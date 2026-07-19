@@ -713,23 +713,99 @@ function parseTransferenciaHTML(html: string): Record<string, any> | null {
 
 
 
+function mergeTransferenciaDetalhe(row: any, det: any, itens: any[]) {
+  row.deposito_origem = det.cdDepositoOrigem ?? row.deposito_origem ?? null;
+  row.deposito_destino = det.cdDepositoDestino ?? row.deposito_destino ?? null;
+  row.codigo_produto = det.cdItem ?? row.codigo_produto ?? null;
+  row.observacao = firstText(row.observacao, det.dsObservacao, det.observacao);
+  const qtdTransf = parseNum(det.qtdTransferencia ?? det.quantidade ?? det.qtItem);
+  if (qtdTransf && itens.length <= 1) row.quantidade = qtdTransf;
+  row.raw = { ...(row.raw ?? {}), _itens: itens };
+  row.detalhe_sincronizado_em = new Date().toISOString();
+}
+
+function transferenciaDetailIds(row: any): string[] {
+  const raw = row.raw ?? {};
+  const values = [
+    ...(Array.isArray(row._detail_ids) ? row._detail_ids : []),
+    ...(Array.isArray(raw._detailIds) ? raw._detailIds : []),
+    row._cd_transf,
+    row._cd_mov,
+    row._cd,
+    raw._cdTransf,
+    raw._cdMovErp,
+    raw.cdTransferenciaEstoque,
+    raw.cdMovEstoqueERP,
+    raw.nrTransfEstoqueERP,
+    row.documento,
+    row.nr_efetivacao,
+  ];
+  return Array.from(new Set(values.map(cleanText).filter(Boolean) as string[]));
+}
+
+function parseTransferenciaRelatorio(html: string): { det: any | null; itens: any[] } {
+  const text = htmlToText(html);
+  if (!text) return { det: null, itens: [] };
+  const det: any = {};
+  const grab = (patterns: RegExp[]) => {
+    for (const re of patterns) {
+      const m = text.match(re);
+      const value = cleanText(m?.[1]);
+      if (value) return value;
+    }
+    return null;
+  };
+  det.cdDepositoOrigem = grab([/Dep[oó]sito\s+Origem\s*[:|-]\s*([0-9]{1,3})\b/i, /Origem\s*[:|-]\s*([0-9]{1,3})\s*[-–]/i]);
+  det.cdDepositoDestino = grab([/Dep[oó]sito\s+Destino\s*[:|-]\s*([0-9]{1,3})\b/i, /Destino\s*[:|-]\s*([0-9]{1,3})\s*[-–]/i]);
+  det.cdItem = grab([/\b(\d+(?:\.\d+){2,})\b/]);
+  det.qtdTransferencia = grab([/Quantidade\s*[:|-]\s*([0-9.,]+)/i, /Qtd\.?\s*[:|-]\s*([0-9.,]+)/i]);
+  det.dsObservacao = grab([/Observa[cç][aã]o\s*[:|-]\s*(.{1,240}?)(?:\s+Item\b|\s+Produto\b|\s+Total\b|$)/i]);
+  const hasData = det.cdDepositoOrigem || det.cdDepositoDestino || det.cdItem || det.qtdTransferencia || det.dsObservacao;
+  return { det: hasData ? det : null, itens: hasData ? [det] : [] };
+}
+
+async function fetchTransferenciaRelatorio(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+  cd: string,
+  tipoDoc: string | null,
+  tipoMov: string | null,
+): Promise<{ det: any | null; itens: any[]; status: number }> {
+  const qs = new URLSearchParams({
+    cdTransferenciaEstoque: cd,
+    idTipoDoc: tipoDoc || 'PORTAL',
+    idTipoMovimentacao: tipoMov || 'T',
+  });
+  const path = `/l.unilux/modInventario/estoque/relatorioTransferenciaEstoque.php?${qs}`;
+  const headers: Record<string, string> = {
+    'Cookie': auth.jar.header(),
+    'X-CSRF-TOKEN': auth.csrf,
+    'Referer': `${AUGE_BASE_URL}/l.unilux/modInventario/estoque/gerirTransferenciaEstoque.php`,
+    'User-Agent': UA,
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  };
+  if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
+  const res = await fetch(`${AUGE_BASE_URL}${path}`, { method: 'GET', headers });
+  auth.jar.ingest(res);
+  if (!res.ok) return { det: null, itens: [], status: res.status };
+  const html = await res.text();
+  return { ...parseTransferenciaRelatorio(html), status: res.status };
+}
+
 // Busca itens da transferência via getMovItensAndControle.php.
-// Endpoint confirmado no HAR: POST cdMov=<cdTransferenciaEstoque> -> {data:[{cdItem, cdDepositoOrigem, nmDepositoOrigem, cdDepositoDestino, qtdTransferencia, ...}]}
+// Endpoint confirmado no HAR: POST cdMov=<chave do botão imprimir/editar> -> {data:[{cdItem, cdDepositoOrigem, cdDepositoDestino, qtdTransferencia, ...}]}
 async function fetchTransferenciaDetalhe(
   auth: { jar: Jar; csrf: string; apiToken: string | null },
-  _cdMovErp: string | null,
-  cdTransf: string | null,
+  ids: string[],
+  tipoDoc: string | null = null,
+  tipoMov: string | null = 'T',
 ): Promise<{ det: any | null; itens: any[]; debug: { status: number; path: string }[] }> {
   const debug: { status: number; path: string }[] = [];
-  // O parâmetro esperado pelo Auge chama-se cdMov, mas seu valor é o cdTransferenciaEstoque.
-  const cd = cdTransf ?? _cdMovErp;
-  if (!cd) return { det: null, itens: [], debug };
+  const cleanIds = Array.from(new Set(ids.map(cleanText).filter(Boolean) as string[]));
+  if (!cleanIds.length) return { det: null, itens: [], debug };
   const base = '/l.unilux/modInventario/estoque/ajax';
-  const attempts: { method: 'POST' | 'GET'; path: string; body?: URLSearchParams }[] = [
-    { method: 'POST', path: `${base}/getMovItensAndControle.php`, body: new URLSearchParams({ cdMov: cd }) },
-  ];
-  for (const att of attempts) {
+  for (const cd of cleanIds) {
     try {
+      const path = `${base}/getMovItensAndControle.php`;
       const headers: Record<string, string> = {
         'Cookie': auth.jar.header(),
         'X-Requested-With': 'XMLHttpRequest',
@@ -739,14 +815,14 @@ async function fetchTransferenciaDetalhe(
         'Accept': 'application/json, text/javascript, */*; q=0.01',
       };
       if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
-      if (att.method === 'POST') headers['Content-Type'] = 'application/x-www-form-urlencoded';
-      const res = await fetch(`${AUGE_BASE_URL}${att.path}`, {
-        method: att.method,
+      headers['Content-Type'] = 'application/x-www-form-urlencoded';
+      const res = await fetch(`${AUGE_BASE_URL}${path}`, {
+        method: 'POST',
         headers,
-        body: att.method === 'POST' ? att.body?.toString() : undefined,
+        body: new URLSearchParams({ cdMov: cd }).toString(),
       });
       auth.jar.ingest(res);
-      debug.push({ status: res.status, path: att.path });
+      debug.push({ status: res.status, path: `${path}?cdMov=${cd}` });
       if (!res.ok) continue;
       const text = await res.text();
       let j: any;
@@ -756,7 +832,17 @@ async function fetchTransferenciaDetalhe(
         return { det: arr[0], itens: arr, debug };
       }
     } catch {
-      debug.push({ status: -1, path: att.path });
+      debug.push({ status: -1, path: `${base}/getMovItensAndControle.php?cdMov=${cd}` });
+    }
+  }
+
+  for (const cd of cleanIds) {
+    try {
+      const report = await fetchTransferenciaRelatorio(auth, cd, tipoDoc, tipoMov);
+      debug.push({ status: report.status, path: `relatorioTransferenciaEstoque.php?cdTransferenciaEstoque=${cd}` });
+      if (report.det) return { det: report.det, itens: report.itens, debug };
+    } catch {
+      debug.push({ status: -1, path: `relatorioTransferenciaEstoque.php?cdTransferenciaEstoque=${cd}` });
     }
   }
   return { det: null, itens: [], debug };
@@ -783,20 +869,15 @@ async function enrichTransferencias(
     while (idx < pending.length) {
       const i = idx++;
       const row = pending[i];
-      const { det, itens, debug } = await fetchTransferenciaDetalhe(auth, row._cd_mov ?? null, row._cd_transf ?? row._cd ?? null);
+      const tipoDoc = firstText(row.raw?.idTipoDocumento, row.raw?.tipoDocumento);
+      const tipoMov = firstText(row.raw?.idTipoMovimentacao) ?? 'T';
+      const { det, itens, debug } = await fetchTransferenciaDetalhe(auth, transferenciaDetailIds(row), tipoDoc, tipoMov);
       if (!det) {
         failed++;
-        if (!sampleDebug) sampleDebug = { cd_mov: row._cd_mov, cd_transf: row._cd_transf, debug };
+        if (!sampleDebug) sampleDebug = { ids: transferenciaDetailIds(row), tipoDoc, debug };
         continue;
       }
-      row.deposito_origem = row.deposito_origem ?? det.cdDepositoOrigem ?? null;
-      row.deposito_destino = row.deposito_destino ?? det.cdDepositoDestino ?? null;
-      row.codigo_produto = row.codigo_produto ?? det.cdItem ?? null;
-      // qtdTransferencia é a quantidade real do item; qtItem no LIST é a contagem de itens
-      const qtdTransf = parseNum(det.qtdTransferencia);
-      if (qtdTransf && itens.length === 1) row.quantidade = qtdTransf;
-      row.raw = { ...(row.raw ?? {}), _itens: itens };
-      row.detalhe_sincronizado_em = new Date().toISOString();
+      mergeTransferenciaDetalhe(row, det, itens);
       enriched++;
     }
   }
