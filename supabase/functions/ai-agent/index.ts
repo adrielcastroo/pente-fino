@@ -45,7 +45,19 @@ Deno.serve(async (req) => {
       auth: { persistSession: false, autoRefreshToken: false },
     });
 
-    const { messages }: { messages: UIMessage[] } = await req.json();
+    const body = await req.json();
+    let messages: UIMessage[] = Array.isArray(body?.messages)
+      ? body.messages
+      : body?.message
+        ? [body.message]
+        : [];
+    if (!Array.isArray(messages) || messages.length === 0) {
+      return new Response(JSON.stringify({ error: "No messages provided" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    console.log("[ai-agent] received", messages.length, "messages, first role:", messages[0]?.role);
 
     // Provedor: NVIDIA NIM (OpenAI-compatível)
     const nvidia = createOpenAICompatible({
