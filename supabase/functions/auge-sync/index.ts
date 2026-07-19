@@ -968,6 +968,27 @@ async function fetchExistingTransferencias(admin: any, rows: any[]) {
   return out;
 }
 
+function transferenciaItemId(baseId: string, item: any, index: number): string {
+  const line = cleanText(item?.idLinha) ?? String(index);
+  const code = cleanText(item?.cdItem) ?? 'sem-item';
+  return `${baseId}:item:${line}:${code}`;
+}
+
+function expandTransferenciaItens(row: any): any[] {
+  const itens = Array.isArray(row.raw?._itens) ? row.raw._itens : [];
+  if (itens.length === 0) return [row];
+  return itens.map((item: any, index: number) => ({
+    ...row,
+    id_externo: transferenciaItemId(row.id_externo, item, index),
+    deposito_origem: cleanText(item.cdDepositoOrigem ?? item.nmDepositoOrigem) ?? row.deposito_origem,
+    deposito_destino: cleanText(item.cdDepositoDestino ?? item.nmDepositoDestino) ?? row.deposito_destino,
+    codigo_produto: cleanText(item.cdItem) ?? row.codigo_produto,
+    descricao_produto: normalizeDescricaoProduto(item.nmItem ?? item.dsItem ?? item.textAbrev, item.cdItem) ?? row.descricao_produto,
+    quantidade: parseNum(item.qtdTransferencia ?? item.quantidade ?? item.qtItem) || row.quantidade,
+    raw: { ...(row.raw ?? {}), _item: item, _item_index: index },
+  }));
+}
+
 async function backfillTransferenciasChunk(admin: any, auth: { jar: Jar; csrf: string; apiToken: string | null }, runId: string) {
   const state = await loadTecidosState(admin, runId);
   const lastId = cleanText(state.last_id);
