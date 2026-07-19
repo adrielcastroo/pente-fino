@@ -1085,7 +1085,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
             </div>
           </div>
         </div>
-      </button>
+      </div>
     </div>
   );
 
