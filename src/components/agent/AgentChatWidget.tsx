@@ -56,6 +56,9 @@ function ChatWindow({ threadId }: { threadId: string }) {
     id: threadId,
     messages: thread?.messages ?? [],
     transport,
+    onError: (err) => {
+      console.error("[ai-agent] erro no chat", err);
+    },
   });
 
   // Sync back to store
@@ -72,11 +75,23 @@ function ChatWindow({ threadId }: { threadId: string }) {
     const text = (msg.text ?? "").trim();
     if (!text || status === "streaming" || status === "submitted") return;
     if (messages.length === 0) setTitle(threadId, text);
-    sendMessage({ text });
+    void sendMessage({ parts: [{ type: "text", text }] });
     setTimeout(() => composerRef.current?.focus(), 0);
   };
 
   const isLoading = status === "submitted" || status === "streaming";
+  const lastMessage = messages[messages.length - 1];
+  const lastAssistantHasVisibleContent =
+    lastMessage?.role === "assistant" &&
+    lastMessage.parts.some((part) => {
+      if (part.type === "text") return part.text.trim().length > 0;
+      if (part.type?.startsWith("tool-")) {
+        const toolPart = part as any;
+        return toolPart.state === "output-available" || toolPart.state === "output-error";
+      }
+      return false;
+    });
+  const showThinking = isLoading && !lastAssistantHasVisibleContent;
 
   return (
     <div className="flex flex-1 flex-col min-h-0">
@@ -113,7 +128,7 @@ function ChatWindow({ threadId }: { threadId: string }) {
               </MessageContent>
             </Message>
           ))}
-          {isLoading && messages[messages.length - 1]?.role === "user" && (
+          {showThinking && (
             <Message from="assistant">
               <MessageContent className="bg-transparent">
                 <Shimmer>Pensando…</Shimmer>
