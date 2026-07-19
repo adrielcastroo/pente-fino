@@ -14,6 +14,7 @@ import { useReservas } from '@/hooks/useReservas';
 import { Reserva } from '@/types';
 import { diffFields } from '@/lib/audit';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { PageHeader } from '@/components/ui/page-header';
 
 
 const ReservasPage = () => {

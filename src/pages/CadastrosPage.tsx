@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { supabase } from '@/integrations/supabase/client';
 import { normalizarCodigo } from '@/lib/codigoFornecedor';
+import { PageHeader } from '@/components/ui/page-header';
 
 type FornFilter = 'todos' | 'com' | 'sem' | 'pendentes_auge';
 type EditFilter = 'todos' | 'editados' | 'nao_editados';
