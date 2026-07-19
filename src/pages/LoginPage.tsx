@@ -187,25 +187,16 @@ export default function LoginPage() {
 
       <div className="w-full max-w-[410px] relative z-10">
         {/* Header com logo + nome */}
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: 'easeOut' }}
-          className="flex flex-col items-center mb-6"
-        >
+        <div className="flex flex-col items-center mb-6">
           <div className="p-2.5 bg-card border border-border/60 rounded-lg shadow-sm mb-3">
-            <img src={logoComb} alt="Logo Pente-Fino" className="w-10 h-10 object-contain" />
+            <img src={logoComb} alt="Logo Pente-Fino" width={40} height={40} className="w-10 h-10 object-contain" fetchPriority="high" />
           </div>
           <h1 className="text-lg font-semibold tracking-tight text-foreground">Pente Fino</h1>
-        </motion.div>
+        </div>
 
 
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
-          >
+          <div>
             <Card className="border-border/60 shadow-lg rounded-xl overflow-hidden bg-card">
               <CardHeader className="space-y-1 pb-4 pt-6 px-5 sm:px-6">
                 <h2 className="text-xl font-semibold leading-none tracking-tight">
