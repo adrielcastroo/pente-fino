@@ -1024,6 +1024,35 @@ function transferenciaPatch(row: any): Record<string, any> {
   };
 }
 
+async function fillTransferenciaProductDescriptions(admin: any, rows: any[]) {
+  const missingCodes = Array.from(new Set(
+    rows
+      .filter((row: any) => !hasValue(row.descricao_produto) && hasValue(row.codigo_produto))
+      .map((row: any) => String(row.codigo_produto))
+  ));
+  if (missingCodes.length === 0) return rows;
+
+  const descricoes = new Map<string, string>();
+  for (let i = 0; i < missingCodes.length; i += 500) {
+    const chunk = missingCodes.slice(i, i + 500);
+    const { data, error } = await admin
+      .from('auge_produtos')
+      .select('codigo,descricao')
+      .in('codigo', chunk);
+    if (error) throw error;
+    for (const produto of data ?? []) {
+      const codigo = cleanText(produto.codigo);
+      const descricao = cleanText(produto.descricao);
+      if (codigo && descricao) descricoes.set(codigo, descricao);
+    }
+  }
+
+  return rows.map((row: any) => ({
+    ...row,
+    descricao_produto: row.descricao_produto ?? descricoes.get(String(row.codigo_produto)) ?? null,
+  }));
+}
+
 function hasValue(v: any): boolean {
   if (v === null || v === undefined) return false;
   if (typeof v === 'string') return v.trim() !== '';
@@ -1153,7 +1182,10 @@ async function backfillTransferenciasChunk(admin: any, auth: { jar: Jar; csrf: s
         valor: row.valor,
       }));
       const existing = await fetchExistingTransferencias(admin, expanded);
-      const rowsToUpsert = expanded.map((expandedRow: any) => preserveTransferenciaDetalhes(expandedRow, existing.get(expandedRow.id_externo)));
+      const rowsToUpsert = await fillTransferenciaProductDescriptions(
+        admin,
+        expanded.map((expandedRow: any) => preserveTransferenciaDetalhes(expandedRow, existing.get(expandedRow.id_externo)))
+      );
       const { error: updError } = await admin.from('auge_transferencias').upsert(rowsToUpsert, { onConflict: 'id_externo' });
       if (updError) throw updError;
       if (expanded.some((expandedRow: any) => expandedRow.id_externo !== row.id_externo)) {
@@ -1438,7 +1470,10 @@ async function syncEntity(
         .flatMap((row: any) => expandTransferenciaItens(row))
         .map(({ _cd, _cd_mov, _cd_transf, _detail_ids, ...rest }: any) => rest);
       const existing = await fetchExistingTransferencias(admin, rows);
-      const rowsToUpsert = rows.map((row: any) => preserveTransferenciaDetalhes(row, existing.get(row.id_externo)));
+      const rowsToUpsert = await fillTransferenciaProductDescriptions(
+        admin,
+        rows.map((row: any) => preserveTransferenciaDetalhes(row, existing.get(row.id_externo)))
+      );
       newMaxDt = maxDateISO(rowsToUpsert);
       const { error, count } = await admin.from('auge_transferencias')
         .upsert(rowsToUpsert, { onConflict: 'id_externo', count: 'exact' });
