@@ -15,8 +15,6 @@ import ResumeBanner from '@/components/ResumeBanner';
 import CommandPalette from '@/components/CommandPalette';
 import ShortcutsModal from '@/components/ShortcutsModal';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import ModuleSwitchFab from '@/components/ModuleSwitchFab';
-import AppFooter from '@/components/shared/AppFooter';
 import { SidebarProvider } from '@/components/ui/sidebar';
 
 const PageSkeleton = () => (
@@ -43,7 +41,6 @@ export interface MainLayoutProps {
   /** Mostrar UndoBanner. Default: true (exceto em rotas de registro). */
   showUndoBanner?: boolean;
   /** Rotas onde o footer é omitido. */
-  hideFooterOn?: string[];
 }
 
 export default function MainLayout({
@@ -52,7 +49,6 @@ export default function MainLayout({
   navRail = <NavRail />,
   showResumeBanner = true,
   showUndoBanner = true,
-  hideFooterOn = ['/estoque/tecido', '/estoque/madeira', '/estoque/motor', '/estoque/conferencia'],
 }: MainLayoutProps) {
   const isMobile = useIsMobile();
   const isTablet = useIsTablet();
@@ -84,7 +80,6 @@ export default function MainLayout({
     } catch { /* ignore */ }
   };
 
-  const showFooter = !hideFooterOn.includes(location.pathname);
   const showUndo = showUndoBanner && !['/estoque/tecido', '/estoque/madeira', '/estoque/motor'].includes(location.pathname);
 
   return (
