@@ -1041,6 +1041,9 @@ async function backfillTransferenciasChunk(admin: any, auth: { jar: Jar; csrf: s
       const rowsToUpsert = expanded.map((expandedRow: any) => preserveTransferenciaDetalhes(expandedRow, existing.get(expandedRow.id_externo)));
       const { error: updError } = await admin.from('auge_transferencias').upsert(rowsToUpsert, { onConflict: 'id_externo' });
       if (updError) throw updError;
+      if (expanded.length > 1) {
+        await admin.from('auge_transferencias').delete().eq('id', row.id);
+      }
       enriched++;
     } else {
       failed++;
