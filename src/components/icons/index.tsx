@@ -131,6 +131,23 @@ import {
   type Icon as TablerIcon,
   type IconProps as TablerIconProps,
 } from "@tabler/icons-react";
+import {
+  FabricRoll,
+  WoodPlank,
+  MotorCoil,
+  WarehouseRack,
+  ScanGun,
+  LabelTag,
+  ShippingTruck,
+  DepositTransfer,
+  ProductRegistry,
+  AuditShield,
+  StockEntry,
+  ReservationTag,
+  HistoryStack,
+  DashboardTiles,
+  WarehouseHome,
+} from "./domain";
 
 /** Lucide-compatible prop surface. `stroke` is omitted from SVGProps so we
  *  can widen it to `number | string` matching Lucide's public type. */
@@ -191,7 +208,7 @@ export const Archive = wrap(IconArchive);
 export const ArrowDown = wrap(IconArrowDown);
 export const ArrowLeft = wrap(IconArrowLeft);
 export const ArrowRight = wrap(IconArrowRight);
-export const ArrowRightLeft = wrap(IconArrowsLeftRight);
+export const ArrowRightLeft = DepositTransfer;
 export const ArrowUp = wrap(IconArrowUp);
 export const ArrowUpDown = wrap(IconArrowsUpDown);
 export const ArrowUpRight = wrap(IconArrowUpRight);
@@ -208,7 +225,7 @@ export const Check = wrap(IconCheck);
 export const CheckCircle2 = wrap(IconCircleCheck);
 export const ChevronRight = wrap(IconChevronRight);
 export const ChevronLeft = wrap(IconChevronLeft);
-export const ClipboardList = wrap(IconClipboardList);
+export const ClipboardList = ProductRegistry;
 export const Clock = wrap(IconClock);
 export const Cloud = wrap(IconCloud);
 export const Copy = wrap(IconCopy);
@@ -227,14 +244,14 @@ export const FolderOpen = wrap(IconFolderOpen);
 export const GitCompare = wrap(IconGitCompare);
 export const Grid3X3 = wrap(IconGridDots);
 export const Hash = wrap(IconHash);
-export const History = wrap(IconHistory);
-export const Home = wrap(IconHome);
+export const History = HistoryStack;
+export const Home = WarehouseHome;
 export const Info = wrap(IconInfoCircle);
 export const KeyRound = wrap(IconKey);
 export const Laptop = wrap(IconDeviceLaptop);
 export const Layers = wrap(IconStack);
 export const Layers3 = wrap(IconStack);
-export const LayoutDashboard = wrap(IconLayoutDashboard);
+export const LayoutDashboard = DashboardTiles;
 export const Link = wrap(IconLink);
 export const List = wrap(IconList);
 export const ListChecks = wrap(IconListCheck);
@@ -251,7 +268,7 @@ export const Moon = wrap(IconMoon);
 export const MoreHorizontal = wrap(IconDots);
 export const MoreVertical = wrap(IconDotsVertical);
 export const Package = wrap(IconPackage);
-export const PackagePlus = wrap(IconPackageImport);
+export const PackagePlus = StockEntry;
 export const PackageX = wrap(IconPackageOff);
 export const Palette = wrap(IconPalette);
 export const Pencil = wrap(IconPencil);
@@ -265,31 +282,31 @@ export const Ruler = wrap(IconRuler);
 export const Save = wrap(IconDeviceFloppy);
 export const Scale = wrap(IconScale);
 export const ScanBarcode = wrap(IconBarcode);
-export const ScanLine = wrap(IconScan);
+export const ScanLine = ScanGun;
 export const Search = wrap(IconSearch);
 export const Settings = wrap(IconSettings);
 export const Settings2 = wrap(IconAdjustments);
 export const Shield = wrap(IconShield);
-export const ShieldAlert = wrap(IconShieldExclamation);
+export const ShieldAlert = AuditShield;
 export const ShieldCheck = wrap(IconShieldCheck);
-export const Shirt = wrap(IconShirt);
+export const Shirt = FabricRoll;
 export const Smartphone = wrap(IconDeviceMobile);
 export const Sparkles = wrap(IconSparkles);
 export const Sun = wrap(IconSun);
 export const Table = wrap(IconTable);
 export const Trash2 = wrap(IconTrash);
-export const TreePine = wrap(IconTree);
+export const TreePine = WoodPlank;
 export const TrendingDown = wrap(IconTrendingDown);
 export const TrendingUp = wrap(IconTrendingUp);
-export const Truck = wrap(IconTruck);
+export const Truck = ShippingTruck;
 export const Unlock = wrap(IconLockOpen);
 export const Upload = wrap(IconUpload);
 export const User = wrap(IconUser);
 export const Users = wrap(IconUsers);
 export const Wand2 = wrap(IconWand);
-export const Warehouse = wrap(IconBuildingWarehouse);
+export const Warehouse = WarehouseRack;
 export const Wifi = wrap(IconWifi);
 export const WifiOff = wrap(IconWifiOff);
 export const X = wrap(IconX);
 export const XCircle = wrap(IconCircleX);
-export const Zap = wrap(IconBolt);
+export const Zap = MotorCoil;
