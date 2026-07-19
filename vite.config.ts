@@ -74,7 +74,8 @@ export default defineConfig(({ mode }) => ({
           if (id.includes("xlsx") || id.includes("exceljs")) return "xlsx-vendor";
           if (id.includes("date-fns")) return "date-vendor";
           if (id.includes("@tanstack")) return "query-vendor";
-          if (id.includes("react-hook-form") || id.includes("@hookform") || id.includes("zod")) {
+          if (id.includes("zod")) return "zod-vendor";
+          if (id.includes("react-hook-form") || id.includes("@hookform")) {
             return "forms-vendor";
           }
           if (id.includes("lucide-react")) return "icons-vendor";
