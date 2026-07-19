@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import ItemFormDialog from '@/components/cadastros/ItemFormDialog';
 import ImportItensDialog from '@/components/cadastros/ImportItensDialog';
+import CadastroDetailDialog from '@/components/cadastros/CadastroDetailDialog';
 import AugeReconciliacaoTab from '@/components/auge/AugeReconciliacaoTab';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ItemCadastro } from '@/services/itensCadastroService';
@@ -224,8 +225,13 @@ export default function CadastrosPage() {
     }
   }, [highlightId, filtered]);
 
+  const [detailItem, setDetailItem] = useState<ItemCadastro | null>(null);
   const handleEdit = (item: ItemCadastro) => { setEditing(item); setFormOpen(true); };
   const handleNew = () => { setEditing(null); setFormOpen(true); };
+  const handleRowClick = (item: ItemCadastro, e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest('button, input, label, [role="checkbox"], a')) return;
+    setDetailItem(item);
+  };
 
   const handleConfirmDelete = async () => {
     if (!toDelete) return;
@@ -520,8 +526,9 @@ export default function CadastrosPage() {
                     <div
                       key={item.id}
                       id={`cad-row-${item.id}`}
+                      onClick={(e) => handleRowClick(item, e)}
                       className={cn(
-                        'rounded-lg border bg-card p-3 flex flex-col gap-2',
+                        'rounded-lg border bg-card p-3 flex flex-col gap-2 cursor-pointer hover:bg-accent/40 hover:border-primary/40 transition-colors',
                         isHighlight && 'ring-2 ring-primary border-primary/40',
                         isSelected && 'bg-primary/5',
                       )}
@@ -604,7 +611,9 @@ export default function CadastrosPage() {
                         <TableRow
                           key={item.id}
                           id={`cad-row-${item.id}`}
+                          onClick={(e) => handleRowClick(item, e)}
                           className={cn(
+                            'cursor-pointer hover:bg-accent/40 transition-colors',
                             isHighlight && 'bg-primary/10 ring-1 ring-primary/40',
                             isSelected && !isHighlight && 'bg-primary/5',
                           )}
@@ -743,6 +752,12 @@ export default function CadastrosPage() {
       </Tabs>
 
       <ItemFormDialog open={formOpen} onOpenChange={setFormOpen} initial={editing} />
+      <CadastroDetailDialog
+        item={detailItem}
+        open={!!detailItem}
+        onOpenChange={(o) => !o && setDetailItem(null)}
+        onEdit={handleEdit}
+      />
       <ImportItensDialog open={importOpen} onOpenChange={setImportOpen} />
 
       <AlertDialog open={!!toDelete} onOpenChange={(o) => !o && setToDelete(null)}>

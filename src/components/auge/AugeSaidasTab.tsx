@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, RefreshCw, Loader2, FileText, Clock, User, Archive, DollarSign, AlertTriangle } from 'lucide-react';
 import { formatDateBR } from '@/lib/app-utils';
+import MovimentacaoDetailDialog, { type MovimentacaoRow } from './MovimentacaoDetailDialog';
 
 interface AugeSaida {
   id: string;
@@ -42,6 +43,7 @@ export default function AugeSaidasTab() {
   const [situacao, setSituacao] = useState<string>('todos');
   const [pageSize, setPageSize] = useState(30);
   const [lastSync, setLastSync] = useState<string | null>(null);
+  const [detail, setDetail] = useState<MovimentacaoRow | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -180,7 +182,14 @@ export default function AugeSaidasTab() {
       ) : (
         <div className="grid grid-cols-1 gap-3">
           {visible.map(r => (
-            <div key={r.id} className="bg-card/60 border border-border/40 rounded-md p-4 hover:border-border/60 transition-colors">
+            <div
+              key={r.id}
+              role="button"
+              tabIndex={0}
+              onClick={() => setDetail(r as MovimentacaoRow)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDetail(r as MovimentacaoRow); } }}
+              className="bg-card/60 border border-border/40 rounded-md p-4 hover:border-primary/40 hover:bg-accent/30 cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40"
+            >
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
@@ -235,6 +244,13 @@ export default function AugeSaidasTab() {
           )}
         </div>
       )}
+
+      <MovimentacaoDetailDialog
+        movimentacao={detail}
+        tipo="saida"
+        open={!!detail}
+        onOpenChange={(o) => !o && setDetail(null)}
+      />
     </div>
   );
 }
