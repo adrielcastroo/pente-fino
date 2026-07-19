@@ -59,6 +59,9 @@ function FooterVersion({ hasNewVersion }: { hasNewVersion: boolean }) {
       )}
     </>
   );
+}
+
+
 
 function getShiftEnd(): Date {
   const h = new Date().getHours();
