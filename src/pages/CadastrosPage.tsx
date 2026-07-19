@@ -225,8 +225,13 @@ export default function CadastrosPage() {
     }
   }, [highlightId, filtered]);
 
+  const [detailItem, setDetailItem] = useState<ItemCadastro | null>(null);
   const handleEdit = (item: ItemCadastro) => { setEditing(item); setFormOpen(true); };
   const handleNew = () => { setEditing(null); setFormOpen(true); };
+  const handleRowClick = (item: ItemCadastro, e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest('button, input, label, [role="checkbox"], a')) return;
+    setDetailItem(item);
+  };
 
   const handleConfirmDelete = async () => {
     if (!toDelete) return;
