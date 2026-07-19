@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, RefreshCw, Loader2, FileText, Clock, User, Archive, DollarSign, AlertTriangle } from 'lucide-react';
 import { formatDateBR } from '@/lib/app-utils';
+import MovimentacaoDetailDialog, { type MovimentacaoRow } from './MovimentacaoDetailDialog';
 
 interface AugeSaida {
   id: string;
