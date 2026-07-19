@@ -226,8 +226,6 @@ export default function AugeTransferenciasTab({
     } finally { setSyncing(false); }
   };
 
-  useEffect(() => { load(); }, []);
-
   useEffect(() => { load(); }, [load]);
 
   const toggleSort = (key: SortKey) => {
