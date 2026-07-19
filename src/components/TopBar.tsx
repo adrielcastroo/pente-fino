@@ -15,7 +15,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/use-auth';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 
-import { ChangelogDialog } from '@/components/ChangelogDialog';
+
 
 
 const TopBar = memo(function TopBar() {
