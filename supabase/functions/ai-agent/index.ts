@@ -46,18 +46,58 @@ Deno.serve(async (req) => {
     });
 
     const body = await req.json();
-    let messages: UIMessage[] = Array.isArray(body?.messages)
+    const rawMessages: any[] = Array.isArray(body?.messages)
       ? body.messages
       : body?.message
         ? [body.message]
         : [];
-    if (!Array.isArray(messages) || messages.length === 0) {
+    if (rawMessages.length === 0) {
       return new Response(JSON.stringify({ error: "No messages provided" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    console.log("[ai-agent] received", messages.length, "messages, first role:", messages[0]?.role);
+
+    // Normaliza mensagens vindas de clientes com formatos diferentes:
+    // - AI SDK v7 (UIMessage): { role, parts: [{type:'text', text}, ...] }
+    // - AI SDK v4/legacy: { role, content: string }
+    // Convertemos tudo para ModelMessage[] (o formato aceito pelo streamText).
+    const modelMessages: ModelMessage[] = [];
+    const hasParts = rawMessages.some((m) => Array.isArray(m?.parts));
+    if (hasParts) {
+      try {
+        const converted = convertToModelMessages(rawMessages as UIMessage[]);
+        if (Array.isArray(converted)) modelMessages.push(...converted);
+      } catch (e) {
+        console.warn("[ai-agent] convertToModelMessages falhou, usando fallback", e);
+      }
+    }
+    if (modelMessages.length === 0) {
+      for (const m of rawMessages) {
+        const role = m?.role === "assistant" ? "assistant" : m?.role === "system" ? "system" : "user";
+        let text = "";
+        if (typeof m?.content === "string") text = m.content;
+        else if (Array.isArray(m?.parts)) {
+          text = m.parts
+            .filter((p: any) => p?.type === "text" && typeof p.text === "string")
+            .map((p: any) => p.text)
+            .join("\n");
+        } else if (Array.isArray(m?.content)) {
+          text = m.content
+            .filter((p: any) => p?.type === "text" && typeof p.text === "string")
+            .map((p: any) => p.text)
+            .join("\n");
+        }
+        if (text) modelMessages.push({ role, content: text } as ModelMessage);
+      }
+    }
+    if (modelMessages.length === 0) {
+      return new Response(JSON.stringify({ error: "Formato de mensagens não reconhecido" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    console.log("[ai-agent] recebidas", rawMessages.length, "msgs; normalizadas:", modelMessages.length);
 
     // Provedor: NVIDIA NIM (OpenAI-compatível)
     const nvidia = createOpenAICompatible({
