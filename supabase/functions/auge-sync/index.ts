@@ -589,14 +589,22 @@ function mapLote(r: any) {
 }
 
 function mapTransferencia(r: any) {
-  const cdTransf = r.cdTransferenciaEstoque ?? r.cdTransferencia ?? null;
-  const cdMov = r.cdMovEstoqueERP ?? r.cdMov ?? null;
-  const cd = cdTransf ?? cdMov ?? r.id ?? '';
+  const cdTransf = r.cdTransferenciaEstoque ?? r.cd_transferencia_estoque ?? r.cdTransferencia ?? r.cdMovimentacao ?? null;
+  const cdMov = r.cdMovEstoqueERP ?? r.cd_mov_estoque_erp ?? r.cdMovERP ?? r.cdMov ?? null;
+  const nrErp = r.nrTransfEstoqueERP ?? r.nr_transf_estoque_erp ?? r.nrDocumentoERP ?? r.nrMovEstoqueERP ?? null;
+  const nrPortal = r.nrTransferencia ?? r.nr_transferencia ?? r.nrDocumento ?? null;
+  const tipoDoc = r.idTipoDocumento ?? r.tipoDocumento ?? r.dsTipoDocumento ?? null;
+  const isSap = /sap/i.test(String(tipoDoc ?? ''));
+  const stableCode = isSap
+    ? (cdMov ?? nrErp ?? cdTransf ?? nrPortal ?? r.id ?? '')
+    : (cdTransf ?? cdMov ?? nrPortal ?? nrErp ?? r.id ?? '');
+  const detailIds = Array.from(new Set([cdTransf, cdMov, nrErp, nrPortal].filter(Boolean).map(String)));
   return {
-    id_externo: `transf-php:${cd || `${r.nmUsuarioCriacao ?? ''}-${r.dtCriacao ?? ''}`}`,
-    _cd: cd ? String(cd) : null,        // interno: usado para enriquecimento (transferencia OU mov)
+    id_externo: `transf-php:${stableCode || `${r.nmUsuarioCriacao ?? ''}-${r.dtCriacao ?? ''}`}`,
+    _cd: stableCode ? String(stableCode) : null,        // interno: usado para enriquecimento (transferencia OU mov)
     _cd_mov: cdMov ? String(cdMov) : null,   // preferido para endpoint de detalhe (cdMov=)
     _cd_transf: cdTransf ? String(cdTransf) : null,
+    _detail_ids: detailIds,
     deposito_origem: r.cdDepositoOrigem ?? r.nmDepositoOrigem ?? null,
     deposito_destino: r.cdDepositoDestino ?? r.nmDepositoDestino ?? null,
     codigo_produto: r.cdItem ?? null,
@@ -609,11 +617,11 @@ function mapTransferencia(r: any) {
     usuario_enviou_logistica: r.nmUsuarioEnviouLogistica ?? null,
     usuario_recebido_logistica: r.nmUsuarioRecebidoLogistica ?? null,
     valor: parseNum(r.vlCustoMovimentacao),
-    documento: cdTransf ? String(cdTransf) : (cdMov ? String(cdMov) : null),
-    nr_efetivacao: r.nrTransfEstoqueERP ? String(r.nrTransfEstoqueERP) : null,
+    documento: isSap ? firstText(cdTransf, nrPortal) : firstText(cdTransf, nrPortal, cdMov),
+    nr_efetivacao: firstText(nrErp, isSap ? cdMov : null),
     ds_efetivacao: r.dsEfetivacao ?? null,
     observacao: r.dsObservacao ?? r.dsObs ?? null,
-    raw: r,
+    raw: { ...r, _cd: stableCode ? String(stableCode) : null, _cdMovErp: cdMov ? String(cdMov) : null, _cdTransf: cdTransf ? String(cdTransf) : null, _detailIds: detailIds },
     synced_at: new Date().toISOString(),
   };
 }
