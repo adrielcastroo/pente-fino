@@ -586,33 +586,58 @@ function mapTransferencia(r: any) {
 }
 
 // Busca detalhe individual (manterTransferenciaEstoque?cdMov=...) para preencher
-// campos ausentes no LIST: origem/destino/item.
+// campos ausentes no LIST: origem/destino/item. Tenta múltiplos endpoints/params.
 async function fetchTransferenciaDetalhe(
   auth: { jar: Jar; csrf: string; apiToken: string | null },
-  cd: string,
-): Promise<any | null> {
-  const path = `/l.unilux/modInventario/estoque/ajax/manterTransferenciaEstoque.php?cdMov=${encodeURIComponent(cd)}`;
-  try {
-    const headers: Record<string, string> = {
-      'Cookie': auth.jar.header(),
-      'X-Requested-With': 'XMLHttpRequest',
-      'X-CSRF-TOKEN': auth.csrf,
-      'Referer': `${AUGE_BASE_URL}/home`,
-      'User-Agent': UA,
-      'Accept': 'application/json, text/javascript, */*; q=0.01',
-    };
-    if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
-    const res = await fetch(`${AUGE_BASE_URL}${path}`, { method: 'GET', headers });
-    auth.jar.ingest(res);
-    if (!res.ok) return null;
-    const text = await res.text();
-    let j: any;
-    try { j = JSON.parse(text); } catch { return null; }
-    const d = Array.isArray(j?.data) ? j.data[0] : (j?.data ?? j);
-    return d && typeof d === 'object' ? d : null;
-  } catch {
-    return null;
+  cdMov: string | null,
+  cdTransf: string | null,
+): Promise<{ det: any | null; debug: { status: number; path: string }[] }> {
+  const attempts: { method: 'GET' | 'POST'; path: string; body?: URLSearchParams }[] = [];
+  const base = '/l.unilux/modInventario/estoque/ajax';
+  if (cdMov) {
+    attempts.push({ method: 'GET', path: `${base}/manterTransferenciaEstoque.php?cdMov=${encodeURIComponent(cdMov)}` });
+    attempts.push({ method: 'POST', path: `${base}/manterTransferenciaEstoque.php`, body: new URLSearchParams({ cdMov }) });
+    attempts.push({ method: 'GET', path: `${base}/getTransferenciaEstoqueDetalhe.php?cdMov=${encodeURIComponent(cdMov)}` });
+    attempts.push({ method: 'POST', path: `${base}/getTransferenciaEstoqueItens.php`, body: new URLSearchParams({ cdMov }) });
   }
+  if (cdTransf) {
+    attempts.push({ method: 'GET', path: `${base}/manterTransferenciaEstoque.php?cdTransferenciaEstoque=${encodeURIComponent(cdTransf)}` });
+    attempts.push({ method: 'POST', path: `${base}/manterTransferenciaEstoque.php`, body: new URLSearchParams({ cdTransferenciaEstoque: cdTransf }) });
+  }
+
+  const debug: { status: number; path: string }[] = [];
+  for (const att of attempts) {
+    try {
+      const headers: Record<string, string> = {
+        'Cookie': auth.jar.header(),
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRF-TOKEN': auth.csrf,
+        'Referer': `${AUGE_BASE_URL}/home`,
+        'User-Agent': UA,
+        'Accept': 'application/json, text/javascript, */*; q=0.01',
+      };
+      if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
+      if (att.method === 'POST') headers['Content-Type'] = 'application/x-www-form-urlencoded';
+      const res = await fetch(`${AUGE_BASE_URL}${att.path}`, {
+        method: att.method,
+        headers,
+        body: att.method === 'POST' ? att.body?.toString() : undefined,
+      });
+      auth.jar.ingest(res);
+      debug.push({ status: res.status, path: att.path });
+      if (!res.ok) continue;
+      const text = await res.text();
+      let j: any;
+      try { j = JSON.parse(text); } catch { continue; }
+      const d = Array.isArray(j?.data) ? j.data[0] : (j?.data ?? j);
+      if (d && typeof d === 'object' && (d.cdDepositoOrigem || d.cdDepositoDestino || d.cdItem)) {
+        return { det: d, debug };
+      }
+    } catch (e) {
+      debug.push({ status: -1, path: att.path });
+    }
+  }
+  return { det: null, debug };
 }
 
 // Enriquece linhas cujos campos-chave (origem/destino/item) estão faltando.
@@ -621,21 +646,26 @@ async function enrichTransferencias(
   rows: any[],
   concurrency = 4,
   maxToEnrich = 300,
-): Promise<{ enriched: number; failed: number; attempted: number }> {
+): Promise<{ enriched: number; failed: number; attempted: number; sample_debug?: any }> {
   const pending = rows.filter(r =>
-    r._cd && (!r.deposito_origem || !r.deposito_destino || !r.codigo_produto)
+    (r._cd_mov || r._cd_transf || r._cd) && (!r.deposito_origem || !r.deposito_destino || !r.codigo_produto)
   ).slice(0, maxToEnrich);
 
   let enriched = 0;
   let failed = 0;
   let idx = 0;
+  let sampleDebug: any = null;
 
   async function worker() {
     while (idx < pending.length) {
       const i = idx++;
       const row = pending[i];
-      const det = await fetchTransferenciaDetalhe(auth, row._cd);
-      if (!det) { failed++; continue; }
+      const { det, debug } = await fetchTransferenciaDetalhe(auth, row._cd_mov ?? null, row._cd_transf ?? row._cd ?? null);
+      if (!det) {
+        failed++;
+        if (!sampleDebug) sampleDebug = { cd_mov: row._cd_mov, cd_transf: row._cd_transf, debug };
+        continue;
+      }
       row.deposito_origem = row.deposito_origem ?? det.cdDepositoOrigem ?? det.cdDepositoOrig ?? null;
       row.deposito_destino = row.deposito_destino ?? det.cdDepositoDestino ?? det.cdDepositoDest ?? null;
       row.codigo_produto = row.codigo_produto ?? det.cdItem ?? det.codigoItem ?? null;
@@ -656,7 +686,7 @@ async function enrichTransferencias(
   }
 
   await Promise.all(Array.from({ length: Math.min(concurrency, pending.length) }, worker));
-  return { enriched, failed, attempted: pending.length };
+  return { enriched, failed, attempted: pending.length, sample_debug: sampleDebug };
 }
 
 // ============================================================
