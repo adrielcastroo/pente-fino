@@ -7,11 +7,8 @@ import { PageHeader } from '@/components/ui/page-header';
 function AuditoriaContent() {
   useDocumentTitle('Auditoria');
   return (
-    <div className="p-3 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 w-full max-w-[1400px] mx-auto min-w-0 h-full flex flex-col">
-      <PageHeader
-        title="Auditoria"
-        subtitle="Kardex — histórico unificado de movimentações do Auge (ERP)."
-      />
+    <div className="space-y-4 w-full min-w-0 h-full flex flex-col">
+      <PageHeader title="Auditoria" />
       <div className="flex-1 min-h-0">
         <AugeKardexTab />
       </div>
