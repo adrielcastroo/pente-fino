@@ -934,9 +934,13 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
 
   const headerContent = (
     <div className="group/header">
-      <button 
-        onClick={() => setOpen(!open)} 
-        className="w-full px-4 py-4 flex items-center gap-3 hover:bg-muted/20 transition-colors duration-150 text-left"
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => setOpen(!open)}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen(!open); } }}
+        aria-expanded={open}
+        className="w-full px-4 py-4 flex items-center gap-3 hover:bg-muted/20 transition-colors duration-150 text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
       >
         
         <div className="flex-1 min-w-0">
