@@ -456,7 +456,7 @@ export default function LoginPage() {
                 </Button>
               </CardFooter>
             </Card>
-          </motion.div>
+          </div>
 
           <p className="text-center text-[10px] text-muted-foreground mt-8">
             © {new Date().getFullYear()} Sistema Pente Fino. Todos os direitos reservados.
