@@ -1992,6 +1992,42 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (action === 'transferencias_backfill') {
+      const nowIso = new Date().toISOString();
+      const runIns = await admin.from('auge_sync_runs').insert({
+        entidade: 'transferencias',
+        status: 'running',
+        started_at: nowIso,
+        triggered_by: triggeredBy,
+        detalhes: { phase: 'backfill', started_at: nowIso },
+      }).select('id').single();
+      const runId = runIns.data?.id as string | undefined;
+      if (!runId) throw new Error('Falha ao criar run de backfill de transferências.');
+      const task = backfillTransferenciasChunk(admin, auth, runId).catch(async (e) => {
+        await admin.from('auge_sync_runs').update({
+          status: 'error',
+          finished_at: new Date().toISOString(),
+          error_message: e instanceof Error ? e.message : String(e),
+        }).eq('id', runId);
+      });
+      // @ts-ignore
+      if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime?.waitUntil) EdgeRuntime.waitUntil(task);
+      return new Response(JSON.stringify({ ok: true, background: true, run_id: runId, chunked: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (action === 'transferencias_backfill_chunk') {
+      const runId = url.searchParams.get('run_id') ?? '';
+      if (!runId) throw new Error('run_id é obrigatório.');
+      const task = backfillTransferenciasChunk(admin, auth, runId);
+      // @ts-ignore
+      if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime?.waitUntil) EdgeRuntime.waitUntil(task);
+      return new Response(JSON.stringify({ ok: true, chunk: true, run_id: runId }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
 
 
 
