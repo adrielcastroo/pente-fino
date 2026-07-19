@@ -21,6 +21,7 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
+const TRANSFERENCIA_BACKFILL_BATCH = 180;
 
 type Entity = 'saldo' | 'produtos' | 'depositos' | 'movimentacoes' | 'entradas' | 'lotes' | 'transferencias';
 const ALL_ENTITIES: Entity[] = ['produtos', 'saldo', 'movimentacoes', 'entradas', 'depositos', 'lotes', 'transferencias'];
@@ -324,6 +325,38 @@ function parseNum(v: any): number {
   const s = String(v).trim().replace(/\./g, '').replace(',', '.');
   const n = Number(s);
   return isFinite(n) ? n : Number(v) || 0;
+}
+
+function cleanText(v: any): string | null {
+  if (v == null) return null;
+  const s = String(v).replace(/\s+/g, ' ').trim();
+  return s === '' ? null : s;
+}
+
+function firstText(...values: any[]): string | null {
+  for (const value of values) {
+    const s = cleanText(value);
+    if (s != null) return s;
+  }
+  return null;
+}
+
+function htmlToText(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/tr>/gi, '\n')
+    .replace(/<\/td>|<\/th>/gi, ' | ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function parseDateBR(v: any): string | null {
