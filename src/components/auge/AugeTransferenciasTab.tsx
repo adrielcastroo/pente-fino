@@ -171,26 +171,27 @@ export default function AugeTransferenciasTab({
   }, [rows, search, filtro]);
 
   return (
-    <div className="flex flex-col gap-4 h-full overflow-hidden">
-      <div className="flex flex-col lg:flex-row gap-3">
-        <div className="relative flex-1">
+    <div className="flex flex-col gap-4 h-full min-h-0 min-w-0 overflow-hidden">
+      <div className="flex flex-wrap items-stretch gap-2 sm:gap-3 min-w-0">
+        <div className="relative flex-1 min-w-[220px]">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
-          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rascunho, nº efetivação, produto, depósito, usuário..." className="pl-10 h-11" />
+          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rascunho, nº efetivação, produto, depósito, usuário..." className="pl-10 h-11 w-full" />
         </div>
-        <ToggleGroup type="single" value={filtro} onValueChange={(v) => v && setFiltro(v as Filtro)} className="h-11">
+        <ToggleGroup type="single" value={filtro} onValueChange={(v) => v && setFiltro(v as Filtro)} className="h-11 shrink-0">
           <ToggleGroupItem value="todos" className="h-11 px-3 text-xs">Todos</ToggleGroupItem>
           <ToggleGroupItem value="rascunho" className="h-11 px-3 text-xs">Rascunhos</ToggleGroupItem>
           <ToggleGroupItem value="efetivada" className="h-11 px-3 text-xs">Efetivadas</ToggleGroupItem>
         </ToggleGroup>
-        <Button onClick={abrirNovo} variant="default" className="h-11 px-5 gap-2">
+        <Button onClick={abrirNovo} variant="default" className="h-11 px-4 sm:px-5 gap-2 shrink-0">
           <Plus className="w-4 h-4" />
-          Nova
+          <span className="hidden sm:inline">Nova</span>
         </Button>
-        <Button onClick={sync} disabled={syncing} variant="outline" className="h-11 px-5 gap-2">
+        <Button onClick={sync} disabled={syncing} variant="outline" className="h-11 px-4 sm:px-5 gap-2 shrink-0">
           {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-          Sincronizar
+          <span className="hidden sm:inline">Sincronizar</span>
         </Button>
       </div>
+
 
       {loading ? (
         <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
