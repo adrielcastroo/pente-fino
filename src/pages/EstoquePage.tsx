@@ -849,145 +849,111 @@ export default function EstoquePage() {
 
       {/* ===== POSITIONS GRID DIALOG ===== */}
       <Dialog open={!!selectedCell} onOpenChange={() => setSelectedCell(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-4xl p-0 gap-0 border-white/10 bg-card/60 backdrop-blur-3xl overflow-hidden rounded-[2.5rem] sm:rounded-[3rem] ring-1 ring-white/10 shadow-2xl shadow-black/40 animate-in fade-in zoom-in-95 slide-in-from-bottom-8 duration-500 max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[95vw] sm:max-w-3xl p-0 gap-0 border border-border bg-card overflow-hidden rounded-lg shadow-xl max-h-[90vh] flex flex-col">
           {selectedCell && (
             <>
-              {/* Dialog Header */}
-              <div className="px-8 pt-10 pb-8 border-b border-white/5 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent relative">
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
-                  <div className="flex items-center gap-5">
-                    <div className="p-4 rounded-[1.5rem] bg-primary text-primary-foreground shadow-2xl shadow-primary/30 ring-4 ring-primary/20">
-                      <Grid3X3 className="w-8 h-8" />
+              {/* Header */}
+              <div className="px-6 py-4 border-b border-border bg-muted/30 shrink-0">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="p-2 rounded-md bg-primary/10 text-primary shrink-0">
+                      <Grid3X3 className="w-5 h-5" />
                     </div>
-                    <div>
-                      <DialogTitle className="text-xl font-semibold tracking-tight">
-                        {activeTec} · {selectedCell.col}N{String(selectedCell.nivel).padStart(2, '0')}
+                    <div className="min-w-0">
+                      <DialogTitle className="text-base font-semibold text-foreground truncate">
+                        Célula {activeTec} · {selectedCell.col}N{String(selectedCell.nivel).padStart(2, '0')}
                       </DialogTitle>
-                      <DialogDescription className="text-[10px] sm:text-xs text-muted-foreground font-semibold uppercase tracking-[0.2em] mt-1 opacity-60">
-                         Monitoramento de Célula · {occupiedCount} de 30 Posições
+                      <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+                        {occupiedCount} de 30 posições ocupadas
                       </DialogDescription>
                     </div>
                   </div>
-                  <Badge className={cn(
-                    "text-[10px] font-semibold px-5 py-2 rounded-md shadow-lg ring-4 uppercase tracking-widest",
-                    occupiedCount === 0 ? "bg-primary text-primary-foreground ring-primary/10" :
-                    occupiedCount >= 25 ? "bg-rose-500 text-white ring-rose-500/10" :
-                    "bg-emerald-500 text-white ring-emerald-500/10"
+                  <Badge variant="outline" className={cn(
+                    "text-[10px] font-medium px-2 py-1 rounded shrink-0",
+                    occupiedCount === 0 ? "border-border text-muted-foreground" :
+                    occupiedCount >= 25 ? "border-destructive/40 text-destructive bg-destructive/5" :
+                    "border-success/40 text-success bg-success/5"
                   )}>
-                    {occupiedCount === 0 ? 'Célula Vazia' : occupiedCount >= 25 ? 'Capacidade Crítica' : `${Math.round((occupiedCount/30)*100)}% Ocupado`}
+                    {occupiedCount === 0 ? 'Vazia' : occupiedCount >= 25 ? 'Capacidade crítica' : `${Math.round((occupiedCount/30)*100)}% ocupado`}
                   </Badge>
                 </div>
                 {/* Occupation bar */}
-                <div className="mt-8 h-2 rounded-full bg-white/5 overflow-hidden shadow-inner border border-white/5">
-                  <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: `${(occupiedCount/30)*100}%` }}
-                    transition={{ duration: 1, ease: "easeOut" }}
+                <div className="mt-3 h-1.5 rounded-full bg-muted overflow-hidden">
+                  <div
                     className={cn(
-                      "h-full rounded-full transition-all shadow-[0_0_10px_rgba(var(--primary),0.5)]",
-                      occupiedCount >= 25 ? 'bg-rose-500' : occupiedCount >= 15 ? 'bg-amber-500' : 'bg-primary'
-                    )} 
+                      "h-full rounded-full transition-all",
+                      occupiedCount >= 25 ? 'bg-destructive' : occupiedCount >= 15 ? 'bg-warning' : 'bg-primary'
+                    )}
+                    style={{ width: `${(occupiedCount/30)*100}%` }}
                   />
                 </div>
               </div>
 
-              {/* Positions List/Grid */}
-              <div className="p-8 overflow-y-auto max-h-[60vh] custom-scrollbar bg-card/20">
+              {/* Positions List */}
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-2 min-h-0">
                 {occupiedCount === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-12 gap-3 border border-dashed border-white/10 rounded-md bg-white/[0.02]">
-                    <Box className="w-8 h-8 text-muted-foreground/30" />
-                    <p className="text-xs font-medium text-muted-foreground/60">Célula disponível</p>
+                  <div className="flex flex-col items-center justify-center py-12 gap-2 border border-dashed border-border rounded-md">
+                    <Box className="w-6 h-6 text-muted-foreground/50" />
+                    <p className="text-sm text-muted-foreground">Nenhuma posição ocupada</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 gap-4">
-                    <AnimatePresence>
-                      {selectedCellItems.sort((a, b) => a.posicao - b.posicao).map((item, idx) => {
-                        const statusCfg = STATUS_CONFIG[item.status] || STATUS_CONFIG.livre;
-                        return (
-                          <motion.div 
-                            key={item.id}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: idx * 0.05 }}
-                            className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-[2rem] p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6 group hover:border-primary/50 hover:bg-primary/5 transition-all duration-500 shadow-xl shadow-black/5 ring-1 ring-white/5 hover:scale-[1.01] hover:-translate-y-1"
-                          >
-                            <div className="flex-1 min-w-0 space-y-3">
-                              <div className="flex items-center gap-3">
-                                <Badge variant="outline" className={cn(
-                                  "text-[9px] font-semibold px-3 py-1 rounded-md border-2 uppercase tracking-widest",
-                                  statusCfg.color,
-                                  statusCfg.border,
-                                  statusCfg.bg
-                                )}>
-                                  POS {String(item.posicao).padStart(2, '0')} · {statusCfg.label}
-                                </Badge>
-                                <div className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-white/5 border border-white/10">
-                                   <Barcode className="w-3 h-3 text-muted-foreground/50" />
-                                   <span className="text-[10px] font-semibold text-muted-foreground/60 tracking-widest uppercase">{item.lote_sistema || 'S/ LOTE'}</span>
-                                </div>
-                              </div>
-                              {(() => {
-                                const info = resolveItemInfo(item.item);
-                                const titulo = info?.descricao || item.item || 'Item sem identificação';
-                                const subCodigo = info?.codigo_interno || item.item;
-                                return (
-                                  <>
-                                    <h3 className="font-semibold text-foreground text-lg sm:text-xl group-hover:text-primary transition-colors" title={item.item || ''}>{titulo}</h3>
-                                    {subCodigo && info?.descricao && (
-                                      <div className="text-[10px] font-mono font-semibold text-muted-foreground/60 uppercase tracking-widest mt-0.5">{subCodigo}</div>
-                                    )}
-                                  </>
-                                );
-                              })()}
-                              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[10px] font-semibold text-muted-foreground/50 uppercase tracking-widest">
-                                <span className="flex items-center gap-2"><Layers className="w-3.5 h-3.5" /> {item.proc || '—'}</span>
-                                <span className="flex items-center gap-2"><Box className="w-3.5 h-3.5" /> {item.m_linear}M X {item.largura}M</span>
-                                <span className="flex items-center gap-2"><Calendar className="w-3.5 h-3.5" /> {formatDateBR(item.data_registro)}</span>
-                              </div>
+                  selectedCellItems.sort((a, b) => a.posicao - b.posicao).map((item) => {
+                    const statusCfg = STATUS_CONFIG[item.status] || STATUS_CONFIG.livre;
+                    const info = resolveItemInfo(item.item);
+                    const titulo = info?.descricao || item.item || 'Item sem identificação';
+                    const subCodigo = info?.codigo_interno || item.item;
+                    return (
+                      <div
+                        key={item.id}
+                        className="border border-border rounded-md p-3 sm:p-4 hover:border-primary/40 hover:bg-muted/30 transition-colors"
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                              <Badge variant="outline" className={cn("text-[10px] font-medium px-1.5 py-0.5 rounded", statusCfg.color, statusCfg.border)}>
+                                Pos {String(item.posicao).padStart(2, '0')} · {statusCfg.label}
+                              </Badge>
+                              <span className="text-[10px] font-mono text-muted-foreground flex items-center gap-1">
+                                <Barcode className="w-3 h-3" />
+                                {item.lote_sistema || 'S/ LOTE'}
+                              </span>
                             </div>
-                            <div className="flex items-center gap-3 shrink-0">
+                            <h3 className="font-medium text-sm text-foreground truncate" title={titulo}>{titulo}</h3>
+                            {subCodigo && info?.descricao && (
+                              <div className="text-[11px] font-mono text-muted-foreground mt-0.5 truncate">{subCodigo}</div>
+                            )}
+                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-[11px] text-muted-foreground">
+                              <span className="flex items-center gap-1"><Layers className="w-3 h-3" /> {item.proc || '—'}</span>
+                              <span className="flex items-center gap-1"><Box className="w-3 h-3" /> {item.m_linear}m × {item.largura}m</span>
+                              <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {formatDateBR(item.data_registro)}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <Button onClick={() => setDetailPos(item)} variant="outline" size="sm" className="h-8 text-xs">
+                              Detalhes
+                            </Button>
+                            {!isGuest && (
                               <Button
-                                onClick={() => setDetailPos(item)}
-                                variant="ghost"
+                                onClick={() => { setDetailPos(item); handleStatusChange(item, 'saida'); }}
                                 size="sm"
-                                  className="h-14 px-8 rounded-md font-semibold text-[10px] uppercase tracking-[0.2em] text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all duration-300 border border-transparent hover:border-primary/20 hover:scale-105 active:scale-95"
-                                >
-                                  Ficha Técnica
+                                className="h-8 text-xs gap-1.5"
+                              >
+                                <LogOut className="w-3.5 h-3.5" />
+                                Dar saída
                               </Button>
-                              {!isGuest && (
-                                <Button
-                                  onClick={() => {
-                                    setDetailPos(item);
-                                    handleStatusChange(item, 'saida');
-                                  }}
-                                  size="sm"
-                                  className="h-14 px-8 rounded-md font-semibold text-[10px] uppercase tracking-[0.3em] bg-violet-600 hover:bg-violet-500 text-white gap-3 shadow-2xl shadow-violet-600/30 ring-4 ring-violet-500/10 transition-all duration-300 hover:scale-105 active:scale-95"
-                                >
-                                  <LogOut className="w-4 h-4" />
-                                  Dar Saída
-                                </Button>
-                              )}
-                            </div>
-                          </motion.div>
-                        );
-                      })}
-                    </AnimatePresence>
-                  </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
                 )}
-
-                {/* Grid View Toggle or Helper */}
-                <div className="mt-10 pt-6 border-t border-white/5 flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary),0.8)]" />
-                    <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.3em] opacity-60">{occupiedCount} Itens encontrados nesta célula</span>
-                  </div>
-                  <p className="text-[10px] font-semibold text-muted-foreground/30 uppercase tracking-widest">* Célula do Galpão G4</p>
-                </div>
               </div>
             </>
           )}
         </DialogContent>
       </Dialog>
+
 
       {/* ===== DETAIL DIALOG ===== */}
       <Dialog open={!!detailPos} onOpenChange={() => setDetailPos(null)}>
