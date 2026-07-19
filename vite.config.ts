@@ -39,20 +39,30 @@ export default defineConfig(({ mode }) => ({
       output: {
         manualChunks(id) {
           if (!id.includes("node_modules")) return;
+          // Utilidades compartilhadas por praticamente todos os chunks (clsx,
+          // tailwind-merge, class-variance-authority). Se não isolarmos, o
+          // Rollup joga essas libs dentro de um chunk maior (ex.: charts-vendor)
+          // e o entry acaba puxando 100+KB de recharts só para pegar clsx.
+          if (
+            id.includes("/clsx/") ||
+            id.includes("/tailwind-merge/") ||
+            id.includes("/class-variance-authority/")
+          ) {
+            return "utils-vendor";
+          }
           // Charts (recharts + d3) só são usados em dashboards — chunk separado
           // para não pesar no bundle inicial (login/rotas leves).
           if (id.includes("recharts") || id.includes("/d3-") || id.includes("victory-vloxon")) {
             return "charts-vendor";
           }
-          // React runtime + libs que dependem dele em tempo de módulo (Radix, framer,
-          // cmdk, vaul, sonner) ficam no mesmo chunk para evitar erros de interop
-          // ("Cannot read properties of undefined (reading 'forwardRef')") quando
-          // um chunk consumidor é avaliado antes do react-vendor.
+          // framer-motion só é usado em algumas rotas (login, dialogs) — isolar
+          // permite que rotas frias não paguem seus ~40KB.
+          if (id.includes("framer-motion")) return "motion-vendor";
+          // React runtime + Radix (que depende de react em tempo de módulo).
           if (
             id.includes("react-dom") ||
             id.includes("react/") ||
             id.includes("scheduler") ||
-            id.includes("framer-motion") ||
             id.includes("@radix-ui") ||
             id.includes("cmdk") ||
             id.includes("vaul") ||
