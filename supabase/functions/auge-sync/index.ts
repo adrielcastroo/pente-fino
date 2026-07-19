@@ -672,36 +672,28 @@ function parseTransferenciaHTML(html: string): Record<string, any> | null {
 
 
 
-// Busca detalhe individual (manterTransferenciaEstoque?cdMov=...) para preencher
-// campos ausentes no LIST: origem/destino/item. Tenta múltiplos endpoints/params.
+// Busca itens da transferência via getMovItensAndControle.php.
+// Endpoint confirmado no HAR: POST cdMov=<cdTransferenciaEstoque> -> {data:[{cdItem, cdDepositoOrigem, nmDepositoOrigem, cdDepositoDestino, qtdTransferencia, ...}]}
 async function fetchTransferenciaDetalhe(
   auth: { jar: Jar; csrf: string; apiToken: string | null },
-  cdMov: string | null,
+  _cdMovErp: string | null,
   cdTransf: string | null,
-): Promise<{ det: any | null; debug: { status: number; path: string }[] }> {
-  const attempts: { method: 'GET' | 'POST'; path: string; body?: URLSearchParams }[] = [];
-  const base = '/l.unilux/modInventario/estoque/ajax';
-  if (cdMov) {
-    attempts.push({ method: 'GET', path: `${base}/manterTransferenciaEstoque.php?cdMov=${encodeURIComponent(cdMov)}` });
-    attempts.push({ method: 'POST', path: `${base}/manterTransferenciaEstoque.php`, body: new URLSearchParams({ cdMov }) });
-    attempts.push({ method: 'GET', path: `${base}/getTransferenciaEstoqueDetalhe.php?cdMov=${encodeURIComponent(cdMov)}` });
-    attempts.push({ method: 'POST', path: `${base}/getTransferenciaEstoqueItens.php`, body: new URLSearchParams({ cdMov }) });
-    attempts.push({ method: 'POST', path: `${base}/getItensTransferenciaEstoque.php`, body: new URLSearchParams({ cdMov }) });
-    attempts.push({ method: 'GET',  path: `${base}/getItensTransferenciaEstoque.php?cdMov=${encodeURIComponent(cdMov)}` });
-  }
-  if (cdTransf) {
-    attempts.push({ method: 'GET', path: `${base}/manterTransferenciaEstoque.php?cdTransferenciaEstoque=${encodeURIComponent(cdTransf)}` });
-    attempts.push({ method: 'POST', path: `${base}/manterTransferenciaEstoque.php`, body: new URLSearchParams({ cdTransferenciaEstoque: cdTransf }) });
-  }
-
+): Promise<{ det: any | null; itens: any[]; debug: { status: number; path: string }[] }> {
   const debug: { status: number; path: string }[] = [];
+  // O parâmetro esperado pelo Auge chama-se cdMov, mas seu valor é o cdTransferenciaEstoque.
+  const cd = cdTransf ?? _cdMovErp;
+  if (!cd) return { det: null, itens: [], debug };
+  const base = '/l.unilux/modInventario/estoque/ajax';
+  const attempts: { method: 'POST' | 'GET'; path: string; body?: URLSearchParams }[] = [
+    { method: 'POST', path: `${base}/getMovItensAndControle.php`, body: new URLSearchParams({ cdMov: cd }) },
+  ];
   for (const att of attempts) {
     try {
       const headers: Record<string, string> = {
         'Cookie': auth.jar.header(),
         'X-Requested-With': 'XMLHttpRequest',
         'X-CSRF-TOKEN': auth.csrf,
-        'Referer': `${AUGE_BASE_URL}/home`,
+        'Referer': `${AUGE_BASE_URL}/l.unilux/modInventario/estoque/gerirTransferenciaEstoque.php`,
         'User-Agent': UA,
         'Accept': 'application/json, text/javascript, */*; q=0.01',
       };
@@ -717,37 +709,18 @@ async function fetchTransferenciaDetalhe(
       if (!res.ok) continue;
       const text = await res.text();
       let j: any;
-      try { j = JSON.parse(text); } catch {
-        const parsed = parseTransferenciaHTML(text);
-        (debug[debug.length - 1] as any).parsed_keys = parsed ? Object.keys(parsed).slice(0, 20) : null;
-        if (!parsed) {
-          // Guarda snippet localizando o trecho relevante (inicializaLinhas / cdDeposito)
-          const idx = Math.max(
-            text.indexOf('inicializaLinhas('),
-            text.indexOf('cdDepositoOrigem":'),
-            text.indexOf("cdDepositoOrigem':"),
-          );
-          (debug[debug.length - 1] as any).body_snippet =
-            idx >= 0 ? text.slice(idx, idx + 1200) : text.slice(-1200);
-          continue;
-        }
-        return { det: parsed, debug };
+      try { j = JSON.parse(text); } catch { continue; }
+      const arr: any[] = Array.isArray(j?.data) ? j.data : [];
+      if (arr.length > 0) {
+        return { det: arr[0], itens: arr, debug };
       }
-      const d = Array.isArray(j?.data) ? j.data[0] : (j?.data ?? j);
-      if (d && typeof d === 'object') {
-        (debug[debug.length - 1] as any).keys = Object.keys(d).slice(0, 30);
-        if (d.cdDepositoOrigem || d.cdDepositoDestino || d.cdItem
-            || d.CdDepositoOrigem || d.deposito_origem
-            || d.origem || d.destino) {
-          return { det: d, debug };
-        }
-      }
-    } catch (e) {
+    } catch {
       debug.push({ status: -1, path: att.path });
     }
   }
-  return { det: null, debug };
+  return { det: null, itens: [], debug };
 }
+
 
 // Enriquece linhas cujos campos-chave (origem/destino/item) estão faltando.
 async function enrichTransferencias(
