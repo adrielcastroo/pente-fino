@@ -15,7 +15,10 @@ export default function SaidaPage() {
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
       <div className="p-4 sm:p-8 flex-shrink-0">
-        <PageHeader title="Saídas" className="lg:items-center" />
+        <PageHeader
+          title="Saídas"
+          subtitle="Registros de saída de estoque sincronizados do Auge."
+        />
       </div>
       <div className="flex-1 overflow-y-auto px-4 sm:px-8 pb-12 custom-scrollbar">
         <div className="max-w-[1400px] mx-auto">
