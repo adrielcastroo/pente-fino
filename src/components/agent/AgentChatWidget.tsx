@@ -92,8 +92,7 @@ function ChatWindow({ threadId }: { threadId: string }) {
           {messages.map((m) => (
             <Message key={m.id} from={m.role === "user" ? "user" : "assistant"}>
               <MessageContent
-                variant={m.role === "user" ? "contained" : "flat"}
-                className={m.role === "user" ? "bg-primary text-primary-foreground" : ""}
+                className={m.role === "user" ? "bg-primary text-primary-foreground" : "bg-transparent"}
               >
                 {m.parts.map((part, i) => {
                   if (part.type === "text") return <MessageResponse key={i}>{part.text}</MessageResponse>;
@@ -116,7 +115,7 @@ function ChatWindow({ threadId }: { threadId: string }) {
           ))}
           {isLoading && messages[messages.length - 1]?.role === "user" && (
             <Message from="assistant">
-              <MessageContent variant="flat">
+              <MessageContent className="bg-transparent">
                 <Shimmer>Pensando…</Shimmer>
               </MessageContent>
             </Message>
