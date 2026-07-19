@@ -107,13 +107,13 @@ export default function MainLayout({
                     <Outlet />
                   </ErrorBoundary>
                 </div>
-                {showFooter && <AppFooter />}
+                
               </Suspense>
             </div>
           </main>
         </div>
         {bottomNav}
-        <ModuleSwitchFab />
+        
       </div>
       {showUndo && <UndoBanner />}
       <CommandPalette />
