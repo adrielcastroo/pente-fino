@@ -1156,7 +1156,7 @@ async function backfillTransferenciasChunk(admin: any, auth: { jar: Jar; csrf: s
       const rowsToUpsert = expanded.map((expandedRow: any) => preserveTransferenciaDetalhes(expandedRow, existing.get(expandedRow.id_externo)));
       const { error: updError } = await admin.from('auge_transferencias').upsert(rowsToUpsert, { onConflict: 'id_externo' });
       if (updError) throw updError;
-      if (expanded.length > 1) {
+      if (expanded.some((expandedRow: any) => expandedRow.id_externo !== row.id_externo)) {
         await admin.from('auge_transferencias').delete().eq('id', row.id);
       }
       enriched++;
@@ -1444,7 +1444,7 @@ async function syncEntity(
         .upsert(rowsToUpsert, { onConflict: 'id_externo', count: 'exact' });
       if (error) throw error;
       const aggregateIdsToRemove = mapped
-        .filter((row: any) => Array.isArray(row.raw?._itens) && row.raw._itens.length > 1)
+        .filter((row: any) => Array.isArray(row.raw?._itens) && row.raw._itens.length > 0)
         .map((row: any) => row.id_externo)
         .filter(Boolean);
       if (aggregateIdsToRemove.length > 0) {
