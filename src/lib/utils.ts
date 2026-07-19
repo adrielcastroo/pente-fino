@@ -12,8 +12,9 @@ export function cn(...inputs: ClassValue[]) {
 export function formatQty(n: number | null | undefined, maxDecimals = 2): string {
   if (n === null || n === undefined || isNaN(Number(n))) return '0';
   const rounded = Math.round(Number(n) * 100) / 100;
+  if (rounded === 1) return '1';
   return rounded.toLocaleString('pt-BR', {
-    minimumFractionDigits: Number.isInteger(rounded) ? 0 : 2,
+    minimumFractionDigits: 2,
     maximumFractionDigits: maxDecimals,
   });
 }
