@@ -629,8 +629,14 @@ async function fetchTransferenciaDetalhe(
       const text = await res.text();
       let j: any;
       try { j = JSON.parse(text); } catch {
-        (debug[debug.length - 1] as any).body_snippet = text.slice(0, 200);
-        continue;
+        // HTML fallback: parse form fields from manterTransferenciaEstoque.php
+        const parsed = parseTransferenciaHTML(text);
+        (debug[debug.length - 1] as any).parsed_keys = parsed ? Object.keys(parsed) : null;
+        if (!parsed) {
+          (debug[debug.length - 1] as any).body_snippet = text.slice(0, 600);
+          continue;
+        }
+        return { det: parsed, debug };
       }
       const d = Array.isArray(j?.data) ? j.data[0] : (j?.data ?? j);
       if (d && typeof d === 'object') {
