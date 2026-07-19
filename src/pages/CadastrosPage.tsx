@@ -611,7 +611,9 @@ export default function CadastrosPage() {
                         <TableRow
                           key={item.id}
                           id={`cad-row-${item.id}`}
+                          onClick={(e) => handleRowClick(item, e)}
                           className={cn(
+                            'cursor-pointer hover:bg-accent/40 transition-colors',
                             isHighlight && 'bg-primary/10 ring-1 ring-primary/40',
                             isSelected && !isHighlight && 'bg-primary/5',
                           )}
