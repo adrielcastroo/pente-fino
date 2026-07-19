@@ -22,7 +22,7 @@
 import { forwardRef, type SVGProps, type ComponentType, type ForwardRefExoticComponent, type RefAttributes } from "react";
 import type { Icon as PhosphorIcon, IconWeight } from "@phosphor-icons/react";
 import {
-  Activity,
+  Pulse,
   Archive,
   ArrowDown,
   ArrowLeft,
@@ -170,10 +170,10 @@ function wrap(Icon: PhosphorIcon, defaultWeight: IconWeight = "duotone"): Lucide
 // ── Lucide-named exports ────────────────────────────────────────────────
 // Keep names identical to lucide-react so imports migrate 1:1.
 
-export const IconActivity = wrap(Activity);
 // Some Lucide icons don't have exact Phosphor twins; picks below prioritise
-// visual/semantic equivalence over literal naming.
-export { IconActivity as Activity };
+// visual/semantic equivalence over literal naming. Phosphor has no `Activity`
+// — `Pulse` is the closest analogue (heartbeat/wave glyph).
+export const Activity = wrap(Pulse);
 export const AlertCircle = wrap(WarningCircle);
 export const AlertTriangle = wrap(Warning);
 const _Archive = wrap(Archive);
