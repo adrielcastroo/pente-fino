@@ -634,6 +634,34 @@ function parseTransferenciaHTML(html: string): Record<string, any> | null {
     if (vm && vm[1] !== '') out[name] = vm[1];
   }
 
+  // inicializaLinhas([{...}, ...]) — dados reais dos itens embutidos no HTML
+  try {
+    const initRe = /inicializaLinhas\s*\(\s*(\[[\s\S]*?\])\s*\)\s*;/;
+    const im = initRe.exec(html);
+    if (im) {
+      // JSON-like com aspas simples e sem quoting de chaves em alguns casos —
+      // primeiro tenta JSON.parse; se falhar, converte para aspas duplas.
+      let raw = im[1];
+      let arr: any = null;
+      try { arr = JSON.parse(raw); } catch {
+        // Substitui aspas simples por duplas e cita chaves não citadas
+        const norm = raw
+          .replace(/'/g, '"')
+          .replace(/([{,]\s*)([A-Za-z_][A-Za-z0-9_]*)\s*:/g, '$1"$2":');
+        try { arr = JSON.parse(norm); } catch { arr = null; }
+      }
+      if (Array.isArray(arr) && arr.length > 0) {
+        const item = arr[0];
+        for (const k of Object.keys(item)) {
+          if (out[k] === undefined && item[k] !== '' && item[k] !== null) {
+            out[k] = item[k];
+          }
+        }
+        out._itens = arr;
+      }
+    }
+  } catch { /* ignore */ }
+
   // Se não encontramos absolutamente nada de identificável, devolve null
   if (!out.cdDepositoOrigem && !out.cdDepositoDestino && !out.cdItem
       && !out.cdTransferenciaEstoque && !out.cdMovEstoqueERP) {
