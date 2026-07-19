@@ -628,10 +628,18 @@ async function fetchTransferenciaDetalhe(
       if (!res.ok) continue;
       const text = await res.text();
       let j: any;
-      try { j = JSON.parse(text); } catch { continue; }
+      try { j = JSON.parse(text); } catch {
+        (debug[debug.length - 1] as any).body_snippet = text.slice(0, 200);
+        continue;
+      }
       const d = Array.isArray(j?.data) ? j.data[0] : (j?.data ?? j);
-      if (d && typeof d === 'object' && (d.cdDepositoOrigem || d.cdDepositoDestino || d.cdItem)) {
-        return { det: d, debug };
+      if (d && typeof d === 'object') {
+        (debug[debug.length - 1] as any).keys = Object.keys(d).slice(0, 30);
+        if (d.cdDepositoOrigem || d.cdDepositoDestino || d.cdItem
+            || d.CdDepositoOrigem || d.deposito_origem
+            || d.origem || d.destino) {
+          return { det: d, debug };
+        }
       }
     } catch (e) {
       debug.push({ status: -1, path: att.path });
