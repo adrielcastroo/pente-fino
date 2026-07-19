@@ -1321,6 +1321,13 @@ async function syncEntity(admin: any, auth: { jar: Jar; csrf: string; apiToken: 
       const { error, count } = await admin.from('auge_transferencias')
         .upsert(rowsToUpsert, { onConflict: 'id_externo', count: 'exact' });
       if (error) throw error;
+      const aggregateIdsToRemove = mapped
+        .filter((row: any) => Array.isArray(row.raw?._itens) && row.raw._itens.length > 1)
+        .map((row: any) => row.id_externo)
+        .filter(Boolean);
+      if (aggregateIdsToRemove.length > 0) {
+        await admin.from('auge_transferencias').delete().in('id_externo', aggregateIdsToRemove);
+      }
       upserted = count ?? rowsToUpsert.length;
       await admin.from('auge_sync_runs').update({
         detalhes: { path, days_back: days, last_max_dt: lastMax, enrich: enrichStats },
