@@ -316,3 +316,31 @@ export { _X as X };
 const _XCircle = wrap(XCircle);
 export { _XCircle as XCircle };
 export const Zap = wrap(Lightning);
+
+// Additional Lucide names that appeared beyond the initial scan. Kept at
+// bottom so the file stays diff-friendly.
+export const ChevronLeft = wrap(CaretLeft);
+const _Cloud = wrap(Cloud);
+export { _Cloud as Cloud };
+const _Cpu = wrap(Cpu);
+export { _Cpu as Cpu };
+const _Database = wrap(Database);
+export { _Database as Database };
+export const EyeOff = wrap(EyeSlash);
+export const GitCompare = wrap(GitDiff);
+const _Laptop = wrap(Laptop);
+export { _Laptop as Laptop };
+export const Link = wrap(PhLink);
+export const List = wrap(PhList);
+export const Mail = wrap(Envelope);
+const _Moon = wrap(Moon);
+export { _Moon as Moon };
+const _Power = wrap(Power);
+export { _Power as Power };
+export const Save = wrap(FloppyDisk);
+export const Shield = wrap(PhShield);
+export const Smartphone = wrap(DeviceMobile);
+const _Sun = wrap(Sun);
+export { _Sun as Sun };
+export const Wifi = wrap(WifiHigh);
+export const WifiOff = wrap(WifiSlash);
