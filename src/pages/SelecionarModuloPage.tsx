@@ -33,6 +33,33 @@ function getShift(): string {
   return '3º Turno';
 }
 
+function FooterVersion({ hasNewVersion }: { hasNewVersion: boolean }) {
+  const current = useCurrentRelease();
+  const bundleVersion = LATEST_VERSION;
+  const version = current?.version ?? bundleVersion;
+  const buildIso = (current as any)?.build_time ?? (typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : '');
+  let buildLabel = '';
+  if (buildIso) {
+    try {
+      const d = new Date(buildIso);
+      if (!isNaN(d.getTime())) {
+        buildLabel = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+      }
+    } catch {}
+  }
+  return (
+    <>
+      <p className="text-[10px] text-muted-foreground/50 font-mono">
+        Pente Fino · v{version}{buildLabel ? ` · build ${buildLabel}` : ''}
+      </p>
+      {hasNewVersion && (
+        <span className="text-[8px] font-semibold px-1 py-0.5 rounded bg-primary/10 text-primary">
+          Novo
+        </span>
+      )}
+    </>
+  );
+
 function getShiftEnd(): Date {
   const h = new Date().getHours();
   const end = new Date();
