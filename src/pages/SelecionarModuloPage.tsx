@@ -6,6 +6,9 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 import { useAppStore } from '@/store/useAppStore';
 import { LATEST_VERSION, CHANGELOG_STORAGE_KEY } from '@/lib/changelog';
+import { useCurrentRelease } from '@/hooks/useAppReleases';
+
+declare const __BUILD_TIME__: string;
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 
