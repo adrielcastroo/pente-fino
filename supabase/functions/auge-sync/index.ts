@@ -556,10 +556,14 @@ function mapLote(r: any) {
 }
 
 function mapTransferencia(r: any) {
-  const cd = r.cdTransferenciaEstoque ?? r.cdTransferencia ?? r.id ?? '';
+  const cdTransf = r.cdTransferenciaEstoque ?? r.cdTransferencia ?? null;
+  const cdMov = r.cdMovEstoqueERP ?? r.cdMov ?? null;
+  const cd = cdTransf ?? cdMov ?? r.id ?? '';
   return {
     id_externo: `transf-php:${cd || `${r.nmUsuarioCriacao ?? ''}-${r.dtCriacao ?? ''}`}`,
-    _cd: cd ? String(cd) : null, // interno: usado para enriquecimento
+    _cd: cd ? String(cd) : null,        // interno: usado para enriquecimento (transferencia OU mov)
+    _cd_mov: cdMov ? String(cdMov) : null,   // preferido para endpoint de detalhe (cdMov=)
+    _cd_transf: cdTransf ? String(cdTransf) : null,
     deposito_origem: r.cdDepositoOrigem ?? r.nmDepositoOrigem ?? null,
     deposito_destino: r.cdDepositoDestino ?? r.nmDepositoDestino ?? null,
     codigo_produto: r.cdItem ?? null,
@@ -572,7 +576,7 @@ function mapTransferencia(r: any) {
     usuario_enviou_logistica: r.nmUsuarioEnviouLogistica ?? null,
     usuario_recebido_logistica: r.nmUsuarioRecebidoLogistica ?? null,
     valor: parseNum(r.vlCustoMovimentacao),
-    documento: cd ? String(cd) : null,
+    documento: cdTransf ? String(cdTransf) : (cdMov ? String(cdMov) : null),
     nr_efetivacao: r.nrTransfEstoqueERP ? String(r.nrTransfEstoqueERP) : null,
     ds_efetivacao: r.dsEfetivacao ?? null,
     observacao: r.dsObservacao ?? r.dsObs ?? null,
