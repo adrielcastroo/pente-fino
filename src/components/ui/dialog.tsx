@@ -61,16 +61,15 @@ const DialogContent = React.forwardRef<
 DialogContent.displayName = DialogPrimitive.Content.displayName;
 
 /**
- * ERP-style header. Uses negative margins to break out of the DialogContent
- * padding and draw an edge-to-edge divider under the title. Backward-compatible
- * with any dialog that already put content directly inside DialogContent.
+ * ERP-style header. A quiet inset divider under the title creates the same
+ * "framed section" look as professional ERP dialogs without breaking out of
+ * whatever padding the DialogContent uses — so any dialog that overrides
+ * DialogContent with p-0 (chart dialogs, custom bodies) keeps working.
  */
 const DialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "flex flex-col space-y-1 text-left pr-10 pb-3 mb-1",
-      "-mx-4 sm:-mx-6 -mt-4 sm:-mt-6 px-4 sm:px-6 pt-4 sm:pt-5",
-      "border-b border-border/60",
+      "flex flex-col space-y-1 text-left pr-10 pb-3 mb-2 border-b border-border/60",
       className,
     )}
     {...props}
@@ -79,15 +78,13 @@ const DialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivEleme
 DialogHeader.displayName = "DialogHeader";
 
 /**
- * ERP-style footer. Edge-to-edge top divider with a subtle muted band that
- * frames the action buttons — mirrors the header for visual balance.
+ * ERP-style footer with a matching top divider. Safe with any DialogContent
+ * padding — no negative margins, no layout surprises.
  */
 const DialogFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-2 sm:gap-0 mt-2",
-      "-mx-4 sm:-mx-6 -mb-4 sm:-mb-6 px-4 sm:px-6 py-3",
-      "border-t border-border/60 bg-muted/30",
+      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-2 sm:gap-0 mt-3 pt-3 border-t border-border/60",
       className,
     )}
     {...props}
