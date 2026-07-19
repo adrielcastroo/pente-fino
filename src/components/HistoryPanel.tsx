@@ -1342,10 +1342,9 @@ export default function HistoryPanel() {
 
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
-      <div className="p-3 sm:p-6 lg:p-10 space-y-4 sm:space-y-8 flex-shrink-0">
+      <div className="space-y-4 flex-shrink-0">
         <PageHeader
           title="Histórico de conferências"
-          subtitle="Conferências finalizadas por data e conferente."
           actions={
             <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
               <div className="relative flex-1 min-w-[180px] lg:w-72">
@@ -1413,7 +1412,7 @@ export default function HistoryPanel() {
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 sm:px-8 pb-12 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto pb-12 custom-scrollbar">
         {filtered.length > 0 ? (
           <div className="grid grid-cols-1 gap-3 max-w-[1400px] mx-auto pb-8">
             <AnimatePresence mode="popLayout">
