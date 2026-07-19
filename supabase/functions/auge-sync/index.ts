@@ -322,7 +322,8 @@ function mapEntradaPHP(r: any) {
 function parseNum(v: any): number {
   if (v == null) return 0;
   if (typeof v === 'number') return v;
-  const s = String(v).trim().replace(/\./g, '').replace(',', '.');
+  const raw = String(v).trim();
+  const s = raw.includes(',') ? raw.replace(/\./g, '').replace(',', '.') : raw;
   const n = Number(s);
   return isFinite(n) ? n : Number(v) || 0;
 }
@@ -339,6 +340,13 @@ function firstText(...values: any[]): string | null {
     if (s != null) return s;
   }
   return null;
+}
+
+function normalizeDescricaoProduto(v: any, codigo?: any): string | null {
+  const s = cleanText(v);
+  if (!s) return null;
+  const code = cleanText(codigo);
+  return code ? cleanText(s.replace(new RegExp(`\\s*\\[${code.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\]\\s*$`), '')) : s;
 }
 
 function htmlToText(html: string): string {
@@ -608,6 +616,7 @@ function mapTransferencia(r: any) {
     deposito_origem: r.cdDepositoOrigem ?? r.nmDepositoOrigem ?? null,
     deposito_destino: r.cdDepositoDestino ?? r.nmDepositoDestino ?? null,
     codigo_produto: r.cdItem ?? null,
+    descricao_produto: normalizeDescricaoProduto(r.nmItem ?? r.dsItem ?? r.descricaoProduto, r.cdItem),
     quantidade: parseNum(r.qtItem),
     situacao: r.idSituacao ?? null,
     ds_situacao: r.dsSituacao ?? null,
@@ -717,6 +726,10 @@ function mergeTransferenciaDetalhe(row: any, det: any, itens: any[]) {
   row.deposito_origem = det.cdDepositoOrigem ?? row.deposito_origem ?? null;
   row.deposito_destino = det.cdDepositoDestino ?? row.deposito_destino ?? null;
   row.codigo_produto = det.cdItem ?? row.codigo_produto ?? null;
+  row.descricao_produto = normalizeDescricaoProduto(
+    det.nmItem ?? det.dsItem ?? det.descricaoProduto ?? det.textAbrev,
+    det.cdItem ?? row.codigo_produto,
+  ) ?? row.descricao_produto ?? null;
   row.observacao = firstText(row.observacao, det.dsObservacao, det.observacao);
   const qtdTransf = parseNum(det.qtdTransferencia ?? det.quantidade ?? det.qtItem);
   if (qtdTransf && itens.length <= 1) row.quantidade = qtdTransf;
@@ -898,6 +911,7 @@ function transferenciaPatch(row: any): Record<string, any> {
     deposito_origem: row.deposito_origem ?? null,
     deposito_destino: row.deposito_destino ?? null,
     codigo_produto: row.codigo_produto ?? null,
+    descricao_produto: row.descricao_produto ?? null,
     quantidade: Number(row.quantidade ?? 0),
     documento: firstText(row.documento, isSap ? cdTransf : null, raw.nrTransferencia, isSap ? nrErp : null, !isSap ? cdTransf : null, cdMov),
     nr_efetivacao: firstText(row.nr_efetivacao, nrErp, isSap ? cdMov : null),

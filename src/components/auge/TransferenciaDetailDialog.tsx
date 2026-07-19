@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ArrowRight, ExternalLink, Package, User, Calendar, DollarSign, ClipboardList } from 'lucide-react';
 import { formatDateBR } from '@/lib/app-utils';
+import { formatQty } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import FichaItemDialog from './FichaItemDialog';
@@ -115,7 +116,7 @@ export default function TransferenciaDetailDialog({ transferencia, open, onOpenC
                 <div className="min-w-0 flex-1">
                   <div className="text-[10px] uppercase text-muted-foreground tracking-wide">Item</div>
                   <div className="font-mono text-sm text-primary font-semibold">{cod ?? '—'}</div>
-                  <div className="text-xs text-muted-foreground line-clamp-2">{produto?.descricao ?? '—'}</div>
+                  <div className="text-xs text-muted-foreground line-clamp-2">{transferencia.descricao_produto ?? produto?.descricao ?? '—'}</div>
                   <div className="flex gap-1 mt-1">
                     {produto?.unidade && <Badge variant="outline" className="text-[10px]">{produto.unidade}</Badge>}
                     {produto?.categoria && <Badge variant="outline" className="text-[10px]">{produto.categoria}</Badge>}
@@ -124,7 +125,7 @@ export default function TransferenciaDetailDialog({ transferencia, open, onOpenC
                 <div className="text-right shrink-0">
                   <div className="text-[10px] uppercase text-muted-foreground tracking-wide">Quantidade</div>
                   <div className="font-bold text-2xl tabular-nums text-primary">
-                    {Number(transferencia.quantidade ?? 0).toLocaleString('pt-BR')}
+                    {formatQty(transferencia.quantidade)}
                   </div>
                 </div>
               </div>
@@ -181,7 +182,7 @@ export default function TransferenciaDetailDialog({ transferencia, open, onOpenC
                         <td className="p-2 font-mono text-[10px]">
                           {r.deposito_origem ?? '?'} → {r.deposito_destino ?? '?'}
                         </td>
-                        <td className="p-2 text-right tabular-nums">{Number(r.quantidade ?? 0).toLocaleString('pt-BR')}</td>
+                        <td className="p-2 text-right tabular-nums">{formatQty(r.quantidade)}</td>
                         <td className="p-2 text-muted-foreground text-[10px]">
                           {r.data_movimento ? formatDateBR(r.data_movimento) : '—'}
                         </td>
