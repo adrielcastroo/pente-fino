@@ -43,6 +43,7 @@ export default function AugeEntradasTab() {
   const [situacao, setSituacao] = useState<string>('todos');
   const [pageSize, setPageSize] = useState(30);
   const [lastSync, setLastSync] = useState<string | null>(null);
+  const [detail, setDetail] = useState<MovimentacaoRow | null>(null);
 
   const load = async () => {
     setLoading(true);
