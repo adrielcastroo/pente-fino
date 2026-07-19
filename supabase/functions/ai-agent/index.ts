@@ -1,8 +1,8 @@
 // AI Agent — assistente do Pente Fino com acesso a consultas e ações do app.
 import { convertToModelMessages, streamText, stepCountIs, tool, type UIMessage } from "npm:ai";
+import { createOpenAICompatible } from "npm:@ai-sdk/openai-compatible";
 import { z } from "npm:zod";
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { createLovableAiGatewayProvider } from "../_shared/ai-gateway.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
