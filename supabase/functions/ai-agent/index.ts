@@ -260,7 +260,7 @@ Data/hora: ${new Date().toISOString()}.`;
     const result = streamText({
       model,
       system,
-      messages: convertToModelMessages(messages),
+      messages: modelMessages,
       tools,
       stopWhen: stepCountIs(50),
     });
