@@ -342,6 +342,12 @@ function firstText(...values: any[]): string | null {
   return null;
 }
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'string') return error;
+  try { return JSON.stringify(error); } catch { return String(error); }
+}
+
 function normalizeDescricaoProduto(v: any, codigo?: any): string | null {
   const s = cleanText(v);
   if (!s) return null;
@@ -2233,7 +2239,7 @@ Deno.serve(async (req) => {
         await admin.from('auge_sync_runs').update({
           status: 'error',
           finished_at: new Date().toISOString(),
-          error_message: e instanceof Error ? e.message : JSON.stringify(e),
+          error_message: getErrorMessage(e),
         }).eq('id', runId);
       });
       // @ts-ignore
