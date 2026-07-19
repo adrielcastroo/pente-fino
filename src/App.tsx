@@ -56,7 +56,7 @@ const TransferenciasPage = lazy(() => import("@/pages/TransferenciasPage"));
 import RoleHomeRedirect from "@/components/auth/RoleHomeRedirect";
 import { RequireRole } from "@/components/auth/RequireRole";
 import { UpdateAvailableBanner } from "@/components/admin/UpdateAvailableBanner";
-import ErrorWatcherWidget from "@/components/admin/ErrorWatcherWidget";
+
 const AdminPanelPage = lazy(() => import("@/pages/admin/AdminPanelPage"));
 const N8nMonitorPage = lazy(() => import("@/pages/N8nMonitorPage"));
 const HarTransferenciasPage = lazy(() => import("@/pages/admin/HarTransferenciasPage"));
@@ -258,7 +258,6 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Routes>
               <UpdateAvailableBanner />
-              <ErrorWatcherWidget />
             </Suspense>
           </AuthProvider>
           <Toaster position="top-right" closeButton duration={2000} visibleToasts={1} />

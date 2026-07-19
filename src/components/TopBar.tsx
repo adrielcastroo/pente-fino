@@ -240,23 +240,6 @@ const TopBar = memo(function TopBar() {
           <GlossaryDialog />
           <ChangelogDialog />
 
-          {canSwitchModule && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  asChild
-                  size="sm"
-                  variant="ghost"
-                  className="h-9 sm:h-10 rounded-md px-2 text-muted-foreground hover:text-primary hover:bg-primary/5"
-                >
-                  <Link to="/selecionar-modulo" aria-label="Trocar de módulo">
-                    <ArrowLeftRight className="w-4 h-4" />
-                  </Link>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Trocar de módulo</TooltipContent>
-            </Tooltip>
-          )}
 
           <div className="h-6 w-[1px] bg-border/30 mx-0.5 hidden sm:block" />
 
