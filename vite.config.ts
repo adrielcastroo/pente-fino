@@ -39,15 +39,19 @@ export default defineConfig(({ mode }) => ({
       output: {
         manualChunks(id) {
           if (!id.includes("node_modules")) return;
-          // Keep React + anything that imports React at runtime in the SAME chunk
-          // to avoid cross-chunk interop issues (e.g. "Cannot read properties of
-          // undefined (reading 'forwardRef')" when recharts/framer loads before react-vendor).
+          // Charts (recharts + d3) só são usados em dashboards — chunk separado
+          // para não pesar no bundle inicial (login/rotas leves).
+          if (id.includes("recharts") || id.includes("/d3-") || id.includes("victory-vloxon")) {
+            return "charts-vendor";
+          }
+          // React runtime + libs que dependem dele em tempo de módulo (Radix, framer,
+          // cmdk, vaul, sonner) ficam no mesmo chunk para evitar erros de interop
+          // ("Cannot read properties of undefined (reading 'forwardRef')") quando
+          // um chunk consumidor é avaliado antes do react-vendor.
           if (
             id.includes("react-dom") ||
             id.includes("react/") ||
             id.includes("scheduler") ||
-            id.includes("recharts") ||
-            id.includes("d3-") ||
             id.includes("framer-motion") ||
             id.includes("@radix-ui") ||
             id.includes("cmdk") ||
@@ -60,6 +64,10 @@ export default defineConfig(({ mode }) => ({
           if (id.includes("xlsx") || id.includes("exceljs")) return "xlsx-vendor";
           if (id.includes("date-fns")) return "date-vendor";
           if (id.includes("@tanstack")) return "query-vendor";
+          if (id.includes("react-hook-form") || id.includes("@hookform") || id.includes("zod")) {
+            return "forms-vendor";
+          }
+          if (id.includes("lucide-react")) return "icons-vendor";
         },
       },
     },
