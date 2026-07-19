@@ -148,7 +148,7 @@ export default function LoginPage() {
         description="Acesse o Sistema Pente Fino: conferência, endereçamento e expedição de estoque têxtil em tempo real."
         path="/login"
       />
-    <div className="relative min-h-[100dvh] w-full flex items-center justify-center bg-background overflow-hidden px-4 py-10 sm:py-16">
+    <main className="relative min-h-[100dvh] w-full flex items-center justify-center bg-background overflow-hidden px-4 py-10 sm:py-16">
       {/* Fundo temático "fio do pente" — camada absoluta atrás do card */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
         {/* Dentes do pente: linhas verticais finas e próximas */}
@@ -208,11 +208,11 @@ export default function LoginPage() {
           >
             <Card className="border-border/60 shadow-lg rounded-xl overflow-hidden bg-card">
               <CardHeader className="space-y-1 pb-4 pt-6 px-5 sm:px-6">
-                <CardTitle className="text-xl font-semibold tracking-tight">
+                <h2 className="text-xl font-semibold leading-none tracking-tight">
                   {mode === 'login' && 'Bem-vindo de volta'}
                   {mode === 'signup' && 'Criar conta'}
                   {mode === 'forgot' && 'Recuperar senha'}
-                </CardTitle>
+                </h2>
                 <CardDescription className="text-xs sm:text-sm">
                   {mode === 'login' && 'Entre na sua conta para continuar'}
                   {mode === 'signup' && 'Cadastre-se para começar a usar'}
@@ -272,9 +272,11 @@ export default function LoginPage() {
                           <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
+                            aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                            aria-pressed={showPassword}
                             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                           >
-                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            {showPassword ? <EyeOff className="w-4 h-4" aria-hidden="true" /> : <Eye className="w-4 h-4" aria-hidden="true" />}
                           </button>
                         </div>
                         {loginForm.formState.errors.password && (
@@ -357,9 +359,11 @@ export default function LoginPage() {
                           <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
+                            aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                            aria-pressed={showPassword}
                             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                           >
-                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            {showPassword ? <EyeOff className="w-4 h-4" aria-hidden="true" /> : <Eye className="w-4 h-4" aria-hidden="true" />}
                           </button>
                         </div>
                         {signupForm.formState.errors.password && (
@@ -527,7 +531,7 @@ export default function LoginPage() {
           </form>
         </DialogContent>
       </Dialog>
-    </div>
+    </main>
     </>
   );
 }
