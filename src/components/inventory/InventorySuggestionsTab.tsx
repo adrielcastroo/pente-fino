@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Plus, Calendar, AlertTriangle, Package, RefreshCw } from 'lucide-react';
+import { Loader2, Plus, Calendar, AlertTriangle, Package, RefreshCw } from '@/components/icons';
 import { toast } from 'sonner';
 import { formatDateBR } from '@/lib/app-utils';
 import { motion, AnimatePresence } from 'framer-motion';

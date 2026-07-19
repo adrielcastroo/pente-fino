@@ -13,7 +13,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { KeyRound, AlertTriangle, Loader2, ShieldCheck, QrCode, Copy, RefreshCw } from 'lucide-react';
+import { KeyRound, AlertTriangle, Loader2, ShieldCheck, QrCode, Copy, RefreshCw } from '@/components/icons';
 import { 
   User, 
   Settings, 
@@ -38,7 +38,7 @@ import {
   EyeOff,
   Activity,
   Trash2
-} from 'lucide-react';
+} from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -65,7 +65,7 @@ import { supabase } from '@/integrations/supabase/client';
 import TeamPanel from '@/components/settings/TeamPanel';
 import LabelLayoutPanel from '@/components/settings/LabelLayoutPanel';
 import ExpedicaoPanel from '@/components/settings/ExpedicaoPanel';
-import { Truck } from 'lucide-react';
+import { Truck } from '@/components/icons';
 import SettingsErrorBoundary from '@/components/SettingsErrorBoundary';
 import { setBipSoundEnabled, isBipSoundEnabled, bipSuccess } from '@/lib/bip-feedback';
 

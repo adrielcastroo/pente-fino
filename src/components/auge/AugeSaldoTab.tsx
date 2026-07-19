@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, RefreshCw, Loader2, Warehouse } from 'lucide-react';
+import { Search, RefreshCw, Loader2, Warehouse } from '@/components/icons';
 import { formatDateBR } from '@/lib/app-utils';
 import FichaItemDialog from './FichaItemDialog';
 

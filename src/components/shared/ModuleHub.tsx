@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { PlayCircle, type LucideIcon } from 'lucide-react';
+import { PlayCircle, type LucideIcon } from '@/components/icons';
 import { useAuth } from '@/hooks/use-auth';
 import { useAppStore } from '@/store/useAppStore';
 import { cn } from '@/lib/utils';

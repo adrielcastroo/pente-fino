@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, PackageX } from 'lucide-react';
+import { AlertTriangle, PackageX } from '@/components/icons';
 
 export type ValidacaoResultado =
   | { tipo: 'ok' }

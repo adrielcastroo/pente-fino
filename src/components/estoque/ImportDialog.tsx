@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Upload, Download, FileSpreadsheet, AlertTriangle, CheckCircle2, X, Eye, Info } from 'lucide-react';
+import { Upload, Download, FileSpreadsheet, AlertTriangle, CheckCircle2, X, Eye, Info } from '@/components/icons';
 import { supabase } from '@/integrations/supabase/client';
 import { useAppStore } from '@/store/useAppStore';
 import { parseEndereco, ENDERECO_REGEX, fmtML } from '@/lib/app-utils';

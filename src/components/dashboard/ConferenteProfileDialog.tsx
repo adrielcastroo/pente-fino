@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { User, Clock, ListChecks, Calendar, AlertTriangle, Activity } from 'lucide-react';
+import { User, Clock, ListChecks, Calendar, AlertTriangle, Activity } from '@/components/icons';
 import { AreaChart, Area, ResponsiveContainer, Tooltip as RTooltip, XAxis } from 'recharts';
 import type { Conference } from '@/types';
 import { normalizeConferente } from '@/lib/dashboard-utils';

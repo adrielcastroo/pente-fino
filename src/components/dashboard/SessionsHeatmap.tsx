@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { CalendarDays } from 'lucide-react';
+import { CalendarDays } from '@/components/icons';
 import { cn } from '@/lib/utils';
 import { formatDateBR } from '@/lib/app-utils';
 

@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ScanLine, TreePine, Zap, ArrowRight, Package } from 'lucide-react';
+import { ScanLine, TreePine, Zap, ArrowRight, Package } from '@/components/icons';
 import { cn } from '@/lib/utils';
 import { PageHeader } from '@/components/ui/page-header';
 

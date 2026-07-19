@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { RefreshCw, Loader2, Warehouse } from 'lucide-react';
+import { RefreshCw, Loader2, Warehouse } from '@/components/icons';
 import AugeDetailDialog from './AugeDetailDialog';
 
 export default function AugeDepositosTab() {

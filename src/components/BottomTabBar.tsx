@@ -1,5 +1,5 @@
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Package, ArrowUpRight, MoreHorizontal, ScanLine, TreePine, Zap, FolderOpen, Table, ClipboardList, ShieldAlert, Settings as SettingsIcon, LogOut, LayoutDashboard } from 'lucide-react';
+import { Home, Package, ArrowUpRight, MoreHorizontal, ScanLine, TreePine, Zap, FolderOpen, Table, ClipboardList, ShieldAlert, Settings as SettingsIcon, LogOut, LayoutDashboard } from '@/components/icons';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
