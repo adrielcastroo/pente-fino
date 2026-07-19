@@ -312,10 +312,9 @@ export default function CadastrosPage() {
   }, [augeHits, itens]);
 
   return (
-    <div className="flex flex-col h-full min-w-0 p-3 sm:p-4 md:p-6 gap-3 sm:gap-4 overflow-hidden">
+    <div className="flex flex-col h-full min-w-0 gap-4 overflow-hidden">
       <PageHeader
         title="Cadastro de Itens"
-        subtitle="Base usada para validar etiquetas: código interno + descrição + código fornecedor. Sincronização com Auge em tempo real."
         actions={
           <>
             <Button

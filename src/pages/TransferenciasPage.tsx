@@ -20,12 +20,9 @@ export default function TransferenciasPage() {
   }, [location, navigate]);
 
   return (
-    <div className="space-y-4 max-w-[1600px] w-full mx-auto flex flex-col min-h-[70vh] min-w-0">
+    <div className="space-y-4 w-full flex flex-col min-h-[70vh] min-w-0">
       <Seo title="Transferências | Pente Fino" description="Transferências entre depósitos sincronizadas do Auge." />
-      <PageHeader
-        title="Transferências"
-        subtitle="Movimentações entre depósitos — sincronizadas do Auge."
-      />
+      <PageHeader title="Transferências" />
       <Card className="flex-1 p-2 sm:p-3 md:p-4 rounded-md border-border/40 overflow-hidden min-w-0">
         <AugeTransferenciasTab
           autoInitial={autoInitial}
