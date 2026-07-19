@@ -343,9 +343,40 @@ function firstText(...values: any[]): string | null {
 }
 
 function getErrorMessage(error: unknown): string {
-  if (error instanceof Error) return error.message;
+  if (error == null) return 'Erro desconhecido';
+  if (error instanceof Error) return error.message || error.name || 'Error';
   if (typeof error === 'string') return error;
-  try { return JSON.stringify(error); } catch { return String(error); }
+  if (typeof error === 'object') {
+    const e = error as Record<string, any>;
+    // Prioridades: message > error > error_description > details > hint > code
+    const candidates = [e.message, e.error, e.error_description, e.details, e.hint, e.code, e.statusText];
+    for (const c of candidates) {
+      if (typeof c === 'string' && c.trim()) return c;
+      if (c && typeof c === 'object') {
+        try { const s = JSON.stringify(c); if (s && s !== '{}') return s; } catch { /* ignore */ }
+      }
+    }
+    try {
+      const s = JSON.stringify(error, Object.getOwnPropertyNames(error as any));
+      if (s && s !== '{}') return s;
+    } catch { /* ignore */ }
+  }
+  try { return String(error); } catch { return 'Erro não serializável'; }
+}
+
+function serializeError(error: unknown): { message: string; stack?: string; details?: any } {
+  const message = getErrorMessage(error);
+  const out: { message: string; stack?: string; details?: any } = { message };
+  if (error instanceof Error && error.stack) {
+    out.stack = error.stack.split('\n').slice(0, 8).join('\n');
+  }
+  if (error && typeof error === 'object' && !(error instanceof Error)) {
+    try {
+      const raw = JSON.stringify(error, Object.getOwnPropertyNames(error as any));
+      if (raw && raw !== '{}') out.details = JSON.parse(raw);
+    } catch { /* ignore */ }
+  }
+  return out;
 }
 
 function normalizeDescricaoProduto(v: any, codigo?: any): string | null {
@@ -528,7 +559,7 @@ async function tryPHP(
       if (data && data.length >= 0) return { data, path: p.path };
       errors.push(`${p.path} sem data[]`);
     } catch (e) {
-      errors.push(`${p.path}: ${e instanceof Error ? e.message : String(e)}`);
+      errors.push(`${p.path}: ${getErrorMessage(e)}`);
     }
   }
   throw new Error(`Nenhum endpoint respondeu. Tentativas: ${errors.join(' | ')}`);
@@ -1516,20 +1547,21 @@ async function syncEntity(
 
     return { entity, processed, upserted, incremental: !!lastMax };
   } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
+    const info = serializeError(e);
     const nowIso = new Date().toISOString();
     await admin.from('auge_sync_runs').update({
       status: 'error',
       finished_at: nowIso,
-      error_message: msg,
+      error_message: info.message,
+      detalhes: { entity, stack: info.stack ?? null, details: info.details ?? null },
     }).eq('id', runId);
     await admin.from('auge_sync_state').upsert({
       entidade: entity,
       last_synced_at: nowIso,
       last_status: 'error',
-      last_error: msg,
+      last_error: info.message,
     }, { onConflict: 'entidade' });
-    return { entity, error: msg };
+    return { entity, error: info.message };
   }
 }
 
@@ -2086,7 +2118,7 @@ async function tecidosDispatch(admin: any, auth: any, runId: string) {
     await admin.from('auge_sync_runs').update({
       status: 'error',
       finished_at: new Date().toISOString(),
-      error_message: (e instanceof Error ? e.message : String(e)) + ` (phase=${phase})`,
+      error_message: (getErrorMessage(e)) + ` (phase=${phase})`,
     }).eq('id', runId);
   }
 }
@@ -2241,7 +2273,7 @@ Deno.serve(async (req) => {
         catch (e) {
           await admin.from('auge_sync_runs').update({
             status: 'error', finished_at: new Date().toISOString(),
-            error_message: e instanceof Error ? e.message : String(e),
+            error_message: getErrorMessage(e),
           }).eq('id', runId);
         }
       })();
@@ -2335,7 +2367,7 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
+    const msg = getErrorMessage(e);
     return new Response(JSON.stringify({ ok: false, error: msg, fallback: true }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
