@@ -132,14 +132,13 @@ import {
   type IconProps as TablerIconProps,
 } from "@tabler/icons-react";
 
-/** Lucide-compatible prop surface used across the codebase. */
-export interface IconProps extends Omit<SVGProps<SVGSVGElement>, "ref"> {
+/** Lucide-compatible prop surface. `stroke` is omitted from SVGProps so we
+ *  can widen it to `number | string` matching Lucide's public type. */
+export interface IconProps extends Omit<SVGProps<SVGSVGElement>, "ref" | "stroke"> {
   size?: number | string;
   color?: string;
-  /** Tabler-native. Lucide's `strokeWidth` is aliased to this. */
   stroke?: number | string;
   strokeWidth?: number | string;
-  /** Lucide active-state pattern: fill="currentColor" → thicker stroke. */
   fill?: string;
   fillOpacity?: number | string;
   absoluteStrokeWidth?: boolean;
@@ -148,13 +147,12 @@ export interface IconProps extends Omit<SVGProps<SVGSVGElement>, "ref"> {
 /** Public alias so `import type { LucideIcon }` keeps compiling. */
 export type LucideIcon = ForwardRefExoticComponent<IconProps & RefAttributes<SVGSVGElement>>;
 
-/**
- * Wrap a Tabler icon so it accepts Lucide-style props. Tabler is outline-
- * only; the "active" state (fill="currentColor" on Lucide) is expressed
- * here as a bolder stroke so BottomTabBar/NavRail keep their filled-when-
- * active affordance without those files changing.
- */
 function wrap(Icon: TablerIcon, defaultStroke: number = 1.5): LucideIcon {
+  // Tabler icons are already forwardRef components; we widen the type so
+  // React accepts our compat props.
+  const IconAny = Icon as unknown as ForwardRefExoticComponent<
+    Omit<TablerIconProps, "ref"> & RefAttributes<SVGSVGElement>
+  >;
   const Wrapped = forwardRef<SVGSVGElement, IconProps>((props, ref) => {
     const {
       strokeWidth,
@@ -171,17 +169,17 @@ function wrap(Icon: TablerIcon, defaultStroke: number = 1.5): LucideIcon {
     const effectiveStroke =
       stroke ?? strokeWidth ?? (active ? 2.25 : defaultStroke);
     return (
-      <Icon
+      <IconAny
         ref={ref}
         size={size as TablerIconProps["size"]}
         color={color}
         stroke={Number(effectiveStroke)}
         className={className}
-        {...(rest as Omit<TablerIconProps, "size" | "color" | "stroke">)}
+        {...(rest as Record<string, unknown>)}
       />
     );
   });
-  Wrapped.displayName = `Icon(${(Icon as unknown as { displayName?: string }).displayName ?? "Tabler"})`;
+  Wrapped.displayName = `Icon(Tabler)`;
   return Wrapped;
 }
 
