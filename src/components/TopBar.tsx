@@ -237,7 +237,7 @@ const TopBar = memo(function TopBar() {
 
 
 
-          <GlossaryDialog />
+          
           <ChangelogDialog />
 
 
