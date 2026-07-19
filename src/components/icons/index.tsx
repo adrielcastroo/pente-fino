@@ -131,6 +131,23 @@ import {
   type Icon as TablerIcon,
   type IconProps as TablerIconProps,
 } from "@tabler/icons-react";
+import {
+  FabricRoll,
+  WoodPlank,
+  MotorCoil,
+  WarehouseRack,
+  ScanGun,
+  LabelTag,
+  ShippingTruck,
+  DepositTransfer,
+  ProductRegistry,
+  AuditShield,
+  StockEntry,
+  ReservationTag,
+  HistoryStack,
+  DashboardTiles,
+  WarehouseHome,
+} from "./domain";
 
 /** Lucide-compatible prop surface. `stroke` is omitted from SVGProps so we
  *  can widen it to `number | string` matching Lucide's public type. */
