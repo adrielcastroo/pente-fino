@@ -3105,51 +3105,6 @@ export type Database = {
         }
         Relationships: []
       }
-      tracking_links: {
-        Row: {
-          carrier: string
-          carrier_raw: Json | null
-          created_at: string
-          created_by: string | null
-          events: Json
-          id: string
-          last_event: Json | null
-          linked_id: string | null
-          linked_type: string | null
-          status: string
-          tracking_code: string
-          updated_at: string
-        }
-        Insert: {
-          carrier: string
-          carrier_raw?: Json | null
-          created_at?: string
-          created_by?: string | null
-          events?: Json
-          id?: string
-          last_event?: Json | null
-          linked_id?: string | null
-          linked_type?: string | null
-          status?: string
-          tracking_code: string
-          updated_at?: string
-        }
-        Update: {
-          carrier?: string
-          carrier_raw?: Json | null
-          created_at?: string
-          created_by?: string | null
-          events?: Json
-          id?: string
-          last_event?: Json | null
-          linked_id?: string | null
-          linked_type?: string | null
-          status?: string
-          tracking_code?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       user_roles: {
         Row: {
           created_at: string
