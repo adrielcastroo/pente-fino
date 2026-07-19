@@ -15,7 +15,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/use-auth';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 
-import { ChangelogDialog } from '@/components/ChangelogDialog';
+
 
 
 const TopBar = memo(function TopBar() {
@@ -238,7 +238,7 @@ const TopBar = memo(function TopBar() {
 
 
           
-          <ChangelogDialog />
+          
 
 
           <div className="h-6 w-[1px] bg-border/30 mx-0.5 hidden sm:block" />
