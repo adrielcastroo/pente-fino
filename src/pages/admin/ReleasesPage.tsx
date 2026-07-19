@@ -10,10 +10,22 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Rocket, Star, CheckCircle2, Trash2 } from 'lucide-react';
+import { Plus, Rocket, Star, CheckCircle2, Trash2, Clock, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 
 declare const __APP_VERSION__: string;
+declare const __BUILD_TIME__: string;
+
+function formatRelative(iso: string): string {
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const min = Math.floor(diffMs / 60000);
+  if (min < 1) return 'agora mesmo';
+  if (min < 60) return `há ${min} min`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `há ${h}h`;
+  const d = Math.floor(h / 24);
+  return `há ${d}d`;
+}
 
 export default function ReleasesPage() {
   const { isAdmin, loading, user } = useAuth();
