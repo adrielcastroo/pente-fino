@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { formatDateBR, formatTimeBR } from '@/lib/app-utils';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { Search, History, FileSpreadsheet, Calendar, User, Package, Settings2, Hash, CheckCircle2, AlertTriangle, Loader2 } from '@/components/icons';
+import { Search, History, FileSpreadsheet, Calendar, User, Package, Settings2, Hash, CheckCircle2, AlertTriangle, Loader2 } from 'lucide-react';
 import { exportCyclicInventoryXLSX } from '@/lib/xlsx-utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

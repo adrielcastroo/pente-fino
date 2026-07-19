@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { TreePine, AlertTriangle, MapPin, Search, Loader2, Package } from '@/components/icons';
+import { TreePine, AlertTriangle, MapPin, Search, Loader2, Package } from 'lucide-react';
 import { lotesMestresService, type LoteMestre } from '@/services/lotesMestresService';
 import { formatDateBR } from '@/lib/app-utils';
 import { toast } from 'sonner';

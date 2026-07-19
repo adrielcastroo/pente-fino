@@ -1,4 +1,4 @@
-import { Archive, Warehouse, Table as TableIcon, FolderOpen, Package, ArrowRightLeft } from '@/components/icons';
+import { Archive, Warehouse, Table as TableIcon, FolderOpen, Package, ArrowRightLeft } from 'lucide-react';
 import ModuleHub, { type HubAction } from '@/components/shared/ModuleHub';
 
 const actions: HubAction[] = [

@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowRight, ExternalLink, Package, User, Calendar, DollarSign, ClipboardList } from '@/components/icons';
+import { ArrowRight, ExternalLink, Package, User, Calendar, DollarSign, ClipboardList } from 'lucide-react';
 import { formatDateBR } from '@/lib/app-utils';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';

@@ -13,7 +13,7 @@ import {
   
   ArrowRightLeft,
   PackagePlus,
-} from '@/components/icons';
+} from 'lucide-react';
 
 import ModuleSidebar, { type ModuleSidebarConfig } from '@/components/ModuleSidebar';
 import { useAppStore } from '@/store/useAppStore';

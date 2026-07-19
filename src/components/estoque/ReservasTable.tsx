@@ -11,7 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Hash, MessageSquare, Package, Trash2, AlertTriangle, Pencil, History } from '@/components/icons';
+import { MapPin, Hash, MessageSquare, Package, Trash2, AlertTriangle, Pencil, History } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import {

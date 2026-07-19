@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { motion } from 'framer-motion';
-import { Trash2, Copy, Package, Ruler, MapPin, Hash, Sparkles } from '@/components/icons';
+import { Trash2, Copy, Package, Ruler, MapPin, Hash, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatML } from '@/lib/app-utils';

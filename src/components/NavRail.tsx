@@ -14,7 +14,7 @@ import {
   Settings as SettingsIcon,
   LogOut,
   Home,
-} from '@/components/icons';
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { atLeast } from '@/lib/permissions';

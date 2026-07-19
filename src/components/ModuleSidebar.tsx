@@ -1,7 +1,6 @@
 import { memo, useCallback, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Settings, LogOut, ArrowLeftRight } from 'lucide-react';
-import type { LucideIcon } from '@/components/icons';
+import { Settings, LogOut, ArrowLeftRight, type LucideIcon } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,

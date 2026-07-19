@@ -1,5 +1,5 @@
 import { Card } from '@/components/ui/card';
-import { PackagePlus } from '@/components/icons';
+import { PackagePlus } from 'lucide-react';
 import AugeEntradasTab from '@/components/auge/AugeEntradasTab';
 import Seo from '@/components/Seo';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';

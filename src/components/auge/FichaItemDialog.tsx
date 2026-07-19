@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Package, Boxes, ArrowRightLeft, History, MapPin, Loader2, AlertCircle, Layers } from '@/components/icons';
+import { Package, Boxes, ArrowRightLeft, History, MapPin, Loader2, AlertCircle, Layers } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 

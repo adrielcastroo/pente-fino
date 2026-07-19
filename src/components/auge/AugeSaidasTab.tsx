@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, RefreshCw, Loader2, FileText, Clock, User, Archive, DollarSign, AlertTriangle } from '@/components/icons';
+import { Search, RefreshCw, Loader2, FileText, Clock, User, Archive, DollarSign, AlertTriangle } from 'lucide-react';
 import { formatDateBR } from '@/lib/app-utils';
 
 interface AugeSaida {

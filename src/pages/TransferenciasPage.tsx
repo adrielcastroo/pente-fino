@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
-import { ArrowRightLeft } from '@/components/icons';
+import { ArrowRightLeft } from 'lucide-react';
 import AugeTransferenciasTab from '@/components/auge/AugeTransferenciasTab';
 import type { TransfDialogInitial } from '@/components/auge/NovaTransferenciaDialog';
 import Seo from '@/components/Seo';

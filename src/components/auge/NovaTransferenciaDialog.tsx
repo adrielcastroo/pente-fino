@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, ArrowRightLeft, Plus, Trash2, Search, Layers, Eye } from '@/components/icons';
+import { Loader2, ArrowRightLeft, Plus, Trash2, Search, Layers, Eye } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import LoteSelectorDialog, { type LoteSelecionado } from './LoteSelectorDialog';
 

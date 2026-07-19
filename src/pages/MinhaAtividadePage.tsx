@@ -14,7 +14,7 @@ import {
   CheckCircle2,
   Calendar,
   ArrowRight,
-} from '@/components/icons';
+} from 'lucide-react';
 
 type Conf = { id: string; processo: string | null; conferente: string | null; started_at: string | null; finished_at: string | null; created_at: string };
 type Reg = { id: string; item: string | null; nf: string | null; created_at: string; conference_id: string | null };

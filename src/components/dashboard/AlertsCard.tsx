@@ -1,5 +1,5 @@
 import { memo, useMemo, useState, useEffect, useCallback } from 'react';
-import { AlertTriangle, CheckCircle2, Info, PackageX, X } from '@/components/icons';
+import { AlertTriangle, CheckCircle2, Info, PackageX, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const DISMISSED_KEY = 'pf_dashboard_dismissed_alerts_v1';

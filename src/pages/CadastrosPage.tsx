@@ -11,7 +11,7 @@ import {
   Plus, Search, Pencil, Trash2, Package, History,
   ChevronLeft, ChevronRight, GitCompare, Sparkles,
   ArrowUp, ArrowDown, ArrowUpDown, Cloud, Loader2, Upload,
-} from '@/components/icons';
+} from 'lucide-react';
 import ItemFormDialog from '@/components/cadastros/ItemFormDialog';
 import ImportItensDialog from '@/components/cadastros/ImportItensDialog';
 import AugeReconciliacaoTab from '@/components/auge/AugeReconciliacaoTab';

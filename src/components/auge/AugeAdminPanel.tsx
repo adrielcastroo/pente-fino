@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import {
   RefreshCw, Loader2, CheckCircle2, XCircle, Clock, Wifi, WifiOff,
   Database, Activity, AlertTriangle, PlayCircle, Power, MapPin,
-} from '@/components/icons';
+} from 'lucide-react';
 
 import { formatDateBR } from '@/lib/app-utils';
 

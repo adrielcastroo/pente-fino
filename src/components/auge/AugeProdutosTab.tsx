@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import {
   Search, RefreshCw, Loader2, Package, ChevronLeft, ChevronRight,
   CheckCircle2, XCircle,
-} from '@/components/icons';
+} from 'lucide-react';
 import { formatDateBR } from '@/lib/app-utils';
 
 interface AugeProduto {

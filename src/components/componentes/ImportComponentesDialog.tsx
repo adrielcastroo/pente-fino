@@ -3,7 +3,7 @@ import * as XLSX from 'xlsx';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle, FileSpreadsheet, Upload, X } from '@/components/icons';
+import { AlertCircle, FileSpreadsheet, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 export interface ImportedComponenteRow {

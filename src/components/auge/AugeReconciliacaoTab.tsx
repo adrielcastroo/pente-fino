@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { RefreshCw, Loader2, Search, AlertTriangle, CheckCircle2, XCircle } from '@/components/icons';
+import { RefreshCw, Loader2, Search, AlertTriangle, CheckCircle2, XCircle } from 'lucide-react';
 
 interface Row {
   codigo: string;

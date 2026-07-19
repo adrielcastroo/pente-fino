@@ -12,7 +12,7 @@ import {
   ScanBarcode,
   Search,
   Trash2,
-} from '@/components/icons';
+} from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
