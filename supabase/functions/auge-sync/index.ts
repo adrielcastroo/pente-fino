@@ -887,6 +887,84 @@ async function enrichTransferencias(
   return { enriched, failed, attempted: pending.length, sample_debug: sampleDebug };
 }
 
+function transferenciaPatch(row: any): Record<string, any> {
+  const raw = row.raw ?? {};
+  const tipoDoc = firstText(raw.idTipoDocumento, raw.tipoDocumento);
+  const isSap = /sap/i.test(String(tipoDoc ?? ''));
+  const cdTransf = firstText(raw.cdTransferenciaEstoque, raw.cdTransferencia, raw._cdTransf);
+  const cdMov = firstText(raw.cdMovEstoqueERP, raw.cdMov, raw._cdMovErp);
+  const nrErp = firstText(raw.nrTransfEstoqueERP, raw.nrDocumentoERP, raw.nrMovEstoqueERP);
+  return {
+    deposito_origem: row.deposito_origem ?? null,
+    deposito_destino: row.deposito_destino ?? null,
+    codigo_produto: row.codigo_produto ?? null,
+    quantidade: Number(row.quantidade ?? 0),
+    documento: firstText(row.documento, isSap ? cdTransf : null, raw.nrTransferencia, !isSap ? cdTransf : null, !isSap ? cdMov : null),
+    nr_efetivacao: firstText(row.nr_efetivacao, nrErp, isSap ? cdMov : null),
+    observacao: firstText(row.observacao, raw.dsObservacao, raw.dsObs),
+    raw: row.raw,
+    detalhe_sincronizado_em: row.detalhe_sincronizado_em ?? null,
+    synced_at: new Date().toISOString(),
+  };
+}
+
+async function backfillTransferenciasChunk(admin: any, auth: { jar: Jar; csrf: string; apiToken: string | null }, runId: string) {
+  const state = await loadTecidosState(admin, runId);
+  const lastId = cleanText(state.last_id);
+  let q = admin
+    .from('auge_transferencias')
+    .select('*')
+    .or('deposito_origem.is.null,deposito_destino.is.null,codigo_produto.is.null,documento.is.null,nr_efetivacao.is.null')
+    .order('id', { ascending: true })
+    .limit(TRANSFERENCIA_BACKFILL_BATCH);
+  if (lastId) q = q.gt('id', lastId);
+
+  const { data: rows, error } = await q;
+  if (error) throw error;
+  if (!rows?.length) {
+    await admin.from('auge_sync_runs').update({
+      status: 'success',
+      finished_at: new Date().toISOString(),
+      rows_processed: state.processed ?? 0,
+      rows_upserted: state.enriched ?? 0,
+      detalhes: { ...state, phase: 'done', finished_at: new Date().toISOString() },
+    }).eq('id', runId);
+    return;
+  }
+
+  let enriched = 0;
+  let failed = 0;
+  let sampleDebug = state.sample_debug ?? null;
+  for (const row of rows) {
+    const tipoDoc = firstText(row.raw?.idTipoDocumento, row.raw?.tipoDocumento);
+    const tipoMov = firstText(row.raw?.idTipoMovimentacao) ?? 'T';
+    const mutable = { ...row };
+    const { det, itens, debug } = await fetchTransferenciaDetalhe(auth, transferenciaDetailIds(mutable), tipoDoc, tipoMov);
+    if (det) {
+      mergeTransferenciaDetalhe(mutable, det, itens);
+      const patch = transferenciaPatch(mutable);
+      const { error: updError } = await admin.from('auge_transferencias').update(patch).eq('id', row.id);
+      if (updError) throw updError;
+      enriched++;
+    } else {
+      failed++;
+      if (!sampleDebug) sampleDebug = { id: row.id, ids: transferenciaDetailIds(mutable), tipoDoc, debug };
+    }
+  }
+
+  const nextState = {
+    ...state,
+    phase: 'backfill',
+    last_id: rows[rows.length - 1].id,
+    processed: (state.processed ?? 0) + rows.length,
+    enriched: (state.enriched ?? 0) + enriched,
+    failed: (state.failed ?? 0) + failed,
+    sample_debug: sampleDebug,
+  };
+  await saveTecidosState(admin, runId, nextState);
+  selfInvoke('transferencias_backfill_chunk', runId);
+}
+
 // ============================================================
 // CRIAR / EFETIVAR TRANSFERÊNCIA
 // Endpoint: POST /l.unilux/modInventario/estoque/controle/ctlTransferenciaEstoque.php
