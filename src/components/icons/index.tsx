@@ -1,146 +1,147 @@
 /**
- * Icon compatibility layer — Phosphor (duotone) with a Lucide-compatible API.
+ * Icon compatibility layer — Tabler Icons (outline, 1.5px stroke) with a
+ * Lucide-compatible API.
  *
- * Why: the Estoque module was using `lucide-react`, whose icons look generic
- * against a professional ERP surface. Phosphor duotone gives us premium,
- * SaaS-grade iconography (Notion/Linear feel) without introducing a paid
- * license (MIT).
+ * Why: Tabler gives a refined, uniform outline style used by Vercel/Supabase/
+ * Linear — much more "professional ERP" than Lucide's default weight and
+ * without the duotone/playful feel of Phosphor. MIT-licensed.
  *
- * How: this file exports icons under their **Lucide names** so the rest of
- * the codebase can migrate with a pure import path swap
- * (`lucide-react` → `@/components/icons`). Each exported icon is a thin
- * wrapper that:
- *   1. Defaults `weight="duotone"`.
- *   2. Maps `fill="currentColor"` (Lucide's active-state pattern used in
- *      BottomTabBar / NavRail) to `weight="fill"`.
- *   3. Silently drops Lucide-only props (`strokeWidth`, `fillOpacity`,
- *      `absoluteStrokeWidth`) so existing call sites keep compiling.
+ * How: exports icons under their **Lucide names** so the rest of the
+ * codebase keeps working with `import { Foo } from "@/components/icons"`.
+ * Each wrapper:
+ *   1. Defaults `stroke={1.5}` for a refined weight.
+ *   2. Maps Lucide's active-state pattern (`fill="currentColor"`) to a
+ *      thicker stroke (2.25) since Tabler is outline-only. Combined with
+ *      the color/drop-shadow already applied by BottomTabBar/NavRail, the
+ *      active state stays visually distinct.
+ *   3. Silently drops Lucide-only props so existing call sites compile.
  *
- * Do NOT add hard-coded colors here — every icon inherits `currentColor` so
+ * Do NOT hard-code colors here — every icon inherits `currentColor` so
  * semantic tokens (`text-primary`, `text-muted-foreground`) keep working.
  */
-import { forwardRef, type SVGProps, type ComponentType, type ForwardRefExoticComponent, type RefAttributes } from "react";
-import type { Icon as PhosphorIcon, IconWeight } from "@phosphor-icons/react";
+import { forwardRef, type SVGProps, type ForwardRefExoticComponent, type RefAttributes } from "react";
 import {
-  Pulse,
-  Archive,
-  ArrowDown,
-  ArrowLeft,
-  ArrowRight,
-  ArrowsLeftRight,
-  ArrowUp,
-  ArrowsDownUp,
-  ArrowUpRight,
-  ChartBar,
-  Barcode as PhBarcode,
-  Bell,
-  Cube,
-  Package as PhPackage,
-  Calendar,
-  CalendarDots,
-  CalendarBlank,
-  Camera,
-  Check,
-  CheckCircle,
-  CaretRight,
-  CaretLeft,
-  Cloud,
-  Cpu,
-  Database,
-  EyeSlash,
-  GitDiff,
-  Laptop,
-  Link as PhLink,
-  List as PhList,
-  Envelope,
-  Moon,
-  Power,
-  FloppyDisk,
-  Shield as PhShield,
-  DeviceMobile,
-  Sun,
-  WifiHigh,
-  WifiSlash,
-  ClipboardText,
-  Clock,
-  Copy,
-  CurrencyDollar,
-  DownloadSimple,
-  ArrowSquareOut,
-  Eye,
-  FileArrowDown,
-  FileXls,
-  FileText,
-  FileX,
-  FolderOpen,
-  GridFour,
-  Hash,
-  ClockCounterClockwise,
-  HouseSimple,
-  Info,
-  Key,
-  Stack,
-  StackSimple,
-  SquaresFour,
-  ListChecks,
-  CircleNotch,
-  Lock,
-  SignOut,
-  MapPin,
-  CornersOut,
-  ChatCircleText,
-  CornersIn,
-  Minus,
-  DotsThree,
-  DotsThreeVertical,
-  Palette,
-  PencilSimple,
-  PlayCircle,
-  Plus,
-  QrCode,
-  ArrowsClockwise,
-  ArrowCounterClockwise,
-  Ruler,
-  Scales,
-  Scan,
-  MagnifyingGlass,
-  GearSix,
-  Sliders,
-  ShieldWarning,
-  ShieldCheck,
-  TShirt,
-  Sparkle,
-  Table,
-  Trash,
-  TreeEvergreen,
-  TrendDown,
-  TrendUp,
-  Truck,
-  LockOpen,
-  UploadSimple,
-  User,
-  Users,
-  MagicWand,
-  Warehouse,
-  X,
-  XCircle,
-  Lightning,
-  WarningCircle,
-  Warning,
-} from "@phosphor-icons/react";
+  IconActivity,
+  IconAlertCircle,
+  IconAlertTriangle,
+  IconArchive,
+  IconArrowDown,
+  IconArrowLeft,
+  IconArrowRight,
+  IconArrowsLeftRight,
+  IconArrowUp,
+  IconArrowsUpDown,
+  IconArrowUpRight,
+  IconChartBar,
+  IconBarcode,
+  IconBell,
+  IconBox,
+  IconStack2,
+  IconPackage,
+  IconPackageImport,
+  IconPackageOff,
+  IconCalendar,
+  IconCalendarEvent,
+  IconCalendarTime,
+  IconCamera,
+  IconCheck,
+  IconCircleCheck,
+  IconChevronRight,
+  IconChevronLeft,
+  IconClipboardList,
+  IconClock,
+  IconCopy,
+  IconCurrencyDollar,
+  IconDownload,
+  IconExternalLink,
+  IconEye,
+  IconEyeOff,
+  IconFileDownload,
+  IconFileSpreadsheet,
+  IconFileText,
+  IconFileAlert,
+  IconFolderOpen,
+  IconGridDots,
+  IconHash,
+  IconHistory,
+  IconHome,
+  IconInfoCircle,
+  IconKey,
+  IconStack,
+  IconLayoutDashboard,
+  IconListCheck,
+  IconLoader2,
+  IconLock,
+  IconLockOpen,
+  IconLogout,
+  IconMapPin,
+  IconMaximize,
+  IconMinimize,
+  IconMessage,
+  IconMinus,
+  IconDots,
+  IconDotsVertical,
+  IconPalette,
+  IconPencil,
+  IconPlayerPlay,
+  IconPlus,
+  IconQrcode,
+  IconRefresh,
+  IconRotate,
+  IconRuler,
+  IconScale,
+  IconScan,
+  IconSearch,
+  IconSettings,
+  IconAdjustments,
+  IconShieldExclamation,
+  IconShieldCheck,
+  IconShirt,
+  IconSparkles,
+  IconTable,
+  IconTrash,
+  IconTree,
+  IconTrendingDown,
+  IconTrendingUp,
+  IconTruck,
+  IconUpload,
+  IconUser,
+  IconUsers,
+  IconWand,
+  IconBuildingWarehouse,
+  IconX,
+  IconCircleX,
+  IconBolt,
+  IconCloud,
+  IconCpu,
+  IconDatabase,
+  IconGitCompare,
+  IconDeviceLaptop,
+  IconLink,
+  IconList,
+  IconMail,
+  IconMoon,
+  IconPower,
+  IconDeviceFloppy,
+  IconShield,
+  IconDeviceMobile,
+  IconSun,
+  IconWifi,
+  IconWifiOff,
+  type Icon as TablerIcon,
+  type IconProps as TablerIconProps,
+} from "@tabler/icons-react";
 
 /** Lucide-compatible prop surface used across the codebase. */
 export interface IconProps extends Omit<SVGProps<SVGSVGElement>, "ref"> {
   size?: number | string;
   color?: string;
-  weight?: IconWeight;
-  /** Lucide-only: silently ignored (Phosphor uses `weight`). */
+  /** Tabler-native. Lucide's `strokeWidth` is aliased to this. */
+  stroke?: number | string;
   strokeWidth?: number | string;
-  /** Lucide active-state pattern: `fill="currentColor"` → weight="fill". */
+  /** Lucide active-state pattern: fill="currentColor" → thicker stroke. */
   fill?: string;
-  /** Lucide-only: silently ignored. */
   fillOpacity?: number | string;
-  /** Lucide-only: silently ignored. */
   absoluteStrokeWidth?: boolean;
 }
 
@@ -148,199 +149,149 @@ export interface IconProps extends Omit<SVGProps<SVGSVGElement>, "ref"> {
 export type LucideIcon = ForwardRefExoticComponent<IconProps & RefAttributes<SVGSVGElement>>;
 
 /**
- * Wrap a Phosphor icon so it accepts Lucide-style props. The active-state
- * trick (`fill="currentColor"`) is translated to Phosphor's `weight="fill"`
- * — this preserves the existing filled-when-active pattern used by
- * BottomTabBar and NavRail without changing those files' logic.
+ * Wrap a Tabler icon so it accepts Lucide-style props. Tabler is outline-
+ * only; the "active" state (fill="currentColor" on Lucide) is expressed
+ * here as a bolder stroke so BottomTabBar/NavRail keep their filled-when-
+ * active affordance without those files changing.
  */
-function wrap(Icon: PhosphorIcon, defaultWeight: IconWeight = "duotone"): LucideIcon {
+function wrap(Icon: TablerIcon, defaultStroke: number = 1.5): LucideIcon {
   const Wrapped = forwardRef<SVGSVGElement, IconProps>((props, ref) => {
     const {
-      strokeWidth: _sw,
+      strokeWidth,
+      stroke,
+      fill,
       fillOpacity: _fo,
       absoluteStrokeWidth: _asw,
-      fill,
-      weight,
       size,
       color,
       className,
       ...rest
     } = props;
-    // Active-state translation: Lucide callers pass fill="currentColor" to
-    // indicate "on" — map that to Phosphor's fill weight.
-    const effectiveWeight: IconWeight =
-      weight ?? (fill && fill !== "none" ? "fill" : defaultWeight);
+    const active = fill && fill !== "none";
+    const effectiveStroke =
+      stroke ?? strokeWidth ?? (active ? 2.25 : defaultStroke);
     return (
       <Icon
         ref={ref}
-        size={size}
+        size={size as TablerIconProps["size"]}
         color={color}
-        weight={effectiveWeight}
+        stroke={Number(effectiveStroke)}
         className={className}
-        {...rest}
+        {...(rest as Omit<TablerIconProps, "size" | "color" | "stroke">)}
       />
     );
   });
-  Wrapped.displayName = `Icon(${Icon.displayName ?? "Phosphor"})`;
+  Wrapped.displayName = `Icon(${(Icon as unknown as { displayName?: string }).displayName ?? "Tabler"})`;
   return Wrapped;
 }
 
 // ── Lucide-named exports ────────────────────────────────────────────────
-// Keep names identical to lucide-react so imports migrate 1:1.
-
-// Some Lucide icons don't have exact Phosphor twins; picks below prioritise
-// visual/semantic equivalence over literal naming. Phosphor has no `Activity`
-// — `Pulse` is the closest analogue (heartbeat/wave glyph).
-export const Activity = wrap(Pulse);
-export const AlertCircle = wrap(WarningCircle);
-export const AlertTriangle = wrap(Warning);
-const _Archive = wrap(Archive);
-export { _Archive as Archive };
-const _ArrowDown = wrap(ArrowDown);
-export { _ArrowDown as ArrowDown };
-const _ArrowLeft = wrap(ArrowLeft);
-export { _ArrowLeft as ArrowLeft };
-const _ArrowRight = wrap(ArrowRight);
-export { _ArrowRight as ArrowRight };
-export const ArrowRightLeft = wrap(ArrowsLeftRight);
-const _ArrowUp = wrap(ArrowUp);
-export { _ArrowUp as ArrowUp };
-export const ArrowUpDown = wrap(ArrowsDownUp);
-const _ArrowUpRight = wrap(ArrowUpRight);
-export { _ArrowUpRight as ArrowUpRight };
-export const BarChart3 = wrap(ChartBar);
-export const Barcode = wrap(PhBarcode);
-const _Bell = wrap(Bell);
-export { _Bell as Bell };
-export const Box = wrap(Cube);
-export const Boxes = wrap(StackSimple);
-const _Calendar = wrap(Calendar);
-export { _Calendar as Calendar };
-export const CalendarDays = wrap(CalendarDots);
-export const CalendarRange = wrap(CalendarBlank);
-const _Camera = wrap(Camera);
-export { _Camera as Camera };
-const _Check = wrap(Check);
-export { _Check as Check };
-export const CheckCircle2 = wrap(CheckCircle);
-export const ChevronRight = wrap(CaretRight);
-export const ClipboardList = wrap(ClipboardText);
-const _Clock = wrap(Clock);
-export { _Clock as Clock };
-const _Copy = wrap(Copy);
-export { _Copy as Copy };
-export const DollarSign = wrap(CurrencyDollar);
-export const Download = wrap(DownloadSimple);
-export const ExternalLink = wrap(ArrowSquareOut);
-const _Eye = wrap(Eye);
-export { _Eye as Eye };
-export const FileDown = wrap(FileArrowDown);
-export const FileSpreadsheet = wrap(FileXls);
-const _FileText = wrap(FileText);
-export { _FileText as FileText };
-export const FileWarning = wrap(FileX);
-const _FolderOpen = wrap(FolderOpen);
-export { _FolderOpen as FolderOpen };
-export const Grid3X3 = wrap(GridFour);
-const _Hash = wrap(Hash);
-export { _Hash as Hash };
-export const History = wrap(ClockCounterClockwise);
-export const Home = wrap(HouseSimple);
-const _Info = wrap(Info);
-export { _Info as Info };
-export const KeyRound = wrap(Key);
-export const Layers = wrap(Stack);
-export const Layers3 = wrap(Stack);
-export const LayoutDashboard = wrap(SquaresFour);
-const _ListChecks = wrap(ListChecks);
-export { _ListChecks as ListChecks };
-export const Loader2 = wrap(CircleNotch, "bold");
-const _Lock = wrap(Lock);
-export { _Lock as Lock };
-export const LogOut = wrap(SignOut);
-const _MapPin = wrap(MapPin);
-export { _MapPin as MapPin };
-export const Maximize2 = wrap(CornersOut);
-export const MessageSquare = wrap(ChatCircleText);
-export const Minimize2 = wrap(CornersIn);
-const _Minus = wrap(Minus);
-export { _Minus as Minus };
-export const MoreHorizontal = wrap(DotsThree);
-export const MoreVertical = wrap(DotsThreeVertical);
-export const Package = wrap(PhPackage);
-export const PackagePlus = wrap(PhPackage);
-export const PackageX = wrap(PhPackage);
-const _Palette = wrap(Palette);
-export { _Palette as Palette };
-export const Pencil = wrap(PencilSimple);
-const _PlayCircle = wrap(PlayCircle);
-export { _PlayCircle as PlayCircle };
-const _Plus = wrap(Plus);
-export { _Plus as Plus };
-const _QrCode = wrap(QrCode);
-export { _QrCode as QrCode };
-export const RefreshCw = wrap(ArrowsClockwise);
-export const RotateCcw = wrap(ArrowCounterClockwise);
-const _Ruler = wrap(Ruler);
-export { _Ruler as Ruler };
-export const Scale = wrap(Scales);
-export const ScanBarcode = wrap(PhBarcode);
-export const ScanLine = wrap(Scan);
-export const Search = wrap(MagnifyingGlass);
-export const Settings = wrap(GearSix);
-export const Settings2 = wrap(Sliders);
-export const ShieldAlert = wrap(ShieldWarning);
-const _ShieldCheck = wrap(ShieldCheck);
-export { _ShieldCheck as ShieldCheck };
-export const Shirt = wrap(TShirt);
-export const Sparkles = wrap(Sparkle);
-const _Table = wrap(Table);
-export { _Table as Table };
-export const Trash2 = wrap(Trash);
-export const TreePine = wrap(TreeEvergreen);
-export const TrendingDown = wrap(TrendDown);
-export const TrendingUp = wrap(TrendUp);
-const _Truck = wrap(Truck);
-export { _Truck as Truck };
-export const Unlock = wrap(LockOpen);
-export const Upload = wrap(UploadSimple);
-const _User = wrap(User);
-export { _User as User };
-const _Users = wrap(Users);
-export { _Users as Users };
-export const Wand2 = wrap(MagicWand);
-const _Warehouse = wrap(Warehouse);
-export { _Warehouse as Warehouse };
-const _X = wrap(X);
-export { _X as X };
-const _XCircle = wrap(XCircle);
-export { _XCircle as XCircle };
-export const Zap = wrap(Lightning);
-
-// Additional Lucide names that appeared beyond the initial scan. Kept at
-// bottom so the file stays diff-friendly.
-export const ChevronLeft = wrap(CaretLeft);
-const _Cloud = wrap(Cloud);
-export { _Cloud as Cloud };
-const _Cpu = wrap(Cpu);
-export { _Cpu as Cpu };
-const _Database = wrap(Database);
-export { _Database as Database };
-export const EyeOff = wrap(EyeSlash);
-export const GitCompare = wrap(GitDiff);
-const _Laptop = wrap(Laptop);
-export { _Laptop as Laptop };
-export const Link = wrap(PhLink);
-export const List = wrap(PhList);
-export const Mail = wrap(Envelope);
-const _Moon = wrap(Moon);
-export { _Moon as Moon };
-const _Power = wrap(Power);
-export { _Power as Power };
-export const Save = wrap(FloppyDisk);
-export const Shield = wrap(PhShield);
-export const Smartphone = wrap(DeviceMobile);
-const _Sun = wrap(Sun);
-export { _Sun as Sun };
-export const Wifi = wrap(WifiHigh);
-export const WifiOff = wrap(WifiSlash);
+export const Activity = wrap(IconActivity);
+export const AlertCircle = wrap(IconAlertCircle);
+export const AlertTriangle = wrap(IconAlertTriangle);
+export const Archive = wrap(IconArchive);
+export const ArrowDown = wrap(IconArrowDown);
+export const ArrowLeft = wrap(IconArrowLeft);
+export const ArrowRight = wrap(IconArrowRight);
+export const ArrowRightLeft = wrap(IconArrowsLeftRight);
+export const ArrowUp = wrap(IconArrowUp);
+export const ArrowUpDown = wrap(IconArrowsUpDown);
+export const ArrowUpRight = wrap(IconArrowUpRight);
+export const BarChart3 = wrap(IconChartBar);
+export const Barcode = wrap(IconBarcode);
+export const Bell = wrap(IconBell);
+export const Box = wrap(IconBox);
+export const Boxes = wrap(IconStack2);
+export const Calendar = wrap(IconCalendar);
+export const CalendarDays = wrap(IconCalendarEvent);
+export const CalendarRange = wrap(IconCalendarTime);
+export const Camera = wrap(IconCamera);
+export const Check = wrap(IconCheck);
+export const CheckCircle2 = wrap(IconCircleCheck);
+export const ChevronRight = wrap(IconChevronRight);
+export const ChevronLeft = wrap(IconChevronLeft);
+export const ClipboardList = wrap(IconClipboardList);
+export const Clock = wrap(IconClock);
+export const Cloud = wrap(IconCloud);
+export const Copy = wrap(IconCopy);
+export const Cpu = wrap(IconCpu);
+export const Database = wrap(IconDatabase);
+export const DollarSign = wrap(IconCurrencyDollar);
+export const Download = wrap(IconDownload);
+export const ExternalLink = wrap(IconExternalLink);
+export const Eye = wrap(IconEye);
+export const EyeOff = wrap(IconEyeOff);
+export const FileDown = wrap(IconFileDownload);
+export const FileSpreadsheet = wrap(IconFileSpreadsheet);
+export const FileText = wrap(IconFileText);
+export const FileWarning = wrap(IconFileAlert);
+export const FolderOpen = wrap(IconFolderOpen);
+export const GitCompare = wrap(IconGitCompare);
+export const Grid3X3 = wrap(IconGridDots);
+export const Hash = wrap(IconHash);
+export const History = wrap(IconHistory);
+export const Home = wrap(IconHome);
+export const Info = wrap(IconInfoCircle);
+export const KeyRound = wrap(IconKey);
+export const Laptop = wrap(IconDeviceLaptop);
+export const Layers = wrap(IconStack);
+export const Layers3 = wrap(IconStack);
+export const LayoutDashboard = wrap(IconLayoutDashboard);
+export const Link = wrap(IconLink);
+export const List = wrap(IconList);
+export const ListChecks = wrap(IconListCheck);
+export const Loader2 = wrap(IconLoader2, 2);
+export const Lock = wrap(IconLock);
+export const LogOut = wrap(IconLogout);
+export const Mail = wrap(IconMail);
+export const MapPin = wrap(IconMapPin);
+export const Maximize2 = wrap(IconMaximize);
+export const MessageSquare = wrap(IconMessage);
+export const Minimize2 = wrap(IconMinimize);
+export const Minus = wrap(IconMinus);
+export const Moon = wrap(IconMoon);
+export const MoreHorizontal = wrap(IconDots);
+export const MoreVertical = wrap(IconDotsVertical);
+export const Package = wrap(IconPackage);
+export const PackagePlus = wrap(IconPackageImport);
+export const PackageX = wrap(IconPackageOff);
+export const Palette = wrap(IconPalette);
+export const Pencil = wrap(IconPencil);
+export const PlayCircle = wrap(IconPlayerPlay);
+export const Plus = wrap(IconPlus);
+export const Power = wrap(IconPower);
+export const QrCode = wrap(IconQrcode);
+export const RefreshCw = wrap(IconRefresh);
+export const RotateCcw = wrap(IconRotate);
+export const Ruler = wrap(IconRuler);
+export const Save = wrap(IconDeviceFloppy);
+export const Scale = wrap(IconScale);
+export const ScanBarcode = wrap(IconBarcode);
+export const ScanLine = wrap(IconScan);
+export const Search = wrap(IconSearch);
+export const Settings = wrap(IconSettings);
+export const Settings2 = wrap(IconAdjustments);
+export const Shield = wrap(IconShield);
+export const ShieldAlert = wrap(IconShieldExclamation);
+export const ShieldCheck = wrap(IconShieldCheck);
+export const Shirt = wrap(IconShirt);
+export const Smartphone = wrap(IconDeviceMobile);
+export const Sparkles = wrap(IconSparkles);
+export const Sun = wrap(IconSun);
+export const Table = wrap(IconTable);
+export const Trash2 = wrap(IconTrash);
+export const TreePine = wrap(IconTree);
+export const TrendingDown = wrap(IconTrendingDown);
+export const TrendingUp = wrap(IconTrendingUp);
+export const Truck = wrap(IconTruck);
+export const Unlock = wrap(IconLockOpen);
+export const Upload = wrap(IconUpload);
+export const User = wrap(IconUser);
+export const Users = wrap(IconUsers);
+export const Wand2 = wrap(IconWand);
+export const Warehouse = wrap(IconBuildingWarehouse);
+export const Wifi = wrap(IconWifi);
+export const WifiOff = wrap(IconWifiOff);
+export const X = wrap(IconX);
+export const XCircle = wrap(IconCircleX);
+export const Zap = wrap(IconBolt);
