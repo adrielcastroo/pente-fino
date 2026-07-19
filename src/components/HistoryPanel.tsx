@@ -1341,7 +1341,7 @@ export default function HistoryPanel() {
 
 
   return (
-    <div className="flex flex-col h-full bg-background overflow-hidden">
+    <div className="flex flex-col gap-4 h-full bg-background overflow-hidden">
       <div className="space-y-4 flex-shrink-0">
         <PageHeader
           title="Histórico de conferências"
