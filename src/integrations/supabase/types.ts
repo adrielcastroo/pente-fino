@@ -40,6 +40,7 @@ export type Database = {
       }
       app_releases: {
         Row: {
+          build_time: string | null
           created_at: string
           id: string
           is_current: boolean
@@ -51,6 +52,7 @@ export type Database = {
           version: string
         }
         Insert: {
+          build_time?: string | null
           created_at?: string
           id?: string
           is_current?: boolean
@@ -62,6 +64,7 @@ export type Database = {
           version: string
         }
         Update: {
+          build_time?: string | null
           created_at?: string
           id?: string
           is_current?: boolean
@@ -3199,6 +3202,10 @@ export type Database = {
         Returns: undefined
       }
       normalizar_codigo: { Args: { v: string }; Returns: string }
+      register_app_release: {
+        Args: { p_build_time: string; p_notes?: string; p_version: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "operador" | "user" | "supervisor" | "gerente"

@@ -6,6 +6,9 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 import { useAppStore } from '@/store/useAppStore';
 import { LATEST_VERSION, CHANGELOG_STORAGE_KEY } from '@/lib/changelog';
+import { useCurrentRelease } from '@/hooks/useAppReleases';
+
+declare const __BUILD_TIME__: string;
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -29,6 +32,36 @@ function getShift(): string {
   if (h >= 14 && h < 22) return '2º Turno';
   return '3º Turno';
 }
+
+function FooterVersion({ hasNewVersion }: { hasNewVersion: boolean }) {
+  const current = useCurrentRelease();
+  const bundleVersion = LATEST_VERSION;
+  const version = current?.version ?? bundleVersion;
+  const buildIso = (current as any)?.build_time ?? (typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : '');
+  let buildLabel = '';
+  if (buildIso) {
+    try {
+      const d = new Date(buildIso);
+      if (!isNaN(d.getTime())) {
+        buildLabel = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+      }
+    } catch {}
+  }
+  return (
+    <>
+      <p className="text-[10px] text-muted-foreground/50 font-mono">
+        Pente Fino · v{version}{buildLabel ? ` · build ${buildLabel}` : ''}
+      </p>
+      {hasNewVersion && (
+        <span className="text-[8px] font-semibold px-1 py-0.5 rounded bg-primary/10 text-primary">
+          Novo
+        </span>
+      )}
+    </>
+  );
+}
+
+
 
 function getShiftEnd(): Date {
   const h = new Date().getHours();
@@ -587,15 +620,7 @@ export default function SelecionarModuloPage() {
       </main>
 
       <footer className="py-4 flex items-center justify-center gap-2">
-        <p className="text-[10px] text-muted-foreground/50 font-mono">
-          Pente Fino · v{LATEST_VERSION}
-        </p>
-        {hasNewVersion && (
-          <span className="text-[8px] font-semibold px-1 py-0.5 rounded bg-primary/10 text-primary">
-            Novo
-          </span>
-        )}
-        
+        <FooterVersion hasNewVersion={hasNewVersion} />
       </footer>
     </div>
   );
