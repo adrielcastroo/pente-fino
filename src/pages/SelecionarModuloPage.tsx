@@ -590,15 +590,7 @@ export default function SelecionarModuloPage() {
       </main>
 
       <footer className="py-4 flex items-center justify-center gap-2">
-        <p className="text-[10px] text-muted-foreground/50 font-mono">
-          Pente Fino · v{LATEST_VERSION}
-        </p>
-        {hasNewVersion && (
-          <span className="text-[8px] font-semibold px-1 py-0.5 rounded bg-primary/10 text-primary">
-            Novo
-          </span>
-        )}
-        
+        <FooterVersion hasNewVersion={hasNewVersion} />
       </footer>
     </div>
   );
