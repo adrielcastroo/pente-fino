@@ -238,7 +238,7 @@ const TopBar = memo(function TopBar() {
 
 
           
-          <ChangelogDialog />
+          
 
 
           <div className="h-6 w-[1px] bg-border/30 mx-0.5 hidden sm:block" />
