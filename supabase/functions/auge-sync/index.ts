@@ -2082,9 +2082,7 @@ Deno.serve(async (req) => {
     if (action === 'transferencias_backfill_chunk') {
       const runId = url.searchParams.get('run_id') ?? '';
       if (!runId) throw new Error('run_id é obrigatório.');
-      const task = backfillTransferenciasChunk(admin, auth, runId);
-      // @ts-ignore
-      if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime?.waitUntil) EdgeRuntime.waitUntil(task);
+      await backfillTransferenciasChunk(admin, auth, runId);
       return new Response(JSON.stringify({ ok: true, chunk: true, run_id: runId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
