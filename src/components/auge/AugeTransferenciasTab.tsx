@@ -171,26 +171,27 @@ export default function AugeTransferenciasTab({
   }, [rows, search, filtro]);
 
   return (
-    <div className="flex flex-col gap-4 h-full overflow-hidden">
-      <div className="flex flex-col lg:flex-row gap-3">
-        <div className="relative flex-1">
+    <div className="flex flex-col gap-4 h-full min-h-0 min-w-0 overflow-hidden">
+      <div className="flex flex-wrap items-stretch gap-2 sm:gap-3 min-w-0">
+        <div className="relative flex-1 min-w-[220px]">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
-          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rascunho, nº efetivação, produto, depósito, usuário..." className="pl-10 h-11" />
+          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rascunho, nº efetivação, produto, depósito, usuário..." className="pl-10 h-11 w-full" />
         </div>
-        <ToggleGroup type="single" value={filtro} onValueChange={(v) => v && setFiltro(v as Filtro)} className="h-11">
+        <ToggleGroup type="single" value={filtro} onValueChange={(v) => v && setFiltro(v as Filtro)} className="h-11 shrink-0">
           <ToggleGroupItem value="todos" className="h-11 px-3 text-xs">Todos</ToggleGroupItem>
           <ToggleGroupItem value="rascunho" className="h-11 px-3 text-xs">Rascunhos</ToggleGroupItem>
           <ToggleGroupItem value="efetivada" className="h-11 px-3 text-xs">Efetivadas</ToggleGroupItem>
         </ToggleGroup>
-        <Button onClick={abrirNovo} variant="default" className="h-11 px-5 gap-2">
+        <Button onClick={abrirNovo} variant="default" className="h-11 px-4 sm:px-5 gap-2 shrink-0">
           <Plus className="w-4 h-4" />
-          Nova
+          <span className="hidden sm:inline">Nova</span>
         </Button>
-        <Button onClick={sync} disabled={syncing} variant="outline" className="h-11 px-5 gap-2">
+        <Button onClick={sync} disabled={syncing} variant="outline" className="h-11 px-4 sm:px-5 gap-2 shrink-0">
           {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-          Sincronizar
+          <span className="hidden sm:inline">Sincronizar</span>
         </Button>
       </div>
+
 
       {loading ? (
         <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
@@ -200,20 +201,20 @@ export default function AugeTransferenciasTab({
           <p className="text-sm text-muted-foreground">{rows.length === 0 ? 'Nenhuma transferência.' : 'Sem resultados.'}</p>
         </div>
       ) : (
-        <div className="flex-1 overflow-auto border rounded-lg bg-card">
-          <Table>
+        <div className="flex-1 min-h-0 min-w-0 overflow-auto border rounded-lg bg-card">
+          <Table className="min-w-[900px]">
             <TableHeader className="sticky top-0 bg-card z-10">
               <TableRow>
-                <TableHead>Nº Rascunho</TableHead>
-                <TableHead>Nº Efetivação</TableHead>
-                <TableHead>Origem → Destino</TableHead>
-                <TableHead>Produto</TableHead>
-                <TableHead className="text-right">Qtd</TableHead>
-                <TableHead>Situação</TableHead>
-                <TableHead>Usuário</TableHead>
-                <TableHead className="max-w-[220px]">Observação</TableHead>
-                <TableHead>Data</TableHead>
-                <TableHead className="w-[80px] text-right">Ações</TableHead>
+                <TableHead className="whitespace-nowrap">Nº Rascunho</TableHead>
+                <TableHead className="whitespace-nowrap">Nº Efetivação</TableHead>
+                <TableHead className="whitespace-nowrap">Origem → Destino</TableHead>
+                <TableHead className="whitespace-nowrap">Produto</TableHead>
+                <TableHead className="text-right whitespace-nowrap">Qtd</TableHead>
+                <TableHead className="whitespace-nowrap">Situação</TableHead>
+                <TableHead className="whitespace-nowrap">Usuário</TableHead>
+                <TableHead className="max-w-[220px] whitespace-nowrap">Observação</TableHead>
+                <TableHead className="whitespace-nowrap">Data</TableHead>
+                <TableHead className="w-[80px] text-right whitespace-nowrap">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -221,36 +222,37 @@ export default function AugeTransferenciasTab({
                 const rascunho = isRascunho(r) && !isEfetivada(r);
                 return (
                   <TableRow key={r.id} className="cursor-pointer hover:bg-muted/40" onClick={() => rascunho ? abrirEdicao(r) : setDetail(r)}>
-                    <TableCell className="font-mono text-xs font-bold text-primary">{r.documento || '—'}</TableCell>
-                    <TableCell className="font-mono text-xs">
+                    <TableCell className="font-mono text-xs font-bold text-primary whitespace-nowrap">{r.documento || '—'}</TableCell>
+                    <TableCell className="font-mono text-xs whitespace-nowrap">
                       {r.nr_efetivacao ? (
                         <span className="font-bold text-emerald-500">{r.nr_efetivacao}</span>
                       ) : (
                         <span className="text-muted-foreground/60">—</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-xs">
+                    <TableCell className="text-xs whitespace-nowrap">
                       <span className="font-mono">{r.deposito_origem || '?'}</span>
                       <ArrowRightLeft className="inline w-3 h-3 mx-1 text-muted-foreground" />
                       <span className="font-mono">{r.deposito_destino || '?'}</span>
                     </TableCell>
-                    <TableCell className="font-mono text-xs">{r.codigo_produto || '—'}</TableCell>
-                    <TableCell className="text-right font-mono text-xs">{Number(r.quantidade || 0).toLocaleString('pt-BR')}</TableCell>
-                    <TableCell>
+                    <TableCell className="font-mono text-xs whitespace-nowrap">{r.codigo_produto || '—'}</TableCell>
+                    <TableCell className="text-right font-mono text-xs whitespace-nowrap">{Number(r.quantidade || 0).toLocaleString('pt-BR')}</TableCell>
+                    <TableCell className="whitespace-nowrap">
                       <Badge
                         variant={isEfetivada(r) ? 'default' : rascunho ? 'secondary' : 'outline'}
-                        className="text-[10px]"
+                        className="text-[10px] whitespace-nowrap"
                       >
                         {r.ds_situacao || r.situacao || '—'}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-xs text-muted-foreground truncate max-w-[140px]" title={r.usuario_criacao || ''}>
+                    <TableCell className="text-xs text-muted-foreground truncate max-w-[140px] whitespace-nowrap" title={r.usuario_criacao || ''}>
                       {r.usuario_criacao || '—'}
                     </TableCell>
-                    <TableCell className="text-xs text-muted-foreground max-w-[220px] truncate" title={r.observacao || ''}>
+                    <TableCell className="text-xs text-muted-foreground max-w-[220px] truncate whitespace-nowrap" title={r.observacao || ''}>
                       {r.observacao || <span className="text-muted-foreground/40">—</span>}
                     </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{r.data_movimento ? formatDateBR(r.data_movimento) : '—'}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{r.data_movimento ? formatDateBR(r.data_movimento) : '—'}</TableCell>
+
                     <TableCell className="p-1 text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1">
                         {rascunho && (

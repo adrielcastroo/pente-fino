@@ -21,18 +21,18 @@ export default function TransferenciasPage() {
   }, [location, navigate]);
 
   return (
-    <div className="p-4 md:p-6 space-y-4 max-w-[1600px] mx-auto h-[calc(100vh-4rem)] flex flex-col">
+    <div className="space-y-4 max-w-[1600px] w-full mx-auto flex flex-col min-h-[70vh] min-w-0">
       <Seo title="Transferências | Pente Fino" description="Transferências entre depósitos sincronizadas do Auge." />
-      <div className="flex items-center gap-3">
-        <div className="w-11 h-11 rounded-md bg-primary/10 flex items-center justify-center">
+      <div className="flex items-center gap-3 min-w-0">
+        <div className="w-11 h-11 shrink-0 rounded-md bg-primary/10 flex items-center justify-center">
           <ArrowRightLeft className="w-5 h-5 text-primary" />
         </div>
-        <div>
-          <h1 className="text-xl md:text-2xl font-bold tracking-tight">Transferências</h1>
-          <p className="text-xs text-muted-foreground">Movimentações entre depósitos — sincronizadas do Auge.</p>
+        <div className="min-w-0">
+          <h1 className="text-xl md:text-2xl font-bold tracking-tight truncate">Transferências</h1>
+          <p className="text-xs text-muted-foreground truncate">Movimentações entre depósitos — sincronizadas do Auge.</p>
         </div>
       </div>
-      <Card className="flex-1 p-4 rounded-md border-border/40 overflow-hidden">
+      <Card className="flex-1 p-2 sm:p-3 md:p-4 rounded-md border-border/40 overflow-hidden min-w-0">
         <AugeTransferenciasTab
           autoInitial={autoInitial}
           onAutoInitialConsumed={() => setAutoInitial(null)}
