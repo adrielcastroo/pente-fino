@@ -8,7 +8,7 @@ import { useAppStore } from '@/store/useAppStore';
 import { LATEST_VERSION, CHANGELOG_STORAGE_KEY } from '@/lib/changelog';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ChangelogDialog } from '@/components/ChangelogDialog';
+
 import logoComb from '@/assets/logo-comb.webp';
 
 function getGreeting(): string {
