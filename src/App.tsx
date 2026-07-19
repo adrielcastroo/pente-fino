@@ -52,7 +52,7 @@ const ComprasRomaneioStarcolorEditorPage = lazy(() => import("@/pages/compras/Ro
 
 const EntradasPage = lazy(() => import("@/pages/EntradasPage"));
 const TransferenciasPage = lazy(() => import("@/pages/TransferenciasPage"));
-const OAuthCallbackPage = lazy(() => import("@/pages/OAuthCallbackPage"));
+
 import RoleHomeRedirect from "@/components/auth/RoleHomeRedirect";
 import { RequireRole } from "@/components/auth/RequireRole";
 import { UpdateAvailableBanner } from "@/components/admin/UpdateAvailableBanner";
@@ -129,7 +129,7 @@ const App = () => (
                 <Route path="/reset-password" element={<ResetPassword />} />
                 
                 <Route path="/selecionar-modulo" element={<ProtectedRoute><SelecionarModuloPage /></ProtectedRoute>} />
-                <Route path="/auth/callback" element={<OAuthCallbackPage />} />
+                
 
 
                 {/* Home redirect fora de qualquer guard de módulo — evita loop para usuários sem estoque */}
