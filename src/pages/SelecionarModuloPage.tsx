@@ -595,7 +595,7 @@ export default function SelecionarModuloPage() {
             Novo
           </span>
         )}
-        <ChangelogDialog />
+        
       </footer>
     </div>
   );
