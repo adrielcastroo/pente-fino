@@ -1023,8 +1023,9 @@ async function backfillTransferenciasChunk(admin: any, auth: { jar: Jar; csrf: s
     const { det, itens, debug } = await fetchTransferenciaDetalhe(auth, transferenciaDetailIds(mutable), tipoDoc, tipoMov);
     if (det) {
       mergeTransferenciaDetalhe(mutable, det, itens);
+      const { id: _oldId, created_at: _createdAt, updated_at: _updatedAt, ...baseRow } = row;
       const expanded = expandTransferenciaItens(mutable).map((expandedRow: any) => ({
-        ...row,
+        ...baseRow,
         ...transferenciaPatch(expandedRow),
         id_externo: expandedRow.id_externo,
         situacao: row.situacao,
@@ -2106,7 +2107,7 @@ Deno.serve(async (req) => {
         await admin.from('auge_sync_runs').update({
           status: 'error',
           finished_at: new Date().toISOString(),
-          error_message: e instanceof Error ? e.message : String(e),
+          error_message: e instanceof Error ? e.message : JSON.stringify(e),
         }).eq('id', runId);
       });
       // @ts-ignore
