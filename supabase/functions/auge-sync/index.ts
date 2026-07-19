@@ -2270,10 +2270,16 @@ Deno.serve(async (req) => {
       });
     }
 
+    let syncPayload: any = {};
+    try { syncPayload = await req.clone().json(); } catch { /* GET ou body ausente */ }
+    const syncOptions = {
+      dateFrom: cleanText(url.searchParams.get('dateFrom')) ?? cleanText(syncPayload?.dateFrom) ?? cleanText(syncPayload?.dataDe),
+      dateTo: cleanText(url.searchParams.get('dateTo')) ?? cleanText(syncPayload?.dateTo) ?? cleanText(syncPayload?.dataAte),
+    };
     const results = [];
 
     for (const e of entities) {
-      results.push(await syncEntity(admin, auth, e, triggeredBy));
+      results.push(await syncEntity(admin, auth, e, triggeredBy, syncOptions));
     }
 
     const totalUpserted = results.reduce((s, r: any) => s + (r.upserted ?? 0), 0);
