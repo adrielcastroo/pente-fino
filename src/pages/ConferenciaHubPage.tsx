@@ -46,12 +46,9 @@ export default function ConferenciaHubPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="container max-w-5xl mx-auto px-4 py-8">
-      <PageHeader
-        title="Conferência"
-        subtitle="Escolha o tipo de item que deseja bipar."
-        className="mb-8"
-      />
+    <div className="space-y-4 w-full min-w-0">
+      <PageHeader title="Conferência" />
+
 
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
