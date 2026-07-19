@@ -14,6 +14,7 @@ import { useReservas } from '@/hooks/useReservas';
 import { Reserva } from '@/types';
 import { diffFields } from '@/lib/audit';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { PageHeader } from '@/components/ui/page-header';
 
 
 const ReservasPage = () => {
@@ -102,30 +103,24 @@ const ReservasPage = () => {
   return (
     <TooltipProvider>
       <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
-        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-6">
-          <div className="space-y-1 sm:space-y-2">
-            <h1 className="text-[clamp(1.5rem,7vw,3.5rem)] font-semibold tracking-tight text-foreground leading-none">
-              Reservas
-            </h1>
-            <p className="text-muted-foreground text-[10px] sm:text-sm font-medium opacity-70 max-w-lg leading-relaxed">
-              Gerenciamento de prateleira virtual e reservas sincronizadas em tempo real.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3 w-full sm:w-auto">
-            <ReservaFormDialog onAdd={handleAddReserva} />
-
-            {reservas.length > 0 && (
-              <Button
-                variant="outline"
-                onClick={handleClearAll}
-                className="text-destructive hover:bg-destructive/10 hover:text-destructive border-destructive/20 font-bold"
-              >
-                Limpar
-              </Button>
-            )}
-          </div>
-        </header>
+        <PageHeader
+          title="Reservas"
+          subtitle="Gerenciamento de prateleira virtual e reservas sincronizadas em tempo real."
+          actions={
+            <>
+              <ReservaFormDialog onAdd={handleAddReserva} />
+              {reservas.length > 0 && (
+                <Button
+                  variant="outline"
+                  onClick={handleClearAll}
+                  className="text-destructive hover:bg-destructive/10 hover:text-destructive border-destructive/20 font-bold"
+                >
+                  Limpar
+                </Button>
+              )}
+            </>
+          }
+        />
 
         <Tabs defaultValue="prateleira" className="space-y-4">
           <TabsList>

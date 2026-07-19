@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { supabase } from '@/integrations/supabase/client';
 import { normalizarCodigo } from '@/lib/codigoFornecedor';
+import { PageHeader } from '@/components/ui/page-header';
 
 type FornFilter = 'todos' | 'com' | 'sem' | 'pendentes_auge';
 type EditFilter = 'todos' | 'editados' | 'nao_editados';
@@ -312,29 +313,27 @@ export default function CadastrosPage() {
 
   return (
     <div className="flex flex-col h-full min-w-0 p-3 sm:p-4 md:p-6 gap-3 sm:gap-4 overflow-hidden">
-      <header className="flex flex-col md:flex-row md:items-center gap-3 min-w-0">
-        <div className="min-w-0">
-          <h1 className="text-lg sm:text-xl font-semibold tracking-tight">Cadastro de Itens</h1>
-          <p className="text-[11px] sm:text-xs text-muted-foreground">
-            Base usada para validar etiquetas: código interno + descrição + código fornecedor. Sincronização com Auge em tempo real.
-          </p>
-        </div>
-        <div className="md:ml-auto flex flex-wrap items-center gap-2 min-w-0">
-          <Button
-            variant="outline"
-            onClick={() => setImportOpen(true)}
-            className="gap-2 flex-1 md:flex-none sm:min-w-[130px] h-10"
-            aria-label="Importar itens"
-          >
-            <Upload className="h-4 w-4 shrink-0" />
-            <span className="truncate">Importar</span>
-          </Button>
-          <Button onClick={handleNew} className="gap-2 flex-1 md:flex-none sm:min-w-[130px] h-10" aria-label="Novo item">
-            <Plus className="h-4 w-4 shrink-0" />
-            <span className="truncate">Novo item</span>
-          </Button>
-        </div>
-      </header>
+      <PageHeader
+        title="Cadastro de Itens"
+        subtitle="Base usada para validar etiquetas: código interno + descrição + código fornecedor. Sincronização com Auge em tempo real."
+        actions={
+          <>
+            <Button
+              variant="outline"
+              onClick={() => setImportOpen(true)}
+              className="gap-2 h-10"
+              aria-label="Importar itens"
+            >
+              <Upload className="h-4 w-4 shrink-0" />
+              <span className="truncate">Importar</span>
+            </Button>
+            <Button onClick={handleNew} className="gap-2 h-10" aria-label="Novo item">
+              <Plus className="h-4 w-4 shrink-0" />
+              <span className="truncate">Novo item</span>
+            </Button>
+          </>
+        }
+      />
 
       <Tabs defaultValue="interno" className="flex-1 flex flex-col overflow-hidden gap-3 sm:gap-4 min-w-0">
         <TabsList className="w-full sm:w-fit overflow-x-auto no-scrollbar">

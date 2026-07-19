@@ -21,6 +21,7 @@ import ImportDialog from '@/components/estoque/ImportDialog';
 import { useAuth } from '@/hooks/use-auth';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { normalizarCodigo } from '@/lib/codigoFornecedor';
+import { PageHeader } from '@/components/ui/page-header';
 
 
 interface Posicao {
@@ -483,27 +484,11 @@ export default function EstoquePage() {
       className="max-w-full mx-auto space-y-4 sm:space-y-8 pb-20 p-2 sm:p-0 overflow-x-hidden"
     >
       {/* Header */}
-      <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4">
-        <div className="flex items-center gap-3 w-full">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate('/estoque/dashboard')}
-            className="rounded-md hover:bg-muted/50 transition-colors w-9 h-9"
-          >
-            <ArrowLeft className="w-4 h-4" strokeWidth={1.75} />
-          </Button>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground leading-tight">
-              Gestão de estoque
-            </h1>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Monitoramento de posições e ocupação
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
+      <PageHeader
+        title="Gestão de estoque"
+        subtitle="Monitoramento de posições e ocupação"
+        backTo="/estoque/dashboard"
+        actions={
           <Button
             onClick={() => setImportOpen(true)}
             variant="outline"
@@ -512,8 +497,8 @@ export default function EstoquePage() {
           >
             Importar
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Categoria Tabs */}
       <div className="inline-flex bg-card/60 rounded-md p-1 gap-1 border border-border/40 w-full sm:max-w-md">
