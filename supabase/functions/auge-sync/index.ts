@@ -658,6 +658,8 @@ async function fetchTransferenciaDetalhe(
     attempts.push({ method: 'POST', path: `${base}/manterTransferenciaEstoque.php`, body: new URLSearchParams({ cdMov }) });
     attempts.push({ method: 'GET', path: `${base}/getTransferenciaEstoqueDetalhe.php?cdMov=${encodeURIComponent(cdMov)}` });
     attempts.push({ method: 'POST', path: `${base}/getTransferenciaEstoqueItens.php`, body: new URLSearchParams({ cdMov }) });
+    attempts.push({ method: 'POST', path: `${base}/getItensTransferenciaEstoque.php`, body: new URLSearchParams({ cdMov }) });
+    attempts.push({ method: 'GET',  path: `${base}/getItensTransferenciaEstoque.php?cdMov=${encodeURIComponent(cdMov)}` });
   }
   if (cdTransf) {
     attempts.push({ method: 'GET', path: `${base}/manterTransferenciaEstoque.php?cdTransferenciaEstoque=${encodeURIComponent(cdTransf)}` });
