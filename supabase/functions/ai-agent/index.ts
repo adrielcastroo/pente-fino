@@ -30,8 +30,9 @@ function errorPayload(err: unknown) {
   return { error: typeof err === "string" ? err : JSON.stringify(err) };
 }
 
-const optionalNumberInput = z.coerce.number().optional();
-const requiredNumberInput = z.coerce.number();
+const numberLikeInput = z.union([z.number(), z.string()]);
+const optionalNumberInput = numberLikeInput.optional();
+const requiredNumberInput = numberLikeInput;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
