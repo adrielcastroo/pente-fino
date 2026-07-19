@@ -1294,7 +1294,9 @@ async function syncEntity(admin: any, auth: { jar: Jar; csrf: string; apiToken: 
       // Enriquece com endpoint de detalhe (origem/destino/item)
       const enrichStats = await enrichTransferencias(auth, mapped, 4, 800);
       // Remove campo interno antes do upsert
-      const rows = mapped.map(({ _cd, _cd_mov, _cd_transf, _detail_ids, ...rest }: any) => rest);
+      const rows = mapped
+        .flatMap((row: any) => expandTransferenciaItens(row))
+        .map(({ _cd, _cd_mov, _cd_transf, _detail_ids, ...rest }: any) => rest);
       const existing = await fetchExistingTransferencias(admin, rows);
       const rowsToUpsert = rows.map((row: any) => preserveTransferenciaDetalhes(row, existing.get(row.id_externo)));
       newMaxDt = maxDateISO(rowsToUpsert);
