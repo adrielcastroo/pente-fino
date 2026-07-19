@@ -971,9 +971,15 @@ async function enrichTransferencias(
   concurrency = 4,
   maxToEnrich = 300,
 ): Promise<{ enriched: number; failed: number; attempted: number; sample_debug?: any }> {
-  const pending = rows.filter(r =>
-    (r._cd_mov || r._cd_transf || r._cd) && (!r.deposito_origem || !r.deposito_destino || !r.codigo_produto)
-  ).slice(0, maxToEnrich);
+  const pending = rows.filter(r => {
+    if (!(r._cd_mov || r._cd_transf || r._cd)) return false;
+    const rawObs = firstText(r.raw?.dsObservacao, r.raw?.dsObs, r.raw?._detalhe?.dsObservacao, r.raw?._item?.dsObservacao);
+    return !hasValue(r.deposito_origem) ||
+      !hasValue(r.deposito_destino) ||
+      !hasValue(r.codigo_produto) ||
+      !hasValue(r.descricao_produto) ||
+      (!!rawObs && !hasValue(r.observacao));
+  }).slice(0, maxToEnrich);
 
   let enriched = 0;
   let failed = 0;
