@@ -672,36 +672,28 @@ function parseTransferenciaHTML(html: string): Record<string, any> | null {
 
 
 
-// Busca detalhe individual (manterTransferenciaEstoque?cdMov=...) para preencher
-// campos ausentes no LIST: origem/destino/item. Tenta múltiplos endpoints/params.
+// Busca itens da transferência via getMovItensAndControle.php.
+// Endpoint confirmado no HAR: POST cdMov=<cdTransferenciaEstoque> -> {data:[{cdItem, cdDepositoOrigem, nmDepositoOrigem, cdDepositoDestino, qtdTransferencia, ...}]}
 async function fetchTransferenciaDetalhe(
   auth: { jar: Jar; csrf: string; apiToken: string | null },
-  cdMov: string | null,
+  _cdMovErp: string | null,
   cdTransf: string | null,
-): Promise<{ det: any | null; debug: { status: number; path: string }[] }> {
-  const attempts: { method: 'GET' | 'POST'; path: string; body?: URLSearchParams }[] = [];
-  const base = '/l.unilux/modInventario/estoque/ajax';
-  if (cdMov) {
-    attempts.push({ method: 'GET', path: `${base}/manterTransferenciaEstoque.php?cdMov=${encodeURIComponent(cdMov)}` });
-    attempts.push({ method: 'POST', path: `${base}/manterTransferenciaEstoque.php`, body: new URLSearchParams({ cdMov }) });
-    attempts.push({ method: 'GET', path: `${base}/getTransferenciaEstoqueDetalhe.php?cdMov=${encodeURIComponent(cdMov)}` });
-    attempts.push({ method: 'POST', path: `${base}/getTransferenciaEstoqueItens.php`, body: new URLSearchParams({ cdMov }) });
-    attempts.push({ method: 'POST', path: `${base}/getItensTransferenciaEstoque.php`, body: new URLSearchParams({ cdMov }) });
-    attempts.push({ method: 'GET',  path: `${base}/getItensTransferenciaEstoque.php?cdMov=${encodeURIComponent(cdMov)}` });
-  }
-  if (cdTransf) {
-    attempts.push({ method: 'GET', path: `${base}/manterTransferenciaEstoque.php?cdTransferenciaEstoque=${encodeURIComponent(cdTransf)}` });
-    attempts.push({ method: 'POST', path: `${base}/manterTransferenciaEstoque.php`, body: new URLSearchParams({ cdTransferenciaEstoque: cdTransf }) });
-  }
-
+): Promise<{ det: any | null; itens: any[]; debug: { status: number; path: string }[] }> {
   const debug: { status: number; path: string }[] = [];
+  // O parâmetro esperado pelo Auge chama-se cdMov, mas seu valor é o cdTransferenciaEstoque.
+  const cd = cdTransf ?? _cdMovErp;
+  if (!cd) return { det: null, itens: [], debug };
+  const base = '/l.unilux/modInventario/estoque/ajax';
+  const attempts: { method: 'POST' | 'GET'; path: string; body?: URLSearchParams }[] = [
+    { method: 'POST', path: `${base}/getMovItensAndControle.php`, body: new URLSearchParams({ cdMov: cd }) },
+  ];
   for (const att of attempts) {
     try {
       const headers: Record<string, string> = {
         'Cookie': auth.jar.header(),
         'X-Requested-With': 'XMLHttpRequest',
         'X-CSRF-TOKEN': auth.csrf,
-        'Referer': `${AUGE_BASE_URL}/home`,
+        'Referer': `${AUGE_BASE_URL}/l.unilux/modInventario/estoque/gerirTransferenciaEstoque.php`,
         'User-Agent': UA,
         'Accept': 'application/json, text/javascript, */*; q=0.01',
       };
@@ -717,37 +709,18 @@ async function fetchTransferenciaDetalhe(
       if (!res.ok) continue;
       const text = await res.text();
       let j: any;
-      try { j = JSON.parse(text); } catch {
-        const parsed = parseTransferenciaHTML(text);
-        (debug[debug.length - 1] as any).parsed_keys = parsed ? Object.keys(parsed).slice(0, 20) : null;
-        if (!parsed) {
-          // Guarda snippet localizando o trecho relevante (inicializaLinhas / cdDeposito)
-          const idx = Math.max(
-            text.indexOf('inicializaLinhas('),
-            text.indexOf('cdDepositoOrigem":'),
-            text.indexOf("cdDepositoOrigem':"),
-          );
-          (debug[debug.length - 1] as any).body_snippet =
-            idx >= 0 ? text.slice(idx, idx + 1200) : text.slice(-1200);
-          continue;
-        }
-        return { det: parsed, debug };
+      try { j = JSON.parse(text); } catch { continue; }
+      const arr: any[] = Array.isArray(j?.data) ? j.data : [];
+      if (arr.length > 0) {
+        return { det: arr[0], itens: arr, debug };
       }
-      const d = Array.isArray(j?.data) ? j.data[0] : (j?.data ?? j);
-      if (d && typeof d === 'object') {
-        (debug[debug.length - 1] as any).keys = Object.keys(d).slice(0, 30);
-        if (d.cdDepositoOrigem || d.cdDepositoDestino || d.cdItem
-            || d.CdDepositoOrigem || d.deposito_origem
-            || d.origem || d.destino) {
-          return { det: d, debug };
-        }
-      }
-    } catch (e) {
+    } catch {
       debug.push({ status: -1, path: att.path });
     }
   }
-  return { det: null, debug };
+  return { det: null, itens: [], debug };
 }
+
 
 // Enriquece linhas cujos campos-chave (origem/destino/item) estão faltando.
 async function enrichTransferencias(
@@ -769,30 +742,24 @@ async function enrichTransferencias(
     while (idx < pending.length) {
       const i = idx++;
       const row = pending[i];
-      const { det, debug } = await fetchTransferenciaDetalhe(auth, row._cd_mov ?? null, row._cd_transf ?? row._cd ?? null);
+      const { det, itens, debug } = await fetchTransferenciaDetalhe(auth, row._cd_mov ?? null, row._cd_transf ?? row._cd ?? null);
       if (!det) {
         failed++;
         if (!sampleDebug) sampleDebug = { cd_mov: row._cd_mov, cd_transf: row._cd_transf, debug };
         continue;
       }
-      row.deposito_origem = row.deposito_origem ?? det.cdDepositoOrigem ?? det.cdDepositoOrig ?? null;
-      row.deposito_destino = row.deposito_destino ?? det.cdDepositoDestino ?? det.cdDepositoDest ?? null;
-      row.codigo_produto = row.codigo_produto ?? det.cdItem ?? det.codigoItem ?? null;
-      row.quantidade = row.quantidade ?? parseNum(det.qtItem);
-      row.situacao = row.situacao ?? det.idSituacao ?? null;
-      row.ds_situacao = row.ds_situacao ?? det.dsSituacao ?? null;
-      row.usuario_efetivacao = row.usuario_efetivacao ?? det.nmUsuarioEfetivacao ?? null;
-      row.usuario_enviou_logistica = row.usuario_enviou_logistica ?? det.nmUsuarioEnviouLogistica ?? null;
-      row.usuario_recebido_logistica = row.usuario_recebido_logistica ?? det.nmUsuarioRecebidoLogistica ?? null;
-      row.valor = row.valor ?? parseNum(det.vlCustoMovimentacao);
-      row.nr_efetivacao = row.nr_efetivacao ?? (det.nrTransfEstoqueERP ? String(det.nrTransfEstoqueERP) : null);
-      row.ds_efetivacao = row.ds_efetivacao ?? det.dsEfetivacao ?? null;
-      row.observacao = row.observacao ?? det.dsObservacao ?? det.dsObs ?? null;
-      row.raw = { ...(row.raw ?? {}), _detalhe: det };
+      row.deposito_origem = row.deposito_origem ?? det.cdDepositoOrigem ?? null;
+      row.deposito_destino = row.deposito_destino ?? det.cdDepositoDestino ?? null;
+      row.codigo_produto = row.codigo_produto ?? det.cdItem ?? null;
+      // qtdTransferencia é a quantidade real do item; qtItem no LIST é a contagem de itens
+      const qtdTransf = parseNum(det.qtdTransferencia);
+      if (qtdTransf && itens.length === 1) row.quantidade = qtdTransf;
+      row.raw = { ...(row.raw ?? {}), _itens: itens };
       row.detalhe_sincronizado_em = new Date().toISOString();
       enriched++;
     }
   }
+
 
   await Promise.all(Array.from({ length: Math.min(concurrency, pending.length) }, worker));
   return { enriched, failed, attempted: pending.length, sample_debug: sampleDebug };
