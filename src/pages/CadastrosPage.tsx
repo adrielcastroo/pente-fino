@@ -526,8 +526,9 @@ export default function CadastrosPage() {
                     <div
                       key={item.id}
                       id={`cad-row-${item.id}`}
+                      onClick={(e) => handleRowClick(item, e)}
                       className={cn(
-                        'rounded-lg border bg-card p-3 flex flex-col gap-2',
+                        'rounded-lg border bg-card p-3 flex flex-col gap-2 cursor-pointer hover:bg-accent/40 hover:border-primary/40 transition-colors',
                         isHighlight && 'ring-2 ring-primary border-primary/40',
                         isSelected && 'bg-primary/5',
                       )}
