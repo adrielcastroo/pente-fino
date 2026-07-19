@@ -21,6 +21,7 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
+const TRANSFERENCIA_BACKFILL_BATCH = 25;
 
 type Entity = 'saldo' | 'produtos' | 'depositos' | 'movimentacoes' | 'entradas' | 'lotes' | 'transferencias';
 const ALL_ENTITIES: Entity[] = ['produtos', 'saldo', 'movimentacoes', 'entradas', 'depositos', 'lotes', 'transferencias'];
@@ -326,6 +327,38 @@ function parseNum(v: any): number {
   return isFinite(n) ? n : Number(v) || 0;
 }
 
+function cleanText(v: any): string | null {
+  if (v == null) return null;
+  const s = String(v).replace(/\s+/g, ' ').trim();
+  return s === '' ? null : s;
+}
+
+function firstText(...values: any[]): string | null {
+  for (const value of values) {
+    const s = cleanText(value);
+    if (s != null) return s;
+  }
+  return null;
+}
+
+function htmlToText(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/tr>/gi, '\n')
+    .replace(/<\/td>|<\/th>/gi, ' | ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function parseDateBR(v: any): string | null {
   if (!v) return null;
   const s = String(v).trim();
@@ -556,14 +589,22 @@ function mapLote(r: any) {
 }
 
 function mapTransferencia(r: any) {
-  const cdTransf = r.cdTransferenciaEstoque ?? r.cdTransferencia ?? null;
-  const cdMov = r.cdMovEstoqueERP ?? r.cdMov ?? null;
-  const cd = cdTransf ?? cdMov ?? r.id ?? '';
+  const cdTransf = r.cdTransferenciaEstoque ?? r.cd_transferencia_estoque ?? r.cdTransferencia ?? r.cdMovimentacao ?? null;
+  const cdMov = r.cdMovEstoqueERP ?? r.cd_mov_estoque_erp ?? r.cdMovERP ?? r.cdMov ?? null;
+  const nrErp = r.nrTransfEstoqueERP ?? r.nr_transf_estoque_erp ?? r.nrDocumentoERP ?? r.nrMovEstoqueERP ?? null;
+  const nrPortal = r.nrTransferencia ?? r.nr_transferencia ?? r.nrDocumento ?? null;
+  const tipoDoc = r.idTipoDocumento ?? r.tipoDocumento ?? r.dsTipoDocumento ?? null;
+  const isSap = /sap/i.test(String(tipoDoc ?? ''));
+  const stableCode = isSap
+    ? (cdMov ?? nrErp ?? cdTransf ?? nrPortal ?? r.id ?? '')
+    : (cdTransf ?? cdMov ?? nrPortal ?? nrErp ?? r.id ?? '');
+  const detailIds = Array.from(new Set([cdTransf, cdMov, nrErp, nrPortal].filter(Boolean).map(String)));
   return {
-    id_externo: `transf-php:${cd || `${r.nmUsuarioCriacao ?? ''}-${r.dtCriacao ?? ''}`}`,
-    _cd: cd ? String(cd) : null,        // interno: usado para enriquecimento (transferencia OU mov)
+    id_externo: `transf-php:${stableCode || `${r.nmUsuarioCriacao ?? ''}-${r.dtCriacao ?? ''}`}`,
+    _cd: stableCode ? String(stableCode) : null,        // interno: usado para enriquecimento (transferencia OU mov)
     _cd_mov: cdMov ? String(cdMov) : null,   // preferido para endpoint de detalhe (cdMov=)
     _cd_transf: cdTransf ? String(cdTransf) : null,
+    _detail_ids: detailIds,
     deposito_origem: r.cdDepositoOrigem ?? r.nmDepositoOrigem ?? null,
     deposito_destino: r.cdDepositoDestino ?? r.nmDepositoDestino ?? null,
     codigo_produto: r.cdItem ?? null,
@@ -576,11 +617,11 @@ function mapTransferencia(r: any) {
     usuario_enviou_logistica: r.nmUsuarioEnviouLogistica ?? null,
     usuario_recebido_logistica: r.nmUsuarioRecebidoLogistica ?? null,
     valor: parseNum(r.vlCustoMovimentacao),
-    documento: cdTransf ? String(cdTransf) : (cdMov ? String(cdMov) : null),
-    nr_efetivacao: r.nrTransfEstoqueERP ? String(r.nrTransfEstoqueERP) : null,
+    documento: isSap ? firstText(cdTransf, nrPortal, nrErp, cdMov) : firstText(cdTransf, nrPortal, cdMov),
+    nr_efetivacao: firstText(nrErp, isSap ? cdMov : null),
     ds_efetivacao: r.dsEfetivacao ?? null,
     observacao: r.dsObservacao ?? r.dsObs ?? null,
-    raw: r,
+    raw: { ...r, _cd: stableCode ? String(stableCode) : null, _cdMovErp: cdMov ? String(cdMov) : null, _cdTransf: cdTransf ? String(cdTransf) : null, _detailIds: detailIds },
     synced_at: new Date().toISOString(),
   };
 }
@@ -672,23 +713,99 @@ function parseTransferenciaHTML(html: string): Record<string, any> | null {
 
 
 
+function mergeTransferenciaDetalhe(row: any, det: any, itens: any[]) {
+  row.deposito_origem = det.cdDepositoOrigem ?? row.deposito_origem ?? null;
+  row.deposito_destino = det.cdDepositoDestino ?? row.deposito_destino ?? null;
+  row.codigo_produto = det.cdItem ?? row.codigo_produto ?? null;
+  row.observacao = firstText(row.observacao, det.dsObservacao, det.observacao);
+  const qtdTransf = parseNum(det.qtdTransferencia ?? det.quantidade ?? det.qtItem);
+  if (qtdTransf && itens.length <= 1) row.quantidade = qtdTransf;
+  row.raw = { ...(row.raw ?? {}), _itens: itens };
+  row.detalhe_sincronizado_em = new Date().toISOString();
+}
+
+function transferenciaDetailIds(row: any): string[] {
+  const raw = row.raw ?? {};
+  const values = [
+    ...(Array.isArray(row._detail_ids) ? row._detail_ids : []),
+    ...(Array.isArray(raw._detailIds) ? raw._detailIds : []),
+    row._cd_transf,
+    row._cd_mov,
+    row._cd,
+    raw._cdTransf,
+    raw._cdMovErp,
+    raw.cdTransferenciaEstoque,
+    raw.cdMovEstoqueERP,
+    raw.nrTransfEstoqueERP,
+    row.documento,
+    row.nr_efetivacao,
+  ];
+  return Array.from(new Set(values.map(cleanText).filter(Boolean) as string[]));
+}
+
+function parseTransferenciaRelatorio(html: string): { det: any | null; itens: any[] } {
+  const text = htmlToText(html);
+  if (!text) return { det: null, itens: [] };
+  const det: any = {};
+  const grab = (patterns: RegExp[]) => {
+    for (const re of patterns) {
+      const m = text.match(re);
+      const value = cleanText(m?.[1]);
+      if (value) return value;
+    }
+    return null;
+  };
+  det.cdDepositoOrigem = grab([/Dep[oó]sito\s+Origem\s*[:|-]\s*([0-9]{1,3})\b/i, /Origem\s*[:|-]\s*([0-9]{1,3})\s*[-–]/i]);
+  det.cdDepositoDestino = grab([/Dep[oó]sito\s+Destino\s*[:|-]\s*([0-9]{1,3})\b/i, /Destino\s*[:|-]\s*([0-9]{1,3})\s*[-–]/i]);
+  det.cdItem = grab([/\b(\d+(?:\.\d+){2,})\b/]);
+  det.qtdTransferencia = grab([/Quantidade\s*[:|-]\s*([0-9.,]+)/i, /Qtd\.?\s*[:|-]\s*([0-9.,]+)/i]);
+  det.dsObservacao = grab([/Observa[cç][aã]o\s*[:|-]\s*(.{1,240}?)(?:\s+Item\b|\s+Produto\b|\s+Total\b|$)/i]);
+  const hasData = det.cdDepositoOrigem || det.cdDepositoDestino || det.cdItem || det.qtdTransferencia || det.dsObservacao;
+  return { det: hasData ? det : null, itens: hasData ? [det] : [] };
+}
+
+async function fetchTransferenciaRelatorio(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+  cd: string,
+  tipoDoc: string | null,
+  tipoMov: string | null,
+): Promise<{ det: any | null; itens: any[]; status: number }> {
+  const qs = new URLSearchParams({
+    cdTransferenciaEstoque: cd,
+    idTipoDoc: tipoDoc || 'PORTAL',
+    idTipoMovimentacao: tipoMov || 'T',
+  });
+  const path = `/l.unilux/modInventario/estoque/relatorioTransferenciaEstoque.php?${qs}`;
+  const headers: Record<string, string> = {
+    'Cookie': auth.jar.header(),
+    'X-CSRF-TOKEN': auth.csrf,
+    'Referer': `${AUGE_BASE_URL}/l.unilux/modInventario/estoque/gerirTransferenciaEstoque.php`,
+    'User-Agent': UA,
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  };
+  if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
+  const res = await fetch(`${AUGE_BASE_URL}${path}`, { method: 'GET', headers });
+  auth.jar.ingest(res);
+  if (!res.ok) return { det: null, itens: [], status: res.status };
+  const html = await res.text();
+  return { ...parseTransferenciaRelatorio(html), status: res.status };
+}
+
 // Busca itens da transferência via getMovItensAndControle.php.
-// Endpoint confirmado no HAR: POST cdMov=<cdTransferenciaEstoque> -> {data:[{cdItem, cdDepositoOrigem, nmDepositoOrigem, cdDepositoDestino, qtdTransferencia, ...}]}
+// Endpoint confirmado no HAR: POST cdMov=<chave do botão imprimir/editar> -> {data:[{cdItem, cdDepositoOrigem, cdDepositoDestino, qtdTransferencia, ...}]}
 async function fetchTransferenciaDetalhe(
   auth: { jar: Jar; csrf: string; apiToken: string | null },
-  _cdMovErp: string | null,
-  cdTransf: string | null,
+  ids: string[],
+  tipoDoc: string | null = null,
+  tipoMov: string | null = 'T',
 ): Promise<{ det: any | null; itens: any[]; debug: { status: number; path: string }[] }> {
   const debug: { status: number; path: string }[] = [];
-  // O parâmetro esperado pelo Auge chama-se cdMov, mas seu valor é o cdTransferenciaEstoque.
-  const cd = cdTransf ?? _cdMovErp;
-  if (!cd) return { det: null, itens: [], debug };
+  const cleanIds = Array.from(new Set(ids.map(cleanText).filter(Boolean) as string[]));
+  if (!cleanIds.length) return { det: null, itens: [], debug };
   const base = '/l.unilux/modInventario/estoque/ajax';
-  const attempts: { method: 'POST' | 'GET'; path: string; body?: URLSearchParams }[] = [
-    { method: 'POST', path: `${base}/getMovItensAndControle.php`, body: new URLSearchParams({ cdMov: cd }) },
-  ];
-  for (const att of attempts) {
+  for (const cd of cleanIds) {
     try {
+      const path = `${base}/getMovItensAndControle.php`;
       const headers: Record<string, string> = {
         'Cookie': auth.jar.header(),
         'X-Requested-With': 'XMLHttpRequest',
@@ -698,14 +815,14 @@ async function fetchTransferenciaDetalhe(
         'Accept': 'application/json, text/javascript, */*; q=0.01',
       };
       if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
-      if (att.method === 'POST') headers['Content-Type'] = 'application/x-www-form-urlencoded';
-      const res = await fetch(`${AUGE_BASE_URL}${att.path}`, {
-        method: att.method,
+      headers['Content-Type'] = 'application/x-www-form-urlencoded';
+      const res = await fetch(`${AUGE_BASE_URL}${path}`, {
+        method: 'POST',
         headers,
-        body: att.method === 'POST' ? att.body?.toString() : undefined,
+        body: new URLSearchParams({ cdMov: cd }).toString(),
       });
       auth.jar.ingest(res);
-      debug.push({ status: res.status, path: att.path });
+      debug.push({ status: res.status, path: `${path}?cdMov=${cd}` });
       if (!res.ok) continue;
       const text = await res.text();
       let j: any;
@@ -715,7 +832,17 @@ async function fetchTransferenciaDetalhe(
         return { det: arr[0], itens: arr, debug };
       }
     } catch {
-      debug.push({ status: -1, path: att.path });
+      debug.push({ status: -1, path: `${base}/getMovItensAndControle.php?cdMov=${cd}` });
+    }
+  }
+
+  for (const cd of cleanIds) {
+    try {
+      const report = await fetchTransferenciaRelatorio(auth, cd, tipoDoc, tipoMov);
+      debug.push({ status: report.status, path: `relatorioTransferenciaEstoque.php?cdTransferenciaEstoque=${cd}` });
+      if (report.det) return { det: report.det, itens: report.itens, debug };
+    } catch {
+      debug.push({ status: -1, path: `relatorioTransferenciaEstoque.php?cdTransferenciaEstoque=${cd}` });
     }
   }
   return { det: null, itens: [], debug };
@@ -742,20 +869,15 @@ async function enrichTransferencias(
     while (idx < pending.length) {
       const i = idx++;
       const row = pending[i];
-      const { det, itens, debug } = await fetchTransferenciaDetalhe(auth, row._cd_mov ?? null, row._cd_transf ?? row._cd ?? null);
+      const tipoDoc = firstText(row.raw?.idTipoDocumento, row.raw?.tipoDocumento);
+      const tipoMov = firstText(row.raw?.idTipoMovimentacao) ?? 'T';
+      const { det, itens, debug } = await fetchTransferenciaDetalhe(auth, transferenciaDetailIds(row), tipoDoc, tipoMov);
       if (!det) {
         failed++;
-        if (!sampleDebug) sampleDebug = { cd_mov: row._cd_mov, cd_transf: row._cd_transf, debug };
+        if (!sampleDebug) sampleDebug = { ids: transferenciaDetailIds(row), tipoDoc, debug };
         continue;
       }
-      row.deposito_origem = row.deposito_origem ?? det.cdDepositoOrigem ?? null;
-      row.deposito_destino = row.deposito_destino ?? det.cdDepositoDestino ?? null;
-      row.codigo_produto = row.codigo_produto ?? det.cdItem ?? null;
-      // qtdTransferencia é a quantidade real do item; qtItem no LIST é a contagem de itens
-      const qtdTransf = parseNum(det.qtdTransferencia);
-      if (qtdTransf && itens.length === 1) row.quantidade = qtdTransf;
-      row.raw = { ...(row.raw ?? {}), _itens: itens };
-      row.detalhe_sincronizado_em = new Date().toISOString();
+      mergeTransferenciaDetalhe(row, det, itens);
       enriched++;
     }
   }
@@ -763,6 +885,84 @@ async function enrichTransferencias(
 
   await Promise.all(Array.from({ length: Math.min(concurrency, pending.length) }, worker));
   return { enriched, failed, attempted: pending.length, sample_debug: sampleDebug };
+}
+
+function transferenciaPatch(row: any): Record<string, any> {
+  const raw = row.raw ?? {};
+  const tipoDoc = firstText(raw.idTipoDocumento, raw.tipoDocumento);
+  const isSap = /sap/i.test(String(tipoDoc ?? ''));
+  const cdTransf = firstText(raw.cdTransferenciaEstoque, raw.cdTransferencia, raw._cdTransf);
+  const cdMov = firstText(raw.cdMovEstoqueERP, raw.cdMov, raw._cdMovErp);
+  const nrErp = firstText(raw.nrTransfEstoqueERP, raw.nrDocumentoERP, raw.nrMovEstoqueERP);
+  return {
+    deposito_origem: row.deposito_origem ?? null,
+    deposito_destino: row.deposito_destino ?? null,
+    codigo_produto: row.codigo_produto ?? null,
+    quantidade: Number(row.quantidade ?? 0),
+    documento: firstText(row.documento, isSap ? cdTransf : null, raw.nrTransferencia, isSap ? nrErp : null, !isSap ? cdTransf : null, cdMov),
+    nr_efetivacao: firstText(row.nr_efetivacao, nrErp, isSap ? cdMov : null),
+    observacao: firstText(row.observacao, raw.dsObservacao, raw.dsObs),
+    raw: row.raw,
+    detalhe_sincronizado_em: row.detalhe_sincronizado_em ?? null,
+    synced_at: new Date().toISOString(),
+  };
+}
+
+async function backfillTransferenciasChunk(admin: any, auth: { jar: Jar; csrf: string; apiToken: string | null }, runId: string) {
+  const state = await loadTecidosState(admin, runId);
+  const lastId = cleanText(state.last_id);
+  let q = admin
+    .from('auge_transferencias')
+    .select('*')
+    .or('deposito_origem.is.null,deposito_destino.is.null,codigo_produto.is.null,documento.is.null,nr_efetivacao.is.null')
+    .order('id', { ascending: true })
+    .limit(TRANSFERENCIA_BACKFILL_BATCH);
+  if (lastId) q = q.gt('id', lastId);
+
+  const { data: rows, error } = await q;
+  if (error) throw error;
+  if (!rows?.length) {
+    await admin.from('auge_sync_runs').update({
+      status: 'success',
+      finished_at: new Date().toISOString(),
+      rows_processed: state.processed ?? 0,
+      rows_upserted: state.enriched ?? 0,
+      detalhes: { ...state, phase: 'done', finished_at: new Date().toISOString() },
+    }).eq('id', runId);
+    return;
+  }
+
+  let enriched = 0;
+  let failed = 0;
+  let sampleDebug = state.sample_debug ?? null;
+  for (const row of rows) {
+    const tipoDoc = firstText(row.raw?.idTipoDocumento, row.raw?.tipoDocumento);
+    const tipoMov = firstText(row.raw?.idTipoMovimentacao) ?? 'T';
+    const mutable = { ...row };
+    const { det, itens, debug } = await fetchTransferenciaDetalhe(auth, transferenciaDetailIds(mutable), tipoDoc, tipoMov);
+    if (det) {
+      mergeTransferenciaDetalhe(mutable, det, itens);
+      const patch = transferenciaPatch(mutable);
+      const { error: updError } = await admin.from('auge_transferencias').update(patch).eq('id', row.id);
+      if (updError) throw updError;
+      enriched++;
+    } else {
+      failed++;
+      if (!sampleDebug) sampleDebug = { id: row.id, ids: transferenciaDetailIds(mutable), tipoDoc, debug };
+    }
+  }
+
+  const nextState = {
+    ...state,
+    phase: 'backfill',
+    last_id: rows[rows.length - 1].id,
+    processed: (state.processed ?? 0) + rows.length,
+    enriched: (state.enriched ?? 0) + enriched,
+    failed: (state.failed ?? 0) + failed,
+    sample_debug: sampleDebug,
+  };
+  await saveTecidosState(admin, runId, nextState);
+  selfInvoke('transferencias_backfill_chunk', runId);
 }
 
 // ============================================================
@@ -1006,14 +1206,14 @@ async function syncEntity(admin: any, auth: { jar: Jar; csrf: string; apiToken: 
       upserted = count ?? rows.length;
       await admin.from('auge_sync_runs').update({ detalhes: { path } }).eq('id', runId);
     } else if (entity === 'transferencias') {
-      const days = daysSince(lastMax);
+      const days = daysSince(lastMax, 7, 120);
       const { data: items, path } = await fetchTransferenciasPHP(auth, days);
       processed = items.length;
       const mapped = items.map(mapTransferencia).filter(r => r.id_externo);
       // Enriquece com endpoint de detalhe (origem/destino/item)
-      const enrichStats = await enrichTransferencias(auth, mapped, 4, 300);
+      const enrichStats = await enrichTransferencias(auth, mapped, 4, 800);
       // Remove campo interno antes do upsert
-      const rows = mapped.map(({ _cd, _cd_mov, _cd_transf, ...rest }: any) => rest);
+      const rows = mapped.map(({ _cd, _cd_mov, _cd_transf, _detail_ids, ...rest }: any) => rest);
       newMaxDt = maxDateISO(rows);
       const { error, count } = await admin.from('auge_transferencias')
         .upsert(rows, { onConflict: 'id_externo', count: 'exact' });
@@ -1785,6 +1985,42 @@ Deno.serve(async (req) => {
       const runId = url.searchParams.get('run_id') ?? '';
       if (!runId) throw new Error('run_id é obrigatório.');
       const task = tecidosDispatch(admin, auth, runId);
+      // @ts-ignore
+      if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime?.waitUntil) EdgeRuntime.waitUntil(task);
+      return new Response(JSON.stringify({ ok: true, chunk: true, run_id: runId }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (action === 'transferencias_backfill') {
+      const nowIso = new Date().toISOString();
+      const runIns = await admin.from('auge_sync_runs').insert({
+        entidade: 'transferencias',
+        status: 'running',
+        started_at: nowIso,
+        triggered_by: triggeredBy,
+        detalhes: { phase: 'backfill', started_at: nowIso },
+      }).select('id').single();
+      const runId = runIns.data?.id as string | undefined;
+      if (!runId) throw new Error('Falha ao criar run de backfill de transferências.');
+      const task = backfillTransferenciasChunk(admin, auth, runId).catch(async (e) => {
+        await admin.from('auge_sync_runs').update({
+          status: 'error',
+          finished_at: new Date().toISOString(),
+          error_message: e instanceof Error ? e.message : String(e),
+        }).eq('id', runId);
+      });
+      // @ts-ignore
+      if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime?.waitUntil) EdgeRuntime.waitUntil(task);
+      return new Response(JSON.stringify({ ok: true, background: true, run_id: runId, chunked: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (action === 'transferencias_backfill_chunk') {
+      const runId = url.searchParams.get('run_id') ?? '';
+      if (!runId) throw new Error('run_id é obrigatório.');
+      const task = backfillTransferenciasChunk(admin, auth, runId);
       // @ts-ignore
       if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime?.waitUntil) EdgeRuntime.waitUntil(task);
       return new Response(JSON.stringify({ ok: true, chunk: true, run_id: runId }), {
