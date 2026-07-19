@@ -545,14 +545,30 @@ async function fetchLotesPHP(auth: any) {
   ]);
 }
 
-async function fetchTransferenciasPHP(auth: any, daysBack = 60) {
+function toAugeDateParam(value: string | null | undefined): string | null {
+  const s = cleanText(value);
+  if (!s) return null;
+  const br = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (br) return s;
+  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return `${iso[3]}/${iso[2]}/${iso[1]}`;
+  return null;
+}
+
+function daysBackDateParam(daysBack: number): string {
   const de = new Date(Date.now() - daysBack * 24 * 3600 * 1000);
   const dd = String(de.getDate()).padStart(2, '0');
   const mm = String(de.getMonth() + 1).padStart(2, '0');
   const yyyy = de.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
+}
+
+async function fetchTransferenciasPHP(auth: any, daysBack = 60, dateFrom?: string | null, dateTo?: string | null) {
+  const dtCriacaoDe = toAugeDateParam(dateFrom) ?? daysBackDateParam(daysBack);
+  const dtCriacaoAte = toAugeDateParam(dateTo) ?? '';
   const body = new URLSearchParams({
-    dtCriacaoDe: `${dd}/${mm}/${yyyy}`,
-    dtCriacaoAte: '',
+    dtCriacaoDe,
+    dtCriacaoAte,
     idSituacao: '',
     cdDepositoOrigem: '',
     cdDepositoDestino: '',
@@ -733,8 +749,18 @@ function mergeTransferenciaDetalhe(row: any, det: any, itens: any[]) {
   row.observacao = firstText(row.observacao, det.dsObservacao, det.observacao);
   const qtdTransf = parseNum(det.qtdTransferencia ?? det.quantidade ?? det.qtItem);
   if (qtdTransf && itens.length <= 1) row.quantidade = qtdTransf;
-  row.raw = { ...(row.raw ?? {}), _itens: itens };
+  row.raw = { ...(row.raw ?? {}), _detalhe: det, _itens: itens };
   row.detalhe_sincronizado_em = new Date().toISOString();
+}
+
+function mergeDetailPayload(base: any | null, extra: any | null): any | null {
+  if (!base) return extra;
+  if (!extra) return base;
+  const merged = { ...base };
+  for (const [key, value] of Object.entries(extra)) {
+    if (!hasValue(merged[key]) && hasValue(value)) merged[key] = value;
+  }
+  return merged;
 }
 
 function transferenciaDetailIds(row: any): string[] {
@@ -804,6 +830,50 @@ async function fetchTransferenciaRelatorio(
   return { ...parseTransferenciaRelatorio(html), status: res.status };
 }
 
+async function fetchTransferenciaHTML(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+  ids: string[],
+  tipoDoc: string | null,
+  tipoMov: string | null,
+): Promise<{ det: any | null; itens: any[]; debug: { status: number; path: string }[] }> {
+  const debug: { status: number; path: string }[] = [];
+  const cleanIds = Array.from(new Set(ids.map(cleanText).filter(Boolean) as string[]));
+  const base = '/l.unilux/modInventario/estoque/manterTransferenciaEstoque.php';
+  for (const cd of cleanIds) {
+    const candidates = [
+      new URLSearchParams({ cdTransferenciaEstoque: cd, idTipoDocumento: tipoDoc || 'PORTAL', idTipoMovimentacao: tipoMov || 'T' }),
+      new URLSearchParams({ cdMovimentacao: cd, idTipoDocumento: tipoDoc || 'PORTAL', idTipoMovimentacao: tipoMov || 'T' }),
+      new URLSearchParams({ cdMov: cd, idTipoDocumento: tipoDoc || 'PORTAL', idTipoMovimentacao: tipoMov || 'T' }),
+      new URLSearchParams({ cdMovEstoqueERP: cd, idTipoDocumento: tipoDoc || 'PORTAL', idTipoMovimentacao: tipoMov || 'T' }),
+    ];
+    for (const qs of candidates) {
+      const path = `${base}?${qs}`;
+      try {
+        const headers: Record<string, string> = {
+          'Cookie': auth.jar.header(),
+          'X-CSRF-TOKEN': auth.csrf,
+          'Referer': `${AUGE_BASE_URL}/l.unilux/modInventario/estoque/gerirTransferenciaEstoque.php`,
+          'User-Agent': UA,
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        };
+        if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
+        const res = await fetch(`${AUGE_BASE_URL}${path}`, { method: 'GET', headers });
+        auth.jar.ingest(res);
+        debug.push({ status: res.status, path });
+        if (!res.ok) continue;
+        const parsed = parseTransferenciaHTML(await res.text());
+        if (parsed) {
+          const itens = Array.isArray(parsed._itens) ? parsed._itens : [];
+          return { det: parsed, itens, debug };
+        }
+      } catch {
+        debug.push({ status: -1, path });
+      }
+    }
+  }
+  return { det: null, itens: [], debug };
+}
+
 // Busca itens da transferência via getMovItensAndControle.php.
 // Endpoint confirmado no HAR: POST cdMov=<chave do botão imprimir/editar> -> {data:[{cdItem, cdDepositoOrigem, cdDepositoDestino, qtdTransferencia, ...}]}
 async function fetchTransferenciaDetalhe(
@@ -816,6 +886,8 @@ async function fetchTransferenciaDetalhe(
   const cleanIds = Array.from(new Set(ids.map(cleanText).filter(Boolean) as string[]));
   if (!cleanIds.length) return { det: null, itens: [], debug };
   const base = '/l.unilux/modInventario/estoque/ajax';
+  let bestDet: any | null = null;
+  let bestItens: any[] = [];
   for (const cd of cleanIds) {
     try {
       const path = `${base}/getMovItensAndControle.php`;
@@ -842,22 +914,46 @@ async function fetchTransferenciaDetalhe(
       try { j = JSON.parse(text); } catch { continue; }
       const arr: any[] = Array.isArray(j?.data) ? j.data : [];
       if (arr.length > 0) {
-        return { det: arr[0], itens: arr, debug };
+        bestDet = mergeDetailPayload(bestDet, arr[0]);
+        if (bestItens.length === 0) bestItens = arr;
+        const primary = bestDet ?? arr[0];
+        if (hasValue(primary.cdDepositoOrigem ?? primary.nmDepositoOrigem) &&
+            hasValue(primary.cdDepositoDestino ?? primary.nmDepositoDestino) &&
+            hasValue(primary.cdItem)) {
+          return { det: primary, itens: bestItens, debug };
+        }
       }
     } catch {
       debug.push({ status: -1, path: `${base}/getMovItensAndControle.php?cdMov=${cd}` });
     }
   }
 
+  try {
+    const html = await fetchTransferenciaHTML(auth, cleanIds, tipoDoc, tipoMov);
+    debug.push(...html.debug);
+    if (html.det) {
+      bestDet = mergeDetailPayload(bestDet, html.det);
+      if (html.itens.length > 0) bestItens = html.itens;
+      if (bestDet) return { det: bestDet, itens: bestItens, debug };
+    }
+  } catch {
+    debug.push({ status: -1, path: 'manterTransferenciaEstoque.php' });
+  }
+
   for (const cd of cleanIds) {
     try {
       const report = await fetchTransferenciaRelatorio(auth, cd, tipoDoc, tipoMov);
       debug.push({ status: report.status, path: `relatorioTransferenciaEstoque.php?cdTransferenciaEstoque=${cd}` });
-      if (report.det) return { det: report.det, itens: report.itens, debug };
+      if (report.det) {
+        bestDet = mergeDetailPayload(bestDet, report.det);
+        if (bestItens.length === 0) bestItens = report.itens;
+        if (bestDet) return { det: bestDet, itens: bestItens, debug };
+      }
     } catch {
       debug.push({ status: -1, path: `relatorioTransferenciaEstoque.php?cdTransferenciaEstoque=${cd}` });
     }
   }
+  if (bestDet) return { det: bestDet, itens: bestItens, debug };
   return { det: null, itens: [], debug };
 }
 
@@ -929,6 +1025,18 @@ function hasValue(v: any): boolean {
   return true;
 }
 
+function transferenciaNeedsBackfill(row: any): boolean {
+  const raw = row.raw ?? {};
+  const rawObs = firstText(raw.dsObservacao, raw.dsObs, raw._detalhe?.dsObservacao, raw._item?.dsObservacao);
+  return !hasValue(row.deposito_origem) ||
+    !hasValue(row.deposito_destino) ||
+    !hasValue(row.codigo_produto) ||
+    !hasValue(row.descricao_produto) ||
+    !hasValue(row.documento) ||
+    !hasValue(row.nr_efetivacao) ||
+    (!!rawObs && !hasValue(row.observacao));
+}
+
 function preserveTransferenciaDetalhes(row: any, existing?: any): any {
   if (!existing) return row;
   const merged = { ...row };
@@ -995,9 +1103,8 @@ async function backfillTransferenciasChunk(admin: any, auth: { jar: Jar; csrf: s
   let q = admin
     .from('auge_transferencias')
     .select('*')
-    .or('deposito_origem.is.null,deposito_destino.is.null,codigo_produto.is.null,documento.is.null,nr_efetivacao.is.null')
     .order('id', { ascending: true })
-    .limit(TRANSFERENCIA_BACKFILL_BATCH);
+    .limit(TRANSFERENCIA_BACKFILL_BATCH * 12);
   if (lastId) q = q.gt('id', lastId);
 
   const { data: rows, error } = await q;
@@ -1016,7 +1123,8 @@ async function backfillTransferenciasChunk(admin: any, auth: { jar: Jar; csrf: s
   let enriched = 0;
   let failed = 0;
   let sampleDebug = state.sample_debug ?? null;
-  for (const row of rows) {
+  const pendingRows = rows.filter(transferenciaNeedsBackfill).slice(0, TRANSFERENCIA_BACKFILL_BATCH);
+  for (const row of pendingRows) {
     const tipoDoc = firstText(row.raw?.idTipoDocumento, row.raw?.tipoDocumento);
     const tipoMov = firstText(row.raw?.idTipoMovimentacao) ?? 'T';
     const mutable = { ...row };
@@ -1056,6 +1164,7 @@ async function backfillTransferenciasChunk(admin: any, auth: { jar: Jar; csrf: s
     phase: 'backfill',
     last_id: rows[rows.length - 1].id,
     processed: (state.processed ?? 0) + rows.length,
+    attempted: (state.attempted ?? 0) + pendingRows.length,
     enriched: (state.enriched ?? 0) + enriched,
     failed: (state.failed ?? 0) + failed,
     sample_debug: sampleDebug,
@@ -1225,7 +1334,13 @@ function maxDateISO(rows: any[], field = 'data_movimento'): string | null {
   return m ? new Date(m).toISOString() : null;
 }
 
-async function syncEntity(admin: any, auth: { jar: Jar; csrf: string; apiToken: string | null }, entity: Entity, triggeredBy: string | null) {
+async function syncEntity(
+  admin: any,
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+  entity: Entity,
+  triggeredBy: string | null,
+  options: { dateFrom?: string | null; dateTo?: string | null } = {},
+) {
   if (UNMAPPED.includes(entity)) {
     return { entity, skipped: true, reason: 'Endpoint ainda não mapeado (aguardando HAR).' };
   }
@@ -1306,7 +1421,7 @@ async function syncEntity(admin: any, auth: { jar: Jar; csrf: string; apiToken: 
       await admin.from('auge_sync_runs').update({ detalhes: { path } }).eq('id', runId);
     } else if (entity === 'transferencias') {
       const days = daysSince(lastMax, 7, 120);
-      const { data: items, path } = await fetchTransferenciasPHP(auth, days);
+      const { data: items, path } = await fetchTransferenciasPHP(auth, days, options.dateFrom, options.dateTo);
       processed = items.length;
       const mapped = items.map(mapTransferencia).filter(r => r.id_externo);
       // Enriquece com endpoint de detalhe (origem/destino/item)
@@ -1330,7 +1445,7 @@ async function syncEntity(admin: any, auth: { jar: Jar; csrf: string; apiToken: 
       }
       upserted = count ?? rowsToUpsert.length;
       await admin.from('auge_sync_runs').update({
-        detalhes: { path, days_back: days, last_max_dt: lastMax, enrich: enrichStats },
+        detalhes: { path, days_back: days, date_from: options.dateFrom, date_to: options.dateTo, last_max_dt: lastMax, enrich: enrichStats },
       }).eq('id', runId);
     }
 
