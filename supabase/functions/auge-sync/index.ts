@@ -899,7 +899,7 @@ function transferenciaPatch(row: any): Record<string, any> {
     deposito_destino: row.deposito_destino ?? null,
     codigo_produto: row.codigo_produto ?? null,
     quantidade: Number(row.quantidade ?? 0),
-    documento: firstText(row.documento, isSap ? cdTransf : null, raw.nrTransferencia, !isSap ? cdTransf : null, !isSap ? cdMov : null),
+    documento: firstText(row.documento, isSap ? cdTransf : null, raw.nrTransferencia, isSap ? nrErp : null, !isSap ? cdTransf : null, cdMov),
     nr_efetivacao: firstText(row.nr_efetivacao, nrErp, isSap ? cdMov : null),
     observacao: firstText(row.observacao, raw.dsObservacao, raw.dsObs),
     raw: row.raw,
