@@ -957,50 +957,38 @@ export default function EstoquePage() {
 
       {/* ===== DETAIL DIALOG ===== */}
       <Dialog open={!!detailPos} onOpenChange={() => setDetailPos(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 gap-0 border-white/10 bg-card/60 backdrop-blur-3xl overflow-hidden rounded-[2.5rem] sm:rounded-[3.5rem] ring-1 ring-white/10 shadow-2xl shadow-black/40 max-h-[90vh] overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-500">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 gap-0 border border-border bg-card overflow-hidden rounded-lg shadow-xl max-h-[90vh] flex flex-col">
           {detailPos && (() => {
             const statusCfg = STATUS_CONFIG[detailPos.status] || STATUS_CONFIG.livre;
+            const info = resolveItemInfo(detailPos.item);
+            const titulo = info?.descricao || detailPos.item || 'Item sem identificação';
+            const subCodigo = info?.codigo_interno || detailPos.item;
             return (
               <>
-                {/* Detail Header */}
-                <div className="px-8 pt-10 pb-8 border-b border-white/5 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent">
-                  <div className="flex flex-col sm:flex-row items-center gap-6">
-                    <div className="p-5 rounded-[1.5rem] bg-primary text-primary-foreground shadow-2xl shadow-primary/30 ring-4 ring-primary/20 shrink-0">
-                      <Package className="w-10 h-10" />
+                {/* Header */}
+                <div className="px-6 py-4 border-b border-border bg-muted/30 shrink-0">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="p-2 rounded-md bg-primary/10 text-primary shrink-0">
+                        <Package className="w-5 h-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <DialogTitle className="text-base font-semibold text-foreground truncate" title={titulo}>{titulo}</DialogTitle>
+                        <DialogDescription className="text-xs text-muted-foreground mt-0.5 font-mono">
+                          {subCodigo && info?.descricao ? `${subCodigo} · ` : ''}
+                          {detailPos.estrutura}·{detailPos.coluna}·N{String(detailPos.nivel).padStart(2, '0')}·P{String(detailPos.posicao).padStart(2, '0')}
+                        </DialogDescription>
+                      </div>
                     </div>
-                    <div className="min-w-0 flex-1 text-center sm:text-left">
-                      {(() => {
-                        const info = resolveItemInfo(detailPos.item);
-                        const titulo = info?.descricao || detailPos.item || 'Item sem identificação';
-                        const subCodigo = info?.codigo_interno || detailPos.item;
-                        return (
-                          <>
-                            <DialogTitle className="text-xl font-semibold tracking-tight">{titulo}</DialogTitle>
-                            {subCodigo && info?.descricao && (
-                              <div className="text-xs font-mono font-semibold text-primary/80 mt-1">{subCodigo}</div>
-                            )}
-                            <DialogDescription className="text-[10px] sm:text-sm text-muted-foreground font-semibold uppercase tracking-[0.2em] mt-2 opacity-60">
-                              {detailPos.estrutura} · COLUNA {detailPos.coluna} · NÍVEL {String(detailPos.nivel).padStart(2, '0')} · POS {String(detailPos.posicao).padStart(2, '0')}
-                            </DialogDescription>
-                          </>
-                        );
-                      })()}
-                    </div>
-                    <Badge className={cn(
-                      "text-[10px] font-semibold px-5 py-2 rounded-md shadow-lg ring-4 uppercase tracking-widest border-2",
-                      statusCfg.bg,
-                      statusCfg.border,
-                      statusCfg.color,
-                      "bg-transparent"
-                    )}>
+                    <Badge variant="outline" className={cn("text-[10px] font-medium px-2 py-1 rounded shrink-0", statusCfg.color, statusCfg.border)}>
                       {statusCfg.label}
                     </Badge>
                   </div>
                 </div>
 
                 {/* Info Grid */}
-                <div className="p-8 space-y-8 bg-card/20">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="flex-1 overflow-y-auto p-6 space-y-6 min-h-0">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-border border border-border rounded-md overflow-hidden">
                     {(() => {
                       const depAtual = detailPos.deposito_atual || null;
                       const depNome = depAtual === '01' ? '01 · Central'
@@ -1011,69 +999,55 @@ export default function EstoquePage() {
                       const mostraDiff = mlAtual != null && mlOrig != null && Math.abs((mlAtual as number) - (mlOrig as number)) > 0.01;
                       return [
                       { label: 'Lote Fábrica', value: detailPos.lote || '—' },
-                      { label: 'Lote Sistema (Final)', value: detailPos.lote_sistema || '—' },
-                      { label: 'Endereço Atual', value: detailPos.endereco || '—' },
-                      { label: 'Depósito Atual (Auge)', value: depNome },
-                      { label: 'Conferente Responsável', value: detailPos.conferente_entrada || '—' },
-                      { label: 'Largura Nominal', value: detailPos.largura != null ? `${detailPos.largura}` : '—' },
-                      { label: 'Metragem Linear (Original)', value: mlOrig != null ? `${mlOrig} M` : '—' },
-                      { label: 'Metragem Física Atual', value: mlAtual != null ? `${mlAtual} M${mostraDiff ? ' ⚠️' : ''}` : (mlOrig != null ? `${mlOrig} M` : '—') },
-                      { label: 'Área Total Atual (M²)', value: (detailPos.m2_atual ?? detailPos.m2) != null ? `${detailPos.m2_atual ?? detailPos.m2}` : '—' },
+                      { label: 'Lote Sistema', value: detailPos.lote_sistema || '—' },
+                      { label: 'Endereço', value: detailPos.endereco || '—' },
+                      { label: 'Depósito Auge', value: depNome },
+                      { label: 'Conferente', value: detailPos.conferente_entrada || '—' },
+                      { label: 'Largura', value: detailPos.largura != null ? `${detailPos.largura} m` : '—' },
+                      { label: 'Metragem Original', value: mlOrig != null ? `${mlOrig} m` : '—' },
+                      { label: 'Metragem Atual', value: mlAtual != null ? `${mlAtual} m${mostraDiff ? ' ⚠' : ''}` : (mlOrig != null ? `${mlOrig} m` : '—'), highlight: mostraDiff },
+                      { label: 'Área Total (m²)', value: (detailPos.m2_atual ?? detailPos.m2) != null ? `${detailPos.m2_atual ?? detailPos.m2}` : '—' },
                       { label: 'Data de Entrada', value: formatDateBR(detailPos.data_registro) },
-                    ]; })().map((f, i) => (
-                      <motion.div 
-                        key={f.label} 
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: i * 0.05 }}
-                        className="bg-card/40 backdrop-blur-xl border border-white/5 rounded-md p-5 shadow-lg group hover:border-primary/30 transition-all duration-300 hover:scale-[1.03] hover:shadow-primary/5 hover:-translate-y-1"
-                      >
-                        <div className="text-[9px] font-semibold text-muted-foreground/60 uppercase tracking-widest mb-1.5">{f.label}</div>
-                        <div className="text-sm sm:text-base font-semibold text-foreground break-all tracking-tight group-hover:text-primary transition-colors">{f.value}</div>
-                      </motion.div>
+                    ]; })().map((f) => (
+                      <div key={f.label} className="bg-card p-3">
+                        <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1">{f.label}</div>
+                        <div className={cn("text-sm font-medium break-words", (f as any).highlight ? "text-warning" : "text-foreground")}>{f.value}</div>
+                      </div>
                     ))}
                   </div>
 
                   {/* Status Actions */}
-                  <div className="space-y-4">
-                    <div className="text-[10px] font-semibold text-muted-foreground/40 uppercase tracking-[0.3em] text-center mb-4">Gerenciamento de Status</div>
-                    <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <div className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Alterar status</div>
+                    <div className="grid grid-cols-2 gap-2">
                       {(['ocupado', 'reservado', 'bloqueado'] as const).map(st => {
                         const cfg = STATUS_CONFIG[st];
                         const isActive = detailPos.status === st;
-                        const activeBg = st === 'ocupado' ? 'bg-emerald-500 shadow-emerald-500/30' 
-                          : st === 'bloqueado' ? 'bg-rose-500 shadow-rose-500/30' 
-                          : 'bg-amber-500 shadow-amber-500/30';
-                        
                         return (
-                          <Button 
-                            key={st} 
-                            onClick={() => handleStatusChange(detailPos, st)} 
-                            variant="outline"
-                            className={cn(
-                              "h-14 font-semibold uppercase tracking-widest text-[10px] rounded-md border-2 transition-all duration-300 gap-3 group relative overflow-hidden",
-                              isActive 
-                                ? `${activeBg} text-white border-transparent ring-4 ring-white/10 scale-105 z-10` 
-                                : "border-white/5 bg-white/5 text-muted-foreground hover:bg-white/10 hover:border-white/20 active:scale-95"
-                            )}
+                          <Button
+                            key={st}
+                            onClick={() => handleStatusChange(detailPos, st)}
+                            variant={isActive ? "default" : "outline"}
+                            size="sm"
+                            className="h-9 text-xs gap-2 justify-start"
                           >
                             <div className={cn(
-                              "w-2.5 h-2.5 rounded-full transition-all duration-500",
-                              isActive ? "bg-white animate-pulse" : 
-                              st === 'ocupado' ? "bg-emerald-500" : st === 'bloqueado' ? "bg-rose-500" : "bg-amber-500"
+                              "w-2 h-2 rounded-full",
+                              st === 'ocupado' ? "bg-success" : st === 'bloqueado' ? "bg-destructive" : "bg-warning"
                             )} />
                             {cfg.label}
-                            {isActive && <CheckCircle2 className="w-4 h-4 ml-auto" />}
+                            {isActive && <CheckCircle2 className="w-3.5 h-3.5 ml-auto" />}
                           </Button>
                         );
                       })}
                       {!isGuest && (
-                        <Button 
-                          onClick={() => handleStatusChange(detailPos, 'saida')} 
+                        <Button
+                          onClick={() => handleStatusChange(detailPos, 'saida')}
                           variant="outline"
-                          className="h-14 font-semibold uppercase tracking-widest text-[10px] rounded-md border-2 border-violet-500/30 bg-violet-500/5 text-violet-500 hover:bg-violet-600 hover:text-white hover:border-transparent transition-all duration-300 active:scale-95 shadow-lg group"
+                          size="sm"
+                          className="h-9 text-xs gap-2 justify-start col-span-2"
                         >
-                          <LogOut className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                          <LogOut className="w-3.5 h-3.5" />
                           Confirmar Saída
                         </Button>
                       )}
@@ -1081,23 +1055,24 @@ export default function EstoquePage() {
                   </div>
 
                   {!isGuest && (
-                    <div className="pt-6 border-t border-white/5">
-                      <Button 
-                        variant="ghost" 
-                        onClick={() => handleDelete(detailPos)} 
-                        className="w-full h-14 rounded-md font-semibold uppercase tracking-widest text-[10px] text-destructive hover:bg-rose-500/10 hover:text-destructive border border-transparent hover:border-rose-500/20 transition-all duration-300"
+                    <div className="pt-4 border-t border-border">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(detailPos)}
+                        className="w-full h-9 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive gap-2"
                       >
-                        <Trash2 className="w-5 h-5 mr-3" />
-                        Remover do Sistema Permanentemente
+                        <Trash2 className="w-3.5 h-3.5" />
+                        Remover permanentemente
                       </Button>
                     </div>
                   )}
-
                 </div>
               </>
             );
           })()}
         </DialogContent>
+
       </Dialog>
 
       {/* ===== STAT DETAIL DIALOG ===== */}
