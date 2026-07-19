@@ -201,20 +201,20 @@ export default function AugeTransferenciasTab({
           <p className="text-sm text-muted-foreground">{rows.length === 0 ? 'Nenhuma transferência.' : 'Sem resultados.'}</p>
         </div>
       ) : (
-        <div className="flex-1 overflow-auto border rounded-lg bg-card">
-          <Table>
+        <div className="flex-1 min-h-0 min-w-0 overflow-auto border rounded-lg bg-card">
+          <Table className="min-w-[900px]">
             <TableHeader className="sticky top-0 bg-card z-10">
               <TableRow>
-                <TableHead>Nº Rascunho</TableHead>
-                <TableHead>Nº Efetivação</TableHead>
-                <TableHead>Origem → Destino</TableHead>
-                <TableHead>Produto</TableHead>
-                <TableHead className="text-right">Qtd</TableHead>
-                <TableHead>Situação</TableHead>
-                <TableHead>Usuário</TableHead>
-                <TableHead className="max-w-[220px]">Observação</TableHead>
-                <TableHead>Data</TableHead>
-                <TableHead className="w-[80px] text-right">Ações</TableHead>
+                <TableHead className="whitespace-nowrap">Nº Rascunho</TableHead>
+                <TableHead className="whitespace-nowrap">Nº Efetivação</TableHead>
+                <TableHead className="whitespace-nowrap">Origem → Destino</TableHead>
+                <TableHead className="whitespace-nowrap">Produto</TableHead>
+                <TableHead className="text-right whitespace-nowrap">Qtd</TableHead>
+                <TableHead className="whitespace-nowrap">Situação</TableHead>
+                <TableHead className="whitespace-nowrap">Usuário</TableHead>
+                <TableHead className="max-w-[220px] whitespace-nowrap">Observação</TableHead>
+                <TableHead className="whitespace-nowrap">Data</TableHead>
+                <TableHead className="w-[80px] text-right whitespace-nowrap">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -222,36 +222,37 @@ export default function AugeTransferenciasTab({
                 const rascunho = isRascunho(r) && !isEfetivada(r);
                 return (
                   <TableRow key={r.id} className="cursor-pointer hover:bg-muted/40" onClick={() => rascunho ? abrirEdicao(r) : setDetail(r)}>
-                    <TableCell className="font-mono text-xs font-bold text-primary">{r.documento || '—'}</TableCell>
-                    <TableCell className="font-mono text-xs">
+                    <TableCell className="font-mono text-xs font-bold text-primary whitespace-nowrap">{r.documento || '—'}</TableCell>
+                    <TableCell className="font-mono text-xs whitespace-nowrap">
                       {r.nr_efetivacao ? (
                         <span className="font-bold text-emerald-500">{r.nr_efetivacao}</span>
                       ) : (
                         <span className="text-muted-foreground/60">—</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-xs">
+                    <TableCell className="text-xs whitespace-nowrap">
                       <span className="font-mono">{r.deposito_origem || '?'}</span>
                       <ArrowRightLeft className="inline w-3 h-3 mx-1 text-muted-foreground" />
                       <span className="font-mono">{r.deposito_destino || '?'}</span>
                     </TableCell>
-                    <TableCell className="font-mono text-xs">{r.codigo_produto || '—'}</TableCell>
-                    <TableCell className="text-right font-mono text-xs">{Number(r.quantidade || 0).toLocaleString('pt-BR')}</TableCell>
-                    <TableCell>
+                    <TableCell className="font-mono text-xs whitespace-nowrap">{r.codigo_produto || '—'}</TableCell>
+                    <TableCell className="text-right font-mono text-xs whitespace-nowrap">{Number(r.quantidade || 0).toLocaleString('pt-BR')}</TableCell>
+                    <TableCell className="whitespace-nowrap">
                       <Badge
                         variant={isEfetivada(r) ? 'default' : rascunho ? 'secondary' : 'outline'}
-                        className="text-[10px]"
+                        className="text-[10px] whitespace-nowrap"
                       >
                         {r.ds_situacao || r.situacao || '—'}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-xs text-muted-foreground truncate max-w-[140px]" title={r.usuario_criacao || ''}>
+                    <TableCell className="text-xs text-muted-foreground truncate max-w-[140px] whitespace-nowrap" title={r.usuario_criacao || ''}>
                       {r.usuario_criacao || '—'}
                     </TableCell>
-                    <TableCell className="text-xs text-muted-foreground max-w-[220px] truncate" title={r.observacao || ''}>
+                    <TableCell className="text-xs text-muted-foreground max-w-[220px] truncate whitespace-nowrap" title={r.observacao || ''}>
                       {r.observacao || <span className="text-muted-foreground/40">—</span>}
                     </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{r.data_movimento ? formatDateBR(r.data_movimento) : '—'}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{r.data_movimento ? formatDateBR(r.data_movimento) : '—'}</TableCell>
+
                     <TableCell className="p-1 text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1">
                         {rascunho && (
