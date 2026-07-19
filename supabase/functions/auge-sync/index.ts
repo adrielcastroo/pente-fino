@@ -342,6 +342,12 @@ function firstText(...values: any[]): string | null {
   return null;
 }
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'string') return error;
+  try { return JSON.stringify(error); } catch { return String(error); }
+}
+
 function normalizeDescricaoProduto(v: any, codigo?: any): string | null {
   const s = cleanText(v);
   if (!s) return null;
@@ -545,14 +551,30 @@ async function fetchLotesPHP(auth: any) {
   ]);
 }
 
-async function fetchTransferenciasPHP(auth: any, daysBack = 60) {
+function toAugeDateParam(value: string | null | undefined): string | null {
+  const s = cleanText(value);
+  if (!s) return null;
+  const br = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (br) return s;
+  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return `${iso[3]}/${iso[2]}/${iso[1]}`;
+  return null;
+}
+
+function daysBackDateParam(daysBack: number): string {
   const de = new Date(Date.now() - daysBack * 24 * 3600 * 1000);
   const dd = String(de.getDate()).padStart(2, '0');
   const mm = String(de.getMonth() + 1).padStart(2, '0');
   const yyyy = de.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
+}
+
+async function fetchTransferenciasPHP(auth: any, daysBack = 60, dateFrom?: string | null, dateTo?: string | null) {
+  const dtCriacaoDe = toAugeDateParam(dateFrom) ?? daysBackDateParam(daysBack);
+  const dtCriacaoAte = toAugeDateParam(dateTo) ?? '';
   const body = new URLSearchParams({
-    dtCriacaoDe: `${dd}/${mm}/${yyyy}`,
-    dtCriacaoAte: '',
+    dtCriacaoDe,
+    dtCriacaoAte,
     idSituacao: '',
     cdDepositoOrigem: '',
     cdDepositoDestino: '',
@@ -733,8 +755,18 @@ function mergeTransferenciaDetalhe(row: any, det: any, itens: any[]) {
   row.observacao = firstText(row.observacao, det.dsObservacao, det.observacao);
   const qtdTransf = parseNum(det.qtdTransferencia ?? det.quantidade ?? det.qtItem);
   if (qtdTransf && itens.length <= 1) row.quantidade = qtdTransf;
-  row.raw = { ...(row.raw ?? {}), _itens: itens };
+  row.raw = { ...(row.raw ?? {}), _detalhe: det, _itens: itens };
   row.detalhe_sincronizado_em = new Date().toISOString();
+}
+
+function mergeDetailPayload(base: any | null, extra: any | null): any | null {
+  if (!base) return extra;
+  if (!extra) return base;
+  const merged = { ...base };
+  for (const [key, value] of Object.entries(extra)) {
+    if (!hasValue(merged[key]) && hasValue(value)) merged[key] = value;
+  }
+  return merged;
 }
 
 function transferenciaDetailIds(row: any): string[] {
@@ -804,6 +836,50 @@ async function fetchTransferenciaRelatorio(
   return { ...parseTransferenciaRelatorio(html), status: res.status };
 }
 
+async function fetchTransferenciaHTML(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+  ids: string[],
+  tipoDoc: string | null,
+  tipoMov: string | null,
+): Promise<{ det: any | null; itens: any[]; debug: { status: number; path: string }[] }> {
+  const debug: { status: number; path: string }[] = [];
+  const cleanIds = Array.from(new Set(ids.map(cleanText).filter(Boolean) as string[]));
+  const base = '/l.unilux/modInventario/estoque/manterTransferenciaEstoque.php';
+  for (const cd of cleanIds) {
+    const candidates = [
+      new URLSearchParams({ cdTransferenciaEstoque: cd, idTipoDocumento: tipoDoc || 'PORTAL', idTipoMovimentacao: tipoMov || 'T' }),
+      new URLSearchParams({ cdMovimentacao: cd, idTipoDocumento: tipoDoc || 'PORTAL', idTipoMovimentacao: tipoMov || 'T' }),
+      new URLSearchParams({ cdMov: cd, idTipoDocumento: tipoDoc || 'PORTAL', idTipoMovimentacao: tipoMov || 'T' }),
+      new URLSearchParams({ cdMovEstoqueERP: cd, idTipoDocumento: tipoDoc || 'PORTAL', idTipoMovimentacao: tipoMov || 'T' }),
+    ];
+    for (const qs of candidates) {
+      const path = `${base}?${qs}`;
+      try {
+        const headers: Record<string, string> = {
+          'Cookie': auth.jar.header(),
+          'X-CSRF-TOKEN': auth.csrf,
+          'Referer': `${AUGE_BASE_URL}/l.unilux/modInventario/estoque/gerirTransferenciaEstoque.php`,
+          'User-Agent': UA,
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        };
+        if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
+        const res = await fetch(`${AUGE_BASE_URL}${path}`, { method: 'GET', headers });
+        auth.jar.ingest(res);
+        debug.push({ status: res.status, path });
+        if (!res.ok) continue;
+        const parsed = parseTransferenciaHTML(await res.text());
+        if (parsed) {
+          const itens = Array.isArray(parsed._itens) ? parsed._itens : [];
+          return { det: parsed, itens, debug };
+        }
+      } catch {
+        debug.push({ status: -1, path });
+      }
+    }
+  }
+  return { det: null, itens: [], debug };
+}
+
 // Busca itens da transferência via getMovItensAndControle.php.
 // Endpoint confirmado no HAR: POST cdMov=<chave do botão imprimir/editar> -> {data:[{cdItem, cdDepositoOrigem, cdDepositoDestino, qtdTransferencia, ...}]}
 async function fetchTransferenciaDetalhe(
@@ -816,6 +892,8 @@ async function fetchTransferenciaDetalhe(
   const cleanIds = Array.from(new Set(ids.map(cleanText).filter(Boolean) as string[]));
   if (!cleanIds.length) return { det: null, itens: [], debug };
   const base = '/l.unilux/modInventario/estoque/ajax';
+  let bestDet: any | null = null;
+  let bestItens: any[] = [];
   for (const cd of cleanIds) {
     try {
       const path = `${base}/getMovItensAndControle.php`;
@@ -842,22 +920,46 @@ async function fetchTransferenciaDetalhe(
       try { j = JSON.parse(text); } catch { continue; }
       const arr: any[] = Array.isArray(j?.data) ? j.data : [];
       if (arr.length > 0) {
-        return { det: arr[0], itens: arr, debug };
+        bestDet = mergeDetailPayload(bestDet, arr[0]);
+        if (bestItens.length === 0) bestItens = arr;
+        const primary = bestDet ?? arr[0];
+        if (hasValue(primary.cdDepositoOrigem ?? primary.nmDepositoOrigem) &&
+            hasValue(primary.cdDepositoDestino ?? primary.nmDepositoDestino) &&
+            hasValue(primary.cdItem)) {
+          return { det: primary, itens: bestItens, debug };
+        }
       }
     } catch {
       debug.push({ status: -1, path: `${base}/getMovItensAndControle.php?cdMov=${cd}` });
     }
   }
 
+  try {
+    const html = await fetchTransferenciaHTML(auth, cleanIds, tipoDoc, tipoMov);
+    debug.push(...html.debug);
+    if (html.det) {
+      bestDet = mergeDetailPayload(bestDet, html.det);
+      if (html.itens.length > 0) bestItens = html.itens;
+      if (bestDet) return { det: bestDet, itens: bestItens, debug };
+    }
+  } catch {
+    debug.push({ status: -1, path: 'manterTransferenciaEstoque.php' });
+  }
+
   for (const cd of cleanIds) {
     try {
       const report = await fetchTransferenciaRelatorio(auth, cd, tipoDoc, tipoMov);
       debug.push({ status: report.status, path: `relatorioTransferenciaEstoque.php?cdTransferenciaEstoque=${cd}` });
-      if (report.det) return { det: report.det, itens: report.itens, debug };
+      if (report.det) {
+        bestDet = mergeDetailPayload(bestDet, report.det);
+        if (bestItens.length === 0) bestItens = report.itens;
+        if (bestDet) return { det: bestDet, itens: bestItens, debug };
+      }
     } catch {
       debug.push({ status: -1, path: `relatorioTransferenciaEstoque.php?cdTransferenciaEstoque=${cd}` });
     }
   }
+  if (bestDet) return { det: bestDet, itens: bestItens, debug };
   return { det: null, itens: [], debug };
 }
 
@@ -869,9 +971,15 @@ async function enrichTransferencias(
   concurrency = 4,
   maxToEnrich = 300,
 ): Promise<{ enriched: number; failed: number; attempted: number; sample_debug?: any }> {
-  const pending = rows.filter(r =>
-    (r._cd_mov || r._cd_transf || r._cd) && (!r.deposito_origem || !r.deposito_destino || !r.codigo_produto)
-  ).slice(0, maxToEnrich);
+  const pending = rows.filter(r => {
+    if (!(r._cd_mov || r._cd_transf || r._cd)) return false;
+    const rawObs = firstText(r.raw?.dsObservacao, r.raw?.dsObs, r.raw?._detalhe?.dsObservacao, r.raw?._item?.dsObservacao);
+    return !hasValue(r.deposito_origem) ||
+      !hasValue(r.deposito_destino) ||
+      !hasValue(r.codigo_produto) ||
+      !hasValue(r.descricao_produto) ||
+      (!!rawObs && !hasValue(r.observacao));
+  }).slice(0, maxToEnrich);
 
   let enriched = 0;
   let failed = 0;
@@ -922,11 +1030,52 @@ function transferenciaPatch(row: any): Record<string, any> {
   };
 }
 
+async function fillTransferenciaProductDescriptions(admin: any, rows: any[]) {
+  const missingCodes = Array.from(new Set(
+    rows
+      .filter((row: any) => !hasValue(row.descricao_produto) && hasValue(row.codigo_produto))
+      .map((row: any) => String(row.codigo_produto))
+  ));
+  if (missingCodes.length === 0) return rows;
+
+  const descricoes = new Map<string, string>();
+  for (let i = 0; i < missingCodes.length; i += 500) {
+    const chunk = missingCodes.slice(i, i + 500);
+    const { data, error } = await admin
+      .from('auge_produtos')
+      .select('codigo,descricao')
+      .in('codigo', chunk);
+    if (error) throw error;
+    for (const produto of data ?? []) {
+      const codigo = cleanText(produto.codigo);
+      const descricao = cleanText(produto.descricao);
+      if (codigo && descricao) descricoes.set(codigo, descricao);
+    }
+  }
+
+  return rows.map((row: any) => ({
+    ...row,
+    descricao_produto: row.descricao_produto ?? descricoes.get(String(row.codigo_produto)) ?? null,
+  }));
+}
+
 function hasValue(v: any): boolean {
   if (v === null || v === undefined) return false;
   if (typeof v === 'string') return v.trim() !== '';
   if (typeof v === 'number') return Number.isFinite(v) && v !== 0;
   return true;
+}
+
+function transferenciaNeedsBackfill(row: any): boolean {
+  const raw = row.raw ?? {};
+  const rawObs = firstText(raw.dsObservacao, raw.dsObs, raw._detalhe?.dsObservacao, raw._item?.dsObservacao);
+  return !hasValue(row.deposito_origem) ||
+    !hasValue(row.deposito_destino) ||
+    !hasValue(row.codigo_produto) ||
+    !hasValue(row.descricao_produto) ||
+    !hasValue(row.documento) ||
+    !hasValue(row.nr_efetivacao) ||
+    (!!rawObs && !hasValue(row.observacao));
 }
 
 function preserveTransferenciaDetalhes(row: any, existing?: any): any {
@@ -995,7 +1144,7 @@ async function backfillTransferenciasChunk(admin: any, auth: { jar: Jar; csrf: s
   let q = admin
     .from('auge_transferencias')
     .select('*')
-    .or('deposito_origem.is.null,deposito_destino.is.null,codigo_produto.is.null,documento.is.null,nr_efetivacao.is.null')
+      .or('deposito_origem.is.null,deposito_destino.is.null,codigo_produto.is.null,descricao_produto.is.null,observacao.is.null,documento.is.null,nr_efetivacao.is.null')
     .order('id', { ascending: true })
     .limit(TRANSFERENCIA_BACKFILL_BATCH);
   if (lastId) q = q.gt('id', lastId);
@@ -1016,7 +1165,8 @@ async function backfillTransferenciasChunk(admin: any, auth: { jar: Jar; csrf: s
   let enriched = 0;
   let failed = 0;
   let sampleDebug = state.sample_debug ?? null;
-  for (const row of rows) {
+  const pendingRows = rows.filter(transferenciaNeedsBackfill);
+  for (const row of pendingRows) {
     const tipoDoc = firstText(row.raw?.idTipoDocumento, row.raw?.tipoDocumento);
     const tipoMov = firstText(row.raw?.idTipoMovimentacao) ?? 'T';
     const mutable = { ...row };
@@ -1038,10 +1188,13 @@ async function backfillTransferenciasChunk(admin: any, auth: { jar: Jar; csrf: s
         valor: row.valor,
       }));
       const existing = await fetchExistingTransferencias(admin, expanded);
-      const rowsToUpsert = expanded.map((expandedRow: any) => preserveTransferenciaDetalhes(expandedRow, existing.get(expandedRow.id_externo)));
+      const rowsToUpsert = await fillTransferenciaProductDescriptions(
+        admin,
+        expanded.map((expandedRow: any) => preserveTransferenciaDetalhes(expandedRow, existing.get(expandedRow.id_externo)))
+      );
       const { error: updError } = await admin.from('auge_transferencias').upsert(rowsToUpsert, { onConflict: 'id_externo' });
       if (updError) throw updError;
-      if (expanded.length > 1) {
+      if (expanded.some((expandedRow: any) => expandedRow.id_externo !== row.id_externo)) {
         await admin.from('auge_transferencias').delete().eq('id', row.id);
       }
       enriched++;
@@ -1056,6 +1209,7 @@ async function backfillTransferenciasChunk(admin: any, auth: { jar: Jar; csrf: s
     phase: 'backfill',
     last_id: rows[rows.length - 1].id,
     processed: (state.processed ?? 0) + rows.length,
+    attempted: (state.attempted ?? 0) + pendingRows.length,
     enriched: (state.enriched ?? 0) + enriched,
     failed: (state.failed ?? 0) + failed,
     sample_debug: sampleDebug,
@@ -1225,7 +1379,13 @@ function maxDateISO(rows: any[], field = 'data_movimento'): string | null {
   return m ? new Date(m).toISOString() : null;
 }
 
-async function syncEntity(admin: any, auth: { jar: Jar; csrf: string; apiToken: string | null }, entity: Entity, triggeredBy: string | null) {
+async function syncEntity(
+  admin: any,
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+  entity: Entity,
+  triggeredBy: string | null,
+  options: { dateFrom?: string | null; dateTo?: string | null } = {},
+) {
   if (UNMAPPED.includes(entity)) {
     return { entity, skipped: true, reason: 'Endpoint ainda não mapeado (aguardando HAR).' };
   }
@@ -1306,7 +1466,7 @@ async function syncEntity(admin: any, auth: { jar: Jar; csrf: string; apiToken: 
       await admin.from('auge_sync_runs').update({ detalhes: { path } }).eq('id', runId);
     } else if (entity === 'transferencias') {
       const days = daysSince(lastMax, 7, 120);
-      const { data: items, path } = await fetchTransferenciasPHP(auth, days);
+      const { data: items, path } = await fetchTransferenciasPHP(auth, days, options.dateFrom, options.dateTo);
       processed = items.length;
       const mapped = items.map(mapTransferencia).filter(r => r.id_externo);
       // Enriquece com endpoint de detalhe (origem/destino/item)
@@ -1316,13 +1476,16 @@ async function syncEntity(admin: any, auth: { jar: Jar; csrf: string; apiToken: 
         .flatMap((row: any) => expandTransferenciaItens(row))
         .map(({ _cd, _cd_mov, _cd_transf, _detail_ids, ...rest }: any) => rest);
       const existing = await fetchExistingTransferencias(admin, rows);
-      const rowsToUpsert = rows.map((row: any) => preserveTransferenciaDetalhes(row, existing.get(row.id_externo)));
+      const rowsToUpsert = await fillTransferenciaProductDescriptions(
+        admin,
+        rows.map((row: any) => preserveTransferenciaDetalhes(row, existing.get(row.id_externo)))
+      );
       newMaxDt = maxDateISO(rowsToUpsert);
       const { error, count } = await admin.from('auge_transferencias')
         .upsert(rowsToUpsert, { onConflict: 'id_externo', count: 'exact' });
       if (error) throw error;
       const aggregateIdsToRemove = mapped
-        .filter((row: any) => Array.isArray(row.raw?._itens) && row.raw._itens.length > 1)
+        .filter((row: any) => Array.isArray(row.raw?._itens) && row.raw._itens.length > 0)
         .map((row: any) => row.id_externo)
         .filter(Boolean);
       if (aggregateIdsToRemove.length > 0) {
@@ -1330,7 +1493,7 @@ async function syncEntity(admin: any, auth: { jar: Jar; csrf: string; apiToken: 
       }
       upserted = count ?? rowsToUpsert.length;
       await admin.from('auge_sync_runs').update({
-        detalhes: { path, days_back: days, last_max_dt: lastMax, enrich: enrichStats },
+        detalhes: { path, days_back: days, date_from: options.dateFrom, date_to: options.dateTo, last_max_dt: lastMax, enrich: enrichStats },
       }).eq('id', runId);
     }
 
@@ -2117,7 +2280,7 @@ Deno.serve(async (req) => {
         await admin.from('auge_sync_runs').update({
           status: 'error',
           finished_at: new Date().toISOString(),
-          error_message: e instanceof Error ? e.message : JSON.stringify(e),
+          error_message: getErrorMessage(e),
         }).eq('id', runId);
       });
       // @ts-ignore
@@ -2155,10 +2318,16 @@ Deno.serve(async (req) => {
       });
     }
 
+    let syncPayload: any = {};
+    try { syncPayload = await req.clone().json(); } catch { /* GET ou body ausente */ }
+    const syncOptions = {
+      dateFrom: cleanText(url.searchParams.get('dateFrom')) ?? cleanText(syncPayload?.dateFrom) ?? cleanText(syncPayload?.dataDe),
+      dateTo: cleanText(url.searchParams.get('dateTo')) ?? cleanText(syncPayload?.dateTo) ?? cleanText(syncPayload?.dataAte),
+    };
     const results = [];
 
     for (const e of entities) {
-      results.push(await syncEntity(admin, auth, e, triggeredBy));
+      results.push(await syncEntity(admin, auth, e, triggeredBy, syncOptions));
     }
 
     const totalUpserted = results.reduce((s, r: any) => s + (r.upserted ?? 0), 0);
