@@ -585,6 +585,65 @@ function mapTransferencia(r: any) {
   };
 }
 
+// Extrai campos da página HTML manterTransferenciaEstoque.php.
+// Procura por <select name="X">…<option value="Y" selected>Texto</option>… e
+// <input name="X" value="Y" />, cobrindo os principais campos.
+function parseTransferenciaHTML(html: string): Record<string, any> | null {
+  if (!html || html.length < 200) return null;
+  const out: Record<string, any> = {};
+
+  // Selects: name -> [selected value, selected text]
+  const selectRe = /<select\b[^>]*\bname=["']([^"']+)["'][^>]*>([\s\S]*?)<\/select>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = selectRe.exec(html)) !== null) {
+    const name = m[1];
+    const inner = m[2];
+    const optRe = /<option\b([^>]*)>([\s\S]*?)<\/option>/gi;
+    let om: RegExpExecArray | null;
+    while ((om = optRe.exec(inner)) !== null) {
+      const attrs = om[1];
+      const label = om[2].replace(/<[^>]+>/g, '').trim();
+      if (/\bselected\b/i.test(attrs)) {
+        const vm = /\bvalue=["']([^"']*)["']/i.exec(attrs);
+        const v = vm ? vm[1] : label;
+        if (v !== '' && v !== '0') {
+          out[name] = v;
+          out[`${name}__label`] = label;
+        }
+        break;
+      }
+    }
+  }
+
+  // Inputs: name/value/type
+  const inputRe = /<input\b([^>]+)\/?>/gi;
+  while ((m = inputRe.exec(html)) !== null) {
+    const attrs = m[1];
+    const nm = /\bname=["']([^"']+)["']/i.exec(attrs);
+    const vm = /\bvalue=["']([^"']*)["']/i.exec(attrs);
+    const tm = /\btype=["']([^"']+)["']/i.exec(attrs);
+    if (!nm) continue;
+    const name = nm[1];
+    if (out[name] !== undefined) continue;
+    const type = tm ? tm[1].toLowerCase() : 'text';
+    if (type === 'submit' || type === 'button' || type === 'image') continue;
+    if (type === 'checkbox' || type === 'radio') {
+      if (/\bchecked\b/i.test(attrs)) out[name] = vm ? vm[1] : 'on';
+      continue;
+    }
+    if (vm && vm[1] !== '') out[name] = vm[1];
+  }
+
+  // Se não encontramos absolutamente nada de identificável, devolve null
+  if (!out.cdDepositoOrigem && !out.cdDepositoDestino && !out.cdItem
+      && !out.cdTransferenciaEstoque && !out.cdMovEstoqueERP) {
+    return null;
+  }
+  return out;
+}
+
+
+
 // Busca detalhe individual (manterTransferenciaEstoque?cdMov=...) para preencher
 // campos ausentes no LIST: origem/destino/item. Tenta múltiplos endpoints/params.
 async function fetchTransferenciaDetalhe(
