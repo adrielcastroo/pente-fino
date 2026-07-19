@@ -57,6 +57,7 @@ import RoleHomeRedirect from "@/components/auth/RoleHomeRedirect";
 import { RequireRole } from "@/components/auth/RequireRole";
 import { UpdateAvailableBanner } from "@/components/admin/UpdateAvailableBanner";
 import { ReleaseRegistrar } from "@/components/admin/ReleaseRegistrar";
+import { AgentChatWidget } from "@/components/agent/AgentChatWidget";
 
 const AdminPanelPage = lazy(() => import("@/pages/admin/AdminPanelPage"));
 const N8nMonitorPage = lazy(() => import("@/pages/N8nMonitorPage"));
@@ -262,6 +263,7 @@ const App = () => (
               </Routes>
               <UpdateAvailableBanner />
               <ReleaseRegistrar />
+              <AgentChatWidget />
             </Suspense>
           </AuthProvider>
           <Toaster position="top-right" closeButton duration={2000} visibleToasts={1} />
