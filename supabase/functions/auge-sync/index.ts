@@ -1547,20 +1547,21 @@ async function syncEntity(
 
     return { entity, processed, upserted, incremental: !!lastMax };
   } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
+    const info = serializeError(e);
     const nowIso = new Date().toISOString();
     await admin.from('auge_sync_runs').update({
       status: 'error',
       finished_at: nowIso,
-      error_message: msg,
+      error_message: info.message,
+      detalhes: { entity, stack: info.stack ?? null, details: info.details ?? null },
     }).eq('id', runId);
     await admin.from('auge_sync_state').upsert({
       entidade: entity,
       last_synced_at: nowIso,
       last_status: 'error',
-      last_error: msg,
+      last_error: info.message,
     }, { onConflict: 'entidade' });
-    return { entity, error: msg };
+    return { entity, error: info.message };
   }
 }
 
