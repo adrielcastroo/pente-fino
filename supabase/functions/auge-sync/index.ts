@@ -688,11 +688,17 @@ async function fetchTransferenciaDetalhe(
       const text = await res.text();
       let j: any;
       try { j = JSON.parse(text); } catch {
-        // HTML fallback: parse form fields from manterTransferenciaEstoque.php
         const parsed = parseTransferenciaHTML(text);
-        (debug[debug.length - 1] as any).parsed_keys = parsed ? Object.keys(parsed) : null;
+        (debug[debug.length - 1] as any).parsed_keys = parsed ? Object.keys(parsed).slice(0, 20) : null;
         if (!parsed) {
-          (debug[debug.length - 1] as any).body_snippet = text.slice(0, 600);
+          // Guarda snippet localizando o trecho relevante (inicializaLinhas / cdDeposito)
+          const idx = Math.max(
+            text.indexOf('inicializaLinhas('),
+            text.indexOf('cdDepositoOrigem":'),
+            text.indexOf("cdDepositoOrigem':"),
+          );
+          (debug[debug.length - 1] as any).body_snippet =
+            idx >= 0 ? text.slice(idx, idx + 1200) : text.slice(-1200);
           continue;
         }
         return { det: parsed, debug };
