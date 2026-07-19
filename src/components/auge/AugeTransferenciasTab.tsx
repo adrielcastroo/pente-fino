@@ -3,7 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
@@ -12,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { RefreshCw, Loader2, ArrowRightLeft, Search, Plus, Zap, MoreVertical, Pencil, Copy, Trash2 } from 'lucide-react';
 import { formatDateBR } from '@/lib/app-utils';
+import { formatQty } from '@/lib/utils';
 import TransferenciaDetailDialog from './TransferenciaDetailDialog';
 import NovaTransferenciaDialog, { type TransfDialogInitial, type TransfDialogMode } from './NovaTransferenciaDialog';
 
@@ -130,7 +130,23 @@ export default function AugeTransferenciasTab({
       .order('data_movimento', { ascending: false, nullsFirst: false })
       .limit(500);
     if (error) toast.error(error.message);
-    setRows(data || []);
+    const transferencias = data || [];
+    const codigos = Array.from(new Set(
+      transferencias.map((r: any) => r.codigo_produto).filter(Boolean)
+    ));
+    if (codigos.length > 0) {
+      const { data: produtos } = await (supabase as any)
+        .from('auge_produtos')
+        .select('codigo, descricao')
+        .in('codigo', codigos);
+      const descricoes = new Map((produtos || []).map((p: any) => [p.codigo, p.descricao]));
+      setRows(transferencias.map((r: any) => ({
+        ...r,
+        descricao_produto: r.descricao_produto ?? descricoes.get(r.codigo_produto) ?? null,
+      })));
+    } else {
+      setRows(transferencias);
+    }
     setLoading(false);
   };
 
@@ -160,6 +176,7 @@ export default function AugeTransferenciasTab({
       if (!q) return true;
       return (
         (r.codigo_produto || '').toLowerCase().includes(q) ||
+        (r.descricao_produto || '').toLowerCase().includes(q) ||
         (r.documento || '').toLowerCase().includes(q) ||
         (r.nr_efetivacao || '').toLowerCase().includes(q) ||
         (r.deposito_origem || '').toLowerCase().includes(q) ||
@@ -202,15 +219,15 @@ export default function AugeTransferenciasTab({
         </div>
       ) : (
         <div className="flex-1 min-h-0 min-w-0 overflow-auto border rounded-lg bg-card">
-          <Table className="min-w-[900px]">
+          <Table className="min-w-[1080px]">
             <TableHeader className="sticky top-0 bg-card z-10">
               <TableRow>
                 <TableHead className="whitespace-nowrap">Nº Rascunho</TableHead>
                 <TableHead className="whitespace-nowrap">Nº Efetivação</TableHead>
                 <TableHead className="whitespace-nowrap">Origem → Destino</TableHead>
                 <TableHead className="whitespace-nowrap">Produto</TableHead>
+                <TableHead className="min-w-[260px] whitespace-nowrap">Descrição</TableHead>
                 <TableHead className="text-right whitespace-nowrap">Qtd</TableHead>
-                <TableHead className="whitespace-nowrap">Situação</TableHead>
                 <TableHead className="whitespace-nowrap">Usuário</TableHead>
                 <TableHead className="max-w-[220px] whitespace-nowrap">Observação</TableHead>
                 <TableHead className="whitespace-nowrap">Data</TableHead>
@@ -236,15 +253,10 @@ export default function AugeTransferenciasTab({
                       <span className="font-mono">{r.deposito_destino || '?'}</span>
                     </TableCell>
                     <TableCell className="font-mono text-xs whitespace-nowrap">{r.codigo_produto || '—'}</TableCell>
-                    <TableCell className="text-right font-mono text-xs whitespace-nowrap">{Number(r.quantidade || 0).toLocaleString('pt-BR')}</TableCell>
-                    <TableCell className="whitespace-nowrap">
-                      <Badge
-                        variant={isEfetivada(r) ? 'default' : rascunho ? 'secondary' : 'outline'}
-                        className="text-[10px] whitespace-nowrap"
-                      >
-                        {r.ds_situacao || r.situacao || '—'}
-                      </Badge>
+                    <TableCell className="text-xs text-foreground max-w-[360px] truncate whitespace-nowrap" title={r.descricao_produto || ''}>
+                      {r.descricao_produto || <span className="text-muted-foreground/40">—</span>}
                     </TableCell>
+                    <TableCell className="text-right font-mono text-xs whitespace-nowrap">{formatQty(r.quantidade)}</TableCell>
                     <TableCell className="text-xs text-muted-foreground truncate max-w-[140px] whitespace-nowrap" title={r.usuario_criacao || ''}>
                       {r.usuario_criacao || '—'}
                     </TableCell>

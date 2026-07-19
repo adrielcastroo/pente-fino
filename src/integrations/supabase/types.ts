@@ -453,6 +453,7 @@ export type Database = {
           data_movimento: string | null
           deposito_destino: string | null
           deposito_origem: string | null
+          descricao_produto: string | null
           detalhe_sincronizado_em: string | null
           documento: string | null
           ds_efetivacao: string | null
@@ -478,6 +479,7 @@ export type Database = {
           data_movimento?: string | null
           deposito_destino?: string | null
           deposito_origem?: string | null
+          descricao_produto?: string | null
           detalhe_sincronizado_em?: string | null
           documento?: string | null
           ds_efetivacao?: string | null
@@ -503,6 +505,7 @@ export type Database = {
           data_movimento?: string | null
           deposito_destino?: string | null
           deposito_origem?: string | null
+          descricao_produto?: string | null
           detalhe_sincronizado_em?: string | null
           documento?: string | null
           ds_efetivacao?: string | null

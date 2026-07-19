@@ -21,7 +21,7 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
-const TRANSFERENCIA_BACKFILL_BATCH = 25;
+const TRANSFERENCIA_BACKFILL_BATCH = 8;
 
 type Entity = 'saldo' | 'produtos' | 'depositos' | 'movimentacoes' | 'entradas' | 'lotes' | 'transferencias';
 const ALL_ENTITIES: Entity[] = ['produtos', 'saldo', 'movimentacoes', 'entradas', 'depositos', 'lotes', 'transferencias'];
@@ -322,7 +322,8 @@ function mapEntradaPHP(r: any) {
 function parseNum(v: any): number {
   if (v == null) return 0;
   if (typeof v === 'number') return v;
-  const s = String(v).trim().replace(/\./g, '').replace(',', '.');
+  const raw = String(v).trim();
+  const s = raw.includes(',') ? raw.replace(/\./g, '').replace(',', '.') : raw;
   const n = Number(s);
   return isFinite(n) ? n : Number(v) || 0;
 }
@@ -339,6 +340,13 @@ function firstText(...values: any[]): string | null {
     if (s != null) return s;
   }
   return null;
+}
+
+function normalizeDescricaoProduto(v: any, codigo?: any): string | null {
+  const s = cleanText(v);
+  if (!s) return null;
+  const code = cleanText(codigo);
+  return code ? cleanText(s.replace(new RegExp(`\\s*\\[${code.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\]\\s*$`), '')) : s;
 }
 
 function htmlToText(html: string): string {
@@ -605,9 +613,10 @@ function mapTransferencia(r: any) {
     _cd_mov: cdMov ? String(cdMov) : null,   // preferido para endpoint de detalhe (cdMov=)
     _cd_transf: cdTransf ? String(cdTransf) : null,
     _detail_ids: detailIds,
-    deposito_origem: r.cdDepositoOrigem ?? r.nmDepositoOrigem ?? null,
-    deposito_destino: r.cdDepositoDestino ?? r.nmDepositoDestino ?? null,
-    codigo_produto: r.cdItem ?? null,
+    deposito_origem: cleanText(r.cdDepositoOrigem ?? r.nmDepositoOrigem),
+    deposito_destino: cleanText(r.cdDepositoDestino ?? r.nmDepositoDestino),
+    codigo_produto: cleanText(r.cdItem),
+    descricao_produto: normalizeDescricaoProduto(r.nmItem ?? r.dsItem ?? r.descricaoProduto, r.cdItem),
     quantidade: parseNum(r.qtItem),
     situacao: r.idSituacao ?? null,
     ds_situacao: r.dsSituacao ?? null,
@@ -714,9 +723,13 @@ function parseTransferenciaHTML(html: string): Record<string, any> | null {
 
 
 function mergeTransferenciaDetalhe(row: any, det: any, itens: any[]) {
-  row.deposito_origem = det.cdDepositoOrigem ?? row.deposito_origem ?? null;
-  row.deposito_destino = det.cdDepositoDestino ?? row.deposito_destino ?? null;
-  row.codigo_produto = det.cdItem ?? row.codigo_produto ?? null;
+  row.deposito_origem = cleanText(det.cdDepositoOrigem ?? det.nmDepositoOrigem) ?? row.deposito_origem ?? null;
+  row.deposito_destino = cleanText(det.cdDepositoDestino ?? det.nmDepositoDestino) ?? row.deposito_destino ?? null;
+  row.codigo_produto = cleanText(det.cdItem) ?? row.codigo_produto ?? null;
+  row.descricao_produto = normalizeDescricaoProduto(
+    det.nmItem ?? det.dsItem ?? det.descricaoProduto ?? det.textAbrev,
+    det.cdItem ?? row.codigo_produto,
+  ) ?? row.descricao_produto ?? null;
   row.observacao = firstText(row.observacao, det.dsObservacao, det.observacao);
   const qtdTransf = parseNum(det.qtdTransferencia ?? det.quantidade ?? det.qtItem);
   if (qtdTransf && itens.length <= 1) row.quantidade = qtdTransf;
@@ -898,6 +911,7 @@ function transferenciaPatch(row: any): Record<string, any> {
     deposito_origem: row.deposito_origem ?? null,
     deposito_destino: row.deposito_destino ?? null,
     codigo_produto: row.codigo_produto ?? null,
+    descricao_produto: row.descricao_produto ?? null,
     quantidade: Number(row.quantidade ?? 0),
     documento: firstText(row.documento, isSap ? cdTransf : null, raw.nrTransferencia, isSap ? nrErp : null, !isSap ? cdTransf : null, cdMov),
     nr_efetivacao: firstText(row.nr_efetivacao, nrErp, isSap ? cdMov : null),
@@ -906,6 +920,73 @@ function transferenciaPatch(row: any): Record<string, any> {
     detalhe_sincronizado_em: row.detalhe_sincronizado_em ?? null,
     synced_at: new Date().toISOString(),
   };
+}
+
+function hasValue(v: any): boolean {
+  if (v === null || v === undefined) return false;
+  if (typeof v === 'string') return v.trim() !== '';
+  if (typeof v === 'number') return Number.isFinite(v) && v !== 0;
+  return true;
+}
+
+function preserveTransferenciaDetalhes(row: any, existing?: any): any {
+  if (!existing) return row;
+  const merged = { ...row };
+  for (const field of [
+    'deposito_origem',
+    'deposito_destino',
+    'codigo_produto',
+    'descricao_produto',
+    'nr_efetivacao',
+    'observacao',
+    'usuario_criacao',
+    'usuario_efetivacao',
+    'usuario_enviou_logistica',
+    'usuario_recebido_logistica',
+    'ds_efetivacao',
+    'detalhe_sincronizado_em',
+  ]) {
+    if (!hasValue(merged[field]) && hasValue(existing[field])) merged[field] = existing[field];
+  }
+  if (!hasValue(merged.quantidade) && hasValue(existing.quantidade)) merged.quantidade = existing.quantidade;
+  merged.raw = { ...(existing.raw ?? {}), ...(row.raw ?? {}) };
+  return merged;
+}
+
+async function fetchExistingTransferencias(admin: any, rows: any[]) {
+  const out = new Map<string, any>();
+  const ids = Array.from(new Set(rows.map((r: any) => r.id_externo).filter(Boolean)));
+  for (let i = 0; i < ids.length; i += 500) {
+    const chunk = ids.slice(i, i + 500);
+    const { data, error } = await admin
+      .from('auge_transferencias')
+      .select('id_externo,deposito_origem,deposito_destino,codigo_produto,descricao_produto,quantidade,nr_efetivacao,observacao,usuario_criacao,usuario_efetivacao,usuario_enviou_logistica,usuario_recebido_logistica,ds_efetivacao,detalhe_sincronizado_em,raw')
+      .in('id_externo', chunk);
+    if (error) throw error;
+    for (const row of data ?? []) out.set(row.id_externo, row);
+  }
+  return out;
+}
+
+function transferenciaItemId(baseId: string, item: any, index: number): string {
+  const line = cleanText(item?.idLinha) ?? String(index);
+  const code = cleanText(item?.cdItem) ?? 'sem-item';
+  return `${baseId}:item:${line}:${code}`;
+}
+
+function expandTransferenciaItens(row: any): any[] {
+  const itens = Array.isArray(row.raw?._itens) ? row.raw._itens : [];
+  if (itens.length === 0) return [row];
+  return itens.map((item: any, index: number) => ({
+    ...row,
+    id_externo: transferenciaItemId(row.id_externo, item, index),
+    deposito_origem: cleanText(item.cdDepositoOrigem ?? item.nmDepositoOrigem) ?? row.deposito_origem,
+    deposito_destino: cleanText(item.cdDepositoDestino ?? item.nmDepositoDestino) ?? row.deposito_destino,
+    codigo_produto: cleanText(item.cdItem) ?? row.codigo_produto,
+    descricao_produto: normalizeDescricaoProduto(item.nmItem ?? item.dsItem ?? item.textAbrev, item.cdItem) ?? row.descricao_produto,
+    quantidade: parseNum(item.qtdTransferencia ?? item.quantidade ?? item.qtItem) || row.quantidade,
+    raw: { ...(row.raw ?? {}), _item: item, _item_index: index },
+  }));
 }
 
 async function backfillTransferenciasChunk(admin: any, auth: { jar: Jar; csrf: string; apiToken: string | null }, runId: string) {
@@ -942,9 +1023,27 @@ async function backfillTransferenciasChunk(admin: any, auth: { jar: Jar; csrf: s
     const { det, itens, debug } = await fetchTransferenciaDetalhe(auth, transferenciaDetailIds(mutable), tipoDoc, tipoMov);
     if (det) {
       mergeTransferenciaDetalhe(mutable, det, itens);
-      const patch = transferenciaPatch(mutable);
-      const { error: updError } = await admin.from('auge_transferencias').update(patch).eq('id', row.id);
+      const { id: _oldId, created_at: _createdAt, updated_at: _updatedAt, ...baseRow } = row;
+      const expanded = expandTransferenciaItens(mutable).map((expandedRow: any) => ({
+        ...baseRow,
+        ...transferenciaPatch(expandedRow),
+        id_externo: expandedRow.id_externo,
+        situacao: row.situacao,
+        ds_situacao: row.ds_situacao,
+        data_movimento: row.data_movimento,
+        usuario_criacao: row.usuario_criacao,
+        usuario_efetivacao: row.usuario_efetivacao,
+        usuario_enviou_logistica: row.usuario_enviou_logistica,
+        usuario_recebido_logistica: row.usuario_recebido_logistica,
+        valor: row.valor,
+      }));
+      const existing = await fetchExistingTransferencias(admin, expanded);
+      const rowsToUpsert = expanded.map((expandedRow: any) => preserveTransferenciaDetalhes(expandedRow, existing.get(expandedRow.id_externo)));
+      const { error: updError } = await admin.from('auge_transferencias').upsert(rowsToUpsert, { onConflict: 'id_externo' });
       if (updError) throw updError;
+      if (expanded.length > 1) {
+        await admin.from('auge_transferencias').delete().eq('id', row.id);
+      }
       enriched++;
     } else {
       failed++;
@@ -1213,12 +1312,23 @@ async function syncEntity(admin: any, auth: { jar: Jar; csrf: string; apiToken: 
       // Enriquece com endpoint de detalhe (origem/destino/item)
       const enrichStats = await enrichTransferencias(auth, mapped, 4, 800);
       // Remove campo interno antes do upsert
-      const rows = mapped.map(({ _cd, _cd_mov, _cd_transf, _detail_ids, ...rest }: any) => rest);
-      newMaxDt = maxDateISO(rows);
+      const rows = mapped
+        .flatMap((row: any) => expandTransferenciaItens(row))
+        .map(({ _cd, _cd_mov, _cd_transf, _detail_ids, ...rest }: any) => rest);
+      const existing = await fetchExistingTransferencias(admin, rows);
+      const rowsToUpsert = rows.map((row: any) => preserveTransferenciaDetalhes(row, existing.get(row.id_externo)));
+      newMaxDt = maxDateISO(rowsToUpsert);
       const { error, count } = await admin.from('auge_transferencias')
-        .upsert(rows, { onConflict: 'id_externo', count: 'exact' });
+        .upsert(rowsToUpsert, { onConflict: 'id_externo', count: 'exact' });
       if (error) throw error;
-      upserted = count ?? rows.length;
+      const aggregateIdsToRemove = mapped
+        .filter((row: any) => Array.isArray(row.raw?._itens) && row.raw._itens.length > 1)
+        .map((row: any) => row.id_externo)
+        .filter(Boolean);
+      if (aggregateIdsToRemove.length > 0) {
+        await admin.from('auge_transferencias').delete().in('id_externo', aggregateIdsToRemove);
+      }
+      upserted = count ?? rowsToUpsert.length;
       await admin.from('auge_sync_runs').update({
         detalhes: { path, days_back: days, last_max_dt: lastMax, enrich: enrichStats },
       }).eq('id', runId);
@@ -2007,7 +2117,7 @@ Deno.serve(async (req) => {
         await admin.from('auge_sync_runs').update({
           status: 'error',
           finished_at: new Date().toISOString(),
-          error_message: e instanceof Error ? e.message : String(e),
+          error_message: e instanceof Error ? e.message : JSON.stringify(e),
         }).eq('id', runId);
       });
       // @ts-ignore
@@ -2020,9 +2130,7 @@ Deno.serve(async (req) => {
     if (action === 'transferencias_backfill_chunk') {
       const runId = url.searchParams.get('run_id') ?? '';
       if (!runId) throw new Error('run_id é obrigatório.');
-      const task = backfillTransferenciasChunk(admin, auth, runId);
-      // @ts-ignore
-      if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime?.waitUntil) EdgeRuntime.waitUntil(task);
+      await backfillTransferenciasChunk(admin, auth, runId);
       return new Response(JSON.stringify({ ok: true, chunk: true, run_id: runId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
