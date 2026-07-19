@@ -486,7 +486,6 @@ export default function EstoquePage() {
       {/* Header */}
       <PageHeader
         title="Gestão de estoque"
-        backTo="/estoque/dashboard"
         actions={
           <Button
             onClick={() => setImportOpen(true)}

@@ -1412,7 +1412,7 @@ export default function HistoryPanel() {
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 sm:px-8 pb-12 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto pb-12 custom-scrollbar">
         {filtered.length > 0 ? (
           <div className="grid grid-cols-1 gap-3 max-w-[1400px] mx-auto pb-8">
             <AnimatePresence mode="popLayout">
