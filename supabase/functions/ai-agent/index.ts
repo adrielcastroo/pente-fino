@@ -30,6 +30,10 @@ function errorPayload(err: unknown) {
   return { error: typeof err === "string" ? err : JSON.stringify(err) };
 }
 
+const numberLikeInput = z.union([z.number(), z.string()]);
+const optionalNumberInput = numberLikeInput.optional();
+const requiredNumberInput = numberLikeInput;
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -141,7 +145,7 @@ Data/hora: ${new Date().toISOString()}.`;
         inputSchema: z.object({
           codigo: z.string().optional().describe("Código exato do item (opcional)"),
           descricao: z.string().optional().describe("Trecho da descrição para busca ilike (opcional)"),
-          limit: z.number().optional().describe("Quantidade máxima de registros"),
+          limit: optionalNumberInput.describe("Quantidade máxima de registros"),
         }),
         execute: async ({ codigo, descricao, limit }) => {
           try {
@@ -200,7 +204,7 @@ Data/hora: ${new Date().toISOString()}.`;
           data_de: z.string().optional().describe("Data inicial YYYY-MM-DD"),
           data_ate: z.string().optional().describe("Data final YYYY-MM-DD"),
           status: z.string().optional(),
-          limit: z.number().optional().describe("Quantidade máxima de registros"),
+          limit: optionalNumberInput.describe("Quantidade máxima de registros"),
         }),
         execute: async ({ produto, data_de, data_ate, status, limit }) => {
           try {
@@ -230,7 +234,7 @@ Data/hora: ${new Date().toISOString()}.`;
         inputSchema: z.object({
           codigo: z.string(),
           tipo: z.string().optional().describe("entrada, saida ou todos"),
-          limit: z.number().optional().describe("Quantidade máxima de registros"),
+          limit: optionalNumberInput.describe("Quantidade máxima de registros"),
         }),
         execute: async ({ codigo, tipo, limit }) => {
           try {
@@ -257,7 +261,7 @@ Data/hora: ${new Date().toISOString()}.`;
       consultar_tecidos_sem_espaco: tool({
         description: "Lista lotes de tecidos que não têm endereço alocado no mapa.",
         inputSchema: z.object({
-          limit: z.number().optional().describe("Quantidade máxima de registros"),
+          limit: optionalNumberInput.describe("Quantidade máxima de registros"),
         }),
         execute: async ({ limit }) => {
           try {
@@ -277,7 +281,7 @@ Data/hora: ${new Date().toISOString()}.`;
       consultar_conferencias_recentes: tool({
         description: "Lista conferências recentes do módulo estoque.",
         inputSchema: z.object({
-          limit: z.number().optional().describe("Quantidade máxima de registros"),
+          limit: optionalNumberInput.describe("Quantidade máxima de registros"),
         }),
         execute: async ({ limit }) => {
           try {
@@ -300,7 +304,7 @@ Data/hora: ${new Date().toISOString()}.`;
           "Prepara um rascunho de transferência entre depósitos. Esta ferramenta NÃO executa a criação — apenas retorna o payload validado para o usuário confirmar. Depois de confirmado, o app dispara a criação via /estoque/transferencias.",
         inputSchema: z.object({
           produto: z.string(),
-          quantidade: z.number(),
+          quantidade: requiredNumberInput,
           deposito_origem: z.string(),
           deposito_destino: z.string(),
           lote: z.string().optional(),
