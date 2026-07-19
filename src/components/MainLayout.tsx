@@ -40,7 +40,6 @@ export interface MainLayoutProps {
   showResumeBanner?: boolean;
   /** Mostrar UndoBanner. Default: true (exceto em rotas de registro). */
   showUndoBanner?: boolean;
-  /** Rotas onde o footer é omitido. */
 }
 
 export default function MainLayout({
