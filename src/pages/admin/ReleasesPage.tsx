@@ -133,6 +133,51 @@ export default function ReleasesPage() {
         </Dialog>
       </div>
 
+      {(() => {
+        const currentVersion = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : null;
+        const currentBuildTime = typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : null;
+        const match = releases?.find(
+          (r) =>
+            r.version === currentVersion &&
+            currentBuildTime &&
+            r.build_time &&
+            new Date(r.build_time).getTime() === new Date(currentBuildTime).getTime(),
+        );
+        return (
+          <Card className={`p-4 border-l-4 ${match ? 'border-l-primary' : 'border-l-amber-500'}`}>
+            <div className="flex items-start gap-3">
+              {match ? (
+                <Clock className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+              ) : (
+                <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold">Build atual</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  <span className="font-mono">v{currentVersion ?? '?'}</span>
+                  {currentBuildTime && (
+                    <> · compilado em {new Date(currentBuildTime).toLocaleString('pt-BR')}</>
+                  )}
+                </p>
+                {match ? (
+                  <p className="text-xs mt-1">
+                    Registrado em <strong>app_releases</strong> {formatRelative(match.updated_at ?? match.released_at)}
+                    {' '}(<span className="text-muted-foreground">{new Date(match.updated_at ?? match.released_at).toLocaleString('pt-BR')}</span>).
+                  </p>
+                ) : (
+                  <p className="text-xs mt-1 text-amber-600 dark:text-amber-400">
+                    Este build ainda não foi registrado. O registro é automático no primeiro acesso autenticado —
+                    recarregue a página logado ou registre manualmente pelo botão acima.
+                  </p>
+                )}
+              </div>
+            </div>
+          </Card>
+        );
+      })()}
+
+
+
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Carregando...</p>
       ) : !releases?.length ? (
