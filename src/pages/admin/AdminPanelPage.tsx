@@ -107,7 +107,6 @@ export default function AdminPanelPage() {
     <PageShell>
       <PageHeader
         title="Painel Admin"
-        subtitle="Controle total do aplicativo: features, versões, usuários, banco e segurança."
         actions={
           <div className="flex items-center gap-2 text-xs">
             <Badge variant="outline" className="font-mono h-7 px-2.5">v{version}</Badge>
