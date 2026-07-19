@@ -64,7 +64,9 @@ const DepositosAdminPage = lazy(() => import("@/pages/admin/DepositosAdminPage")
 import RequireModule from "@/components/auth/RequireModule";
 
 
-const LoginPage = lazy(() => import("@/pages/LoginPage"));
+// LoginPage é estático — é o LCP da rota /login e não deve pagar um round-trip
+// extra de lazy import (economiza ~500–1500ms no render delay).
+import LoginPage from "@/pages/LoginPage";
 const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
 const VerifyOtp = lazy(() => import("@/pages/VerifyOtp"));
 const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
