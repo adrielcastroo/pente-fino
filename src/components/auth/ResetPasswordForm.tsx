@@ -140,7 +140,7 @@ export const ResetPasswordForm = ({
           {requirements.map((req, i) => (
             <div key={i} className="flex items-center space-x-2 text-xs">
               {req.met ? (
-                <Check className="h-3 w-3 text-emerald-500" />
+                <Check className="h-3 w-3 text-success" />
               ) : (
                 <X className="h-3 w-3 text-muted-foreground/50" />
               )}

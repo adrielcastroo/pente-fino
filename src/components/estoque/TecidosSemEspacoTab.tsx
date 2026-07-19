@@ -137,7 +137,7 @@ export default function TecidosSemEspacoTab() {
       <CardHeader className="bg-muted/30 pb-4 border-b border-border/40">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <CardTitle className="text-lg font-bold flex items-center gap-2">
-            <PackageX className="w-5 h-5 text-amber-500" />
+            <PackageX className="w-5 h-5 text-warning" />
             Tecidos sem espaço
             <Badge variant="secondary" className="ml-2 font-mono font-bold">{filtered.length}</Badge>
           </CardTitle>
@@ -214,7 +214,7 @@ export default function TecidosSemEspacoTab() {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <PackageX className="w-5 h-5 text-amber-500" />
+              <PackageX className="w-5 h-5 text-warning" />
               Tecido sem espaço
             </DialogTitle>
             <DialogDescription>

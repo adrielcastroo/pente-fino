@@ -28,9 +28,9 @@ interface AugeSaida {
 }
 
 const SITUACAO_STYLE: Record<string, string> = {
-  '10': 'bg-amber-500/10 text-amber-400 border-amber-500/30',
-  '20': 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
-  '8':  'bg-red-500/10 text-red-400 border-red-500/30',
+  '10': 'bg-amber-500/10 text-warning border-amber-500/30',
+  '20': 'bg-emerald-500/10 text-success border-emerald-500/30',
+  '8':  'bg-red-500/10 text-destructive border-red-500/30',
   '30': 'bg-slate-500/10 text-slate-400 border-slate-500/30',
 };
 
@@ -216,7 +216,7 @@ export default function AugeSaidasTab() {
               </div>
 
               {r.ds_efetivacao && (
-                <div className="mt-3 pt-3 border-t border-red-500/20 flex items-start gap-2 text-[11px] font-medium text-red-400/90">
+                <div className="mt-3 pt-3 border-t border-red-500/20 flex items-start gap-2 text-[11px] font-medium text-destructive/90">
                   <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                   <span className="leading-snug">{r.ds_efetivacao}</span>
                 </div>
@@ -241,9 +241,9 @@ export default function AugeSaidasTab() {
 
 function StatBox({ label, value, tone }: { label: string; value: number; tone?: 'emerald' | 'amber' | 'red' }) {
   const toneCls =
-    tone === 'emerald' ? 'text-emerald-400' :
-    tone === 'amber' ? 'text-amber-400' :
-    tone === 'red' ? 'text-red-400' : 'text-foreground';
+    tone === 'emerald' ? 'text-success' :
+    tone === 'amber' ? 'text-warning' :
+    tone === 'red' ? 'text-destructive' : 'text-foreground';
   return (
     <div className="bg-card/60 border border-border/40 rounded-md p-3">
       <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground/60">{label}</p>

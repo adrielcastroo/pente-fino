@@ -20,11 +20,11 @@ import { cn } from '@/lib/utils';
 const POLL_MS = 15_000;
 
 const statusStyle: Record<string, string> = {
-  success: 'bg-green-500/15 text-green-400 border-green-500/30',
-  error: 'bg-red-500/15 text-red-400 border-red-500/30',
-  crashed: 'bg-red-500/15 text-red-400 border-red-500/30',
+  success: 'bg-green-500/15 text-success border-green-500/30',
+  error: 'bg-red-500/15 text-destructive border-red-500/30',
+  crashed: 'bg-red-500/15 text-destructive border-red-500/30',
   running: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
-  waiting: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/30',
+  waiting: 'bg-yellow-500/15 text-warning border-yellow-500/30',
   canceled: 'bg-gray-500/15 text-gray-400 border-gray-500/30',
 };
 
@@ -200,9 +200,9 @@ export default function N8nMonitorPage() {
                 )}
               >
                 <div className="flex items-start gap-2">
-                  {d.level === 'ok' && <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5" />}
-                  {d.level === 'warn' && <AlertTriangle className="h-4 w-4 text-yellow-500 mt-0.5" />}
-                  {d.level === 'error' && <XCircle className="h-4 w-4 text-red-500 mt-0.5" />}
+                  {d.level === 'ok' && <CheckCircle2 className="h-4 w-4 text-success mt-0.5" />}
+                  {d.level === 'warn' && <AlertTriangle className="h-4 w-4 text-warning mt-0.5" />}
+                  {d.level === 'error' && <XCircle className="h-4 w-4 text-destructive mt-0.5" />}
                   <div className="flex-1">
                     <div className="font-semibold">{d.title}</div>
                     <div className="text-xs text-muted-foreground mt-1">{d.detail}</div>
@@ -244,7 +244,7 @@ export default function N8nMonitorPage() {
                   </div>
                 </div>
                 {e.errorMessage && (
-                  <span className="text-[10px] text-red-400 max-w-[200px] truncate">{e.errorMessage}</span>
+                  <span className="text-[10px] text-destructive max-w-[200px] truncate">{e.errorMessage}</span>
                 )}
               </button>
             ))}
@@ -327,7 +327,7 @@ export default function N8nMonitorPage() {
                 <div className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" /> Carregando detalhes…</div>
               ) : selected.errorMessage ? (
                 <div className="bg-red-500/10 border border-red-500/30 rounded p-3 text-xs space-y-1">
-                  <div className="font-semibold text-red-400">Erro no nó "{selected.errorNode || '?'}"</div>
+                  <div className="font-semibold text-destructive">Erro no nó "{selected.errorNode || '?'}"</div>
                   <div className="text-muted-foreground">{selected.errorMessage}</div>
                 </div>
               ) : null}

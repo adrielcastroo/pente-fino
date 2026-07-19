@@ -340,7 +340,7 @@ export default function SelecionarModuloPage() {
           </div>
 
           {!isOnline && (
-            <div className="mb-4 flex items-center gap-2 rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs text-amber-700 dark:text-amber-300">
+            <div className="mb-4 flex items-center gap-2 rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs text-warning dark:text-amber-300">
               <WifiOff className="w-3.5 h-3.5" />
               Sem conexão — dados podem estar desatualizados
             </div>
@@ -379,7 +379,7 @@ export default function SelecionarModuloPage() {
               className="mb-6 flex items-center justify-between gap-3 rounded-md border border-amber-500/30 bg-amber-500/5 px-4 py-3 hover:bg-amber-500/10 transition-colors"
             >
               <div className="min-w-0">
-                <p className="text-xs font-semibold text-amber-700 dark:text-amber-300">
+                <p className="text-xs font-semibold text-warning dark:text-amber-300">
                   Sessão aberta{processo ? `: ${processo}` : ''}
                 </p>
                 <p className="text-[11px] text-muted-foreground mt-0.5 tabular-nums">
@@ -387,7 +387,7 @@ export default function SelecionarModuloPage() {
                   {sessionStartedAt ? ` · iniciada ${formatTimeAgo(new Date(sessionStartedAt).toISOString())}` : ''}
                 </p>
               </div>
-              <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 dark:text-amber-300 shrink-0">
+              <span className="inline-flex items-center gap-1 text-xs font-medium text-warning dark:text-amber-300 shrink-0">
                 Retomar <ArrowRight className="w-3.5 h-3.5" />
               </span>
             </Link>
@@ -411,7 +411,7 @@ export default function SelecionarModuloPage() {
                 <Package className="w-5 h-5 text-sky-600" strokeWidth={1.75} />
                 <h2 className="text-sm font-semibold text-foreground">Estoque</h2>
                 {!!stats?.estoque.openConferences && (
-                  <span className="ml-auto text-[10px] font-medium text-amber-700 dark:text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded px-1.5 py-0.5 tabular-nums">
+                  <span className="ml-auto text-[10px] font-medium text-warning dark:text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded px-1.5 py-0.5 tabular-nums">
                     {stats.estoque.openConferences} aberta{stats.estoque.openConferences > 1 ? 's' : ''}
                   </span>
                 )}
@@ -467,10 +467,10 @@ export default function SelecionarModuloPage() {
               }`}
             >
               <div className="flex items-center gap-2 mb-4">
-                <Truck className="w-5 h-5 text-emerald-600" strokeWidth={1.75} />
+                <Truck className="w-5 h-5 text-success" strokeWidth={1.75} />
                 <h2 className="text-sm font-semibold text-foreground">Expedição</h2>
                 {!!stats?.expedicao.pendentes && (
-                  <span className="ml-auto text-[10px] font-medium text-amber-700 dark:text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded px-1.5 py-0.5 tabular-nums">
+                  <span className="ml-auto text-[10px] font-medium text-warning dark:text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded px-1.5 py-0.5 tabular-nums">
                     {stats.expedicao.pendentes} pendente{stats.expedicao.pendentes > 1 ? 's' : ''}
                   </span>
                 )}

@@ -1038,7 +1038,7 @@ function SilentPrintPanel() {
 
       {enabled && (
         <div className="rounded-md bg-amber-500/10 border border-amber-500/20 px-2 py-1.5 text-[10px] leading-tight">
-          <b className="text-amber-700 dark:text-amber-400">Atenção:</b> se o Chrome/Edge não foi aberto com a flag <span className="font-mono">--kiosk-printing</span>, o diálogo ainda aparecerá.
+          <b className="text-warning dark:text-warning">Atenção:</b> se o Chrome/Edge não foi aberto com a flag <span className="font-mono">--kiosk-printing</span>, o diálogo ainda aparecerá.
         </div>
       )}
 

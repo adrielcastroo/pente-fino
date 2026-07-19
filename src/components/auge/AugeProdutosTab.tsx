@@ -228,7 +228,7 @@ export default function AugeProdutosTab() {
                       {r.unidade && <Badge variant="outline" className="text-[10px] font-mono">{r.unidade}</Badge>}
                     </TableCell>
                     <TableCell className="text-xs text-right font-mono">{fmtNum(r.qt_estoque)}</TableCell>
-                    <TableCell className={`text-xs text-right font-mono font-bold ${(r.qt_disponivel || 0) > 0 ? 'text-emerald-500' : 'text-muted-foreground'}`}>
+                    <TableCell className={`text-xs text-right font-mono font-bold ${(r.qt_disponivel || 0) > 0 ? 'text-success' : 'text-muted-foreground'}`}>
                       {fmtNum(r.qt_disponivel)}
                     </TableCell>
                     <TableCell>
@@ -270,9 +270,9 @@ export default function AugeProdutosTab() {
 
 function StatBox({ label, value, tone }: { label: string; value: number; tone?: 'emerald' | 'amber' | 'red' }) {
   const toneCls =
-    tone === 'emerald' ? 'text-emerald-500' :
-    tone === 'amber' ? 'text-amber-500' :
-    tone === 'red' ? 'text-red-500' : 'text-foreground';
+    tone === 'emerald' ? 'text-success' :
+    tone === 'amber' ? 'text-warning' :
+    tone === 'red' ? 'text-destructive' : 'text-foreground';
   return (
     <div className="bg-card/60 border border-border/40 rounded-md p-3">
       <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground/60">{label}</p>
@@ -287,7 +287,7 @@ function Flag({ on, label, title }: { on: boolean | null; label: string; title: 
     <span
       title={`${title}: ${active ? 'sim' : 'não'}`}
       className={`inline-flex items-center justify-center w-5 h-5 rounded text-[9px] font-bold ${
-        active ? 'bg-emerald-500/15 text-emerald-500' : 'bg-muted/30 text-muted-foreground/40'
+        active ? 'bg-emerald-500/15 text-success' : 'bg-muted/30 text-muted-foreground/40'
       }`}
     >
       {label}

@@ -437,7 +437,7 @@ export default function DashboardPage() {
                                 "text-[10px] font-medium px-2 py-0 h-5",
                                 isEmpty
                                   ? "border-muted-foreground/30 text-muted-foreground bg-muted/30"
-                                  : "border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/5"
+                                  : "border-emerald-500/30 text-success dark:text-success bg-emerald-500/5"
                               )}>
                                 {isEmpty ? 'Vazia' : 'Concluído'}
                               </Badge>
@@ -623,7 +623,7 @@ export default function DashboardPage() {
                   <tr key={c.id} className={cn("transition-colors group", isDark ? "hover:bg-muted/40" : "hover:bg-muted/40")}>
                     <td className={cn("px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 font-bold group-hover:text-primary truncate max-w-[120px] sm:max-w-[200px] transition-colors text-sm sm:text-base", isDark ? "text-foreground" : "text-foreground")}>{c.name}</td>
                     <td className={cn("px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 font-bold truncate max-w-[120px] hidden sm:table-cell", isDark ? "text-muted-foreground" : "text-muted-foreground")}>{c.conferente || '—'}</td>
-                    <td className="px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-center font-mono text-emerald-500/80 text-[12px] font-bold hidden xs:table-cell">{formatTimeBR(c.startedAt)}</td>
+                    <td className="px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-center font-mono text-success/80 text-[12px] font-bold hidden xs:table-cell">{formatTimeBR(c.startedAt)}</td>
                     <td className={cn("px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-center font-mono text-[12px] font-bold hidden md:table-cell", isDark ? "text-muted-foreground/70" : "text-muted-foreground/70")}>{formatTimeBR(c.finishedAt)}</td>
                     <td className="px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-center">
                       <Badge variant="outline" className={cn("text-[10px] font-bold px-4 py-1 rounded-full border-primary/20 text-primary bg-primary/5")}>{c.duration}</Badge>

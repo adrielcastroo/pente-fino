@@ -144,7 +144,7 @@ function EditRegistroDialog({
       <label className={labelCls}>{label}</label>
       {extra}
       {form && registro && String(form[key] ?? '') !== String(registro[key] ?? '') && (
-        <span className="block text-[10px] text-amber-600 ml-1">
+        <span className="block text-[10px] text-warning ml-1">
           Anterior: {String(registro[key] ?? '—') || '—'}
         </span>
       )}
@@ -949,7 +949,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-sm font-semibold tracking-tight text-foreground truncate max-w-[200px] sm:max-w-none">{folderName}</span>
                 {!conf.finishedAt && (
-                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded uppercase tracking-wide bg-amber-500/10 text-amber-600 border border-amber-500/20">
+                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded uppercase tracking-wide bg-amber-500/10 text-warning border border-amber-500/20">
                     Aberta
                   </span>
                 )}
@@ -982,7 +982,7 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
                   return (
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <span className={`tabular-nums cursor-help ${suspect ? 'font-semibold text-amber-600' : ''}`}>
+                        <span className={`tabular-nums cursor-help ${suspect ? 'font-semibold text-warning' : ''}`}>
                           {suspect && '⚠ '}{formatDuration(conf.startedAt, conf.finishedAt)}
                         </span>
                       </TooltipTrigger>

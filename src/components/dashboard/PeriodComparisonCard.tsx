@@ -142,9 +142,9 @@ export function PeriodComparisonCard({ history }: Props) {
               trend === 'flat'
                 ? 'bg-muted text-muted-foreground'
                 : isPositive
-                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                ? 'bg-emerald-500/10 text-success dark:text-success'
                 : isNegative
-                ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                ? 'bg-rose-500/10 text-destructive dark:text-destructive'
                 : 'bg-muted text-muted-foreground';
 
             

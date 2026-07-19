@@ -81,11 +81,11 @@ function redactEntry(e: HarEntry): HarEntry {
 
 function methodColor(m: string) {
   switch (m) {
-    case 'GET': return 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30';
+    case 'GET': return 'bg-emerald-500/15 text-success border-emerald-500/30';
     case 'POST': return 'bg-blue-500/15 text-blue-500 border-blue-500/30';
-    case 'PUT': return 'bg-amber-500/15 text-amber-500 border-amber-500/30';
+    case 'PUT': return 'bg-amber-500/15 text-warning border-amber-500/30';
     case 'PATCH': return 'bg-purple-500/15 text-purple-500 border-purple-500/30';
-    case 'DELETE': return 'bg-red-500/15 text-red-500 border-red-500/30';
+    case 'DELETE': return 'bg-red-500/15 text-destructive border-red-500/30';
     default: return 'bg-muted text-muted-foreground border-border';
   }
 }
@@ -286,7 +286,7 @@ export default function HarTransferenciasPage() {
                     >
                       <div className="flex items-center gap-2 mb-1">
                         <Badge variant="outline" className={`text-[10px] h-5 shrink-0 ${methodColor(e.method)}`}>{e.method}</Badge>
-                        <Badge variant="outline" className={`text-[10px] h-5 shrink-0 ${e.status >= 400 ? 'text-red-500 border-red-500/30' : e.status >= 300 ? 'text-amber-500' : ''}`}>{e.status}</Badge>
+                        <Badge variant="outline" className={`text-[10px] h-5 shrink-0 ${e.status >= 400 ? 'text-destructive border-red-500/30' : e.status >= 300 ? 'text-warning' : ''}`}>{e.status}</Badge>
                         <span className="text-[10px] text-muted-foreground font-mono truncate">{e.host}</span>
                       </div>
                       <p className="text-[11px] font-mono break-all leading-tight">{e.path}</p>

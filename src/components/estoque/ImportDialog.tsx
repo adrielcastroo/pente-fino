@@ -388,12 +388,12 @@ export default function ImportDialog({ open, onOpenChange, onImportComplete }: I
           {step === 'preview' && (
             <>
               <div className="flex gap-3">
-                <div className="flex items-center gap-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-lg px-3 py-2">
+                <div className="flex items-center gap-2 bg-emerald-500/10 text-success border border-emerald-500/20 rounded-lg px-3 py-2">
                   <CheckCircle2 className="w-4 h-4" />
                   <span className="text-xs font-bold">{validRows.length} válidos</span>
                 </div>
                 {invalidRows.length > 0 && (
-                  <div className="flex items-center gap-2 bg-red-500/10 text-red-400 border border-red-500/20 rounded-lg px-3 py-2">
+                  <div className="flex items-center gap-2 bg-red-500/10 text-destructive border border-red-500/20 rounded-lg px-3 py-2">
                     <AlertTriangle className="w-4 h-4" />
                     <span className="text-xs font-bold">{invalidRows.length} com erro</span>
                   </div>
@@ -420,10 +420,10 @@ export default function ImportDialog({ open, onOpenChange, onImportComplete }: I
                       <tr key={i} className={`border-b border-border/10 ${!row.valid ? 'bg-red-500/5' : ''}`}>
                         <td className="px-3 py-2">
                           {row.valid ? (
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                            <CheckCircle2 className="w-3.5 h-3.5 text-success" />
                           ) : (
                             <span title={row.error}>
-                              <AlertTriangle className="w-3.5 h-3.5 text-red-400" />
+                              <AlertTriangle className="w-3.5 h-3.5 text-destructive" />
                             </span>
                           )}
                         </td>

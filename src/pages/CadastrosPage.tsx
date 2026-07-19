@@ -386,7 +386,7 @@ export default function CadastrosPage() {
               <div className="flex flex-wrap items-center gap-2 w-full md:w-auto md:ml-auto">
                 <Badge variant="secondary" className="text-[10px] sm:text-xs">{filtered.length} de {itens.length}</Badge>
                 {semFornecedorCount > 0 && (
-                  <Badge variant="outline" className="text-[10px] sm:text-xs text-amber-600 dark:text-amber-400 border-amber-500/30">
+                  <Badge variant="outline" className="text-[10px] sm:text-xs text-warning dark:text-warning border-amber-500/30">
                     {semFornecedorCount} sem fornecedor
                   </Badge>
                 )}
@@ -557,7 +557,7 @@ export default function CadastrosPage() {
                       )}
                       <div className="text-[10px] text-muted-foreground">
                         Atualizado em {new Date(item.updated_at).toLocaleDateString('pt-BR')}
-                        {item.last_edited_at && <span className="ml-2 text-amber-600 dark:text-amber-400">• editado</span>}
+                        {item.last_edited_at && <span className="ml-2 text-warning dark:text-warning">• editado</span>}
                       </div>
                     </div>
                   );
@@ -665,7 +665,7 @@ export default function CadastrosPage() {
                             {wasEdited ? (
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <Badge variant="outline" className="gap-1 border-amber-500/30 bg-amber-500/5 text-amber-600 dark:text-amber-400 font-medium text-[10px] cursor-help">
+                                  <Badge variant="outline" className="gap-1 border-amber-500/30 bg-amber-500/5 text-warning dark:text-warning font-medium text-[10px] cursor-help">
                                     <History className="w-3 h-3" />
                                     editado
                                   </Badge>

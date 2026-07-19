@@ -24,7 +24,7 @@ export default function ValidacaoEtiquetaDialog({ open, onOpenChange, resultado,
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <div className={`h-12 w-12 rounded-full flex items-center justify-center mb-3 ${isDivergente ? 'bg-destructive/10 text-destructive' : 'bg-amber-500/10 text-amber-500'}`}>
+          <div className={`h-12 w-12 rounded-full flex items-center justify-center mb-3 ${isDivergente ? 'bg-destructive/10 text-destructive' : 'bg-amber-500/10 text-warning'}`}>
             {isDivergente ? <AlertTriangle className="h-6 w-6" /> : <PackageX className="h-6 w-6" />}
           </div>
           <DialogTitle>

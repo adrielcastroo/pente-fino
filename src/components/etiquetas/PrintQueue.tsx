@@ -180,7 +180,7 @@ export function PrintQueue({ items, activeTemplateId, onRemove, onClear, onPatch
 
 function StatusIcon({ status }: { status: PrintQueueItem['status'] }) {
   const base = 'h-4 w-4 shrink-0';
-  if (status === 'done') return <CheckCircle2 className={cn(base, 'text-emerald-500')} />;
+  if (status === 'done') return <CheckCircle2 className={cn(base, 'text-success')} />;
   if (status === 'error') return <AlertCircle className={cn(base, 'text-destructive')} />;
   if (status === 'printing') return <Loader2 className={cn(base, 'animate-spin text-primary')} />;
   return <div className={cn(base, 'rounded-full border border-muted-foreground/40')} />;

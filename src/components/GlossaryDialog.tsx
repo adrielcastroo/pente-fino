@@ -36,9 +36,9 @@ const GLOSSARY: GlossaryEntry[] = [
 const CAT_COLOR: Record<GlossaryEntry['category'], string> = {
   Geral: 'bg-muted text-foreground',
   Endereço: 'bg-primary/10 text-primary',
-  Operação: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+  Operação: 'bg-amber-500/10 text-warning dark:text-warning',
   Documento: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
-  Estoque: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+  Estoque: 'bg-emerald-500/10 text-success dark:text-success',
 };
 
 interface GlossaryDialogProps {

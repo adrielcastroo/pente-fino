@@ -182,7 +182,7 @@ export default function AugeAdminPanel() {
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
             <div className={`w-10 h-10 rounded-full flex items-center justify-center ${syncEnabled ? 'bg-emerald-500/10' : 'bg-amber-500/10'}`}>
-              <Power className={`w-5 h-5 ${syncEnabled ? 'text-emerald-500' : 'text-amber-500'}`} />
+              <Power className={`w-5 h-5 ${syncEnabled ? 'text-success' : 'text-warning'}`} />
             </div>
             <div>
               <Label htmlFor="auge-sync-toggle" className="font-semibold text-sm cursor-pointer">
@@ -216,11 +216,11 @@ export default function AugeAdminPanel() {
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
             ) : ping?.ok ? (
               <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                <Wifi className="w-5 h-5 text-emerald-500" />
+                <Wifi className="w-5 h-5 text-success" />
               </div>
             ) : (
               <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
-                <WifiOff className="w-5 h-5 text-red-500" />
+                <WifiOff className="w-5 h-5 text-destructive" />
               </div>
             )}
             <div>
@@ -282,7 +282,7 @@ export default function AugeAdminPanel() {
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-sm">{ent.label}</span>
-                      {!ent.mapped && <Badge variant="outline" className="text-[9px] border-amber-500/40 text-amber-500">experimental</Badge>}
+                      {!ent.mapped && <Badge variant="outline" className="text-[9px] border-amber-500/40 text-warning">experimental</Badge>}
                     </div>
                     <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">
                       {count.toLocaleString('pt-BR')} registros
@@ -295,9 +295,9 @@ export default function AugeAdminPanel() {
                 </div>
                 {last ? (
                   <div className="flex items-center gap-1.5 text-[10px]">
-                    {last.status === 'success' ? <CheckCircle2 className="w-3 h-3 text-emerald-500" /> :
-                      last.status === 'error' ? <XCircle className="w-3 h-3 text-red-500" /> :
-                      <Loader2 className="w-3 h-3 animate-spin text-amber-500" />}
+                    {last.status === 'success' ? <CheckCircle2 className="w-3 h-3 text-success" /> :
+                      last.status === 'error' ? <XCircle className="w-3 h-3 text-destructive" /> :
+                      <Loader2 className="w-3 h-3 animate-spin text-warning" />}
                     <span className="text-muted-foreground truncate">
                       {formatDateBR(last.started_at)} · {last.rows_upserted ?? 0} up
                     </span>
@@ -306,7 +306,7 @@ export default function AugeAdminPanel() {
                   <p className="text-[10px] text-muted-foreground/60 italic">Nunca sincronizado</p>
                 )}
                 {last?.error_message && (
-                  <p className="text-[10px] text-red-500/80 mt-1 line-clamp-2" title={last.error_message}>
+                  <p className="text-[10px] text-destructive/80 mt-1 line-clamp-2" title={last.error_message}>
                     {last.error_message}
                   </p>
                 )}
@@ -354,9 +354,9 @@ export default function AugeAdminPanel() {
                       <td className="p-2.5"><Badge variant="outline" className="text-[10px]">{r.entidade || 'all'}</Badge></td>
                       <td className="p-2.5">
                         <Badge className={`text-[10px] ${
-                          r.status === 'success' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30' :
-                          r.status === 'error' ? 'bg-red-500/10 text-red-500 border-red-500/30' :
-                          'bg-amber-500/10 text-amber-500 border-amber-500/30'
+                          r.status === 'success' ? 'bg-emerald-500/10 text-success border-emerald-500/30' :
+                          r.status === 'error' ? 'bg-red-500/10 text-destructive border-red-500/30' :
+                          'bg-amber-500/10 text-warning border-amber-500/30'
                         }`}>
                           {r.status}
                         </Badge>
@@ -365,7 +365,7 @@ export default function AugeAdminPanel() {
                       <td className="p-2.5 text-right font-mono font-bold">{r.rows_upserted ?? '—'}</td>
                       <td className="p-2.5 font-mono text-muted-foreground">{dur != null ? `${dur}s` : '—'}</td>
                       <td className="p-2.5 text-muted-foreground">{r.triggered_by ? 'usuário' : 'cron'}</td>
-                      <td className="p-2.5 text-red-500/80 max-w-[260px] truncate" title={r.error_message || ''}>
+                      <td className="p-2.5 text-destructive/80 max-w-[260px] truncate" title={r.error_message || ''}>
                         {r.error_message || ''}
                       </td>
                     </tr>
@@ -381,7 +381,7 @@ export default function AugeAdminPanel() {
 }
 
 function MetricCard({ icon: Icon, label, value, tone, small }: { icon: any; label: string; value: any; tone?: 'emerald' | 'amber' | 'red'; small?: boolean }) {
-  const cls = tone === 'emerald' ? 'text-emerald-500' : tone === 'amber' ? 'text-amber-500' : tone === 'red' ? 'text-red-500' : 'text-foreground';
+  const cls = tone === 'emerald' ? 'text-success' : tone === 'amber' ? 'text-warning' : tone === 'red' ? 'text-destructive' : 'text-foreground';
   return (
     <Card className="p-3 rounded-md border-border/40">
       <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground uppercase tracking-wider mb-1">

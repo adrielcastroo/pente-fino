@@ -482,7 +482,7 @@ export default function RightPanel() {
               { icon: FileText, color: 'text-primary', bg: 'bg-primary/10', label: 'Registros', value: kpis.total.toString() },
               { icon: CheckCircle2, color: 'text-success', bg: 'bg-success/10', label: kpis.m2 > 0 ? 'Total m²' : 'Total m Lin', value: kpis.m2 > 0 ? kpis.m2.toFixed(2).replace('.', ',') : formatML(kpis.ml) },
               { icon: Layers3, color: 'text-purple-500', bg: 'bg-purple-500/10', label: 'Lotes', value: kpis.lotes.toString() },
-              { icon: Clock, color: 'text-orange-500', bg: 'bg-orange-500/10', label: kpis.lastDate || 'Atualizado', value: kpis.lastTime },
+              { icon: Clock, color: 'text-warning', bg: 'bg-orange-500/10', label: kpis.lastDate || 'Atualizado', value: kpis.lastTime },
             ].map((k, idx) => (
               <div
                 key={idx}

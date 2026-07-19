@@ -192,9 +192,9 @@ export function CountingHistoryTable() {
                             variant="outline"
                             className={cn(
                               "font-semibold text-[10px] uppercase tracking-[0.2em] min-w-[140px] justify-center py-2 rounded-md border-2 shadow-sm transition-all duration-500",
-                              item.status === 'completed' && diff === 0 ? "text-emerald-600 border-emerald-600/30 bg-emerald-500/10" : 
-                              item.status === 'completed' && diff !== 0 ? "text-amber-600 border-amber-600/30 bg-amber-500/10" :
-                              "text-rose-600 border-rose-600/30 bg-rose-500/10 animate-pulse"
+                              item.status === 'completed' && diff === 0 ? "text-success border-emerald-600/30 bg-emerald-500/10" : 
+                              item.status === 'completed' && diff !== 0 ? "text-warning border-amber-600/30 bg-amber-500/10" :
+                              "text-destructive border-rose-600/30 bg-rose-500/10 animate-pulse"
                             )}
                           >
                             {item.status === 'awaiting_recheck' ? (
@@ -213,7 +213,7 @@ export function CountingHistoryTable() {
                             variant="ghost" 
                             size="icon" 
                             onClick={() => handleExportRow(item)}
-                            className="rounded-md hover:bg-emerald-500 hover:text-white text-emerald-600 w-12 h-12 transition-all duration-300 active:scale-90 border border-transparent hover:border-emerald-500/20 shadow-sm"
+                            className="rounded-md hover:bg-emerald-500 hover:text-white text-success w-12 h-12 transition-all duration-300 active:scale-90 border border-transparent hover:border-emerald-500/20 shadow-sm"
                           >
                             <FileSpreadsheet className="w-6 h-6" />
                           </Button>

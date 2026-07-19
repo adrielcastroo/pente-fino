@@ -231,7 +231,7 @@ export function InventorySuggestionsTab() {
                           Auditoria: {formatDateBR(item.ultima_contagem || item.created_at)}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2.5 text-rose-500 bg-rose-500/10 px-4 py-1.5 rounded-md border border-rose-500/20 shadow-sm">
+                      <div className="flex items-center gap-2.5 text-destructive bg-rose-500/10 px-4 py-1.5 rounded-md border border-rose-500/20 shadow-sm">
                         <AlertTriangle className="w-4 h-4" />
                         <span className="text-[11px] font-semibold uppercase tracking-[0.1em]">
                           {item.dias_atraso} Dias de Atraso

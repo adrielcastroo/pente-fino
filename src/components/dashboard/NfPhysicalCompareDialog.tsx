@@ -177,7 +177,7 @@ export function NfPhysicalCompareDialog({ open, onOpenChange, conference, confer
               <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">NFs divergentes</div>
               <div className={cn(
                 "text-lg font-semibold tabular-nums",
-                totals.divergentNfs > 0 ? "text-destructive" : "text-emerald-600"
+                totals.divergentNfs > 0 ? "text-destructive" : "text-success"
               )}>
                 {totals.divergentNfs}
               </div>
@@ -189,7 +189,7 @@ export function NfPhysicalCompareDialog({ open, onOpenChange, conference, confer
               <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Itens repetidos</div>
               <div className={cn(
                 "text-lg font-semibold tabular-nums",
-                totals.duplicateItems > 0 ? "text-amber-600" : ""
+                totals.duplicateItems > 0 ? "text-warning" : ""
               )}>
                 {totals.duplicateItems}
               </div>
@@ -227,7 +227,7 @@ export function NfPhysicalCompareDialog({ open, onOpenChange, conference, confer
                       {g.registroCount} registros · {g.items.length} itens
                     </div>
                     {g.items.some(it => it.duplicate) && (
-                      <Badge variant="outline" className="text-[10px] font-semibold bg-amber-500/10 text-amber-700 border-amber-500/30">
+                      <Badge variant="outline" className="text-[10px] font-semibold bg-amber-500/10 text-warning border-amber-500/30">
                         <FileWarning className="w-3 h-3 mr-1" /> repetidos
                       </Badge>
                     )}
@@ -250,7 +250,7 @@ export function NfPhysicalCompareDialog({ open, onOpenChange, conference, confer
                     {hasExp && (
                       <div className={cn(
                         "min-w-[80px] text-right font-semibold tabular-nums px-3 py-1.5 rounded-lg",
-                        isDivergent ? "bg-destructive/15 text-destructive" : "bg-emerald-500/15 text-emerald-600"
+                        isDivergent ? "bg-destructive/15 text-destructive" : "bg-emerald-500/15 text-success"
                       )}>
                         {isDivergent ? (
                           <span className="inline-flex items-center gap-1">
@@ -273,13 +273,13 @@ export function NfPhysicalCompareDialog({ open, onOpenChange, conference, confer
                       key={it.item}
                       className={cn(
                         "flex items-center justify-between gap-2 py-1.5 text-sm border-b border-border/10 last:border-b-0",
-                        it.duplicate && "text-amber-700"
+                        it.duplicate && "text-warning"
                       )}
                     >
                       <span className="font-bold truncate">
                         {it.item}
                         {it.occurrences > 1 && (
-                          <span className="ml-2 text-[10px] font-semibold uppercase text-amber-600">×{it.occurrences}</span>
+                          <span className="ml-2 text-[10px] font-semibold uppercase text-warning">×{it.occurrences}</span>
                         )}
                       </span>
                       <span className="font-semibold tabular-nums shrink-0">

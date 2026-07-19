@@ -331,7 +331,7 @@ export default function MotorControlePage() {
                     <div className="group space-y-1.5">
                       <div className="flex items-center justify-between px-1">
                         <label className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground/60">Modelo / Proc / Cx</label>
-                        <button onClick={() => setLockMotorModelo(!lockMotorModelo)} className={`p-1 rounded-md transition-colors ${lockMotorModelo ? 'text-amber-500 bg-amber-500/10' : 'text-muted-foreground/30'}`}>
+                        <button onClick={() => setLockMotorModelo(!lockMotorModelo)} className={`p-1 rounded-md transition-colors ${lockMotorModelo ? 'text-warning bg-amber-500/10' : 'text-muted-foreground/30'}`}>
                           {lockMotorModelo ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
                         </button>
                       </div>
@@ -339,7 +339,7 @@ export default function MotorControlePage() {
                         value={coulisseModeloProcCx} 
                         onChange={e => setCoulisseModeloProcCx(sanitize(e.target.value))} 
                         placeholder="Ex: MOTION CM-01 PROC 1234 CX01" 
-                        className={`w-full h-14 px-5 rounded-md border bg-card/50 text-sm font-bold focus:ring-4 focus:ring-primary/10 outline-none transition-all ${lockMotorModelo ? 'border-amber-500/30 text-amber-600' : 'border-white/5'}`} 
+                        className={`w-full h-14 px-5 rounded-md border bg-card/50 text-sm font-bold focus:ring-4 focus:ring-primary/10 outline-none transition-all ${lockMotorModelo ? 'border-amber-500/30 text-warning' : 'border-white/5'}`} 
                       />
                     </div>
                     {coulisseModeloProcCx.trim() && (
@@ -378,7 +378,7 @@ export default function MotorControlePage() {
                     <div className="group space-y-1.5">
                       <div className="flex items-center justify-between px-1">
                         <label className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground/60">Modelo / Marca</label>
-                        <button onClick={() => setLockMotorModelo(!lockMotorModelo)} className={`p-1 rounded-md transition-colors ${lockMotorModelo ? 'text-amber-500 bg-amber-500/10' : 'text-muted-foreground/30'}`}>
+                        <button onClick={() => setLockMotorModelo(!lockMotorModelo)} className={`p-1 rounded-md transition-colors ${lockMotorModelo ? 'text-warning bg-amber-500/10' : 'text-muted-foreground/30'}`}>
                           {lockMotorModelo ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
                         </button>
                       </div>
@@ -386,13 +386,13 @@ export default function MotorControlePage() {
                         value={modelo} 
                         onChange={e => setModelo(sanitize(e.target.value))} 
                         placeholder={subMode === 'motor' ? 'Ex: SOMFY, DOOYA...' : 'Ex: 1870405, SI 1 PU...'} 
-                        className={`w-full h-14 px-5 rounded-md border bg-card/50 text-sm font-bold focus:ring-4 focus:ring-primary/10 outline-none transition-all ${lockMotorModelo ? 'border-amber-500/30 text-amber-600' : 'border-white/5'}`} 
+                        className={`w-full h-14 px-5 rounded-md border bg-card/50 text-sm font-bold focus:ring-4 focus:ring-primary/10 outline-none transition-all ${lockMotorModelo ? 'border-amber-500/30 text-warning' : 'border-white/5'}`} 
                       />
                     </div>
                     <div className="group space-y-1.5">
                       <div className="flex items-center justify-between px-1">
                         <label className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground/60">Nota Fiscal (NFe)</label>
-                        <button onClick={() => setLockMotorNf(!lockMotorNf)} className={`p-1 rounded-md transition-colors ${lockMotorNf ? 'text-amber-500 bg-amber-500/10' : 'text-muted-foreground/30'}`}>
+                        <button onClick={() => setLockMotorNf(!lockMotorNf)} className={`p-1 rounded-md transition-colors ${lockMotorNf ? 'text-warning bg-amber-500/10' : 'text-muted-foreground/30'}`}>
                           {lockMotorNf ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
                         </button>
                       </div>
@@ -400,7 +400,7 @@ export default function MotorControlePage() {
                         value={nf} 
                         onChange={e => setNf(sanitize(e.target.value))} 
                         placeholder="Ex: 146842" 
-                        className={`w-full h-14 px-5 rounded-md border bg-card/50 text-sm font-mono font-bold focus:ring-4 focus:ring-primary/10 outline-none transition-all ${lockMotorNf ? 'border-amber-500/30 text-amber-600' : 'border-white/5'}`} 
+                        className={`w-full h-14 px-5 rounded-md border bg-card/50 text-sm font-mono font-bold focus:ring-4 focus:ring-primary/10 outline-none transition-all ${lockMotorNf ? 'border-amber-500/30 text-warning' : 'border-white/5'}`} 
                       />
                     </div>
                     <div className="group space-y-1.5">

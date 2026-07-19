@@ -46,9 +46,9 @@ interface ItemRow {
 const STATUS_META: Record<RomaneioStatus, { label: string; className: string }> = {
   rascunho:   { label: 'Rascunho',   className: 'bg-muted text-muted-foreground' },
   gerado:     { label: 'Gerado',     className: 'bg-primary/15 text-primary' },
-  enviado:    { label: 'Enviado',    className: 'bg-amber-500/15 text-amber-600 dark:text-amber-400' },
+  enviado:    { label: 'Enviado',    className: 'bg-amber-500/15 text-warning dark:text-warning' },
   retornou:   { label: 'Retornou',   className: 'bg-blue-500/15 text-blue-600 dark:text-blue-400' },
-  finalizado: { label: 'Finalizado', className: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' },
+  finalizado: { label: 'Finalizado', className: 'bg-emerald-500/15 text-success dark:text-success' },
 };
 
 const fmtDate = (iso: string | null) => {

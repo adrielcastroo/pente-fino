@@ -90,7 +90,7 @@ export default function AugeLotesTab() {
             <TableBody>
               {filtered.map(r => {
                 const dt = daysTo(r.data_validade);
-                const tone = dt == null ? '' : dt < 0 ? 'text-red-500' : dt < 30 ? 'text-amber-500' : 'text-emerald-500';
+                const tone = dt == null ? '' : dt < 0 ? 'text-destructive' : dt < 30 ? 'text-warning' : 'text-success';
                 return (
                   <TableRow key={r.id} className="cursor-pointer hover:bg-muted/40" onClick={() => setDetail(r)}>
                     <TableCell className="font-mono text-xs font-bold text-primary">{r.codigo_produto}</TableCell>
