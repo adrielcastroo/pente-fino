@@ -343,9 +343,40 @@ function firstText(...values: any[]): string | null {
 }
 
 function getErrorMessage(error: unknown): string {
-  if (error instanceof Error) return error.message;
+  if (error == null) return 'Erro desconhecido';
+  if (error instanceof Error) return error.message || error.name || 'Error';
   if (typeof error === 'string') return error;
-  try { return JSON.stringify(error); } catch { return String(error); }
+  if (typeof error === 'object') {
+    const e = error as Record<string, any>;
+    // Prioridades: message > error > error_description > details > hint > code
+    const candidates = [e.message, e.error, e.error_description, e.details, e.hint, e.code, e.statusText];
+    for (const c of candidates) {
+      if (typeof c === 'string' && c.trim()) return c;
+      if (c && typeof c === 'object') {
+        try { const s = JSON.stringify(c); if (s && s !== '{}') return s; } catch { /* ignore */ }
+      }
+    }
+    try {
+      const s = JSON.stringify(error, Object.getOwnPropertyNames(error as any));
+      if (s && s !== '{}') return s;
+    } catch { /* ignore */ }
+  }
+  try { return String(error); } catch { return 'Erro não serializável'; }
+}
+
+function serializeError(error: unknown): { message: string; stack?: string; details?: any } {
+  const message = getErrorMessage(error);
+  const out: { message: string; stack?: string; details?: any } = { message };
+  if (error instanceof Error && error.stack) {
+    out.stack = error.stack.split('\n').slice(0, 8).join('\n');
+  }
+  if (error && typeof error === 'object' && !(error instanceof Error)) {
+    try {
+      const raw = JSON.stringify(error, Object.getOwnPropertyNames(error as any));
+      if (raw && raw !== '{}') out.details = JSON.parse(raw);
+    } catch { /* ignore */ }
+  }
+  return out;
 }
 
 function normalizeDescricaoProduto(v: any, codigo?: any): string | null {
