@@ -922,6 +922,52 @@ function transferenciaPatch(row: any): Record<string, any> {
   };
 }
 
+function hasValue(v: any): boolean {
+  if (v === null || v === undefined) return false;
+  if (typeof v === 'string') return v.trim() !== '';
+  if (typeof v === 'number') return Number.isFinite(v) && v !== 0;
+  return true;
+}
+
+function preserveTransferenciaDetalhes(row: any, existing?: any): any {
+  if (!existing) return row;
+  const merged = { ...row };
+  for (const field of [
+    'deposito_origem',
+    'deposito_destino',
+    'codigo_produto',
+    'descricao_produto',
+    'nr_efetivacao',
+    'observacao',
+    'usuario_criacao',
+    'usuario_efetivacao',
+    'usuario_enviou_logistica',
+    'usuario_recebido_logistica',
+    'ds_efetivacao',
+    'detalhe_sincronizado_em',
+  ]) {
+    if (!hasValue(merged[field]) && hasValue(existing[field])) merged[field] = existing[field];
+  }
+  if (!hasValue(merged.quantidade) && hasValue(existing.quantidade)) merged.quantidade = existing.quantidade;
+  merged.raw = { ...(existing.raw ?? {}), ...(row.raw ?? {}) };
+  return merged;
+}
+
+async function fetchExistingTransferencias(admin: any, rows: any[]) {
+  const out = new Map<string, any>();
+  const ids = Array.from(new Set(rows.map((r: any) => r.id_externo).filter(Boolean)));
+  for (let i = 0; i < ids.length; i += 500) {
+    const chunk = ids.slice(i, i + 500);
+    const { data, error } = await admin
+      .from('auge_transferencias')
+      .select('id_externo,deposito_origem,deposito_destino,codigo_produto,descricao_produto,quantidade,nr_efetivacao,observacao,usuario_criacao,usuario_efetivacao,usuario_enviou_logistica,usuario_recebido_logistica,ds_efetivacao,detalhe_sincronizado_em,raw')
+      .in('id_externo', chunk);
+    if (error) throw error;
+    for (const row of data ?? []) out.set(row.id_externo, row);
+  }
+  return out;
+}
+
 async function backfillTransferenciasChunk(admin: any, auth: { jar: Jar; csrf: string; apiToken: string | null }, runId: string) {
   const state = await loadTecidosState(admin, runId);
   const lastId = cleanText(state.last_id);
@@ -1228,11 +1274,13 @@ async function syncEntity(admin: any, auth: { jar: Jar; csrf: string; apiToken: 
       const enrichStats = await enrichTransferencias(auth, mapped, 4, 800);
       // Remove campo interno antes do upsert
       const rows = mapped.map(({ _cd, _cd_mov, _cd_transf, _detail_ids, ...rest }: any) => rest);
-      newMaxDt = maxDateISO(rows);
+      const existing = await fetchExistingTransferencias(admin, rows);
+      const rowsToUpsert = rows.map((row: any) => preserveTransferenciaDetalhes(row, existing.get(row.id_externo)));
+      newMaxDt = maxDateISO(rowsToUpsert);
       const { error, count } = await admin.from('auge_transferencias')
-        .upsert(rows, { onConflict: 'id_externo', count: 'exact' });
+        .upsert(rowsToUpsert, { onConflict: 'id_externo', count: 'exact' });
       if (error) throw error;
-      upserted = count ?? rows.length;
+      upserted = count ?? rowsToUpsert.length;
       await admin.from('auge_sync_runs').update({
         detalhes: { path, days_back: days, last_max_dt: lastMax, enrich: enrichStats },
       }).eq('id', runId);
