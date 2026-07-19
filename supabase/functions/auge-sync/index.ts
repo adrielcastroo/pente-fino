@@ -742,30 +742,24 @@ async function enrichTransferencias(
     while (idx < pending.length) {
       const i = idx++;
       const row = pending[i];
-      const { det, debug } = await fetchTransferenciaDetalhe(auth, row._cd_mov ?? null, row._cd_transf ?? row._cd ?? null);
+      const { det, itens, debug } = await fetchTransferenciaDetalhe(auth, row._cd_mov ?? null, row._cd_transf ?? row._cd ?? null);
       if (!det) {
         failed++;
         if (!sampleDebug) sampleDebug = { cd_mov: row._cd_mov, cd_transf: row._cd_transf, debug };
         continue;
       }
-      row.deposito_origem = row.deposito_origem ?? det.cdDepositoOrigem ?? det.cdDepositoOrig ?? null;
-      row.deposito_destino = row.deposito_destino ?? det.cdDepositoDestino ?? det.cdDepositoDest ?? null;
-      row.codigo_produto = row.codigo_produto ?? det.cdItem ?? det.codigoItem ?? null;
-      row.quantidade = row.quantidade ?? parseNum(det.qtItem);
-      row.situacao = row.situacao ?? det.idSituacao ?? null;
-      row.ds_situacao = row.ds_situacao ?? det.dsSituacao ?? null;
-      row.usuario_efetivacao = row.usuario_efetivacao ?? det.nmUsuarioEfetivacao ?? null;
-      row.usuario_enviou_logistica = row.usuario_enviou_logistica ?? det.nmUsuarioEnviouLogistica ?? null;
-      row.usuario_recebido_logistica = row.usuario_recebido_logistica ?? det.nmUsuarioRecebidoLogistica ?? null;
-      row.valor = row.valor ?? parseNum(det.vlCustoMovimentacao);
-      row.nr_efetivacao = row.nr_efetivacao ?? (det.nrTransfEstoqueERP ? String(det.nrTransfEstoqueERP) : null);
-      row.ds_efetivacao = row.ds_efetivacao ?? det.dsEfetivacao ?? null;
-      row.observacao = row.observacao ?? det.dsObservacao ?? det.dsObs ?? null;
-      row.raw = { ...(row.raw ?? {}), _detalhe: det };
+      row.deposito_origem = row.deposito_origem ?? det.cdDepositoOrigem ?? null;
+      row.deposito_destino = row.deposito_destino ?? det.cdDepositoDestino ?? null;
+      row.codigo_produto = row.codigo_produto ?? det.cdItem ?? null;
+      // qtdTransferencia é a quantidade real do item; qtItem no LIST é a contagem de itens
+      const qtdTransf = parseNum(det.qtdTransferencia);
+      if (qtdTransf && itens.length === 1) row.quantidade = qtdTransf;
+      row.raw = { ...(row.raw ?? {}), _itens: itens };
       row.detalhe_sincronizado_em = new Date().toISOString();
       enriched++;
     }
   }
+
 
   await Promise.all(Array.from({ length: Math.min(concurrency, pending.length) }, worker));
   return { enriched, failed, attempted: pending.length, sample_debug: sampleDebug };
