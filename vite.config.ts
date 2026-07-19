@@ -74,10 +74,10 @@ export default defineConfig(({ mode }) => ({
           if (id.includes("xlsx") || id.includes("exceljs")) return "xlsx-vendor";
           if (id.includes("date-fns")) return "date-vendor";
           if (id.includes("@tanstack")) return "query-vendor";
-          if (id.includes("zod")) return "zod-vendor";
-          if (id.includes("react-hook-form") || id.includes("@hookform")) {
-            return "forms-vendor";
-          }
+          // NÃO agrupar react-hook-form, @hookform/resolvers e zod em um
+          // manual chunk. Rollup + minificação criam TDZ (Cannot access 'X'
+          // before initialization) por causa da ordem de inicialização entre
+          // eles. Deixamos o Rollup decidir automaticamente onde colocá-los.
           if (id.includes("lucide-react")) return "icons-vendor";
         },
       },
