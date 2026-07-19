@@ -19,6 +19,17 @@ function fmtBR(n: number | null | undefined) {
   return new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n));
 }
 
+function clampLimit(value: unknown, fallback: number, max: number) {
+  const n = Number(value ?? fallback);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.max(1, Math.min(Math.trunc(n), max));
+}
+
+function errorPayload(err: unknown) {
+  if (err instanceof Error) return { error: err.message, stack: err.stack };
+  return { error: typeof err === "string" ? err : JSON.stringify(err) };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -130,15 +141,30 @@ Data/hora: ${new Date().toISOString()}.`;
         inputSchema: z.object({
           codigo: z.string().optional().describe("Código exato do item (opcional)"),
           descricao: z.string().optional().describe("Trecho da descrição para busca ilike (opcional)"),
-          limit: z.number().min(1).max(50).default(20),
+          limit: z.number().optional().describe("Quantidade máxima de registros"),
         }),
         execute: async ({ codigo, descricao, limit }) => {
-          let q = admin.from("itens_cadastro").select("codigo,descricao,unidade,categoria,ativo").limit(limit);
-          if (codigo) q = q.eq("codigo", codigo);
-          if (descricao) q = q.ilike("descricao", `%${descricao}%`);
-          const { data, error } = await q;
-          if (error) return { error: error.message };
-          return { count: data?.length ?? 0, items: data ?? [] };
+          try {
+            const safeLimit = clampLimit(limit, 20, 50);
+            const codigoNormalizado = codigo?.trim();
+            let q = admin
+              .from("itens_cadastro")
+              .select(
+                "codigo_interno,descricao,unidade,codigo_fornecedor,codigos_fornecedor,pacote_fornecedor,pacote_estocagem",
+              )
+              .limit(safeLimit);
+            if (codigoNormalizado) {
+              q = q.or(
+                `codigo_interno.eq.${codigoNormalizado},codigo_interno_normalizado.eq.${codigoNormalizado},codigo_fornecedor.eq.${codigoNormalizado},codigo_fornecedor_normalizado.eq.${codigoNormalizado}`,
+              );
+            }
+            if (descricao) q = q.ilike("descricao", `%${descricao.trim()}%`);
+            const { data, error } = await q;
+            if (error) return { error: error.message };
+            return { count: data?.length ?? 0, items: data ?? [] };
+          } catch (err) {
+            return errorPayload(err);
+          }
         },
       }),
 
@@ -148,14 +174,22 @@ Data/hora: ${new Date().toISOString()}.`;
           codigo: z.string().describe("Código do item"),
         }),
         execute: async ({ codigo }) => {
-          const { data, error } = await admin
-            .from("estoque_posicoes")
-            .select("endereco,quantidade,lote,deposito,status")
-            .eq("codigo", codigo)
-            .limit(100);
-          if (error) return { error: error.message };
-          const total = (data ?? []).reduce((s, r: any) => s + Number(r.quantidade ?? 0), 0);
-          return { codigo, total: fmtBR(total), posicoes: data ?? [] };
+          try {
+            const codigoNormalizado = codigo.trim();
+            const { data, error } = await admin
+              .from("estoque_posicoes")
+              .select("endereco,item,auge_cd_item,lote,lote_sistema,deposito_atual,status,m_linear_atual,m_linear,m2_atual,m2")
+              .or(`item.eq.${codigoNormalizado},auge_cd_item.eq.${codigoNormalizado}`)
+              .limit(100);
+            if (error) return { error: error.message };
+            const total = (data ?? []).reduce(
+              (s, r: any) => s + Number(r.m_linear_atual ?? r.m_linear ?? r.m2_atual ?? r.m2 ?? 0),
+              0,
+            );
+            return { codigo, total: fmtBR(total), posicoes: data ?? [] };
+          } catch (err) {
+            return errorPayload(err);
+          }
         },
       }),
 
@@ -166,21 +200,28 @@ Data/hora: ${new Date().toISOString()}.`;
           data_de: z.string().optional().describe("Data inicial YYYY-MM-DD"),
           data_ate: z.string().optional().describe("Data final YYYY-MM-DD"),
           status: z.string().optional(),
-          limit: z.number().min(1).max(50).default(30),
+          limit: z.number().optional().describe("Quantidade máxima de registros"),
         }),
         execute: async ({ produto, data_de, data_ate, status, limit }) => {
-          let q = admin
-            .from("auge_transferencias")
-            .select("numero_rascunho,data,produto,descricao,quantidade,deposito_origem,deposito_destino,status,observacao,usuario")
-            .order("data", { ascending: false })
-            .limit(limit);
-          if (produto) q = q.eq("produto", produto);
-          if (data_de) q = q.gte("data", data_de);
-          if (data_ate) q = q.lte("data", data_ate);
-          if (status) q = q.ilike("status", `%${status}%`);
-          const { data, error } = await q;
-          if (error) return { error: error.message };
-          return { count: data?.length ?? 0, transferencias: data ?? [] };
+          try {
+            const safeLimit = clampLimit(limit, 30, 50);
+            let q = admin
+              .from("auge_transferencias")
+              .select(
+                "documento,nr_efetivacao,data_movimento,codigo_produto,descricao_produto,quantidade,deposito_origem,deposito_destino,situacao,ds_situacao,observacao,usuario_criacao,usuario_efetivacao,ds_efetivacao",
+              )
+              .order("data_movimento", { ascending: false, nullsFirst: false })
+              .limit(safeLimit);
+            if (produto) q = q.eq("codigo_produto", produto.trim());
+            if (data_de) q = q.gte("data_movimento", `${data_de}T00:00:00.000Z`);
+            if (data_ate) q = q.lte("data_movimento", `${data_ate}T23:59:59.999Z`);
+            if (status) q = q.or(`situacao.ilike.%${status.trim()}%,ds_situacao.ilike.%${status.trim()}%`);
+            const { data, error } = await q;
+            if (error) return { error: error.message };
+            return { count: data?.length ?? 0, transferencias: data ?? [] };
+          } catch (err) {
+            return errorPayload(err);
+          }
         },
       }),
 
@@ -188,51 +229,69 @@ Data/hora: ${new Date().toISOString()}.`;
         description: "Consulta movimentações (entradas/saídas) do Auge para um item específico.",
         inputSchema: z.object({
           codigo: z.string(),
-          tipo: z.enum(["entrada", "saida", "todos"]).default("todos"),
-          limit: z.number().min(1).max(50).default(20),
+          tipo: z.string().optional().describe("entrada, saida ou todos"),
+          limit: z.number().optional().describe("Quantidade máxima de registros"),
         }),
         execute: async ({ codigo, tipo, limit }) => {
-          let q = admin
-            .from("auge_movimentacoes")
-            .select("data,tipo,quantidade,deposito,lote,documento,observacao")
-            .eq("produto", codigo)
-            .order("data", { ascending: false })
-            .limit(limit);
-          if (tipo !== "todos") q = q.ilike("tipo", `%${tipo}%`);
-          const { data, error } = await q;
-          if (error) return { error: error.message };
-          return { count: data?.length ?? 0, movimentacoes: data ?? [] };
+          try {
+            const safeLimit = clampLimit(limit, 20, 50);
+            const tipoNormalizado = (tipo ?? "todos").toLowerCase();
+            let q = admin
+              .from("auge_movimentacoes")
+              .select(
+                "data_movimento,tipo,codigo_produto,quantidade,deposito,documento,observacao,situacao,ds_situacao,usuario_criacao,usuario_efetivacao,ds_efetivacao",
+              )
+              .eq("codigo_produto", codigo.trim())
+              .order("data_movimento", { ascending: false, nullsFirst: false })
+              .limit(safeLimit);
+            if (tipoNormalizado !== "todos") q = q.ilike("tipo", `%${tipoNormalizado}%`);
+            const { data, error } = await q;
+            if (error) return { error: error.message };
+            return { count: data?.length ?? 0, movimentacoes: data ?? [] };
+          } catch (err) {
+            return errorPayload(err);
+          }
         },
       }),
 
       consultar_tecidos_sem_espaco: tool({
         description: "Lista lotes de tecidos que não têm endereço alocado no mapa.",
         inputSchema: z.object({
-          limit: z.number().min(1).max(100).default(30),
+          limit: z.number().optional().describe("Quantidade máxima de registros"),
         }),
         execute: async ({ limit }) => {
-          const { data, error } = await admin
-            .from("tecidos_sem_espaco")
-            .select("codigo,descricao,lote,quantidade,endereco_original")
-            .limit(limit);
-          if (error) return { error: error.message };
-          return { count: data?.length ?? 0, itens: data ?? [] };
+          try {
+            const safeLimit = clampLimit(limit, 30, 100);
+            const { data, error } = await admin
+              .from("tecidos_sem_espaco")
+              .select("item,auge_cd_item,endereco_desejado,estrutura,coluna,nivel,proc,m_linear,largura,m2,lote,lote_sistema")
+              .limit(safeLimit);
+            if (error) return { error: error.message };
+            return { count: data?.length ?? 0, itens: data ?? [] };
+          } catch (err) {
+            return errorPayload(err);
+          }
         },
       }),
 
       consultar_conferencias_recentes: tool({
         description: "Lista conferências recentes do módulo estoque.",
         inputSchema: z.object({
-          limit: z.number().min(1).max(30).default(10),
+          limit: z.number().optional().describe("Quantidade máxima de registros"),
         }),
         execute: async ({ limit }) => {
-          const { data, error } = await admin
-            .from("conferences")
-            .select("id,processo,conferente,started_at,finished_at")
-            .order("started_at", { ascending: false })
-            .limit(limit);
-          if (error) return { error: error.message };
-          return { count: data?.length ?? 0, conferencias: data ?? [] };
+          try {
+            const safeLimit = clampLimit(limit, 10, 30);
+            const { data, error } = await admin
+              .from("conferences")
+              .select("id,processo,conferente,started_at,finished_at")
+              .order("started_at", { ascending: false, nullsFirst: false })
+              .limit(safeLimit);
+            if (error) return { error: error.message };
+            return { count: data?.length ?? 0, conferencias: data ?? [] };
+          } catch (err) {
+            return errorPayload(err);
+          }
         },
       }),
 
@@ -266,9 +325,16 @@ Data/hora: ${new Date().toISOString()}.`;
       stopWhen: stepCountIs(50),
     });
 
-    return result.toUIMessageStreamResponse({ headers: corsHeaders });
+    return result.toUIMessageStreamResponse({
+      headers: corsHeaders,
+      onError: (error) => {
+        console.error("[ai-agent] stream error", error);
+        return error instanceof Error ? error.message : "Falha ao gerar resposta do assistente.";
+      },
+    });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
+    console.error("[ai-agent] request error", err);
     return new Response(JSON.stringify({ error: message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
