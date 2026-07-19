@@ -13,7 +13,6 @@ export default function ComprasLayout() {
       bottomNav={<ComprasBottomTabBar />}
       navRail={null}
       showResumeBanner={false}
-      hideFooterOn={[]}
     />
   );
 }

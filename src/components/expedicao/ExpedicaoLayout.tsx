@@ -15,7 +15,6 @@ export default function ExpedicaoLayout() {
       bottomNav={<ExpedicaoBottomTabBar />}
       navRail={null}
       showResumeBanner={false}
-      hideFooterOn={[]}
     />
   );
 }
