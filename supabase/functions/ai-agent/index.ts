@@ -242,7 +242,7 @@ function acabamentoItemCountAnswer(context: Record<string, unknown>, text: strin
         return `- Acabamento **${codigo}** (${nomeAcab})${cancel}\n  → Descrição do item: ${descItem}`;
       })
       .join("\n");
-    return `Fio aqui para ajudar.\n\nDescrição **do item ${code}** (campo \`ds_item_acabamento_original\` do Auge) dentro de cada um dos **${total} acabamentos** vinculados:\n\n${lines}`;
+    return `Fio aqui para ajudar.\n\nDescrição **do item ${code}** (campo \`ds_item_acabamento\` do Auge) dentro de cada um dos **${total} acabamentos** vinculados:\n\n${lines}`;
   }
 
   const lines = uniqueRows
@@ -421,8 +421,8 @@ async function buildAgentContext(admin: ReturnType<typeof createClient>, text: s
             combinacao: r.auge_acabamentos?.nm_combinacao1 ?? null,
             cancelado: r.auge_acabamentos?.id_cancelado === "S",
             codigo_item: r.cd_item_acabamento,
-            descricao_item_no_acabamento: r.ds_item_acabamento_original ?? r.ds_item_acabamento ?? r.ds_item_acabamento_reduzida ?? null,
-            descricao: r.ds_item_acabamento_original ?? r.ds_item_acabamento ?? r.ds_item_acabamento_reduzida ?? null,
+            descricao_item_no_acabamento: r.ds_item_acabamento ?? r.ds_item_acabamento_reduzida ?? r.ds_item_acabamento_original ?? null,
+            descricao: r.ds_item_acabamento ?? r.ds_item_acabamento_reduzida ?? r.ds_item_acabamento_original ?? null,
             kits: [1, 2, 3, 4, 5]
               .map((n) => r[`nm_kit_complementar_${n}`])
               .filter(Boolean),
