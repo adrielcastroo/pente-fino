@@ -277,7 +277,7 @@ export default function AcabamentosPage() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <div className="font-medium truncate">{a.nm_acabamento ?? '—'}</div>
-                    <div className="font-mono text-[10px] text-muted-foreground">#{a.cd_acabamento}</div>
+                    <div className="font-mono text-[10px] text-muted-foreground">{a.chave_acabamento ?? `#${a.cd_acabamento}`}</div>
                     {(a.nm_classe1 || a.nm_combinacao1) && (
                       <div className="text-[10px] text-muted-foreground truncate">{a.nm_classe1} {a.nm_combinacao1 && `· ${a.nm_combinacao1}`}</div>
                     )}
