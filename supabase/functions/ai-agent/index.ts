@@ -25,6 +25,38 @@ function errorPayload(err: unknown) {
   return { error: typeof err === "string" ? err : JSON.stringify(err) };
 }
 
+function textStreamResponse(text: string, headers: Record<string, string> = {}) {
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream({
+    start(controller) {
+      const id = crypto.randomUUID();
+      const send = (obj: unknown) => controller.enqueue(encoder.encode(`data: ${JSON.stringify(obj)}\n\n`));
+      send({ type: "start" });
+      send({ type: "start-step" });
+      send({ type: "text-start", id });
+      const CHUNK = 80;
+      for (let i = 0; i < text.length; i += CHUNK) {
+        send({ type: "text-delta", id, delta: text.slice(i, i + CHUNK) });
+      }
+      send({ type: "text-end", id });
+      send({ type: "finish-step" });
+      send({ type: "finish" });
+      controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+      controller.close();
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      ...corsHeaders,
+      "Content-Type": "text/event-stream",
+      "x-vercel-ai-ui-message-stream": "v1",
+      "Cache-Control": "no-cache, no-transform",
+      ...headers,
+    },
+  });
+}
+
 function latestUserText(messages: ModelMessage[]) {
   const last = [...messages].reverse().find((m) => m.role === "user");
   const content = last?.content;
@@ -36,6 +68,25 @@ function latestUserText(messages: ModelMessage[]) {
       .trim();
   }
   return "";
+}
+
+function allUserText(messages: ModelMessage[]) {
+  return messages
+    .filter((m) => m.role === "user")
+    .slice(-6)
+    .map((m) => {
+      const content = m.content;
+      if (typeof content === "string") return content;
+      if (Array.isArray(content)) {
+        return content
+          .map((part: any) => (part?.type === "text" && typeof part.text === "string" ? part.text : ""))
+          .join(" ")
+          .trim();
+      }
+      return "";
+    })
+    .filter(Boolean)
+    .join("\n");
 }
 
 const STOPWORDS = new Set([
@@ -134,6 +185,52 @@ function detectSensitive(text: string) {
 
 function sanitizePostgrestValue(value: string) {
   return value.replace(/[(),.]/g, " ").trim();
+}
+
+function codeVariants(value: string) {
+  const raw = value.trim().replace(/\s+/g, "");
+  if (!raw) return [];
+  const variants = new Set<string>([raw, raw.toUpperCase(), raw.toLowerCase()]);
+
+  const compact = raw.replace(/[^a-z0-9]/gi, "");
+  const shortAugeCode = compact.match(/^([a-z]{2})(\d{3})(\d{3})$/i);
+  if (shortAugeCode) {
+    variants.add(`${shortAugeCode[1].toUpperCase()}.${shortAugeCode[2]}.${shortAugeCode[3]}`);
+  }
+
+  return Array.from(variants);
+}
+
+function looksLikeAugeItemCode(value: string) {
+  const compact = value.replace(/[^a-z0-9]/gi, "");
+  return /^[a-z]{2}\d{6}$/i.test(compact) || /^\d{6,}(?:\d+)?$/i.test(compact);
+}
+
+function acabamentoItemCountAnswer(context: Record<string, unknown>, text: string) {
+  if (!/quantos?/i.test(text) || !/acabament/i.test(text) || !/item|produto|c[oó]digo/i.test(text)) return null;
+  const rows = Array.isArray(context.acabamentos_do_item) ? context.acabamentos_do_item as any[] : [];
+  if (typeof context.acabamentos_do_item_total !== "number") return null;
+
+  const code = typeof context.acabamentos_do_item_codigo_perguntado === "string"
+    ? context.acabamentos_do_item_codigo_perguntado
+    : Array.isArray(context.acabamentos_do_item_codigos_consultados)
+      ? String(context.acabamentos_do_item_codigos_consultados[0] ?? "item informado")
+      : "item informado";
+  const total = context.acabamentos_do_item_total;
+
+  if (total === 0) {
+    return `Fio aqui para ajudar.\n\nO item **${code}** não possui acabamentos vinculados no Auge, conforme a consulta direta na base sincronizada.`;
+  }
+
+  const uniqueRows = Array.from(
+    new Map(rows.map((row) => [String(row.cd_acabamento ?? row.codigo_auge), row])).values(),
+  );
+  const lines = uniqueRows
+    .slice(0, 30)
+    .map((row) => `- **${row.codigo_auge ?? row.cd_acabamento}** — ${row.nm_acabamento ?? "Sem nome"}${row.cancelado ? " _(cancelado)_" : ""}`)
+    .join("\n");
+
+  return `Fio aqui para ajudar.\n\nO item **${code}** está vinculado a **${total} acabamentos** no Auge.\n\n${lines}`;
 }
 
 async function buildAgentContext(admin: ReturnType<typeof createClient>, text: string) {
@@ -263,20 +360,40 @@ async function buildAgentContext(admin: ReturnType<typeof createClient>, text: s
             .filter(Boolean),
         ),
       ).slice(0, 20);
-      const alvos = Array.from(new Set([...codigos, ...codeLike])).slice(0, 80);
+      const explicitCodeTargets = Array.from(
+        new Set(codeLike.flatMap((code) => codeVariants(code)).filter(Boolean)),
+      );
+      const relatedCodeTargets = Array.from(
+        new Set(
+          codigos
+            .flatMap((code) => codeVariants(code))
+            .filter(Boolean),
+        ),
+      );
+      const codeTargets = (explicitCodeTargets.length > 0 ? explicitCodeTargets : relatedCodeTargets).slice(0, 120);
 
-      if (alvos.length > 0) {
+      if (codeTargets.length > 0) {
         const { data, error } = await admin
           .from("auge_acabamento_itens")
           .select(
             "cd_acabamento_item,cd_acabamento,cd_item_acabamento,ds_item_acabamento,ds_item_acabamento_original,ds_item_acabamento_reduzida,nm_kit_complementar_1,nm_kit_complementar_2,nm_kit_complementar_3,nm_kit_complementar_4,nm_kit_complementar_5,auge_acabamentos(cd_acabamento,chave_acabamento,nm_acabamento,nm_classe1,nm_combinacao1,id_cancelado)",
           )
-          .in("cd_item_acabamento", alvos)
-          .limit(60);
+          .in("cd_item_acabamento", codeTargets)
+          .limit(120);
         if (error) {
           context.acabamentos_erro = error.message;
         } else {
-          context.acabamentos_do_item = (data ?? []).map((r: any) => ({
+          const rows = data ?? [];
+          const requestedCodes = explicitCodeTargets.length > 0
+            ? new Set(explicitCodeTargets.map((code) => code.toUpperCase()))
+            : null;
+          const requestedRows = requestedCodes
+            ? rows.filter((r: any) => requestedCodes.has(String(r.cd_item_acabamento ?? "").toUpperCase()))
+            : rows;
+          context.acabamentos_do_item_total = requestedRows.length;
+          context.acabamentos_do_item_codigo_perguntado = explicitCodeTargets.find((code) => /^[A-Z]{2}\./.test(code)) ?? explicitCodeTargets[0] ?? null;
+          context.acabamentos_do_item_codigos_consultados = codeTargets.filter(looksLikeAugeItemCode).slice(0, 20);
+          context.acabamentos_do_item = requestedRows.map((r: any) => ({
             codigo_auge: r.auge_acabamentos?.chave_acabamento ?? r.cd_acabamento,
             cd_acabamento: r.cd_acabamento,
             nm_acabamento: r.auge_acabamentos?.nm_acabamento ?? "-",
@@ -547,6 +664,7 @@ Deno.serve(async (req) => {
     }
 
     const userText = latestUserText(modelMessages);
+    const conversationText = allUserText(modelMessages) || userText;
     const scope = isInScope(userText);
     const task = classifyTask(userText);
 
@@ -621,7 +739,16 @@ Deno.serve(async (req) => {
       });
     }
 
-    const automaticContext = await buildAgentContext(admin, userText);
+    const automaticContext = await buildAgentContext(admin, conversationText);
+    const deterministicAnswer = acabamentoItemCountAnswer(automaticContext, conversationText);
+    if (deterministicAnswer) {
+      return textStreamResponse(deterministicAnswer, {
+        "x-ai-provider": "backend-query",
+        "x-ai-model": "deterministic",
+        "x-ai-task": task,
+        "x-ai-fallbacks": "0",
+      });
+    }
 
     // Regras de permissão embutidas no system prompt (defesa em profundidade).
     const permissionRules = `
