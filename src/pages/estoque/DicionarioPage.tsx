@@ -313,6 +313,11 @@ export default function DicionarioPage() {
                               </Button>
                             </>
                           )}
+                          {(s.status === 'pendente' || s.status === 'aprovada') && isGerentePlus && (
+                            <Button size="sm" onClick={() => efetivarNoAuge(s)} className="h-7 gap-1">
+                              <Send className="h-3.5 w-3.5" /> Efetivar no Auge
+                            </Button>
+                          )}
                           {s.status === 'pendente' && (mine || isGerentePlus) && (
                             <Button size="sm" variant="ghost" onClick={() => excluir(s.id)} className="h-7">
                               <Trash2 className="h-3.5 w-3.5" />
