@@ -122,7 +122,7 @@ export default function FichaItemDialog({ codigo, open, onOpenChange }: Props) {
                  cd_kit_complementar_3, nm_kit_complementar_3,
                  cd_kit_complementar_4, nm_kit_complementar_4,
                  cd_kit_complementar_5, nm_kit_complementar_5,
-                 auge_acabamentos ( cd_acabamento, nm_acabamento, nm_classe1, nm_combinacao1, id_cancelado )`)
+                 auge_acabamentos ( cd_acabamento, chave_acabamento, nm_acabamento, nm_classe1, nm_combinacao1, id_cancelado )`)
         .eq('cd_item_acabamento', cod!)
         .limit(50);
       return (data ?? []) as any[];
