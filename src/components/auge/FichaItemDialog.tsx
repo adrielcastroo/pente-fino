@@ -383,7 +383,7 @@ export default function FichaItemDialog({ codigo, open, onOpenChange }: Props) {
                           <tr key={a.cd_acabamento_item} className="border-t align-top">
                             <td className="p-2">
                               <div className="font-medium">{ac.nm_acabamento ?? a.cd_acabamento}</div>
-                              <div className="font-mono text-[10px] text-muted-foreground">#{a.cd_acabamento}</div>
+                              <div className="font-mono text-[10px] text-muted-foreground">{ac?.chave_acabamento ?? `#${a.cd_acabamento}`}</div>
                               {ac.id_cancelado === 'S' && <Badge variant="destructive" className="text-[9px] mt-1">Cancelado</Badge>}
                             </td>
                             <td className="p-2 text-[11px]">
