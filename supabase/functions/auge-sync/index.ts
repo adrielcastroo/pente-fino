@@ -2518,6 +2518,67 @@ Deno.serve(async (req) => {
       });
     }
 
+    // -------------- ACABAMENTOS --------------
+    if (action === 'sync_acabamentos') {
+      const task = syncAcabamentosFull(admin, auth, triggeredBy).catch((e) =>
+        console.error('sync_acabamentos error', getErrorMessage(e))
+      );
+      // @ts-ignore
+      if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime?.waitUntil) EdgeRuntime.waitUntil(task);
+      return new Response(JSON.stringify({ ok: true, background: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (action === 'sync_acabamento_one') {
+      let payload: any = {};
+      try { payload = await req.json(); } catch { /* ignore */ }
+      const cd = String(payload?.cdAcabamento ?? '').trim();
+      if (!cd) throw new Error('cdAcabamento é obrigatório.');
+      const itens = await fetchItensAcabamento(auth, cd);
+      if (itens.length) {
+        const rows = itens.map((r) => mapAcabamentoItemRow(cd, r));
+        // remove itens que não vieram mais (para refletir exclusões no Auge)
+        const keepIds = rows.map((r) => r.cd_acabamento_item);
+        await admin.from('auge_acabamento_itens')
+          .delete()
+          .eq('cd_acabamento', cd)
+          .not('cd_acabamento_item', 'in', `(${keepIds.map((v) => `"${v}"`).join(',')})`);
+        for (let i = 0; i < rows.length; i += 500) {
+          await admin.from('auge_acabamento_itens').upsert(rows.slice(i, i + 500), { onConflict: 'cd_acabamento_item' });
+        }
+      }
+      return new Response(JSON.stringify({ ok: true, cdAcabamento: cd, itens: itens.length }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (action === 'update_acabamento_item') {
+      let payload: any = {};
+      try { payload = await req.json(); } catch { /* ignore */ }
+      if (!payload?.cdAcabamentoItem) throw new Error('cdAcabamentoItem é obrigatório.');
+      if (!payload?.cdItemAcabamento) throw new Error('cdItemAcabamento é obrigatório.');
+      const resp = await updateAcabamentoItem(auth, payload);
+      // re-sincroniza o acabamento afetado para refletir mudança local
+      if (payload?.cdAcabamento) {
+        try {
+          const itens = await fetchItensAcabamento(auth, String(payload.cdAcabamento));
+          if (itens.length) {
+            const rows = itens.map((r) => mapAcabamentoItemRow(String(payload.cdAcabamento), r));
+            for (let i = 0; i < rows.length; i += 500) {
+              await admin.from('auge_acabamento_itens').upsert(rows.slice(i, i + 500), { onConflict: 'cd_acabamento_item' });
+            }
+          }
+        } catch (_) { /* ignore refresh error */ }
+      }
+      return new Response(JSON.stringify({ ok: true, auge: resp }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+
+
+
 
 
 
