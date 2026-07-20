@@ -217,13 +217,24 @@ export function AgentChatWidget() {
           type="button"
           aria-label="Abrir Fio (assistente de IA)"
           onClick={() => toggleOpen(true)}
-          className="group fixed bottom-20 right-4 z-40 flex h-14 w-14 items-center justify-center overflow-visible rounded-2xl shadow-lg ring-1 ring-primary/40 transition-all duration-200 hover:scale-110 hover:shadow-2xl hover:ring-2 hover:ring-primary tablet-landscape:bottom-6 desktop:bottom-6"
+          className="group fixed bottom-20 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 shadow-lg ring-1 ring-primary/40 transition-all duration-200 hover:shadow-2xl hover:ring-2 hover:ring-primary tablet-landscape:bottom-6 desktop:bottom-6"
         >
-          <img
-            src={logo}
-            alt="Fio"
-            className="h-full w-full rounded-2xl object-cover transition-transform duration-200 group-hover:brightness-110"
-          />
+          <div className="relative h-full w-full">
+            <img
+              src={logo}
+              alt="Fio"
+              className="h-full w-full rounded-2xl object-cover transition-transform duration-300 group-hover:animate-fio-peek"
+              style={{ transformOrigin: "bottom center" }}
+            />
+            {/* Mãozinha acenando — aparece só no hover */}
+            <span
+              aria-hidden
+              className="pointer-events-none absolute -right-2 -top-3 text-2xl opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-hover:animate-fio-wave"
+              style={{ transformOrigin: "70% 80%" }}
+            >
+              👋
+            </span>
+          </div>
           {hasUnread && (
             <span className="absolute -right-1 -top-1 flex h-3.5 w-3.5">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
