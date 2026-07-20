@@ -90,6 +90,47 @@ function isInScope(text: string): { ok: boolean; reason?: string } {
   return { ok: false, reason: "fora_de_escopo" };
 }
 
+// ---------- Guardrail de PERMISSÕES ----------
+// Rol e nível mínimo requerido por tipo de ação.
+// admin=1, gerente=2, supervisor=3, operador=4, user=4, visitante/sem_role=5.
+const ROLE_LEVEL: Record<string, number> = {
+  admin: 1, gerente: 2, supervisor: 3, operador: 4, user: 4,
+};
+function roleLevel(role: string | null | undefined) {
+  if (!role) return 5;
+  return ROLE_LEVEL[role] ?? 5;
+}
+function roleLabel(role: string | null | undefined) {
+  if (!role) return "visitante";
+  return role;
+}
+
+// Padrões que sinalizam intenção de AÇÃO SENSÍVEL (não apenas consulta).
+// Consulta pura ("qual", "quantos", "onde está") NÃO é sensível.
+const SENSITIVE_PATTERNS: Array<{ id: string; re: RegExp; minLevel: number; label: string }> = [
+  // Ações administrativas / gestão de usuários e permissões — SOMENTE admin.
+  { id: "admin_panel", minLevel: 1, label: "painel administrativo",
+    re: /\b(painel|area|área)\s+(admin|administra)|acessar?\s+admin|entrar\s+no\s+admin|abrir\s+admin/i },
+  { id: "user_role", minLevel: 1, label: "gestão de usuários/permissões",
+    re: /(promover|rebaixar|virar|tornar|conceder|dar|remover|revogar|alterar)\s+(usu[aá]rio|permiss|papel|role|n[ií]vel|acesso|admin|gerente|supervisor|operador)|(?:mudar|trocar|elevar)\s+(?:meu|seu|do)\s*(?:n[ií]vel|role|papel|permiss|acesso)|me\s+(?:torne|promova|deixe|faça)\s+admin/i },
+  { id: "delete_bulk", minLevel: 2, label: "exclusão em massa",
+    re: /\b(apagar|deletar|excluir|remover|zerar|limpar)\s+(tudo|todos|todas|toda|geral|base|banco|dados|hist[oó]rico|cadastros?|itens|registros)/i },
+  // Escrita no Auge / Pente Fino — mínimo operador.
+  { id: "write_auge", minLevel: 4, label: "ação de escrita no Auge/Pente Fino",
+    re: /\b(criar|cadastrar|efetivar|confirmar|registrar|lançar|lancar|dar\s+sa[ií]da|dar\s+entrada|transferir|estornar|editar|alterar|atualizar|corrigir|ajustar|mover|realocar|movimentar)\s+(transfer|sa[ií]da|entrada|estoque|item|itens|lote|movimenta|acabament|reserva|romaneio|carga|nfe|nf-e|nota|cadastro|posi[cç][aã]o|endere[cç]o|kardex)/i },
+  { id: "secrets", minLevel: 1, label: "acesso a segredos/credenciais",
+    re: /\b(api[_\s-]?key|senha|password|token|secret|credenci|service[_\s-]?role|chave\s+privada|env\b|\.env)/i },
+  { id: "sql_direct", minLevel: 1, label: "execução direta de SQL",
+    re: /\b(executar|rodar|run|exec)\s+(sql|query|comando)|drop\s+(table|schema|database)|truncate\s+table|delete\s+from\s+/i },
+];
+
+function detectSensitive(text: string) {
+  const hits = SENSITIVE_PATTERNS.filter((p) => p.re.test(text));
+  if (hits.length === 0) return null;
+  // Retorna o mais restritivo (menor nível permitido = mais alto na hierarquia).
+  return hits.reduce((a, b) => (a.minLevel <= b.minLevel ? a : b));
+}
+
 function sanitizePostgrestValue(value: string) {
   return value.replace(/[(),.]/g, " ").trim();
 }
