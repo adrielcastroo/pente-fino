@@ -173,7 +173,8 @@ const App = () => (
                     }
                   />
                   <Route path="/estoque/minha-atividade" element={<MinhaAtividadePage />} />
-                  <Route path="/estoque/entradas" element={<EntradasPage />} />
+                 <Route path="/estoque/entradas" element={<EntradasPage />} />
+                 <Route path="/estoque/acabamentos" element={<RequireRole minRole="supervisor"><AcabamentosPage /></RequireRole>} />
                   <Route path="/estoque/auge" element={<Navigate to="/estoque/cadastros" replace />} />
                   <Route path="/estoque/transferencias" element={<TransferenciasPage />} />
                   <Route path="/transferencias" element={<Navigate to="/estoque/transferencias" replace />} />
