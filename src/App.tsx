@@ -176,6 +176,7 @@ const App = () => (
                   <Route path="/estoque/minha-atividade" element={<MinhaAtividadePage />} />
                  <Route path="/estoque/entradas" element={<EntradasPage />} />
                  <Route path="/estoque/acabamentos" element={<RequireRole role="supervisor" fallback={<Navigate to="/estoque/operacao" replace />}><AcabamentosPage /></RequireRole>} />
+                 <Route path="/estoque/dicionario" element={<DicionarioPage />} />
                   <Route path="/estoque/auge" element={<Navigate to="/estoque/cadastros" replace />} />
                   <Route path="/estoque/transferencias" element={<TransferenciasPage />} />
                   <Route path="/transferencias" element={<Navigate to="/estoque/transferencias" replace />} />
