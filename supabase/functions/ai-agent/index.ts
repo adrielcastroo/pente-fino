@@ -1,7 +1,7 @@
 // AI Agent — assistente do Pente Fino/Auge.
 // - Guardrail de escopo: só responde sobre estoque/Pente Fino/Auge.
 // - Roteamento por tarefa + fallback em cadeia: Cerebras → Groq → NVIDIA.
-import { convertToModelMessages, streamText, type ModelMessage, type UIMessage } from "npm:ai";
+import { convertToModelMessages, generateText, streamText, type ModelMessage, type UIMessage } from "npm:ai";
 import { createOpenAICompatible } from "npm:@ai-sdk/openai-compatible";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
