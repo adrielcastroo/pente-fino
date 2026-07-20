@@ -425,6 +425,24 @@ Deno.serve(async (req) => {
       auth: { persistSession: false, autoRefreshToken: false },
     });
 
+    // Descobre o papel efetivo do usuário (role mais alto). Sem role → visitante.
+    let userRole: string | null = null;
+    if (userId) {
+      try {
+        const { data: rolesData } = await admin
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", userId);
+        const roles = (rolesData ?? []).map((r: any) => String(r.role));
+        userRole = roles
+          .slice()
+          .sort((a, b) => roleLevel(a) - roleLevel(b))[0] ?? null;
+      } catch (_) {
+        userRole = null;
+      }
+    }
+    const userLevel = roleLevel(userRole);
+
     const body = await req.json();
     const rawMessages: any[] = Array.isArray(body?.messages)
       ? body.messages
