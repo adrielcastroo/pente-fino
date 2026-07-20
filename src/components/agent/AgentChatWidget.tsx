@@ -23,7 +23,8 @@ import {
 } from "@/components/ai-elements/prompt-input";
 import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from "@/components/ai-elements/tool";
 import { Shimmer } from "@/components/ai-elements/shimmer";
-import logo from "@/assets/ai-agent-logo.png";
+import logoAsset from "@/assets/fio-logo.png.asset.json";
+const logo = logoAsset.url;
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const PUBLISHABLE_KEY = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
@@ -185,9 +186,9 @@ export function AgentChatWidget() {
           type="button"
           aria-label="Abrir Fio (assistente de IA)"
           onClick={() => toggleOpen(true)}
-          className="fixed bottom-20 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg ring-1 ring-primary/40 transition hover:scale-105 hover:shadow-xl tablet-landscape:bottom-6 desktop:bottom-6"
+          className="fixed bottom-20 right-4 z-40 flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl shadow-lg ring-1 ring-primary/40 transition hover:scale-105 hover:shadow-xl tablet-landscape:bottom-6 desktop:bottom-6"
         >
-          <Bot className="h-6 w-6" />
+          <img src={logo} alt="Fio" className="h-full w-full object-cover" />
         </button>
       )}
 
