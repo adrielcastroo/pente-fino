@@ -110,10 +110,32 @@ export default function FichaItemDialog({ codigo, open, onOpenChange }: Props) {
     },
   });
 
+  const { data: acabamentos = [], refetch: refetchAcabamentos } = useQuery({
+    queryKey: ['ficha-acabamentos', cod],
+    enabled: !!cod && open,
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from('auge_acabamento_itens')
+        .select(`cd_acabamento_item, cd_acabamento, cd_item_acabamento, ds_item_acabamento, ds_item_acabamento_original, ds_item_acabamento_reduzida,
+                 cd_kit_complementar_1, nm_kit_complementar_1,
+                 cd_kit_complementar_2, nm_kit_complementar_2,
+                 cd_kit_complementar_3, nm_kit_complementar_3,
+                 cd_kit_complementar_4, nm_kit_complementar_4,
+                 cd_kit_complementar_5, nm_kit_complementar_5,
+                 auge_acabamentos ( cd_acabamento, nm_acabamento, nm_classe1, nm_combinacao1, id_cancelado )`)
+        .eq('cd_item_acabamento', cod!)
+        .limit(50);
+      return (data ?? []) as any[];
+    },
+  });
+
+  const [editingAcab, setEditingAcab] = useState<any | null>(null);
+
   const totalSaldo = useMemo(
     () => saldos.reduce((acc: number, s: any) => acc + Number(s.quantidade ?? 0), 0),
     [saldos],
   );
+
 
   const disponivel = Number(produto?.qt_disponivel ?? 0);
   const entradaPrev = Number(produto?.qt_entrada_prevista ?? 0);
