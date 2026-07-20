@@ -322,9 +322,9 @@ export default function AcabamentosPage() {
                         <tr key={i.cd_acabamento_item} className="border-t align-top">
                           <td className="p-2 font-mono text-[11px]">{i.cd_item_acabamento}</td>
                           <td className="p-2">
-                            <div>{i.ds_item_acabamento ?? '—'}</div>
-                            {i.ds_item_acabamento_reduzida && (
-                              <div className="text-[10px] text-muted-foreground">↳ {i.ds_item_acabamento_reduzida}</div>
+                            <div>{i.ds_item_acabamento_original ?? i.ds_item_acabamento ?? '—'}</div>
+                            {i.ds_item_acabamento && i.ds_item_acabamento_original && i.ds_item_acabamento !== i.ds_item_acabamento_original && (
+                              <div className="text-[10px] text-muted-foreground">↳ {i.ds_item_acabamento}</div>
                             )}
                           </td>
                           <td className="p-2 text-[11px] text-muted-foreground">{kits.length ? kits.join(', ') : '—'}</td>
