@@ -23,8 +23,7 @@ import {
 } from "@/components/ai-elements/prompt-input";
 import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from "@/components/ai-elements/tool";
 import { Shimmer } from "@/components/ai-elements/shimmer";
-import logoAsset from "@/assets/fio-logo.png.asset.json";
-const logo = logoAsset.url;
+import logo from "@/assets/fio-logo.png";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const PUBLISHABLE_KEY = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
@@ -114,7 +113,7 @@ function ChatWindow({ threadId }: { threadId: string }) {
         <ConversationContent>
           {messages.length === 0 && (
             <ConversationEmptyState
-              icon={<img src={logo} alt="" width={48} height={48} className="opacity-90" />}
+              icon={<img src={logo} alt="" width={72} height={72} className="rounded-xl opacity-95" />}
               title="Fio · Assistente do Pente Fino"
               description="Sou o Fio. Pergunte sobre itens, transferências, saldo do estoque, movimentações e mais."
             />
