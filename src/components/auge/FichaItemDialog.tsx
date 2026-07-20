@@ -391,9 +391,9 @@ export default function FichaItemDialog({ codigo, open, onOpenChange }: Props) {
                               {ac.nm_combinacao1 && <div className="text-muted-foreground">{ac.nm_combinacao1}</div>}
                             </td>
                             <td className="p-2 text-[11px]">
-                              <div>{a.ds_item_acabamento ?? '—'}</div>
-                              {a.ds_item_acabamento_reduzida && (
-                                <div className="text-muted-foreground text-[10px]">↳ {a.ds_item_acabamento_reduzida}</div>
+                              <div>{a.ds_item_acabamento_original ?? a.ds_item_acabamento ?? '—'}</div>
+                              {a.ds_item_acabamento && a.ds_item_acabamento_original && a.ds_item_acabamento !== a.ds_item_acabamento_original && (
+                                <div className="text-muted-foreground text-[10px]">↳ {a.ds_item_acabamento}</div>
                               )}
                             </td>
                             <td className="p-2 text-[10px] text-muted-foreground">
