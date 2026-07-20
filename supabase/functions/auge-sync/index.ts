@@ -2250,15 +2250,22 @@ function mapAcabamentoItemRow(cdAcabamento: string, r: any) {
   };
 }
 
-async function syncAcabamentosFull(admin: any, auth: any, triggeredBy: string | null) {
+async function syncAcabamentosFull(admin: any, auth: any, triggeredBy: string | null, existingRunId?: string) {
   const started = new Date().toISOString();
-  const runIns = await admin.from('auge_sync_runs').insert({
-    entidade: 'acabamentos', status: 'running', started_at: started,
-    triggered_by: triggeredBy, detalhes: { phase: 'lista' },
-  }).select('id').single();
-  const runId = runIns.data?.id;
+  let runId = existingRunId;
+  if (!runId) {
+    const runIns = await admin.from('auge_sync_runs').insert({
+      entidade: 'acabamentos', status: 'running', started_at: started,
+      triggered_by: triggeredBy, detalhes: { phase: 'lista' },
+    }).select('id').single();
+    runId = runIns.data?.id;
+  }
 
   try {
+    await admin.from('auge_sync_runs').update({
+      detalhes: { phase: 'lista', current: 0, total: 0, itens: 0, errors: [] },
+    }).eq('id', runId);
+
     const acabs = await fetchListaAcabamentos(auth);
     if (acabs.length) {
       const rows = acabs.map(mapAcabamentoRow);
@@ -2268,6 +2275,22 @@ async function syncAcabamentosFull(admin: any, auth: any, triggeredBy: string | 
     }
 
     let totalItens = 0;
+    let current = 0;
+    const errors: Array<{ cd: string; nm?: string; erro: string }> = [];
+    const total = acabs.length;
+    let lastFlush = 0;
+
+    const flushProgress = async (force = false) => {
+      const now = Date.now();
+      if (!force && now - lastFlush < 800) return;
+      lastFlush = now;
+      await admin.from('auge_sync_runs').update({
+        rows_processed: current,
+        rows_upserted: totalItens,
+        detalhes: { phase: 'itens', current, total, itens: totalItens, errors: errors.slice(-50) },
+      }).eq('id', runId);
+    };
+
     const concurrency = 4;
     let idx = 0;
     const worker = async () => {
@@ -2285,19 +2308,27 @@ async function syncAcabamentosFull(admin: any, auth: any, triggeredBy: string | 
             totalItens += rows.length;
           }
         } catch (e) {
-          console.warn(`[acabamento ${cd}] erro:`, getErrorMessage(e));
+          const msg = getErrorMessage(e);
+          console.warn(`[acabamento ${cd}] erro:`, msg);
+          errors.push({ cd, nm: a?.nmAcabamento ?? undefined, erro: msg });
+        } finally {
+          current++;
+          flushProgress().catch(() => {});
         }
       }
     };
     await Promise.all(Array.from({ length: concurrency }, worker));
+    await flushProgress(true);
 
     await admin.from('auge_sync_runs').update({
-      status: 'success', finished_at: new Date().toISOString(),
+      status: errors.length && totalItens === 0 ? 'error' : 'success',
+      finished_at: new Date().toISOString(),
       rows_processed: acabs.length, rows_upserted: totalItens,
-      detalhes: { acabamentos: acabs.length, itens: totalItens },
+      error_message: errors.length ? `${errors.length} acabamento(s) com erro` : null,
+      detalhes: { phase: 'done', current: acabs.length, total: acabs.length, acabamentos: acabs.length, itens: totalItens, errors },
     }).eq('id', runId);
 
-    return { ok: true, acabamentos: acabs.length, itens: totalItens, run_id: runId };
+    return { ok: true, acabamentos: acabs.length, itens: totalItens, run_id: runId, errors };
   } catch (e) {
     await admin.from('auge_sync_runs').update({
       status: 'error', finished_at: new Date().toISOString(),
