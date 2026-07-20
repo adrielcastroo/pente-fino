@@ -74,6 +74,7 @@ const DOMAIN_TERMS = [
   "auditoria","reconciliacao","reconciliação","chao","chão","tec","fifo","descricao","descrição",
   "sincroniz","sync","importar","export","relatorio","relatório","dashboard","carga","transportadora",
   "acabamento","acabamentos","kit","kits","classe","combinacao","combinação",
+  "abreviacao","abreviação","abreviacoes","abreviações","dicionario","dicionário","subclasse","sub_classe","tag","tags",
 ];
 
 const GREETING_RE = /^\s*(oi|ola|olá|bom dia|boa tarde|boa noite|e ai|eaí|hello|hi|hey|obrigad|valeu|tchau|help|ajuda)\b/i;
