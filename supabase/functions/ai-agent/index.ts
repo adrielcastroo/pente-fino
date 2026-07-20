@@ -1,4 +1,6 @@
-// AI Agent — assistente do Pente Fino com acesso a consultas e ações do app.
+// AI Agent — assistente do Pente Fino/Auge.
+// - Guardrail de escopo: só responde sobre estoque/Pente Fino/Auge.
+// - Roteamento por tarefa + fallback em cadeia: Cerebras → Groq → NVIDIA.
 import { convertToModelMessages, streamText, type ModelMessage, type UIMessage } from "npm:ai";
 import { createOpenAICompatible } from "npm:@ai-sdk/openai-compatible";
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -36,43 +38,13 @@ function latestUserText(messages: ModelMessage[]) {
   return "";
 }
 
+const STOPWORDS = new Set([
+  "qual","quais","quanto","quantos","temos","mais","menos","estoque","item","itens",
+  "tecido","tecidos","produto","produtos","cor","cores","codigo","código","para","com",
+  "dos","das","que","uma","por","em","no","na","de","do","da","o","a","e",
+]);
+
 function textTokens(text: string) {
-  const stop = new Set([
-    "qual",
-    "quais",
-    "quanto",
-    "quantos",
-    "temos",
-    "mais",
-    "menos",
-    "estoque",
-    "item",
-    "itens",
-    "tecido",
-    "tecidos",
-    "produto",
-    "produtos",
-    "cor",
-    "cores",
-    "codigo",
-    "código",
-    "para",
-    "com",
-    "dos",
-    "das",
-    "que",
-    "uma",
-    "por",
-    "em",
-    "no",
-    "na",
-    "de",
-    "do",
-    "da",
-    "o",
-    "a",
-    "e",
-  ]);
   return Array.from(
     new Set(
       text
@@ -80,9 +52,41 @@ function textTokens(text: string) {
         .replace(/[\u0300-\u036f]/g, "")
         .toLowerCase()
         .match(/[a-z0-9]+/g)
-        ?.filter((token) => token.length >= 2 && !stop.has(token)) ?? [],
+        ?.filter((token) => token.length >= 2 && !STOPWORDS.has(token)) ?? [],
     ),
   ).slice(0, 6);
+}
+
+// ---------- Escopo Pente Fino / Auge ----------
+// Vocabulário mínimo do domínio. Se a mensagem for muito curta (saudação) permitimos.
+// Se for longa e não contém nenhum termo do domínio, recusamos.
+const DOMAIN_TERMS = [
+  "pente fino","auge","estoque","cadastro","cadastros","item","itens","itens_cadastro",
+  "tecido","tecidos","motor","motores","madeira","componente","componentes",
+  "transferencia","transferência","transferencias","transferências","rascunho","efetiva","efetivar",
+  "saida","saída","saidas","saídas","entrada","entradas","movimenta","movimentação","movimentacoes",
+  "kardex","deposito","depósito","depositos","depósitos","lote","lotes","serie","série","series","séries",
+  "endereco","endereço","enderecos","endereços","mapa","posicao","posição","posicoes","posições",
+  "conferencia","conferência","conferencias","conferências","romaneio","romaneios","expedicao","expedição",
+  "picking","carrinho","carrinhos","nf","nfe","nota","notas","fiscal","fiscais","xml","danfe",
+  "reserva","reservas","inventario","inventário","contagem","contagens","operador","conferente",
+  "cor","cores","tonalidade","screen","blackout","tecido","metros","m2","m²","peça","pecas","peças",
+  "auditoria","reconciliacao","reconciliação","chao","chão","tec","fifo","descricao","descrição",
+  "sincroniz","sync","importar","export","relatorio","relatório","dashboard","carga","transportadora",
+];
+
+const GREETING_RE = /^\s*(oi|ola|olá|bom dia|boa tarde|boa noite|e ai|eaí|hello|hi|hey|obrigad|valeu|tchau|help|ajuda)\b/i;
+const HELP_RE = /(o que voce faz|o que você faz|como usar|ajuda|help|capacidades|comandos)/i;
+
+function isInScope(text: string): { ok: boolean; reason?: string } {
+  const t = text.trim();
+  if (!t) return { ok: false, reason: "vazio" };
+  if (t.length < 12) return { ok: true }; // saudações / curtas
+  if (GREETING_RE.test(t) || HELP_RE.test(t)) return { ok: true };
+  const norm = t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const hit = DOMAIN_TERMS.some((term) => norm.includes(term));
+  if (hit) return { ok: true };
+  return { ok: false, reason: "fora_de_escopo" };
 }
 
 function sanitizePostgrestValue(value: string) {
@@ -93,10 +97,7 @@ async function buildAgentContext(admin: ReturnType<typeof createClient>, text: s
   const tokens = textTokens(text);
   const wantsTransfers = /transfer|rascunho|efetiva/i.test(text);
   const wantsMoves = /entrada|sa[ií]da|movimenta|kardex/i.test(text);
-  const context: Record<string, unknown> = {
-    consulta: text,
-    tokens_usados: tokens,
-  };
+  const context: Record<string, unknown> = { consulta: text, tokens_usados: tokens };
 
   try {
     let itens: any[] = [];
@@ -182,7 +183,10 @@ async function buildAgentContext(admin: ReturnType<typeof createClient>, text: s
         saldo_estimado: fmtBR(row.saldo_estimado),
         enderecos: Array.from(row.enderecos).slice(0, 8),
       }))
-      .sort((a, b) => Number.parseFloat(String(b.saldo_estimado).replace(/\./g, "").replace(",", ".")) - Number.parseFloat(String(a.saldo_estimado).replace(/\./g, "").replace(",", ".")))
+      .sort((a, b) =>
+        Number.parseFloat(String(b.saldo_estimado).replace(/\./g, "").replace(",", ".")) -
+        Number.parseFloat(String(a.saldo_estimado).replace(/\./g, "").replace(",", ".")),
+      )
       .slice(0, 20);
     context.posicoes_amostra = posicoes.slice(0, 25);
 
@@ -210,13 +214,95 @@ async function buildAgentContext(admin: ReturnType<typeof createClient>, text: s
   return context;
 }
 
+// ---------- Provedores + fallback ----------
+type ProviderId = "cerebras" | "groq" | "nvidia";
+
+interface ProviderCfg {
+  id: ProviderId;
+  apiKey: string | undefined;
+  baseURL: string;
+  model: string;
+  fastModel: string; // usado para tarefas simples
+}
+
+function getProviders(): ProviderCfg[] {
+  return [
+    {
+      id: "cerebras",
+      apiKey: Deno.env.get("CEREBRAS_API_KEY"),
+      baseURL: "https://api.cerebras.ai/v1",
+      model: Deno.env.get("CEREBRAS_MODEL") ?? "llama-3.3-70b",
+      fastModel: Deno.env.get("CEREBRAS_FAST_MODEL") ?? "llama3.1-8b",
+    },
+    {
+      id: "groq",
+      apiKey: Deno.env.get("GROQ_API_KEY"),
+      baseURL: "https://api.groq.com/openai/v1",
+      model: Deno.env.get("GROQ_MODEL") ?? "llama-3.3-70b-versatile",
+      fastModel: Deno.env.get("GROQ_FAST_MODEL") ?? "llama-3.1-8b-instant",
+    },
+    {
+      id: "nvidia",
+      apiKey: Deno.env.get("NVIDIA_API_KEY"),
+      baseURL: "https://integrate.api.nvidia.com/v1",
+      model: Deno.env.get("NVIDIA_MODEL") ?? "meta/llama-3.3-70b-instruct",
+      fastModel: Deno.env.get("NVIDIA_FAST_MODEL") ?? "meta/llama-3.1-8b-instruct",
+    },
+  ];
+}
+
+// Classifica a tarefa: "fast" para perguntas curtas/simples; "reasoning" para
+// pedidos que envolvam análise, comparação, listagens ou ações.
+function classifyTask(text: string): "fast" | "reasoning" {
+  const t = text.toLowerCase();
+  const heavy = /(analis|compar|resumo|resuma|liste|listar|explique|explicar|por que|porque|planej|sugere|sugir|recomend|estrat|hist[oó]rico|relat|criar transfer|efetivar|preparar|top |mais |menos |ranking|agrup|totaliz)/;
+  if (t.length > 140 || heavy.test(t)) return "reasoning";
+  return "fast";
+}
+
+function pickModel(cfg: ProviderCfg, task: "fast" | "reasoning") {
+  return task === "fast" ? cfg.fastModel : cfg.model;
+}
+
+/**
+ * Testa disponibilidade do provedor com um POST curto (não-stream). Se responder
+ * com 2xx num timeout curto, o provedor está saudável. Isso permite fallback
+ * automático em cadeia sem quebrar o stream principal.
+ */
+async function probeProvider(cfg: ProviderCfg, model: string): Promise<boolean> {
+  if (!cfg.apiKey) return false;
+  const ac = new AbortController();
+  const t = setTimeout(() => ac.abort(), 4500);
+  try {
+    const r = await fetch(`${cfg.baseURL}/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${cfg.apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        messages: [{ role: "user", content: "ping" }],
+        max_tokens: 1,
+        temperature: 0,
+      }),
+      signal: ac.signal,
+    });
+    clearTimeout(t);
+    return r.ok;
+  } catch (_) {
+    clearTimeout(t);
+    return false;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const apiKey = Deno.env.get("NVIDIA_API_KEY");
-    if (!apiKey) {
-      return new Response(JSON.stringify({ error: "NVIDIA_API_KEY not set" }), {
+    const providers = getProviders().filter((p) => !!p.apiKey);
+    if (providers.length === 0) {
+      return new Response(JSON.stringify({ error: "Nenhum provedor de IA configurado (CEREBRAS_API_KEY, GROQ_API_KEY ou NVIDIA_API_KEY)." }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -231,7 +317,6 @@ Deno.serve(async (req) => {
     const userId = userData?.user?.id ?? null;
     const userEmail = userData?.user?.email ?? null;
 
-    // Admin client para operações que precisam bypassar RLS (leitura de tabelas Auge)
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
@@ -249,10 +334,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Normaliza mensagens vindas de clientes com formatos diferentes:
-    // - AI SDK v7 (UIMessage): { role, parts: [{type:'text', text}, ...] }
-    // - AI SDK v4/legacy: { role, content: string }
-    // Convertemos tudo para ModelMessage[] (o formato aceito pelo streamText).
     const modelMessages: ModelMessage[] = [];
     const hasParts = rawMessages.some((m) => Array.isArray(m?.parts));
     if (hasParts) {
@@ -269,15 +350,9 @@ Deno.serve(async (req) => {
         let text = "";
         if (typeof m?.content === "string") text = m.content;
         else if (Array.isArray(m?.parts)) {
-          text = m.parts
-            .filter((p: any) => p?.type === "text" && typeof p.text === "string")
-            .map((p: any) => p.text)
-            .join("\n");
+          text = m.parts.filter((p: any) => p?.type === "text" && typeof p.text === "string").map((p: any) => p.text).join("\n");
         } else if (Array.isArray(m?.content)) {
-          text = m.content
-            .filter((p: any) => p?.type === "text" && typeof p.text === "string")
-            .map((p: any) => p.text)
-            .join("\n");
+          text = m.content.filter((p: any) => p?.type === "text" && typeof p.text === "string").map((p: any) => p.text).join("\n");
         }
         if (text) modelMessages.push({ role, content: text } as ModelMessage);
       }
@@ -288,34 +363,67 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    console.log("[ai-agent] recebidas", rawMessages.length, "msgs; normalizadas:", modelMessages.length);
 
-    // Provedor: NVIDIA NIM (OpenAI-compatível)
-    const nvidia = createOpenAICompatible({
-      name: "nvidia",
-      baseURL: "https://integrate.api.nvidia.com/v1",
-      headers: { Authorization: `Bearer ${apiKey}` },
-    });
-    // Sem tool-loop no provedor NVIDIA: o app consulta o banco antes e injeta
-    // contexto ao modelo. Isso evita o bug em que a IA chamava uma ferramenta,
-    // encerrava o stream e deixava o usuário sem resposta textual.
-    const model = nvidia(Deno.env.get("NVIDIA_MODEL") ?? "meta/llama-3.1-8b-instruct");
+    const userText = latestUserText(modelMessages);
+    const scope = isInScope(userText);
+    const task = classifyTask(userText);
 
-    const automaticContext = await buildAgentContext(admin, latestUserText(modelMessages));
+    console.log("[ai-agent]", { msgs: modelMessages.length, task, scope: scope.ok, providers: providers.map((p) => p.id) });
 
-    const system = `Você é o Assistente do Pente Fino, um agente de IA integrado ao ERP de estoque da Unilux.
-Você tem acesso ao banco de dados do app e pode consultar cadastros, transferências, estoque, movimentações e mais.
-Também pode preparar ações de escrita (criar transferência, registrar saída), mas ações que mutam dados exigem confirmação humana.
+    // Guardrail duro: fora de escopo → resposta curta, sem chamar IA.
+    if (!scope.ok) {
+      const refusal = "Sou o Assistente do Pente Fino e só respondo dúvidas sobre estoque, cadastros, transferências, saídas, entradas, movimentações e demais operações do Pente Fino/Auge. Se sua pergunta for sobre isso, reformule com o produto, lote ou operação que deseja consultar.";
+      // Emite como UI Message Stream compatível com useChat.
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        start(controller) {
+          const id = crypto.randomUUID();
+          const send = (obj: unknown) => controller.enqueue(encoder.encode(`data: ${JSON.stringify(obj)}\n\n`));
+          send({ type: "start" });
+          send({ type: "start-step" });
+          send({ type: "text-start", id });
+          send({ type: "text-delta", id, delta: refusal });
+          send({ type: "text-end", id });
+          send({ type: "finish-step" });
+          send({ type: "finish" });
+          controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+          controller.close();
+        },
+      });
+      return new Response(stream, {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "text/event-stream",
+          "x-vercel-ai-ui-message-stream": "v1",
+          "Cache-Control": "no-cache, no-transform",
+        },
+      });
+    }
 
-Regras:
-- Responda sempre em português do Brasil, tom profissional e direto (estilo ERP).
-- Formate quantidades no padrão BR: "000.000,00". Se o valor for exatamente 1, use "1".
-- Use markdown para tabelas e listas quando ajudar a leitura.
-- Antes de executar uma ação de escrita, resuma o que será feito e peça confirmação explícita.
-- Se o usuário pedir algo fora do escopo do estoque, explique gentilmente que você atende o Pente Fino.
-- Ao consultar tabelas, prefira filtrar por códigos exatos quando o usuário informar; caso contrário busque por texto parcial (ilike).
-- Use obrigatoriamente o contexto consultado automaticamente abaixo para responder. Se ele vier vazio, diga claramente que não encontrou dados suficientes.
-- Nunca finalize com resposta vazia. Mesmo quando não houver dados, explique o que foi consultado e o próximo filtro recomendado.
+    const automaticContext = await buildAgentContext(admin, userText);
+
+    const system = `Você é o Assistente do Pente Fino, integrado ao ERP de estoque da Unilux (Pente Fino + Auge).
+
+ESCOPO — REGRA DURA:
+- Você SOMENTE responde perguntas e executa ações relacionadas ao Pente Fino/Auge:
+  cadastros de itens, tecidos, motores, madeira, componentes, estoque, saldo,
+  endereços/mapa, lotes, séries, depósitos, transferências, saídas, entradas,
+  movimentações, kardex, conferências, romaneios, expedição, NF-e, reservas,
+  inventário, auditoria e relatórios do próprio app.
+- Se o usuário pedir algo fora desse escopo (receitas, notícias, opinião,
+  cultura geral, outro sistema, código não-relacionado etc.), recuse educadamente
+  em UMA frase e ofereça exemplos do que você pode fazer aqui. NÃO invente
+  respostas fora do domínio.
+
+REGRAS DE RESPOSTA:
+- Sempre em português do Brasil, tom profissional e direto (estilo ERP).
+- Quantidades no padrão BR: "000.000,00". Se valor for exatamente 1, use "1".
+- Use markdown para tabelas/listas quando ajudar a leitura.
+- Antes de executar QUALQUER ação de escrita (criar transferência, registrar saída,
+  efetivar movimento), resuma o que será feito e peça confirmação explícita.
+- Use OBRIGATORIAMENTE o contexto consultado automaticamente abaixo. Se vier vazio,
+  informe o que foi pesquisado e sugira um filtro melhor (código, lote, endereço).
+- Nunca finalize com resposta vazia.
 
 Usuário atual: ${userEmail ?? "não autenticado"} (id: ${userId ?? "-"}).
 Data/hora: ${new Date().toISOString()}.
@@ -323,20 +431,47 @@ Data/hora: ${new Date().toISOString()}.
 Contexto consultado automaticamente no Pente Fino/Auge:
 ${JSON.stringify(automaticContext, null, 2)}`;
 
-    const result = streamText({
-      model,
-      system,
-      messages: modelMessages,
-      temperature: 0.2,
-      maxOutputTokens: 800,
-    });
+    // Cadeia de fallback: percorre provedores até um deles servir o stream.
+    let lastError: unknown = null;
+    for (const cfg of providers) {
+      const modelId = pickModel(cfg, task);
+      const healthy = await probeProvider(cfg, modelId);
+      if (!healthy) {
+        console.warn(`[ai-agent] provider ${cfg.id} indisponível`);
+        continue;
+      }
+      try {
+        const provider = createOpenAICompatible({
+          name: cfg.id,
+          baseURL: cfg.baseURL,
+          headers: { Authorization: `Bearer ${cfg.apiKey}` },
+        });
+        const model = provider(modelId);
+        const result = streamText({
+          model,
+          system,
+          messages: modelMessages,
+          temperature: 0.2,
+          maxOutputTokens: 900,
+        });
+        console.log(`[ai-agent] usando ${cfg.id} / ${modelId} (task=${task})`);
+        return result.toUIMessageStreamResponse({
+          headers: { ...corsHeaders, "x-ai-provider": cfg.id, "x-ai-model": modelId, "x-ai-task": task },
+          onError: (error) => {
+            console.error(`[ai-agent] stream error (${cfg.id})`, error);
+            return error instanceof Error ? error.message : "Falha ao gerar resposta.";
+          },
+        });
+      } catch (e) {
+        lastError = e;
+        console.error(`[ai-agent] falha em ${cfg.id}, tentando próximo`, e);
+      }
+    }
 
-    return result.toUIMessageStreamResponse({
-      headers: corsHeaders,
-      onError: (error) => {
-        console.error("[ai-agent] stream error", error);
-        return error instanceof Error ? error.message : "Falha ao gerar resposta do assistente.";
-      },
+    const message = lastError instanceof Error ? lastError.message : "Todos os provedores de IA falharam.";
+    return new Response(JSON.stringify({ error: message }), {
+      status: 502,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
