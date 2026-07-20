@@ -1,7 +1,6 @@
 // AI Agent — assistente do Pente Fino com acesso a consultas e ações do app.
-import { convertToModelMessages, streamText, stepCountIs, tool, type ModelMessage, type UIMessage } from "npm:ai";
+import { convertToModelMessages, streamText, type ModelMessage, type UIMessage } from "npm:ai";
 import { createOpenAICompatible } from "npm:@ai-sdk/openai-compatible";
-import { z } from "npm:zod";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -19,20 +18,197 @@ function fmtBR(n: number | null | undefined) {
   return new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n));
 }
 
-function clampLimit(value: unknown, fallback: number, max: number) {
-  const n = Number(value ?? fallback);
-  if (!Number.isFinite(n)) return fallback;
-  return Math.max(1, Math.min(Math.trunc(n), max));
-}
-
 function errorPayload(err: unknown) {
   if (err instanceof Error) return { error: err.message, stack: err.stack };
   return { error: typeof err === "string" ? err : JSON.stringify(err) };
 }
 
-const numberLikeInput = z.union([z.number(), z.string()]);
-const optionalNumberInput = numberLikeInput.optional();
-const requiredNumberInput = numberLikeInput;
+function latestUserText(messages: ModelMessage[]) {
+  const last = [...messages].reverse().find((m) => m.role === "user");
+  const content = last?.content;
+  if (typeof content === "string") return content;
+  if (Array.isArray(content)) {
+    return content
+      .map((part: any) => (part?.type === "text" && typeof part.text === "string" ? part.text : ""))
+      .join(" ")
+      .trim();
+  }
+  return "";
+}
+
+function textTokens(text: string) {
+  const stop = new Set([
+    "qual",
+    "quais",
+    "quanto",
+    "quantos",
+    "temos",
+    "mais",
+    "menos",
+    "estoque",
+    "item",
+    "itens",
+    "tecido",
+    "tecidos",
+    "produto",
+    "produtos",
+    "cor",
+    "cores",
+    "codigo",
+    "código",
+    "para",
+    "com",
+    "dos",
+    "das",
+    "que",
+    "uma",
+    "por",
+    "em",
+    "no",
+    "na",
+    "de",
+    "do",
+    "da",
+    "o",
+    "a",
+    "e",
+  ]);
+  return Array.from(
+    new Set(
+      text
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .match(/[a-z0-9]+/g)
+        ?.filter((token) => token.length >= 2 && !stop.has(token)) ?? [],
+    ),
+  ).slice(0, 6);
+}
+
+function sanitizePostgrestValue(value: string) {
+  return value.replace(/[(),.]/g, " ").trim();
+}
+
+async function buildAgentContext(admin: ReturnType<typeof createClient>, text: string) {
+  const tokens = textTokens(text);
+  const wantsTransfers = /transfer|rascunho|efetiva/i.test(text);
+  const wantsMoves = /entrada|sa[ií]da|movimenta|kardex/i.test(text);
+  const context: Record<string, unknown> = {
+    consulta: text,
+    tokens_usados: tokens,
+  };
+
+  try {
+    let itens: any[] = [];
+    if (tokens.length > 0) {
+      const itemFilters = tokens.flatMap((token) => {
+        const safe = sanitizePostgrestValue(token);
+        if (!safe) return [];
+        return [
+          `descricao.ilike.%${safe}%`,
+          `codigo_interno.ilike.%${safe}%`,
+          `codigo_fornecedor.ilike.%${safe}%`,
+        ];
+      });
+      if (itemFilters.length > 0) {
+        const { data, error } = await admin
+          .from("itens_cadastro")
+          .select("codigo_interno,descricao,unidade,codigo_fornecedor,pacote_fornecedor,pacote_estocagem")
+          .or(itemFilters.join(","))
+          .limit(80);
+        if (error) context.itens_erro = error.message;
+        else itens = data ?? [];
+      }
+    }
+
+    const codigos = Array.from(
+      new Set(
+        itens
+          .map((item) => String(item.codigo_interno ?? item.codigo_fornecedor ?? "").trim())
+          .filter(Boolean),
+      ),
+    ).slice(0, 80);
+
+    let posicoes: any[] = [];
+    if (codigos.length > 0) {
+      const [byAuge, byItem] = await Promise.all([
+        admin
+          .from("estoque_posicoes")
+          .select("item,auge_cd_item,lote,lote_sistema,endereco,deposito_atual,status,m_linear_atual,m_linear,m2_atual,m2")
+          .in("auge_cd_item", codigos)
+          .limit(500),
+        admin
+          .from("estoque_posicoes")
+          .select("item,auge_cd_item,lote,lote_sistema,endereco,deposito_atual,status,m_linear_atual,m_linear,m2_atual,m2")
+          .in("item", codigos)
+          .limit(500),
+      ]);
+      if (byAuge.error) context.estoque_erro = byAuge.error.message;
+      if (byItem.error) context.estoque_item_erro = byItem.error.message;
+      posicoes = [...(byAuge.data ?? []), ...(byItem.data ?? [])];
+    }
+
+    const byCodigo = new Map<string, any>();
+    for (const item of itens) {
+      const codigo = String(item.codigo_interno ?? item.codigo_fornecedor ?? "-");
+      byCodigo.set(codigo, {
+        codigo,
+        descricao: item.descricao ?? "-",
+        unidade: item.unidade ?? "-",
+        saldo_estimado: 0,
+        lotes: 0,
+        enderecos: new Set<string>(),
+      });
+    }
+    for (const pos of posicoes) {
+      const codigo = String(pos.auge_cd_item ?? pos.item ?? "-");
+      const row = byCodigo.get(codigo) ?? {
+        codigo,
+        descricao: itens.find((item) => item.codigo_interno === codigo || item.codigo_fornecedor === codigo)?.descricao ?? "-",
+        unidade: "-",
+        saldo_estimado: 0,
+        lotes: 0,
+        enderecos: new Set<string>(),
+      };
+      row.saldo_estimado += Number(pos.m_linear_atual ?? pos.m_linear ?? pos.m2_atual ?? pos.m2 ?? 0);
+      row.lotes += 1;
+      if (pos.endereco) row.enderecos.add(String(pos.endereco));
+      byCodigo.set(codigo, row);
+    }
+
+    context.itens_encontrados = Array.from(byCodigo.values())
+      .map((row) => ({
+        ...row,
+        saldo_estimado: fmtBR(row.saldo_estimado),
+        enderecos: Array.from(row.enderecos).slice(0, 8),
+      }))
+      .sort((a, b) => Number.parseFloat(String(b.saldo_estimado).replace(/\./g, "").replace(",", ".")) - Number.parseFloat(String(a.saldo_estimado).replace(/\./g, "").replace(",", ".")))
+      .slice(0, 20);
+    context.posicoes_amostra = posicoes.slice(0, 25);
+
+    if (wantsTransfers) {
+      const { data, error } = await admin
+        .from("auge_transferencias")
+        .select("documento,nr_efetivacao,data_movimento,codigo_produto,descricao_produto,quantidade,deposito_origem,deposito_destino,observacao,usuario_criacao,usuario_efetivacao,ds_efetivacao")
+        .order("data_movimento", { ascending: false, nullsFirst: false })
+        .limit(15);
+      context.transferencias_recentes = error ? { erro: error.message } : data ?? [];
+    }
+
+    if (wantsMoves) {
+      const { data, error } = await admin
+        .from("auge_movimentacoes")
+        .select("data_movimento,tipo,codigo_produto,quantidade,deposito,documento,observacao,situacao,ds_situacao")
+        .order("data_movimento", { ascending: false, nullsFirst: false })
+        .limit(20);
+      context.movimentacoes_recentes = error ? { erro: error.message } : data ?? [];
+    }
+  } catch (err) {
+    context.contexto_erro = errorPayload(err);
+  }
+
+  return context;
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -120,9 +296,12 @@ Deno.serve(async (req) => {
       baseURL: "https://integrate.api.nvidia.com/v1",
       headers: { Authorization: `Bearer ${apiKey}` },
     });
-    // Modelo com tool calling robusto — 8B é fraco demais para 7 ferramentas.
-    // 70B do Llama 3.3 é o padrão NVIDIA NIM com melhor custo/qualidade para agentes.
-    const model = nvidia("meta/llama-3.3-70b-instruct");
+    // Sem tool-loop no provedor NVIDIA: o app consulta o banco antes e injeta
+    // contexto ao modelo. Isso evita o bug em que a IA chamava uma ferramenta,
+    // encerrava o stream e deixava o usuário sem resposta textual.
+    const model = nvidia(Deno.env.get("NVIDIA_MODEL") ?? "meta/llama-3.1-8b-instruct");
+
+    const automaticContext = await buildAgentContext(admin, latestUserText(modelMessages));
 
     const system = `Você é o Assistente do Pente Fino, um agente de IA integrado ao ERP de estoque da Unilux.
 Você tem acesso ao banco de dados do app e pode consultar cadastros, transferências, estoque, movimentações e mais.
@@ -135,198 +314,19 @@ Regras:
 - Antes de executar uma ação de escrita, resuma o que será feito e peça confirmação explícita.
 - Se o usuário pedir algo fora do escopo do estoque, explique gentilmente que você atende o Pente Fino.
 - Ao consultar tabelas, prefira filtrar por códigos exatos quando o usuário informar; caso contrário busque por texto parcial (ilike).
+- Use obrigatoriamente o contexto consultado automaticamente abaixo para responder. Se ele vier vazio, diga claramente que não encontrou dados suficientes.
+- Nunca finalize com resposta vazia. Mesmo quando não houver dados, explique o que foi consultado e o próximo filtro recomendado.
 
 Usuário atual: ${userEmail ?? "não autenticado"} (id: ${userId ?? "-"}).
-Data/hora: ${new Date().toISOString()}.`;
+Data/hora: ${new Date().toISOString()}.
 
-    const tools = {
-      consultar_itens: tool({
-        description: "Consulta o cadastro de itens (itens_cadastro). Filtra por código exato ou trecho da descrição. Retorna até 20 registros.",
-        inputSchema: z.object({
-          codigo: z.string().optional().describe("Código exato do item (opcional)"),
-          descricao: z.string().optional().describe("Trecho da descrição para busca ilike (opcional)"),
-          limit: optionalNumberInput.describe("Quantidade máxima de registros"),
-        }),
-        execute: async ({ codigo, descricao, limit }) => {
-          try {
-            const safeLimit = clampLimit(limit, 20, 50);
-            const codigoNormalizado = codigo?.trim();
-            let q = admin
-              .from("itens_cadastro")
-              .select(
-                "codigo_interno,descricao,unidade,codigo_fornecedor,codigos_fornecedor,pacote_fornecedor,pacote_estocagem",
-              )
-              .limit(safeLimit);
-            if (codigoNormalizado) {
-              q = q.or(
-                `codigo_interno.eq.${codigoNormalizado},codigo_interno_normalizado.eq.${codigoNormalizado},codigo_fornecedor.eq.${codigoNormalizado},codigo_fornecedor_normalizado.eq.${codigoNormalizado}`,
-              );
-            }
-            if (descricao) q = q.ilike("descricao", `%${descricao.trim()}%`);
-            const { data, error } = await q;
-            if (error) return { error: error.message };
-            return { count: data?.length ?? 0, items: data ?? [] };
-          } catch (err) {
-            return errorPayload(err);
-          }
-        },
-      }),
-
-      consultar_saldo_estoque: tool({
-        description: "Consulta saldo de um item nas posições do estoque (estoque_posicoes). Informe o código do item.",
-        inputSchema: z.object({
-          codigo: z.string().describe("Código do item"),
-        }),
-        execute: async ({ codigo }) => {
-          try {
-            const codigoNormalizado = codigo.trim();
-            const { data, error } = await admin
-              .from("estoque_posicoes")
-              .select("endereco,item,auge_cd_item,lote,lote_sistema,deposito_atual,status,m_linear_atual,m_linear,m2_atual,m2")
-              .or(`item.eq.${codigoNormalizado},auge_cd_item.eq.${codigoNormalizado}`)
-              .limit(100);
-            if (error) return { error: error.message };
-            const total = (data ?? []).reduce(
-              (s, r: any) => s + Number(r.m_linear_atual ?? r.m_linear ?? r.m2_atual ?? r.m2 ?? 0),
-              0,
-            );
-            return { codigo, total: fmtBR(total), posicoes: data ?? [] };
-          } catch (err) {
-            return errorPayload(err);
-          }
-        },
-      }),
-
-      consultar_transferencias: tool({
-        description: "Lista transferências recentes do Auge, com filtros opcionais. Retorna até 30 registros ordenados por data desc.",
-        inputSchema: z.object({
-          produto: z.string().optional().describe("Filtro por código do produto"),
-          data_de: z.string().optional().describe("Data inicial YYYY-MM-DD"),
-          data_ate: z.string().optional().describe("Data final YYYY-MM-DD"),
-          status: z.string().optional(),
-          limit: optionalNumberInput.describe("Quantidade máxima de registros"),
-        }),
-        execute: async ({ produto, data_de, data_ate, status, limit }) => {
-          try {
-            const safeLimit = clampLimit(limit, 30, 50);
-            let q = admin
-              .from("auge_transferencias")
-              .select(
-                "documento,nr_efetivacao,data_movimento,codigo_produto,descricao_produto,quantidade,deposito_origem,deposito_destino,situacao,ds_situacao,observacao,usuario_criacao,usuario_efetivacao,ds_efetivacao",
-              )
-              .order("data_movimento", { ascending: false, nullsFirst: false })
-              .limit(safeLimit);
-            if (produto) q = q.eq("codigo_produto", produto.trim());
-            if (data_de) q = q.gte("data_movimento", `${data_de}T00:00:00.000Z`);
-            if (data_ate) q = q.lte("data_movimento", `${data_ate}T23:59:59.999Z`);
-            if (status) q = q.or(`situacao.ilike.%${status.trim()}%,ds_situacao.ilike.%${status.trim()}%`);
-            const { data, error } = await q;
-            if (error) return { error: error.message };
-            return { count: data?.length ?? 0, transferencias: data ?? [] };
-          } catch (err) {
-            return errorPayload(err);
-          }
-        },
-      }),
-
-      consultar_movimentacoes: tool({
-        description: "Consulta movimentações (entradas/saídas) do Auge para um item específico.",
-        inputSchema: z.object({
-          codigo: z.string(),
-          tipo: z.string().optional().describe("entrada, saida ou todos"),
-          limit: optionalNumberInput.describe("Quantidade máxima de registros"),
-        }),
-        execute: async ({ codigo, tipo, limit }) => {
-          try {
-            const safeLimit = clampLimit(limit, 20, 50);
-            const tipoNormalizado = (tipo ?? "todos").toLowerCase();
-            let q = admin
-              .from("auge_movimentacoes")
-              .select(
-                "data_movimento,tipo,codigo_produto,quantidade,deposito,documento,observacao,situacao,ds_situacao,usuario_criacao,usuario_efetivacao,ds_efetivacao",
-              )
-              .eq("codigo_produto", codigo.trim())
-              .order("data_movimento", { ascending: false, nullsFirst: false })
-              .limit(safeLimit);
-            if (tipoNormalizado !== "todos") q = q.ilike("tipo", `%${tipoNormalizado}%`);
-            const { data, error } = await q;
-            if (error) return { error: error.message };
-            return { count: data?.length ?? 0, movimentacoes: data ?? [] };
-          } catch (err) {
-            return errorPayload(err);
-          }
-        },
-      }),
-
-      consultar_tecidos_sem_espaco: tool({
-        description: "Lista lotes de tecidos que não têm endereço alocado no mapa.",
-        inputSchema: z.object({
-          limit: optionalNumberInput.describe("Quantidade máxima de registros"),
-        }),
-        execute: async ({ limit }) => {
-          try {
-            const safeLimit = clampLimit(limit, 30, 100);
-            const { data, error } = await admin
-              .from("tecidos_sem_espaco")
-              .select("item,auge_cd_item,endereco_desejado,estrutura,coluna,nivel,proc,m_linear,largura,m2,lote,lote_sistema")
-              .limit(safeLimit);
-            if (error) return { error: error.message };
-            return { count: data?.length ?? 0, itens: data ?? [] };
-          } catch (err) {
-            return errorPayload(err);
-          }
-        },
-      }),
-
-      consultar_conferencias_recentes: tool({
-        description: "Lista conferências recentes do módulo estoque.",
-        inputSchema: z.object({
-          limit: optionalNumberInput.describe("Quantidade máxima de registros"),
-        }),
-        execute: async ({ limit }) => {
-          try {
-            const safeLimit = clampLimit(limit, 10, 30);
-            const { data, error } = await admin
-              .from("conferences")
-              .select("id,processo,conferente,started_at,finished_at")
-              .order("started_at", { ascending: false, nullsFirst: false })
-              .limit(safeLimit);
-            if (error) return { error: error.message };
-            return { count: data?.length ?? 0, conferencias: data ?? [] };
-          } catch (err) {
-            return errorPayload(err);
-          }
-        },
-      }),
-
-      preparar_transferencia: tool({
-        description:
-          "Prepara um rascunho de transferência entre depósitos. Esta ferramenta NÃO executa a criação — apenas retorna o payload validado para o usuário confirmar. Depois de confirmado, o app dispara a criação via /estoque/transferencias.",
-        inputSchema: z.object({
-          produto: z.string(),
-          quantidade: requiredNumberInput,
-          deposito_origem: z.string(),
-          deposito_destino: z.string(),
-          lote: z.string().optional(),
-          observacao: z.string().optional(),
-        }),
-        execute: async (input) => {
-          return {
-            status: "aguardando_confirmacao",
-            mensagem:
-              "Rascunho de transferência preparado. Confirme os dados na tela /estoque/transferencias para efetivar no Auge.",
-            payload: input,
-          };
-        },
-      }),
-    };
+Contexto consultado automaticamente no Pente Fino/Auge:
+${JSON.stringify(automaticContext, null, 2)}`;
 
     const result = streamText({
       model,
       system,
       messages: modelMessages,
-      tools,
-      stopWhen: stepCountIs(8),
       temperature: 0.2,
       maxOutputTokens: 800,
     });
