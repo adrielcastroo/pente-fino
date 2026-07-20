@@ -2308,11 +2308,162 @@ async function syncAcabamentosFull(admin: any, auth: any, triggeredBy: string | 
 }
 
 
+// ============================================================
+// ABREVIAÇÕES + DICIONÁRIOS + CONSULTAS PARAMETRIZADAS
+// ============================================================
 
+async function fetchListaAbreviacoes(auth: any): Promise<any[]> {
+  const txt = await postAugePhp(
+    auth,
+    '/l.unilux/modInventario/Ajax/getListaAbreviacao.php',
+    new URLSearchParams(),
+    '/l.unilux/modInventario/manterAbreviacao.php',
+  );
+  let j: any;
+  try { j = JSON.parse(txt); } catch { throw new Error(`getListaAbreviacao não-JSON: ${txt.slice(0, 120)}`); }
+  return Array.isArray(j?.data) ? j.data : [];
+}
 
+function mapAbreviacaoRow(r: any) {
+  return {
+    cd_abreviacao: String(r.cdAbreviacao),
+    cd_empresa: r.cdEmpresa ?? null,
+    id_tipo_abreviacao: String(r.idTipoAbreviacao ?? 'Descrição do Item'),
+    ds_atual: String(r.dsAtual ?? ''),
+    ds_abreviada: String(r.dsAbreviada ?? ''),
+    raw: r,
+    synced_at: new Date().toISOString(),
+  };
+}
+
+async function syncAbreviacoesFull(admin: any, auth: any, triggeredBy: string | null) {
+  const started = new Date().toISOString();
+  const runIns = await admin.from('auge_sync_runs').insert({
+    entidade: 'abreviacoes', status: 'running', started_at: started, triggered_by: triggeredBy,
+  }).select('id').single();
+  const runId = runIns.data?.id;
+  try {
+    const list = await fetchListaAbreviacoes(auth);
+    const rows = list.map(mapAbreviacaoRow);
+    for (let i = 0; i < rows.length; i += 500) {
+      await admin.from('auge_abreviacoes').upsert(rows.slice(i, i + 500), { onConflict: 'cd_abreviacao' });
+    }
+    // remove os que sumiram no Auge
+    if (rows.length > 0) {
+      const keep = rows.map((r) => `"${r.cd_abreviacao}"`).join(',');
+      await admin.from('auge_abreviacoes').delete().not('cd_abreviacao', 'in', `(${keep})`);
+    }
+    await admin.from('auge_sync_runs').update({
+      status: 'success', finished_at: new Date().toISOString(),
+      rows_processed: rows.length, rows_upserted: rows.length,
+      detalhes: { total: rows.length },
+    }).eq('id', runId);
+    return { ok: true, total: rows.length, run_id: runId };
+  } catch (e) {
+    await admin.from('auge_sync_runs').update({
+      status: 'error', finished_at: new Date().toISOString(), error_message: getErrorMessage(e),
+    }).eq('id', runId);
+    throw e;
+  }
+}
+
+async function fetchDicionarioEndpoint(auth: any, endpoint: string, referer: string): Promise<any[]> {
+  const txt = await postAugePhp(auth, endpoint, new URLSearchParams(), referer);
+  let j: any;
+  try { j = JSON.parse(txt); } catch { throw new Error(`${endpoint} não-JSON: ${txt.slice(0, 120)}`); }
+  return Array.isArray(j?.data) ? j.data : (Array.isArray(j) ? j : []);
+}
+
+function mapDicionarioRow(tipo: string, r: any) {
+  const cd = String(
+    r.cdClasse ?? r.cdSubClasse ?? r.cdCombinacao ?? r.cdTag ?? r.cd ?? r.id ?? '',
+  ).trim();
+  const nm = String(
+    r.nmClasse ?? r.nmSubClasse ?? r.nmCombinacao ?? r.nmTag ?? r.nm ?? r.descricao ?? r.dsDescricao ?? r.text ?? '',
+  ).trim();
+  const cd_pai = String(r.cdClassePai ?? r.cdClasse ?? r.cdPai ?? '').trim() || null;
+  const nm_pai = String(r.nmClassePai ?? r.nmClasse ?? r.nmPai ?? '').trim() || null;
+  return { tipo, cd, nm, cd_pai, nm_pai, raw: r, synced_at: new Date().toISOString() };
+}
+
+async function syncDicionariosFull(admin: any, auth: any, triggeredBy: string | null) {
+  const started = new Date().toISOString();
+  const runIns = await admin.from('auge_sync_runs').insert({
+    entidade: 'dicionarios', status: 'running', started_at: started, triggered_by: triggeredBy,
+  }).select('id').single();
+  const runId = runIns.data?.id;
+
+  const REF = '/l.unilux/modInventario/manterAcabamento.php';
+  const jobs: Array<{ tipo: string; endpoint: string }> = [
+    { tipo: 'classe',      endpoint: '/l.unilux/modInventario/Ajax/getClasses.php' },
+    { tipo: 'sub_classe',  endpoint: '/l.unilux/modInventario/Ajax/getSubClasses.php' },
+    { tipo: 'combinacao',  endpoint: '/l.unilux/modInventario/Ajax/getCombinacoes.php' },
+    { tipo: 'tag',         endpoint: '/l.unilux/modInventario/Ajax/getTags.php' },
+  ];
+
+  const totals: Record<string, number> = {};
+  try {
+    for (const { tipo, endpoint } of jobs) {
+      try {
+        const list = await fetchDicionarioEndpoint(auth, endpoint, REF);
+        const rows = list.map((r) => mapDicionarioRow(tipo, r)).filter((r) => r.cd && r.nm);
+        totals[tipo] = rows.length;
+        for (let i = 0; i < rows.length; i += 500) {
+          await admin.from('auge_dicionarios').upsert(rows.slice(i, i + 500), { onConflict: 'tipo,cd' });
+        }
+      } catch (e) {
+        totals[`${tipo}_erro`] = 0;
+        console.warn(`[dicionario ${tipo}]`, getErrorMessage(e));
+      }
+    }
+    await admin.from('auge_sync_runs').update({
+      status: 'success', finished_at: new Date().toISOString(),
+      rows_upserted: Object.values(totals).reduce((a, b) => a + (b || 0), 0),
+      detalhes: totals,
+    }).eq('id', runId);
+    return { ok: true, totais: totals, run_id: runId };
+  } catch (e) {
+    await admin.from('auge_sync_runs').update({
+      status: 'error', finished_at: new Date().toISOString(), error_message: getErrorMessage(e),
+    }).eq('id', runId);
+    throw e;
+  }
+}
+
+async function runConsultaAuge(auth: any, idConsulta: string): Promise<any> {
+  const filtroTxt = await postAugePhp(
+    auth,
+    '/l.unilux/modTI/Ajax/getFiltroConsulta.php',
+    new URLSearchParams({ idConsulta }),
+    '/l.unilux/modTI/gerirConsulta.php',
+  );
+  let filtros: any = null;
+  try { filtros = JSON.parse(filtroTxt); } catch { filtros = { html: filtroTxt.slice(0, 2000) }; }
+
+  // Resultado: GET com querystring
+  const headers: Record<string, string> = {
+    'Cookie': auth.jar.header(),
+    'X-Requested-With': 'XMLHttpRequest',
+    'X-CSRF-TOKEN': auth.csrf,
+    'Referer': `${AUGE_BASE_URL}/l.unilux/modTI/gerirConsulta.php`,
+    'User-Agent': UA,
+    'Accept': 'application/json, text/javascript, */*; q=0.01',
+  };
+  if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
+  const res = await fetch(
+    `${AUGE_BASE_URL}/l.unilux/modTI/Ajax/getResultadoConsulta.php?idConsulta=${encodeURIComponent(idConsulta)}`,
+    { method: 'GET', headers },
+  );
+  auth.jar.ingest(res);
+  const text = await res.text();
+  let resultado: any = null;
+  try { resultado = JSON.parse(text); } catch { resultado = { raw: text.slice(0, 20000) }; }
+  return { idConsulta, filtros, resultado };
+}
 
 
 Deno.serve(async (req) => {
+
 
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
