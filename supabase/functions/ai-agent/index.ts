@@ -207,8 +207,13 @@ function looksLikeAugeItemCode(value: string) {
 }
 
 function acabamentoItemCountAnswer(context: Record<string, unknown>, text: string) {
-  if (!/quantos?/i.test(text) || !/acabament/i.test(text) || !/item|produto|c[oó]digo/i.test(text)) return null;
-  const rows = Array.isArray(context.acabamentos_do_item) ? context.acabamentos_do_item as any[] : [];
+  const isCount = /quantos?/i.test(text) && /acabament/i.test(text) && /item|produto|c[oó]digo/i.test(text);
+  const isDescricao =
+    /acabament/i.test(text) &&
+    /descri[cç]|descri[cç][aã]o|como est[aá]|qual\s+a?\s*descri|em\s+cada/i.test(text);
+  if (!isCount && !isDescricao) return null;
+
+  const rows = Array.isArray(context.acabamentos_do_item) ? (context.acabamentos_do_item as any[]) : [];
   if (typeof context.acabamentos_do_item_total !== "number") return null;
 
   const code = typeof context.acabamentos_do_item_codigo_perguntado === "string"
@@ -225,6 +230,21 @@ function acabamentoItemCountAnswer(context: Record<string, unknown>, text: strin
   const uniqueRows = Array.from(
     new Map(rows.map((row) => [String(row.cd_acabamento ?? row.codigo_auge), row])).values(),
   );
+
+  if (isDescricao) {
+    const lines = uniqueRows
+      .slice(0, 40)
+      .map((row) => {
+        const codigo = row.codigo_auge ?? row.cd_acabamento;
+        const nome = row.nm_acabamento ?? "Sem nome";
+        const desc = row.descricao ?? "_(sem descrição cadastrada)_";
+        const cancel = row.cancelado ? " _(cancelado)_" : "";
+        return `- **${codigo}** — ${nome}${cancel}\n  ${desc}`;
+      })
+      .join("\n");
+    return `Fio aqui para ajudar.\n\nDescrição do item **${code}** em cada um dos **${total} acabamentos** vinculados no Auge:\n\n${lines}`;
+  }
+
   const lines = uniqueRows
     .slice(0, 30)
     .map((row) => `- **${row.codigo_auge ?? row.cd_acabamento}** — ${row.nm_acabamento ?? "Sem nome"}${row.cancelado ? " _(cancelado)_" : ""}`)
