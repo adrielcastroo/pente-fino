@@ -269,7 +269,7 @@ async function buildAgentContext(admin: ReturnType<typeof createClient>, text: s
         const { data, error } = await admin
           .from("auge_acabamento_itens")
           .select(
-            "cd_acabamento_item,cd_acabamento,cd_item_acabamento,ds_item_acabamento,ds_item_acabamento_reduzida,nm_kit_complementar_1,nm_kit_complementar_2,nm_kit_complementar_3,nm_kit_complementar_4,nm_kit_complementar_5,auge_acabamentos(cd_acabamento,nm_acabamento,nm_classe1,nm_combinacao1,id_cancelado)",
+            "cd_acabamento_item,cd_acabamento,cd_item_acabamento,ds_item_acabamento,ds_item_acabamento_reduzida,nm_kit_complementar_1,nm_kit_complementar_2,nm_kit_complementar_3,nm_kit_complementar_4,nm_kit_complementar_5,auge_acabamentos(cd_acabamento,chave_acabamento,nm_acabamento,nm_classe1,nm_combinacao1,id_cancelado)",
           )
           .in("cd_item_acabamento", alvos)
           .limit(60);
@@ -277,6 +277,7 @@ async function buildAgentContext(admin: ReturnType<typeof createClient>, text: s
           context.acabamentos_erro = error.message;
         } else {
           context.acabamentos_do_item = (data ?? []).map((r: any) => ({
+            codigo_auge: r.auge_acabamentos?.chave_acabamento ?? r.cd_acabamento,
             cd_acabamento: r.cd_acabamento,
             nm_acabamento: r.auge_acabamentos?.nm_acabamento ?? "-",
             classe: r.auge_acabamentos?.nm_classe1 ?? null,
