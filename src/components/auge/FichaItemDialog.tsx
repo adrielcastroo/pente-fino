@@ -448,6 +448,12 @@ export default function FichaItemDialog({ codigo, open, onOpenChange }: Props) {
           </div>
         )}
       </DialogContent>
+      <AcabamentoItemEditDialog
+        item={editingAcab}
+        open={!!editingAcab}
+        onOpenChange={(o) => { if (!o) setEditingAcab(null); }}
+        onSaved={() => refetchAcabamentos()}
+      />
     </Dialog>
   );
 }
