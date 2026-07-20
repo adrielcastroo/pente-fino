@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { Bot, MessageSquarePlus, Plus, Trash2, X } from "lucide-react";
+import { MessageSquarePlus, Plus, Trash2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useAgentThreads } from "@/store/useAgentThreads";
@@ -65,6 +65,9 @@ function ChatWindow({ threadId }: { threadId: string }) {
     id: threadId,
     messages: initialMessages,
     transport,
+    onFinish: () => {
+      window.dispatchEvent(new CustomEvent("fio:response"));
+    },
     onError: (err) => {
       console.error("[ai-agent] erro no chat", err);
     },
@@ -171,11 +174,39 @@ function ChatWindow({ threadId }: { threadId: string }) {
 export function AgentChatWidget() {
   const { user } = useAuth();
   const { open, toggleOpen, threads, activeId, newThread, selectThread, deleteThread } = useAgentThreads();
+  const [hasUnread, setHasUnread] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   // Ensure there's an active thread when opened
   useEffect(() => {
     if (open && !activeId) newThread();
   }, [open, activeId, newThread]);
+
+  // Clear unread when opened
+  useEffect(() => {
+    if (open) setHasUnread(false);
+  }, [open]);
+
+  // Listen for finished responses while minimized
+  useEffect(() => {
+    const onResponse = () => {
+      if (!useAgentThreads.getState().open) setHasUnread(true);
+    };
+    window.addEventListener("fio:response", onResponse);
+    return () => window.removeEventListener("fio:response", onResponse);
+  }, []);
+
+  // Click outside to minimize
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+        toggleOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [open, toggleOpen]);
 
   if (!user) return null;
 
@@ -186,14 +217,28 @@ export function AgentChatWidget() {
           type="button"
           aria-label="Abrir Fio (assistente de IA)"
           onClick={() => toggleOpen(true)}
-          className="fixed bottom-20 right-4 z-40 flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl shadow-lg ring-1 ring-primary/40 transition hover:scale-105 hover:shadow-xl tablet-landscape:bottom-6 desktop:bottom-6"
+          className="group fixed bottom-20 right-4 z-40 flex h-14 w-14 items-center justify-center overflow-visible rounded-2xl shadow-lg ring-1 ring-primary/40 transition-all duration-200 hover:scale-110 hover:shadow-2xl hover:ring-2 hover:ring-primary tablet-landscape:bottom-6 desktop:bottom-6"
         >
-          <img src={logo} alt="Fio" className="h-full w-full object-cover" />
+          <img
+            src={logo}
+            alt="Fio"
+            className="h-full w-full rounded-2xl object-cover transition-transform duration-200 group-hover:brightness-110"
+          />
+          {hasUnread && (
+            <span className="absolute -right-1 -top-1 flex h-3.5 w-3.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
+              <span className="relative inline-flex h-3.5 w-3.5 rounded-full bg-red-500 ring-2 ring-background" />
+            </span>
+          )}
+          <span className="pointer-events-none absolute right-full mr-3 whitespace-nowrap rounded-md bg-foreground px-2 py-1 text-xs font-medium text-background opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100">
+            Fale com o Fio
+          </span>
         </button>
       )}
 
       {open && (
         <div
+          ref={panelRef}
           className={cn(
             "fixed z-50 flex flex-col overflow-hidden rounded-xl border bg-background shadow-2xl",
             "inset-x-2 bottom-2 top-14 sm:inset-auto sm:bottom-6 sm:right-6 sm:top-auto sm:h-[640px] sm:w-[440px]",
