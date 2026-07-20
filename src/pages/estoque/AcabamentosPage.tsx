@@ -281,7 +281,37 @@ export default function AcabamentosPage() {
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar acabamento..." className="h-9 pl-7 text-xs" />
           </div>
-          <div className="text-[10px] text-muted-foreground">{filtrados.length} de {acabamentos.length}</div>
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-[10px] text-muted-foreground">{filtrados.length} de {acabamentos.length}</div>
+            <div className="flex items-center gap-1">
+              <Button
+                size="sm"
+                variant={sortBy === 'nome' ? 'default' : 'outline'}
+                onClick={() => {
+                  if (sortBy === 'nome') setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+                  else { setSortBy('nome'); setSortDir('asc'); }
+                }}
+                className="h-7 px-2 gap-1 text-[10px]"
+                title="Ordenar por descrição"
+              >
+                {sortBy === 'nome' && sortDir === 'desc' ? <ArrowUpAZ className="h-3 w-3" /> : <ArrowDownAZ className="h-3 w-3" />}
+                Descrição
+              </Button>
+              <Button
+                size="sm"
+                variant={sortBy === 'codigo' ? 'default' : 'outline'}
+                onClick={() => {
+                  if (sortBy === 'codigo') setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+                  else { setSortBy('codigo'); setSortDir('asc'); }
+                }}
+                className="h-7 px-2 gap-1 text-[10px]"
+                title="Ordenar por código"
+              >
+                {sortBy === 'codigo' && sortDir === 'desc' ? <ArrowUp01 className="h-3 w-3" /> : <ArrowDown01 className="h-3 w-3" />}
+                Código
+              </Button>
+            </div>
+          </div>
           <div className="max-h-[70vh] overflow-auto space-y-1">
             {isLoading && <div className="p-4 text-center"><Loader2 className="h-4 w-4 animate-spin inline" /></div>}
             {filtrados.map((a: any) => (
