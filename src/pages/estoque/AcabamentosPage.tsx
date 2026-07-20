@@ -98,7 +98,7 @@ export default function AcabamentosPage() {
     queryFn: async () => {
       const { data } = await (supabase as any)
         .from('auge_acabamentos')
-        .select('cd_acabamento, nm_acabamento, nm_classe1, nm_combinacao1, id_cancelado, tem_item_associado, synced_at')
+        .select('cd_acabamento, chave_acabamento, nm_acabamento, nm_classe1, nm_combinacao1, id_cancelado, tem_item_associado, synced_at')
         .order('nm_acabamento', { ascending: true })
         .limit(2000);
       return (data ?? []) as any[];
@@ -123,6 +123,7 @@ export default function AcabamentosPage() {
     if (!t) return acabamentos;
     return acabamentos.filter((a: any) =>
       (a.nm_acabamento ?? '').toLowerCase().includes(t) ||
+      (a.chave_acabamento ?? '').toLowerCase().includes(t) ||
       (a.cd_acabamento ?? '').toLowerCase().includes(t) ||
       (a.nm_classe1 ?? '').toLowerCase().includes(t) ||
       (a.nm_combinacao1 ?? '').toLowerCase().includes(t),
@@ -276,7 +277,7 @@ export default function AcabamentosPage() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <div className="font-medium truncate">{a.nm_acabamento ?? '—'}</div>
-                    <div className="font-mono text-[10px] text-muted-foreground">#{a.cd_acabamento}</div>
+                    <div className="font-mono text-[10px] text-muted-foreground">{a.chave_acabamento ?? `#${a.cd_acabamento}`}</div>
                     {(a.nm_classe1 || a.nm_combinacao1) && (
                       <div className="text-[10px] text-muted-foreground truncate">{a.nm_classe1} {a.nm_combinacao1 && `· ${a.nm_combinacao1}`}</div>
                     )}
@@ -299,7 +300,7 @@ export default function AcabamentosPage() {
               <div className="p-3 border-b flex items-center justify-between gap-3">
                 <div className="min-w-0">
                   <div className="font-semibold text-sm truncate">{acabSelObj?.nm_acabamento}</div>
-                  <div className="font-mono text-[10px] text-muted-foreground">#{acabSel} · {itens.length} itens</div>
+                  <div className="font-mono text-[10px] text-muted-foreground">{acabSelObj?.chave_acabamento ?? `#${acabSel}`} · {itens.length} itens</div>
                 </div>
                 <Button size="sm" variant="outline" onClick={() => runSync(acabSel)} disabled={syncing} className="gap-2 h-8">
                   {syncing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}

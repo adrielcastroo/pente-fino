@@ -122,7 +122,7 @@ export default function FichaItemDialog({ codigo, open, onOpenChange }: Props) {
                  cd_kit_complementar_3, nm_kit_complementar_3,
                  cd_kit_complementar_4, nm_kit_complementar_4,
                  cd_kit_complementar_5, nm_kit_complementar_5,
-                 auge_acabamentos ( cd_acabamento, nm_acabamento, nm_classe1, nm_combinacao1, id_cancelado )`)
+                 auge_acabamentos ( cd_acabamento, chave_acabamento, nm_acabamento, nm_classe1, nm_combinacao1, id_cancelado )`)
         .eq('cd_item_acabamento', cod!)
         .limit(50);
       return (data ?? []) as any[];
@@ -383,7 +383,7 @@ export default function FichaItemDialog({ codigo, open, onOpenChange }: Props) {
                           <tr key={a.cd_acabamento_item} className="border-t align-top">
                             <td className="p-2">
                               <div className="font-medium">{ac.nm_acabamento ?? a.cd_acabamento}</div>
-                              <div className="font-mono text-[10px] text-muted-foreground">#{a.cd_acabamento}</div>
+                              <div className="font-mono text-[10px] text-muted-foreground">{ac?.chave_acabamento ?? `#${a.cd_acabamento}`}</div>
                               {ac.id_cancelado === 'S' && <Badge variant="destructive" className="text-[9px] mt-1">Cancelado</Badge>}
                             </td>
                             <td className="p-2 text-[11px]">
