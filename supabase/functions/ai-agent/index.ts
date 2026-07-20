@@ -136,6 +136,25 @@ function sanitizePostgrestValue(value: string) {
   return value.replace(/[(),.]/g, " ").trim();
 }
 
+function codeVariants(value: string) {
+  const raw = value.trim().replace(/\s+/g, "");
+  if (!raw) return [];
+  const variants = new Set<string>([raw, raw.toUpperCase(), raw.toLowerCase()]);
+
+  const compact = raw.replace(/[^a-z0-9]/gi, "");
+  const shortAugeCode = compact.match(/^([a-z]{2})(\d{3})(\d{3})$/i);
+  if (shortAugeCode) {
+    variants.add(`${shortAugeCode[1].toUpperCase()}.${shortAugeCode[2]}.${shortAugeCode[3]}`);
+  }
+
+  return Array.from(variants);
+}
+
+function looksLikeAugeItemCode(value: string) {
+  const compact = value.replace(/[^a-z0-9]/gi, "");
+  return /^[a-z]{2}\d{6}$/i.test(compact) || /^\d{6,}(?:\d+)?$/i.test(compact);
+}
+
 async function buildAgentContext(admin: ReturnType<typeof createClient>, text: string) {
   const tokens = textTokens(text);
   const wantsTransfers = /transfer|rascunho|efetiva/i.test(text);
@@ -263,19 +282,34 @@ async function buildAgentContext(admin: ReturnType<typeof createClient>, text: s
             .filter(Boolean),
         ),
       ).slice(0, 20);
-      const alvos = Array.from(new Set([...codigos, ...codeLike])).slice(0, 80);
+      const codeTargets = Array.from(
+        new Set(
+          [...codigos, ...codeLike]
+            .flatMap((code) => codeVariants(code))
+            .filter(Boolean),
+        ),
+      ).slice(0, 120);
 
-      if (alvos.length > 0) {
+      if (codeTargets.length > 0) {
         const { data, error } = await admin
           .from("auge_acabamento_itens")
           .select(
             "cd_acabamento_item,cd_acabamento,cd_item_acabamento,ds_item_acabamento,ds_item_acabamento_original,ds_item_acabamento_reduzida,nm_kit_complementar_1,nm_kit_complementar_2,nm_kit_complementar_3,nm_kit_complementar_4,nm_kit_complementar_5,auge_acabamentos(cd_acabamento,chave_acabamento,nm_acabamento,nm_classe1,nm_combinacao1,id_cancelado)",
           )
-          .in("cd_item_acabamento", alvos)
-          .limit(60);
+          .in("cd_item_acabamento", codeTargets)
+          .limit(120);
         if (error) {
           context.acabamentos_erro = error.message;
         } else {
+          const rows = data ?? [];
+          const requestedCodes = codeLike.length > 0
+            ? new Set(codeLike.flatMap((code) => codeVariants(code)).map((code) => code.toUpperCase()))
+            : null;
+          const requestedRows = requestedCodes
+            ? rows.filter((r: any) => requestedCodes.has(String(r.cd_item_acabamento ?? "").toUpperCase()))
+            : rows;
+          context.acabamentos_do_item_total = requestedRows.length;
+          context.acabamentos_do_item_codigos_consultados = codeTargets.filter(looksLikeAugeItemCode).slice(0, 20);
           context.acabamentos_do_item = (data ?? []).map((r: any) => ({
             codigo_auge: r.auge_acabamentos?.chave_acabamento ?? r.cd_acabamento,
             cd_acabamento: r.cd_acabamento,
