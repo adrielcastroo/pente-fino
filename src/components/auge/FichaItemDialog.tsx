@@ -189,7 +189,7 @@ export default function FichaItemDialog({ codigo, open, onOpenChange }: Props) {
             </Card>
 
             <Tabs defaultValue="depositos">
-              <TabsList className="w-full grid grid-cols-5">
+              <TabsList className="w-full grid grid-cols-6">
                 <TabsTrigger value="depositos" className="gap-1.5">
                   <Boxes className="h-3.5 w-3.5" /> Depósitos ({saldos.length})
                 </TabsTrigger>
@@ -202,10 +202,14 @@ export default function FichaItemDialog({ codigo, open, onOpenChange }: Props) {
                 <TabsTrigger value="cadastro" className="gap-1.5">
                   <Package className="h-3.5 w-3.5" /> Cadastro ({cadastroInterno?.length ?? 0})
                 </TabsTrigger>
+                <TabsTrigger value="acabamentos" className="gap-1.5">
+                  <Palette className="h-3.5 w-3.5" /> Acabamentos ({acabamentos.length})
+                </TabsTrigger>
                 <TabsTrigger value="posicoes" className="gap-1.5">
                   <MapPin className="h-3.5 w-3.5" /> Posições ({posicoes.length})
                 </TabsTrigger>
               </TabsList>
+
 
               {/* Saldo por depósito */}
               <TabsContent value="depositos" className="mt-2">
