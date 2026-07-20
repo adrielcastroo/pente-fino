@@ -2740,12 +2740,17 @@ Deno.serve(async (req) => {
 
     // -------------- ACABAMENTOS --------------
     if (action === 'sync_acabamentos') {
-      const task = syncAcabamentosFull(admin, auth, triggeredBy).catch((e) =>
+      const runIns = await admin.from('auge_sync_runs').insert({
+        entidade: 'acabamentos', status: 'running', started_at: new Date().toISOString(),
+        triggered_by: triggeredBy, detalhes: { phase: 'iniciando', current: 0, total: 0, itens: 0, errors: [] },
+      }).select('id').single();
+      const runId = runIns.data?.id;
+      const task = syncAcabamentosFull(admin, auth, triggeredBy, runId).catch((e) =>
         console.error('sync_acabamentos error', getErrorMessage(e))
       );
       // @ts-ignore
       if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime?.waitUntil) EdgeRuntime.waitUntil(task);
-      return new Response(JSON.stringify({ ok: true, background: true }), {
+      return new Response(JSON.stringify({ ok: true, background: true, run_id: runId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
