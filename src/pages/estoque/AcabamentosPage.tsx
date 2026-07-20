@@ -37,6 +37,61 @@ export default function AcabamentosPage() {
   const [acabSel, setAcabSel] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
+  const [run, setRun] = useState<SyncRun | null>(null);
+  const [showPanel, setShowPanel] = useState(false);
+  const channelRef = useRef<any>(null);
+
+  // Recupera última execução de acabamentos ao montar
+  useEffect(() => {
+    (async () => {
+      const { data } = await (supabase as any)
+        .from('auge_sync_runs')
+        .select('*')
+        .eq('entidade', 'acabamentos')
+        .order('started_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (data) setRun(data as SyncRun);
+    })();
+  }, []);
+
+  // Assina realtime para o run em andamento
+  const subscribeRun = (runId: string) => {
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
+    const ch = supabase
+      .channel(`acab-run-${runId}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'auge_sync_runs', filter: `id=eq.${runId}` },
+        (payload: any) => {
+          setRun(payload.new as SyncRun);
+          if (payload.new?.status === 'success' || payload.new?.status === 'error') {
+            setSyncing(false);
+            qc.invalidateQueries({ queryKey: ['acabamentos-list'] });
+            if (acabSel) refetchItens();
+            const errs = (payload.new?.detalhes?.errors ?? []) as any[];
+            if (payload.new?.status === 'success') {
+              toast.success(
+                `Sincronização concluída: ${payload.new?.rows_processed ?? 0} acabamentos, ${payload.new?.rows_upserted ?? 0} itens${errs.length ? ` (${errs.length} com erro)` : ''}.`,
+              );
+            } else {
+              toast.error(payload.new?.error_message ?? 'Sincronização falhou.');
+            }
+          }
+        },
+      )
+      .subscribe();
+    channelRef.current = ch;
+  };
+
+  useEffect(() => {
+    return () => {
+      if (channelRef.current) supabase.removeChannel(channelRef.current);
+    };
+  }, []);
 
   const { data: acabamentos = [], isLoading } = useQuery({
     queryKey: ['acabamentos-list'],
