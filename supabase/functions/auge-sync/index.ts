@@ -2800,6 +2800,66 @@ Deno.serve(async (req) => {
       });
     }
 
+    // -------------- SALVAR / EXCLUIR ABREVIAÇÃO DIRETO NO AUGE --------------
+    if (action === 'salvar_abreviacao' || action === 'excluir_abreviacao') {
+      let payload: any = {};
+      try { payload = await req.json(); } catch { /* ignore */ }
+
+      if (action === 'excluir_abreviacao') {
+        const cdAbreviacao = String(payload?.cdAbreviacao ?? '').trim();
+        if (!cdAbreviacao) throw new Error('cdAbreviacao é obrigatório.');
+        const resp = await excluirAbreviacaoAuge(auth, cdAbreviacao);
+        await admin.from('auge_abreviacoes').delete().eq('cd_abreviacao', cdAbreviacao);
+        return new Response(JSON.stringify({ ok: true, auge: resp }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const dsAtual = String(payload?.dsAtual ?? '').trim();
+      const dsAbreviada = String(payload?.dsAbreviada ?? '').trim();
+      const idTipoAbreviacao = payload?.idTipoAbreviacao ?? 1;
+      const cdAbreviacao = payload?.cdAbreviacao ? String(payload.cdAbreviacao) : null;
+      const solicitacaoId = payload?.solicitacaoId ? String(payload.solicitacaoId) : null;
+
+      if (!dsAtual || !dsAbreviada) throw new Error('dsAtual e dsAbreviada são obrigatórios.');
+
+      const resp = await salvarAbreviacaoAuge(auth, { cdAbreviacao, dsAtual, dsAbreviada, idTipoAbreviacao });
+
+      // Reaproveita o retorno: PHP costuma responder com o novo cdAbreviacao ou lista atualizada.
+      let novoCd: string | null = null;
+      if (resp && typeof resp === 'object') {
+        novoCd = resp?.cdAbreviacao ?? resp?.data?.cdAbreviacao ?? resp?.data?.[0]?.cdAbreviacao ?? null;
+      }
+
+      // Ressincroniza para pegar o registro real (independente do formato do retorno).
+      try { await syncAbreviacoesFull(admin, auth, triggeredBy); } catch { /* melhor esforço */ }
+
+      // Se veio de uma solicitação, marca como efetivada.
+      if (solicitacaoId) {
+        // procura o registro pelos textos (mais confiável que o cd retornado)
+        if (!novoCd) {
+          const { data } = await admin
+            .from('auge_abreviacoes')
+            .select('cd_abreviacao')
+            .eq('ds_atual', dsAtual)
+            .eq('ds_abreviada', dsAbreviada)
+            .limit(1);
+          novoCd = data?.[0]?.cd_abreviacao ?? null;
+        }
+        await admin.from('abreviacoes_solicitadas').update({
+          status: 'efetivada',
+          cd_abreviacao_efetivada: novoCd,
+          revisado_em: new Date().toISOString(),
+        }).eq('id', solicitacaoId);
+      }
+
+      return new Response(JSON.stringify({ ok: true, auge: resp, cdAbreviacao: novoCd }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+
+
 
     if (action === 'lotes_live' || action === 'series_live') {
       let payload: any = {};
