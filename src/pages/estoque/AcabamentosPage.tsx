@@ -300,7 +300,7 @@ export default function AcabamentosPage() {
               <div className="p-3 border-b flex items-center justify-between gap-3">
                 <div className="min-w-0">
                   <div className="font-semibold text-sm truncate">{acabSelObj?.nm_acabamento}</div>
-                  <div className="font-mono text-[10px] text-muted-foreground">#{acabSel} · {itens.length} itens</div>
+                  <div className="font-mono text-[10px] text-muted-foreground">{acabSelObj?.chave_acabamento ?? `#${acabSel}`} · {itens.length} itens</div>
                 </div>
                 <Button size="sm" variant="outline" onClick={() => runSync(acabSel)} disabled={syncing} className="gap-2 h-8">
                   {syncing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
