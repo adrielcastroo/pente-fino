@@ -211,9 +211,11 @@ function acabamentoItemCountAnswer(context: Record<string, unknown>, text: strin
   const rows = Array.isArray(context.acabamentos_do_item) ? context.acabamentos_do_item as any[] : [];
   if (typeof context.acabamentos_do_item_total !== "number") return null;
 
-  const code = Array.isArray(context.acabamentos_do_item_codigos_consultados)
-    ? String(context.acabamentos_do_item_codigos_consultados[0] ?? "item informado")
-    : "item informado";
+  const code = typeof context.acabamentos_do_item_codigo_perguntado === "string"
+    ? context.acabamentos_do_item_codigo_perguntado
+    : Array.isArray(context.acabamentos_do_item_codigos_consultados)
+      ? String(context.acabamentos_do_item_codigos_consultados[0] ?? "item informado")
+      : "item informado";
   const total = context.acabamentos_do_item_total;
 
   if (total === 0) {
