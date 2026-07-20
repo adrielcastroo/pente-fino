@@ -79,7 +79,6 @@ export default function AcabamentosPage() {
   return (
     <div className="p-4 md:p-6 space-y-4">
       <PageHeader
-        icon={Palette}
         title="Acabamentos"
         actions={
           <Button size="sm" onClick={() => runSync()} disabled={syncing} className="gap-2">
