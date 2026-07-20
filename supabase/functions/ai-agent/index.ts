@@ -1,7 +1,7 @@
 // AI Agent — assistente do Pente Fino/Auge.
 // - Guardrail de escopo: só responde sobre estoque/Pente Fino/Auge.
 // - Roteamento por tarefa + fallback em cadeia: Cerebras → Groq → NVIDIA.
-import { convertToModelMessages, streamText, type ModelMessage, type UIMessage } from "npm:ai";
+import { convertToModelMessages, generateText, streamText, type ModelMessage, type UIMessage } from "npm:ai";
 import { createOpenAICompatible } from "npm:@ai-sdk/openai-compatible";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -431,15 +431,17 @@ Data/hora: ${new Date().toISOString()}.
 Contexto consultado automaticamente no Pente Fino/Auge:
 ${JSON.stringify(automaticContext, null, 2)}`;
 
-    // Cadeia de fallback: percorre provedores até um deles servir o stream.
-    let lastError: unknown = null;
+    // Cadeia de fallback resiliente: tenta cada provedor com generateText.
+    // Se qualquer um falhar (rate limit, token limit, timeout, 5xx), passa para o próximo.
+    // Só emite o stream ao cliente depois que UM provedor devolveu texto válido —
+    // assim o usuário nunca fica sem resposta por falha de stream no meio.
+    const errors: Array<{ provider: string; model: string; error: string }> = [];
+    let finalText = "";
+    let usedProvider = "";
+    let usedModel = "";
+
     for (const cfg of providers) {
       const modelId = pickModel(cfg, task);
-      const healthy = await probeProvider(cfg, modelId);
-      if (!healthy) {
-        console.warn(`[ai-agent] provider ${cfg.id} indisponível`);
-        continue;
-      }
       try {
         const provider = createOpenAICompatible({
           name: cfg.id,
@@ -447,31 +449,112 @@ ${JSON.stringify(automaticContext, null, 2)}`;
           headers: { Authorization: `Bearer ${cfg.apiKey}` },
         });
         const model = provider(modelId);
-        const result = streamText({
-          model,
-          system,
-          messages: modelMessages,
-          temperature: 0.2,
-          maxOutputTokens: 900,
-        });
-        console.log(`[ai-agent] usando ${cfg.id} / ${modelId} (task=${task})`);
-        return result.toUIMessageStreamResponse({
-          headers: { ...corsHeaders, "x-ai-provider": cfg.id, "x-ai-model": modelId, "x-ai-task": task },
-          onError: (error) => {
-            console.error(`[ai-agent] stream error (${cfg.id})`, error);
-            return error instanceof Error ? error.message : "Falha ao gerar resposta.";
-          },
-        });
+        const ac = new AbortController();
+        const timeout = setTimeout(() => ac.abort(), 25000);
+        try {
+          const { text } = await generateText({
+            model,
+            system,
+            messages: modelMessages,
+            temperature: 0.2,
+            maxOutputTokens: 900,
+            abortSignal: ac.signal,
+          });
+          clearTimeout(timeout);
+          const clean = (text ?? "").trim();
+          if (clean.length > 0) {
+            finalText = clean;
+            usedProvider = cfg.id;
+            usedModel = modelId;
+            console.log(`[ai-agent] ✓ ${cfg.id} / ${modelId} (task=${task}, chars=${clean.length})`);
+            break;
+          }
+          errors.push({ provider: cfg.id, model: modelId, error: "resposta vazia" });
+          console.warn(`[ai-agent] ${cfg.id} devolveu vazio, tentando próximo`);
+        } finally {
+          clearTimeout(timeout);
+        }
       } catch (e) {
-        lastError = e;
-        console.error(`[ai-agent] falha em ${cfg.id}, tentando próximo`, e);
+        const msg = e instanceof Error ? e.message : String(e);
+        errors.push({ provider: cfg.id, model: modelId, error: msg });
+        console.error(`[ai-agent] falha em ${cfg.id} (${modelId}): ${msg} — tentando próximo`);
       }
     }
 
-    const message = lastError instanceof Error ? lastError.message : "Todos os provedores de IA falharam.";
-    return new Response(JSON.stringify({ error: message }), {
-      status: 502,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    // Último recurso: tenta o modelo "fast" de cada provedor se o "reasoning" falhou.
+    if (!finalText && task === "reasoning") {
+      for (const cfg of providers) {
+        const modelId = cfg.fastModel;
+        try {
+          const provider = createOpenAICompatible({
+            name: cfg.id,
+            baseURL: cfg.baseURL,
+            headers: { Authorization: `Bearer ${cfg.apiKey}` },
+          });
+          const { text } = await generateText({
+            model: provider(modelId),
+            system,
+            messages: modelMessages,
+            temperature: 0.2,
+            maxOutputTokens: 700,
+          });
+          const clean = (text ?? "").trim();
+          if (clean.length > 0) {
+            finalText = clean;
+            usedProvider = `${cfg.id}(fast)`;
+            usedModel = modelId;
+            console.log(`[ai-agent] ✓ fallback fast ${cfg.id} / ${modelId}`);
+            break;
+          }
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          errors.push({ provider: `${cfg.id}(fast)`, model: modelId, error: msg });
+        }
+      }
+    }
+
+    if (!finalText) {
+      finalText =
+        "Não consegui gerar uma resposta agora — todos os provedores de IA falharam ou estão indisponíveis. " +
+        "Tente novamente em alguns segundos ou reformule a pergunta com um código/lote específico.";
+      usedProvider = "fallback-local";
+      usedModel = "static";
+      console.error("[ai-agent] todos os provedores falharam", errors);
+    }
+
+    // Emite o texto final como UI Message Stream (mesmo formato do useChat).
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      start(controller) {
+        const id = crypto.randomUUID();
+        const send = (obj: unknown) => controller.enqueue(encoder.encode(`data: ${JSON.stringify(obj)}\n\n`));
+        send({ type: "start" });
+        send({ type: "start-step" });
+        send({ type: "text-start", id });
+        // Emite em pedaços para dar sensação de streaming no cliente.
+        const CHUNK = 80;
+        for (let i = 0; i < finalText.length; i += CHUNK) {
+          send({ type: "text-delta", id, delta: finalText.slice(i, i + CHUNK) });
+        }
+        send({ type: "text-end", id });
+        send({ type: "finish-step" });
+        send({ type: "finish" });
+        controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+        controller.close();
+      },
+    });
+
+    return new Response(stream, {
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "text/event-stream",
+        "x-vercel-ai-ui-message-stream": "v1",
+        "Cache-Control": "no-cache, no-transform",
+        "x-ai-provider": usedProvider,
+        "x-ai-model": usedModel,
+        "x-ai-task": task,
+        "x-ai-fallbacks": String(errors.length),
+      },
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
