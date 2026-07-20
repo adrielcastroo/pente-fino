@@ -113,7 +113,7 @@ function ChatWindow({ threadId }: { threadId: string }) {
         <ConversationContent>
           {messages.length === 0 && (
             <ConversationEmptyState
-              icon={<img src={logo} alt="" width={48} height={48} className="opacity-90" />}
+              icon={<img src={logo} alt="" width={72} height={72} className="rounded-xl opacity-95" />}
               title="Fio · Assistente do Pente Fino"
               description="Sou o Fio. Pergunte sobre itens, transferências, saldo do estoque, movimentações e mais."
             />
