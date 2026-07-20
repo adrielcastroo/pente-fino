@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { PageHeader } from '@/components/ui/page-header';
@@ -6,11 +6,30 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Palette, RefreshCw, Search, Pencil, Loader2 } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Palette, RefreshCw, Search, Pencil, Loader2, AlertTriangle, CheckCircle2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import AcabamentoItemEditDialog from '@/components/acabamentos/AcabamentoItemEditDialog';
+
+interface SyncRun {
+  id: string;
+  status: string;
+  started_at: string;
+  finished_at: string | null;
+  rows_processed: number | null;
+  rows_upserted: number | null;
+  error_message: string | null;
+  detalhes: {
+    phase?: string;
+    current?: number;
+    total?: number;
+    itens?: number;
+    errors?: Array<{ cd: string; nm?: string; erro: string }>;
+  } | null;
+}
 
 export default function AcabamentosPage() {
   const qc = useQueryClient();
@@ -18,6 +37,61 @@ export default function AcabamentosPage() {
   const [acabSel, setAcabSel] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
+  const [run, setRun] = useState<SyncRun | null>(null);
+  const [showPanel, setShowPanel] = useState(false);
+  const channelRef = useRef<any>(null);
+
+  // Recupera última execução de acabamentos ao montar
+  useEffect(() => {
+    (async () => {
+      const { data } = await (supabase as any)
+        .from('auge_sync_runs')
+        .select('*')
+        .eq('entidade', 'acabamentos')
+        .order('started_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (data) setRun(data as SyncRun);
+    })();
+  }, []);
+
+  // Assina realtime para o run em andamento
+  const subscribeRun = (runId: string) => {
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
+    const ch = supabase
+      .channel(`acab-run-${runId}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'auge_sync_runs', filter: `id=eq.${runId}` },
+        (payload: any) => {
+          setRun(payload.new as SyncRun);
+          if (payload.new?.status === 'success' || payload.new?.status === 'error') {
+            setSyncing(false);
+            qc.invalidateQueries({ queryKey: ['acabamentos-list'] });
+            if (acabSel) refetchItens();
+            const errs = (payload.new?.detalhes?.errors ?? []) as any[];
+            if (payload.new?.status === 'success') {
+              toast.success(
+                `Sincronização concluída: ${payload.new?.rows_processed ?? 0} acabamentos, ${payload.new?.rows_upserted ?? 0} itens${errs.length ? ` (${errs.length} com erro)` : ''}.`,
+              );
+            } else {
+              toast.error(payload.new?.error_message ?? 'Sincronização falhou.');
+            }
+          }
+        },
+      )
+      .subscribe();
+    channelRef.current = ch;
+  };
+
+  useEffect(() => {
+    return () => {
+      if (channelRef.current) supabase.removeChannel(channelRef.current);
+    };
+  }, []);
 
   const { data: acabamentos = [], isLoading } = useQuery({
     queryKey: ['acabamentos-list'],
@@ -66,27 +140,123 @@ export default function AcabamentosPage() {
       });
       if (error) throw error;
       if (data?.ok === false) throw new Error(data?.error ?? 'Falha ao sincronizar');
-      toast.success(cdAcabamento ? 'Acabamento sincronizado.' : `Sincronizados ${data?.count ?? '—'} acabamentos.`);
-      qc.invalidateQueries({ queryKey: ['acabamentos-list'] });
-      if (acabSel) refetchItens();
+
+      if (cdAcabamento) {
+        toast.success('Acabamento sincronizado.');
+        qc.invalidateQueries({ queryKey: ['acabamentos-list'] });
+        if (acabSel) refetchItens();
+        setSyncing(false);
+      } else if (data?.run_id) {
+        // Sincronização em background: escuta progresso via realtime
+        setShowPanel(true);
+        // busca estado inicial
+        const { data: initial } = await (supabase as any)
+          .from('auge_sync_runs').select('*').eq('id', data.run_id).maybeSingle();
+        if (initial) setRun(initial as SyncRun);
+        subscribeRun(data.run_id);
+        toast.info('Sincronização iniciada. Acompanhe o progresso abaixo.');
+      } else {
+        setSyncing(false);
+      }
     } catch (e: any) {
       toast.error(e?.message ?? 'Erro na sincronização');
-    } finally {
       setSyncing(false);
     }
   };
+
+  const progressPct = run?.detalhes?.total
+    ? Math.min(100, Math.round(((run.detalhes.current ?? 0) / run.detalhes.total) * 100))
+    : run?.status === 'running' ? 5 : 0;
+  const runErrors = run?.detalhes?.errors ?? [];
+  const runIsActive = run?.status === 'running';
 
   return (
     <div className="p-4 md:p-6 space-y-4">
       <PageHeader
         title="Acabamentos"
         actions={
-          <Button size="sm" onClick={() => runSync()} disabled={syncing} className="gap-2">
-            {syncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-            Sincronizar todos
-          </Button>
+          <div className="flex items-center gap-2">
+            {run && !showPanel && (
+              <Button size="sm" variant="outline" onClick={() => setShowPanel(true)} className="gap-2 h-9">
+                {runIsActive ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> :
+                  run.status === 'error' ? <AlertTriangle className="h-3.5 w-3.5 text-destructive" /> :
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
+                Ver progresso
+              </Button>
+            )}
+            <Button size="sm" onClick={() => runSync()} disabled={syncing || runIsActive} className="gap-2">
+              {(syncing || runIsActive) ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+              {runIsActive ? 'Sincronizando…' : 'Sincronizar todos'}
+            </Button>
+          </div>
         }
       />
+
+      {showPanel && run && (
+        <Card className="p-3 md:p-4 border-primary/40 bg-primary/5">
+          <div className="flex items-start justify-between gap-3 mb-2">
+            <div className="flex items-center gap-2 min-w-0">
+              {runIsActive ? (
+                <Loader2 className="h-4 w-4 animate-spin text-primary shrink-0" />
+              ) : run.status === 'error' ? (
+                <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
+              ) : (
+                <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+              )}
+              <div className="min-w-0">
+                <div className="text-sm font-semibold">
+                  {runIsActive ? 'Sincronizando acabamentos…' :
+                    run.status === 'error' ? 'Sincronização finalizada com erro' :
+                    'Sincronização concluída'}
+                </div>
+                <div className="text-[11px] text-muted-foreground">
+                  Iniciada {formatDistanceToNow(new Date(run.started_at), { addSuffix: true, locale: ptBR })}
+                  {run.finished_at && ` · Concluída ${formatDistanceToNow(new Date(run.finished_at), { addSuffix: true, locale: ptBR })}`}
+                </div>
+              </div>
+            </div>
+            <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => setShowPanel(false)} aria-label="Fechar painel">
+              <X className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+
+          <Progress value={progressPct} className="h-2" />
+          <div className="mt-2 grid grid-cols-2 md:grid-cols-4 gap-2 text-[11px]">
+            <div><span className="text-muted-foreground">Progresso:</span> <span className="font-mono">{run.detalhes?.current ?? 0}/{run.detalhes?.total ?? 0}</span></div>
+            <div><span className="text-muted-foreground">Itens gravados:</span> <span className="font-mono">{run.detalhes?.itens ?? run.rows_upserted ?? 0}</span></div>
+            <div><span className="text-muted-foreground">Erros:</span> <span className="font-mono">{runErrors.length}</span></div>
+            <div><span className="text-muted-foreground">Status:</span> <Badge variant={run.status === 'error' ? 'destructive' : run.status === 'success' ? 'default' : 'secondary'} className="text-[10px]">{run.status}</Badge></div>
+          </div>
+
+          {run.error_message && (
+            <div className="mt-2 text-[11px] text-destructive break-words">{run.error_message}</div>
+          )}
+
+          {runErrors.length > 0 && (
+            <div className="mt-3">
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                Acabamentos com erro ({runErrors.length})
+              </div>
+              <ScrollArea className="max-h-48 rounded border bg-background">
+                <div className="divide-y">
+                  {runErrors.map((e, i) => (
+                    <div key={i} className="p-2 text-[11px]">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-mono text-muted-foreground">#{e.cd}</span>
+                        {e.nm && <span className="font-medium truncate">{e.nm}</span>}
+                        <Button size="sm" variant="ghost" className="h-6 px-2 ml-auto text-[10px] gap-1" onClick={() => runSync(e.cd)}>
+                          <RefreshCw className="h-3 w-3" /> Retentar
+                        </Button>
+                      </div>
+                      <div className="text-destructive/90 break-words mt-0.5">{e.erro}</div>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            </div>
+          )}
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-4">
         <Card className="p-3 space-y-3">
