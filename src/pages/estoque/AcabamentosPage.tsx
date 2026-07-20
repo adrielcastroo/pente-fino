@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { PageHeader } from '@/components/ui/page-header';
@@ -6,11 +6,30 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Palette, RefreshCw, Search, Pencil, Loader2 } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Palette, RefreshCw, Search, Pencil, Loader2, AlertTriangle, CheckCircle2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import AcabamentoItemEditDialog from '@/components/acabamentos/AcabamentoItemEditDialog';
+
+interface SyncRun {
+  id: string;
+  status: string;
+  started_at: string;
+  finished_at: string | null;
+  rows_processed: number | null;
+  rows_upserted: number | null;
+  error_message: string | null;
+  detalhes: {
+    phase?: string;
+    current?: number;
+    total?: number;
+    itens?: number;
+    errors?: Array<{ cd: string; nm?: string; erro: string }>;
+  } | null;
+}
 
 export default function AcabamentosPage() {
   const qc = useQueryClient();
