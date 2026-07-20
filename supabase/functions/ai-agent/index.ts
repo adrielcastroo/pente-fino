@@ -657,6 +657,7 @@ Deno.serve(async (req) => {
     }
 
     const userText = latestUserText(modelMessages);
+    const conversationText = allUserText(modelMessages) || userText;
     const scope = isInScope(userText);
     const task = classifyTask(userText);
 
@@ -731,7 +732,16 @@ Deno.serve(async (req) => {
       });
     }
 
-    const automaticContext = await buildAgentContext(admin, userText);
+    const automaticContext = await buildAgentContext(admin, conversationText);
+    const deterministicAnswer = acabamentoItemCountAnswer(automaticContext, conversationText);
+    if (deterministicAnswer) {
+      return textStreamResponse(deterministicAnswer, {
+        "x-ai-provider": "backend-query",
+        "x-ai-model": "deterministic",
+        "x-ai-task": task,
+        "x-ai-fallbacks": "0",
+      });
+    }
 
     // Regras de permissão embutidas no system prompt (defesa em profundidade).
     const permissionRules = `
