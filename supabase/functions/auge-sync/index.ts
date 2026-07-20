@@ -2124,6 +2124,193 @@ async function tecidosDispatch(admin: any, auth: any, runId: string) {
 }
 
 
+// ============================================================
+// ACABAMENTOS (modInventario)
+// ============================================================
+
+async function postAugePhp(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+  path: string,
+  body: URLSearchParams,
+  referer: string,
+): Promise<string> {
+  const headers: Record<string, string> = {
+    'Cookie': auth.jar.header(),
+    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+    'X-Requested-With': 'XMLHttpRequest',
+    'X-CSRF-TOKEN': auth.csrf,
+    'Origin': AUGE_BASE_URL,
+    'Referer': `${AUGE_BASE_URL}${referer}`,
+    'User-Agent': UA,
+    'Accept': 'application/json, text/javascript, */*; q=0.01',
+    'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
+  };
+  if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
+  const res = await fetch(`${AUGE_BASE_URL}${path}`, { method: 'POST', headers, body });
+  auth.jar.ingest(res);
+  const text = await res.text();
+  if (!res.ok) throw new Error(`POST ${path} HTTP ${res.status} body=${text.slice(0, 200)}`);
+  return text;
+}
+
+async function fetchListaAcabamentos(auth: any): Promise<any[]> {
+  const txt = await postAugePhp(
+    auth,
+    '/l.unilux/modInventario/Ajax/getListaAcabamento.php',
+    new URLSearchParams(),
+    '/l.unilux/modInventario/manterAcabamento.php',
+  );
+  let j: any;
+  try { j = JSON.parse(txt); } catch { throw new Error(`getListaAcabamento não-JSON: ${txt.slice(0, 120)}`); }
+  return Array.isArray(j?.data) ? j.data : [];
+}
+
+async function fetchItensAcabamento(auth: any, cdAcabamento: string): Promise<any[]> {
+  const body = new URLSearchParams({ cdAcabamento });
+  const txt = await postAugePhp(
+    auth,
+    '/l.unilux/modInventario/Ajax/getListaItensAcabamento.php',
+    body,
+    `/l.unilux/modInventario/manterAcabamentoItem.php?cdAcabamento=${cdAcabamento}`,
+  );
+  let j: any;
+  try { j = JSON.parse(txt); } catch { throw new Error(`getListaItensAcabamento não-JSON: ${txt.slice(0, 120)}`); }
+  return Array.isArray(j?.data) ? j.data : [];
+}
+
+async function updateAcabamentoItem(auth: any, payload: Record<string, string>): Promise<any> {
+  const body = new URLSearchParams({
+    idAcao: '2',
+    cdAcabamentoItem: payload.cdAcabamentoItem ?? '',
+    cdItemAcabamento: payload.cdItemAcabamento ?? '',
+    dsItemAcabamento: payload.dsItemAcabamento ?? '',
+    dsItemAcabamentoReduzida: payload.dsItemAcabamentoReduzida ?? '',
+    dsItemAcabamentoOriginal: payload.dsItemAcabamentoOriginal ?? '',
+    cdKitComplementar1: payload.cdKitComplementar1 ?? '',
+    cdKitComplementar2: payload.cdKitComplementar2 ?? '',
+    cdKitComplementar3: payload.cdKitComplementar3 ?? '',
+    cdKitComplementar4: payload.cdKitComplementar4 ?? '',
+    cdKitComplementar5: payload.cdKitComplementar5 ?? '',
+  });
+  const txt = await postAugePhp(
+    auth,
+    '/l.unilux/modInventario/Controle/ctlAcabamentoItem.php',
+    body,
+    `/l.unilux/modInventario/manterAcabamentoItem.php?cdAcabamento=${payload.cdAcabamento ?? ''}`,
+  );
+  let j: any = { message: txt };
+  try { j = JSON.parse(txt); } catch { /* keep raw */ }
+  if (typeof j?.message === 'string' && !/sucesso/i.test(j.message)) {
+    throw new Error(`Auge rejeitou edição: ${j.message}`);
+  }
+  return j;
+}
+
+function mapAcabamentoRow(r: any) {
+  return {
+    cd_acabamento: String(r.cdAcabamento),
+    nr_acabamento: r.nrAcabamento ?? null,
+    chave_acabamento: r.chaveAcabamento ?? null,
+    cd_empresa: r.cdEmpresa ?? null,
+    nm_acabamento: r.nmAcabamento ?? '',
+    id_cancelado: r.idCancelado ?? 'N',
+    cd_classe1: r.cdClasse1 ?? null, cd_sub_classe1: r.cdSubClasse1 ?? null, cd_combinacao1: r.cdCombinacao1 ?? null,
+    nm_classe1: r.nmClasse1 ?? null, nm_sub_classe1: r.nmSubClasse1 ?? null, nm_combinacao1: r.nmCombinacao1 ?? null, chave_combinacao1: r.chaveCombinacao1 ?? null,
+    cd_classe2: r.cdClasse2 ?? null, cd_sub_classe2: r.cdSubClasse2 ?? null, cd_combinacao2: r.cdCombinacao2 ?? null,
+    nm_classe2: r.nmClasse2 ?? null, nm_sub_classe2: r.nmSubClasse2 ?? null, nm_combinacao2: r.nmCombinacao2 ?? null, chave_combinacao2: r.chaveCombinacao2 ?? null,
+    cd_classe3: r.cdClasse3 ?? null, cd_sub_classe3: r.cdSubClasse3 ?? null, cd_combinacao3: r.cdCombinacao3 ?? null,
+    nm_classe3: r.nmClasse3 ?? null, nm_sub_classe3: r.nmSubClasse3 ?? null, nm_combinacao3: r.nmCombinacao3 ?? null, chave_combinacao3: r.chaveCombinacao3 ?? null,
+    cd_seq_tag_calculada: r.cdSeqTagCalculada ?? null,
+    ds_tag_calculada: r.dsTagCalculada ?? null,
+    ds_descricao_tag_calculada: r.dsDescricaoTagCalculada ?? null,
+    id_herdar_colecao: r.idHerdarColecao ?? null,
+    id_limitar_tamanho: r.idLimitarTamanho ?? null,
+    tem_item_associado: r.temItemAssociado ?? null,
+    raw: r,
+    synced_at: new Date().toISOString(),
+  };
+}
+
+function mapAcabamentoItemRow(cdAcabamento: string, r: any) {
+  return {
+    cd_acabamento_item: String(r.cdAcabamentoItem),
+    cd_acabamento: cdAcabamento,
+    cd_linha: r.cdLinha ?? null,
+    cd_item_acabamento: String(r.cdItemAcabamento ?? '').trim(),
+    ds_item_acabamento: r.dsItemAcabamento ?? null,
+    ds_item_acabamento_original: r.dsItemAcabamentoOriginal ?? null,
+    ds_item_acabamento_reduzida: r.dsItemAcabamentoReduzida ?? null,
+    cd_kit_complementar_1: r.cdKitComplementar1 ?? null, nm_kit_complementar_1: r.nmKitComplementar1 ?? null,
+    cd_kit_complementar_2: r.cdKitComplementar2 ?? null, nm_kit_complementar_2: r.nmKitComplementar2 ?? null,
+    cd_kit_complementar_3: r.cdKitComplementar3 ?? null, nm_kit_complementar_3: r.nmKitComplementar3 ?? null,
+    cd_kit_complementar_4: r.cdKitComplementar4 ?? null, nm_kit_complementar_4: r.nmKitComplementar4 ?? null,
+    cd_kit_complementar_5: r.cdKitComplementar5 ?? null, nm_kit_complementar_5: r.nmKitComplementar5 ?? null,
+    raw: r,
+    synced_at: new Date().toISOString(),
+  };
+}
+
+async function syncAcabamentosFull(admin: any, auth: any, triggeredBy: string | null) {
+  const started = new Date().toISOString();
+  const runIns = await admin.from('auge_sync_runs').insert({
+    entidade: 'acabamentos', status: 'running', started_at: started,
+    triggered_by: triggeredBy, detalhes: { phase: 'lista' },
+  }).select('id').single();
+  const runId = runIns.data?.id;
+
+  try {
+    const acabs = await fetchListaAcabamentos(auth);
+    if (acabs.length) {
+      const rows = acabs.map(mapAcabamentoRow);
+      for (let i = 0; i < rows.length; i += 500) {
+        await admin.from('auge_acabamentos').upsert(rows.slice(i, i + 500), { onConflict: 'cd_acabamento' });
+      }
+    }
+
+    let totalItens = 0;
+    const concurrency = 4;
+    let idx = 0;
+    const worker = async () => {
+      while (idx < acabs.length) {
+        const my = idx++;
+        const a = acabs[my];
+        const cd = String(a.cdAcabamento);
+        try {
+          const itens = await fetchItensAcabamento(auth, cd);
+          if (itens.length) {
+            const rows = itens.map((r) => mapAcabamentoItemRow(cd, r));
+            for (let i = 0; i < rows.length; i += 500) {
+              await admin.from('auge_acabamento_itens').upsert(rows.slice(i, i + 500), { onConflict: 'cd_acabamento_item' });
+            }
+            totalItens += rows.length;
+          }
+        } catch (e) {
+          console.warn(`[acabamento ${cd}] erro:`, getErrorMessage(e));
+        }
+      }
+    };
+    await Promise.all(Array.from({ length: concurrency }, worker));
+
+    await admin.from('auge_sync_runs').update({
+      status: 'success', finished_at: new Date().toISOString(),
+      rows_processed: acabs.length, rows_upserted: totalItens,
+      detalhes: { acabamentos: acabs.length, itens: totalItens },
+    }).eq('id', runId);
+
+    return { ok: true, acabamentos: acabs.length, itens: totalItens, run_id: runId };
+  } catch (e) {
+    await admin.from('auge_sync_runs').update({
+      status: 'error', finished_at: new Date().toISOString(),
+      error_message: getErrorMessage(e),
+    }).eq('id', runId);
+    throw e;
+  }
+}
+
+
+
+
+
 
 Deno.serve(async (req) => {
 
