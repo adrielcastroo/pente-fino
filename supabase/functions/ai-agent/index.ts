@@ -326,7 +326,9 @@ Data/hora: ${new Date().toISOString()}.`;
       system,
       messages: modelMessages,
       tools,
-      stopWhen: stepCountIs(50),
+      stopWhen: stepCountIs(8),
+      temperature: 0.2,
+      maxOutputTokens: 800,
     });
 
     return result.toUIMessageStreamResponse({
