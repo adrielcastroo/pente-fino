@@ -13,6 +13,8 @@ import {
   
   ArrowRightLeft,
   PackagePlus,
+  Palette,
+
 } from 'lucide-react';
 
 import ModuleSidebar, { type ModuleSidebarConfig } from '@/components/ModuleSidebar';
@@ -39,7 +41,9 @@ const EstoqueSidebar = memo(() => {
             { key: 'conferencia', label: 'Conferência', icon: ScanLine, path: '/estoque/conferencia' },
             { key: 'saida', label: 'Saída', icon: ArrowUpRight, path: '/estoque/saida' },
             { key: 'entradas', label: 'Entradas', icon: PackagePlus, path: '/estoque/entradas' },
+            { key: 'acabamentos', label: 'Acabamentos', icon: Palette, path: '/estoque/acabamentos', minRole: 'supervisor' },
           ],
+
         },
         {
           label: 'Estoque',

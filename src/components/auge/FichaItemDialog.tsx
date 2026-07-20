@@ -5,9 +5,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Package, Boxes, ArrowRightLeft, History, MapPin, Loader2, AlertCircle, Layers } from 'lucide-react';
+import { Package, Boxes, ArrowRightLeft, History, MapPin, Loader2, AlertCircle, Layers, Palette, Pencil } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { Button } from '@/components/ui/button';
+import AcabamentoItemEditDialog from '@/components/acabamentos/AcabamentoItemEditDialog';
+
 
 interface Props {
   codigo: string | null;
@@ -107,10 +110,32 @@ export default function FichaItemDialog({ codigo, open, onOpenChange }: Props) {
     },
   });
 
+  const { data: acabamentos = [], refetch: refetchAcabamentos } = useQuery({
+    queryKey: ['ficha-acabamentos', cod],
+    enabled: !!cod && open,
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from('auge_acabamento_itens')
+        .select(`cd_acabamento_item, cd_acabamento, cd_item_acabamento, ds_item_acabamento, ds_item_acabamento_original, ds_item_acabamento_reduzida,
+                 cd_kit_complementar_1, nm_kit_complementar_1,
+                 cd_kit_complementar_2, nm_kit_complementar_2,
+                 cd_kit_complementar_3, nm_kit_complementar_3,
+                 cd_kit_complementar_4, nm_kit_complementar_4,
+                 cd_kit_complementar_5, nm_kit_complementar_5,
+                 auge_acabamentos ( cd_acabamento, nm_acabamento, nm_classe1, nm_combinacao1, id_cancelado )`)
+        .eq('cd_item_acabamento', cod!)
+        .limit(50);
+      return (data ?? []) as any[];
+    },
+  });
+
+  const [editingAcab, setEditingAcab] = useState<any | null>(null);
+
   const totalSaldo = useMemo(
     () => saldos.reduce((acc: number, s: any) => acc + Number(s.quantidade ?? 0), 0),
     [saldos],
   );
+
 
   const disponivel = Number(produto?.qt_disponivel ?? 0);
   const entradaPrev = Number(produto?.qt_entrada_prevista ?? 0);
@@ -164,7 +189,7 @@ export default function FichaItemDialog({ codigo, open, onOpenChange }: Props) {
             </Card>
 
             <Tabs defaultValue="depositos">
-              <TabsList className="w-full grid grid-cols-5">
+              <TabsList className="w-full grid grid-cols-6">
                 <TabsTrigger value="depositos" className="gap-1.5">
                   <Boxes className="h-3.5 w-3.5" /> Depósitos ({saldos.length})
                 </TabsTrigger>
@@ -177,10 +202,14 @@ export default function FichaItemDialog({ codigo, open, onOpenChange }: Props) {
                 <TabsTrigger value="cadastro" className="gap-1.5">
                   <Package className="h-3.5 w-3.5" /> Cadastro ({cadastroInterno?.length ?? 0})
                 </TabsTrigger>
+                <TabsTrigger value="acabamentos" className="gap-1.5">
+                  <Palette className="h-3.5 w-3.5" /> Acabamentos ({acabamentos.length})
+                </TabsTrigger>
                 <TabsTrigger value="posicoes" className="gap-1.5">
                   <MapPin className="h-3.5 w-3.5" /> Posições ({posicoes.length})
                 </TabsTrigger>
               </TabsList>
+
 
               {/* Saldo por depósito */}
               <TabsContent value="depositos" className="mt-2">
@@ -333,7 +362,59 @@ export default function FichaItemDialog({ codigo, open, onOpenChange }: Props) {
                 </Card>
               </TabsContent>
 
-              {/* Posições no estoque físico */}
+              {/* Acabamentos que contêm este item */}
+              <TabsContent value="acabamentos" className="mt-2">
+                <Card className="overflow-hidden">
+                  <table className="w-full text-xs">
+                    <thead className="bg-muted"><tr className="text-left">
+                      <th className="p-2">Acabamento</th>
+                      <th className="p-2">Classe / Combinação</th>
+                      <th className="p-2">Descrição</th>
+                      <th className="p-2">Kits</th>
+                      <th className="p-2 w-24 text-right">Ações</th>
+                    </tr></thead>
+                    <tbody>
+                      {acabamentos.map((a: any) => {
+                        const kits = [1, 2, 3, 4, 5]
+                          .map((n) => a[`nm_kit_complementar_${n}`])
+                          .filter(Boolean);
+                        const ac = a.auge_acabamentos ?? {};
+                        return (
+                          <tr key={a.cd_acabamento_item} className="border-t align-top">
+                            <td className="p-2">
+                              <div className="font-medium">{ac.nm_acabamento ?? a.cd_acabamento}</div>
+                              <div className="font-mono text-[10px] text-muted-foreground">#{a.cd_acabamento}</div>
+                              {ac.id_cancelado === 'S' && <Badge variant="destructive" className="text-[9px] mt-1">Cancelado</Badge>}
+                            </td>
+                            <td className="p-2 text-[11px]">
+                              {ac.nm_classe1 && <div>{ac.nm_classe1}</div>}
+                              {ac.nm_combinacao1 && <div className="text-muted-foreground">{ac.nm_combinacao1}</div>}
+                            </td>
+                            <td className="p-2 text-[11px]">
+                              <div>{a.ds_item_acabamento ?? '—'}</div>
+                              {a.ds_item_acabamento_reduzida && (
+                                <div className="text-muted-foreground text-[10px]">↳ {a.ds_item_acabamento_reduzida}</div>
+                              )}
+                            </td>
+                            <td className="p-2 text-[10px] text-muted-foreground">
+                              {kits.length ? kits.join(', ') : '—'}
+                            </td>
+                            <td className="p-2 text-right">
+                              <Button size="sm" variant="outline" className="h-7 gap-1 text-[11px]" onClick={() => setEditingAcab(a)}>
+                                <Pencil className="h-3 w-3" /> Editar
+                              </Button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                      {acabamentos.length === 0 && (
+                        <tr><td colSpan={5} className="p-4 text-center text-muted-foreground">Este item não está em nenhum acabamento sincronizado. Rode a sincronização em /estoque/acabamentos.</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </Card>
+              </TabsContent>
+
               <TabsContent value="posicoes" className="mt-2">
                 <Card className="overflow-hidden">
                   <table className="w-full text-xs">
@@ -367,6 +448,12 @@ export default function FichaItemDialog({ codigo, open, onOpenChange }: Props) {
           </div>
         )}
       </DialogContent>
+      <AcabamentoItemEditDialog
+        item={editingAcab}
+        open={!!editingAcab}
+        onOpenChange={(o) => { if (!o) setEditingAcab(null); }}
+        onSaved={() => refetchAcabamentos()}
+      />
     </Dialog>
   );
 }

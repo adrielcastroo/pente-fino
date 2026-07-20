@@ -51,6 +51,7 @@ const ComprasRomaneiosStarcolorPage = lazy(() => import("@/pages/compras/Romanei
 const ComprasRomaneioStarcolorEditorPage = lazy(() => import("@/pages/compras/RomaneioStarcolorEditorPage"));
 
 const EntradasPage = lazy(() => import("@/pages/EntradasPage"));
+const AcabamentosPage = lazy(() => import("@/pages/estoque/AcabamentosPage"));
 const TransferenciasPage = lazy(() => import("@/pages/TransferenciasPage"));
 
 import RoleHomeRedirect from "@/components/auth/RoleHomeRedirect";
@@ -172,7 +173,8 @@ const App = () => (
                     }
                   />
                   <Route path="/estoque/minha-atividade" element={<MinhaAtividadePage />} />
-                  <Route path="/estoque/entradas" element={<EntradasPage />} />
+                 <Route path="/estoque/entradas" element={<EntradasPage />} />
+                 <Route path="/estoque/acabamentos" element={<RequireRole role="supervisor" fallback={<Navigate to="/estoque/operacao" replace />}><AcabamentosPage /></RequireRole>} />
                   <Route path="/estoque/auge" element={<Navigate to="/estoque/cadastros" replace />} />
                   <Route path="/estoque/transferencias" element={<TransferenciasPage />} />
                   <Route path="/transferencias" element={<Navigate to="/estoque/transferencias" replace />} />
