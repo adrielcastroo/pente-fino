@@ -122,15 +122,29 @@ export default function AcabamentosPage() {
 
   const filtrados = useMemo(() => {
     const t = busca.trim().toLowerCase();
-    if (!t) return acabamentos;
-    return acabamentos.filter((a: any) =>
+    const base = !t ? acabamentos : acabamentos.filter((a: any) =>
       (a.nm_acabamento ?? '').toLowerCase().includes(t) ||
       (a.chave_acabamento ?? '').toLowerCase().includes(t) ||
       (a.cd_acabamento ?? '').toLowerCase().includes(t) ||
       (a.nm_classe1 ?? '').toLowerCase().includes(t) ||
       (a.nm_combinacao1 ?? '').toLowerCase().includes(t),
     );
-  }, [acabamentos, busca]);
+    const arr = [...base];
+    arr.sort((a: any, b: any) => {
+      let cmp = 0;
+      if (sortBy === 'nome') {
+        cmp = (a.nm_acabamento ?? '').localeCompare(b.nm_acabamento ?? '', 'pt-BR', { sensitivity: 'base' });
+      } else {
+        const ak = a.chave_acabamento ?? a.cd_acabamento ?? '';
+        const bk = b.chave_acabamento ?? b.cd_acabamento ?? '';
+        const an = Number(ak), bn = Number(bk);
+        cmp = Number.isFinite(an) && Number.isFinite(bn) ? an - bn : String(ak).localeCompare(String(bk), 'pt-BR');
+      }
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+    return arr;
+  }, [acabamentos, busca, sortBy, sortDir]);
+
 
   const acabSelObj = acabamentos.find((a: any) => a.cd_acabamento === acabSel);
 
