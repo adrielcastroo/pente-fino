@@ -106,6 +106,33 @@ export default function DicionarioPage() {
     load();
   };
 
+  const efetivarNoAuge = async (s: Sol) => {
+    if (!isGerentePlus) { toast.error('Somente gerentes/admins podem efetivar no Auge.'); return; }
+    const conf = window.confirm(`Enviar para o Auge?\n\nAtual: ${s.ds_atual}\nAbreviação: ${s.ds_abreviada}`);
+    if (!conf) return;
+    try {
+      const { data, error } = await supabase.functions.invoke('auge-sync', {
+        body: {
+          action: 'salvar_abreviacao',
+          dsAtual: s.ds_atual,
+          dsAbreviada: s.ds_abreviada,
+          idTipoAbreviacao: 1,
+          solicitacaoId: s.id,
+        },
+      });
+      if (error) throw error;
+      if ((data as any)?.cdAbreviacao) {
+        toast.success(`Efetivada no Auge (cd ${(data as any).cdAbreviacao}).`);
+      } else {
+        toast.success('Enviada ao Auge. Verifique a lista de abreviações.');
+      }
+      setTimeout(load, 2500);
+    } catch (e: any) {
+      toast.error(e?.message ?? 'Falha ao efetivar no Auge.');
+    }
+  };
+
+
   const filteredAbrevs = useMemo(() => {
     const s = q.trim().toLowerCase();
     if (!s) return abrevs;
