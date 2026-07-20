@@ -30,7 +30,15 @@ const PUBLISHABLE_KEY = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
   import.meta.env.VITE_SUPABASE_ANON_KEY) as string;
 
 function ChatWindow({ threadId }: { threadId: string }) {
-  const thread = useAgentThreads((s) => s.threads.find((t) => t.id === threadId));
+  // Snapshot initial messages ONCE per mount (component is keyed by threadId,
+  // so a new thread remounts and re-snapshots). Passing a reactive array from
+  // the store as `messages` creates a feedback loop with the sync effect below
+  // and stomps the stream mid-flight — that was the cause of "Pensando…" never
+  // resolving and the user message flashing twice.
+  const initialMessages = useMemo(
+    () => useAgentThreads.getState().threads.find((t) => t.id === threadId)?.messages ?? [],
+    [threadId],
+  );
   const setMessages = useAgentThreads((s) => s.setMessages);
   const setTitle = useAgentThreads((s) => s.setTitleFromFirstMessage);
   const [accessToken, setAccessToken] = useState<string | null>(null);
@@ -54,17 +62,20 @@ function ChatWindow({ threadId }: { threadId: string }) {
 
   const { messages, sendMessage, status, error } = useChat({
     id: threadId,
-    messages: thread?.messages ?? [],
+    messages: initialMessages,
     transport,
     onError: (err) => {
       console.error("[ai-agent] erro no chat", err);
     },
   });
 
-  // Sync back to store
+  // Sync back to store only when the turn settles — avoids feedback-loop
+  // re-renders while tokens are streaming.
   useEffect(() => {
-    setMessages(threadId, messages as UIMessage[]);
-  }, [messages, threadId, setMessages]);
+    if (status === "ready" || status === "error") {
+      setMessages(threadId, messages as UIMessage[]);
+    }
+  }, [status, messages, threadId, setMessages]);
 
   // Focus composer on mount / thread change / after stream
   useEffect(() => {
