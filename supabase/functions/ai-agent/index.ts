@@ -74,6 +74,7 @@ const DOMAIN_TERMS = [
   "auditoria","reconciliacao","reconciliação","chao","chão","tec","fifo","descricao","descrição",
   "sincroniz","sync","importar","export","relatorio","relatório","dashboard","carga","transportadora",
   "acabamento","acabamentos","kit","kits","classe","combinacao","combinação",
+  "abreviacao","abreviação","abreviacoes","abreviações","dicionario","dicionário","subclasse","sub_classe","tag","tags",
 ];
 
 const GREETING_RE = /^\s*(oi|ola|olá|bom dia|boa tarde|boa noite|e ai|eaí|hello|hi|hey|obrigad|valeu|tchau|help|ajuda)\b/i;
@@ -117,7 +118,7 @@ const SENSITIVE_PATTERNS: Array<{ id: string; re: RegExp; minLevel: number; labe
     re: /\b(apagar|deletar|excluir|remover|zerar|limpar)\s+(tudo|todos|todas|toda|geral|base|banco|dados|hist[oó]rico|cadastros?|itens|registros)/i },
   // Escrita no Auge / Pente Fino — mínimo operador.
   { id: "write_auge", minLevel: 4, label: "ação de escrita no Auge/Pente Fino",
-    re: /\b(criar|cadastrar|efetivar|confirmar|registrar|lançar|lancar|dar\s+sa[ií]da|dar\s+entrada|transferir|estornar|editar|alterar|atualizar|corrigir|ajustar|mover|realocar|movimentar)\s+(transfer|sa[ií]da|entrada|estoque|item|itens|lote|movimenta|acabament|reserva|romaneio|carga|nfe|nf-e|nota|cadastro|posi[cç][aã]o|endere[cç]o|kardex)/i },
+    re: /\b(criar|cadastrar|efetivar|confirmar|registrar|lançar|lancar|dar\s+sa[ií]da|dar\s+entrada|transferir|estornar|editar|alterar|atualizar|corrigir|ajustar|mover|realocar|movimentar|aprovar|rejeitar)\s+(transfer|sa[ií]da|entrada|estoque|item|itens|lote|movimenta|acabament|reserva|romaneio|carga|nfe|nf-e|nota|cadastro|posi[cç][aã]o|endere[cç]o|kardex|abreviac|abreviaç|dicion[aá]rio|solicita)/i },
   { id: "secrets", minLevel: 1, label: "acesso a segredos/credenciais",
     re: /\b(api[_\s-]?key|senha|password|token|secret|credenci|service[_\s-]?role|chave\s+privada|env\b|\.env)/i },
   { id: "sql_direct", minLevel: 1, label: "execução direta de SQL",
@@ -309,6 +310,47 @@ async function buildAgentContext(admin: ReturnType<typeof createClient>, text: s
             .limit(20);
           context.acabamentos_encontrados = data ?? [];
         }
+      }
+
+      // Abreviações e dicionário do Auge
+      const wantsAbreviacao = /\babreviac|\babreviaç|\bdicion[aá]rio|\bsubclass|\bclasse\b|\bcombinac|\bcombinaç/i.test(text);
+      if (wantsAbreviacao) {
+        const filters = tokens.flatMap((t) => {
+          const safe = sanitizePostgrestValue(t);
+          if (!safe) return [];
+          return [`ds_atual.ilike.%${safe}%`, `ds_abreviada.ilike.%${safe}%`];
+        });
+        const q = admin
+          .from("auge_abreviacoes")
+          .select("id_tipo_abreviacao,ds_atual,ds_abreviada")
+          .limit(20);
+        const { data } = filters.length > 0 ? await q.or(filters.join(",")) : await q;
+        context.abreviacoes = data ?? [];
+
+        if (tokens.length > 0) {
+          const dicFilters = tokens.flatMap((t) => {
+            const safe = sanitizePostgrestValue(t);
+            if (!safe) return [];
+            return [`nm.ilike.%${safe}%`, `cd.ilike.%${safe}%`];
+          });
+          if (dicFilters.length > 0) {
+            const { data: dic } = await admin
+              .from("auge_dicionarios")
+              .select("tipo,cd,nm,nm_pai")
+              .or(dicFilters.join(","))
+              .limit(20);
+            context.dicionario_encontrado = dic ?? [];
+          }
+        }
+
+        // Fila de solicitações pendentes (contexto operacional)
+        const { data: pend } = await admin
+          .from("abreviacoes_solicitadas")
+          .select("ds_atual,ds_abreviada,status,solicitante_email,created_at")
+          .eq("status", "pendente")
+          .order("created_at", { ascending: false })
+          .limit(10);
+        context.abreviacoes_solicitacoes_pendentes = pend ?? [];
       }
     }
   } catch (err) {

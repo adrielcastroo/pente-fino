@@ -14,6 +14,7 @@ import {
   ArrowRightLeft,
   PackagePlus,
   Palette,
+  BookOpen,
 
 } from 'lucide-react';
 
@@ -42,6 +43,7 @@ const EstoqueSidebar = memo(() => {
             { key: 'saida', label: 'Saída', icon: ArrowUpRight, path: '/estoque/saida' },
             { key: 'entradas', label: 'Entradas', icon: PackagePlus, path: '/estoque/entradas' },
             { key: 'acabamentos', label: 'Acabamentos', icon: Palette, path: '/estoque/acabamentos', minRole: 'supervisor' },
+            { key: 'dicionario', label: 'Dicionário', icon: BookOpen, path: '/estoque/dicionario' },
           ],
 
         },

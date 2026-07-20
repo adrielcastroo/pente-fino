@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      abreviacoes_solicitadas: {
+        Row: {
+          cd_abreviacao_efetivada: string | null
+          created_at: string
+          ds_abreviada: string
+          ds_atual: string
+          id: string
+          motivo: string | null
+          obs_revisao: string | null
+          revisado_em: string | null
+          revisor_email: string | null
+          revisor_id: string | null
+          solicitante_email: string | null
+          solicitante_id: string
+          status: string
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          cd_abreviacao_efetivada?: string | null
+          created_at?: string
+          ds_abreviada: string
+          ds_atual: string
+          id?: string
+          motivo?: string | null
+          obs_revisao?: string | null
+          revisado_em?: string | null
+          revisor_email?: string | null
+          revisor_id?: string | null
+          solicitante_email?: string | null
+          solicitante_id: string
+          status?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Update: {
+          cd_abreviacao_efetivada?: string | null
+          created_at?: string
+          ds_abreviada?: string
+          ds_atual?: string
+          id?: string
+          motivo?: string | null
+          obs_revisao?: string | null
+          revisado_em?: string | null
+          revisor_email?: string | null
+          revisor_id?: string | null
+          solicitante_email?: string | null
+          solicitante_id?: string
+          status?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ai_chat_history: {
         Row: {
           created_at: string
@@ -113,6 +167,42 @@ export type Database = {
           occurred_at?: string
           user_email?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      auge_abreviacoes: {
+        Row: {
+          cd_abreviacao: string
+          cd_empresa: string | null
+          created_at: string
+          ds_abreviada: string
+          ds_atual: string
+          id_tipo_abreviacao: string
+          raw: Json | null
+          synced_at: string
+          updated_at: string
+        }
+        Insert: {
+          cd_abreviacao: string
+          cd_empresa?: string | null
+          created_at?: string
+          ds_abreviada: string
+          ds_atual: string
+          id_tipo_abreviacao: string
+          raw?: Json | null
+          synced_at?: string
+          updated_at?: string
+        }
+        Update: {
+          cd_abreviacao?: string
+          cd_empresa?: string | null
+          created_at?: string
+          ds_abreviada?: string
+          ds_atual?: string
+          id_tipo_abreviacao?: string
+          raw?: Json | null
+          synced_at?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -357,6 +447,45 @@ export type Database = {
           raw?: Json | null
           synced_at?: string
           tipo?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      auge_dicionarios: {
+        Row: {
+          cd: string
+          cd_pai: string | null
+          created_at: string
+          id: string
+          nm: string
+          nm_pai: string | null
+          raw: Json | null
+          synced_at: string
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          cd: string
+          cd_pai?: string | null
+          created_at?: string
+          id?: string
+          nm: string
+          nm_pai?: string | null
+          raw?: Json | null
+          synced_at?: string
+          tipo: string
+          updated_at?: string
+        }
+        Update: {
+          cd?: string
+          cd_pai?: string | null
+          created_at?: string
+          id?: string
+          nm?: string
+          nm_pai?: string | null
+          raw?: Json | null
+          synced_at?: string
+          tipo?: string
           updated_at?: string
         }
         Relationships: []
