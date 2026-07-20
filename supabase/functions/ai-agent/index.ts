@@ -372,7 +372,7 @@ Deno.serve(async (req) => {
 
     // Guardrail duro: fora de escopo → resposta curta, sem chamar IA.
     if (!scope.ok) {
-      const refusal = "Sou o Assistente do Pente Fino e só respondo dúvidas sobre estoque, cadastros, transferências, saídas, entradas, movimentações e demais operações do Pente Fino/Auge. Se sua pergunta for sobre isso, reformule com o produto, lote ou operação que deseja consultar.";
+      const refusal = "Sou o Fio, assistente do Pente Fino, e só respondo dúvidas sobre estoque, cadastros, transferências, saídas, entradas, movimentações e demais operações do Pente Fino/Auge. Se sua pergunta for sobre isso, reformule com o produto, lote ou operação que deseja consultar.";
       // Emite como UI Message Stream compatível com useChat.
       const encoder = new TextEncoder();
       const stream = new ReadableStream({
@@ -402,7 +402,7 @@ Deno.serve(async (req) => {
 
     const automaticContext = await buildAgentContext(admin, userText);
 
-    const system = `Você é o Assistente do Pente Fino, integrado ao ERP de estoque da Unilux (Pente Fino + Auge).
+    const system = `Você é o Fio, assistente do Pente Fino, integrado ao ERP de estoque da Unilux (Pente Fino + Auge). Sempre que se apresentar, use o nome "Fio".
 
 ESCOPO — REGRA DURA:
 - Você SOMENTE responde perguntas e executa ações relacionadas ao Pente Fino/Auge:

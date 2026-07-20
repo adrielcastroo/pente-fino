@@ -111,8 +111,8 @@ function ChatWindow({ threadId }: { threadId: string }) {
           {messages.length === 0 && (
             <ConversationEmptyState
               icon={<img src={logo} alt="" width={48} height={48} className="opacity-90" />}
-              title="Assistente Pente Fino"
-              description="Pergunte sobre itens, transferências, saldo do estoque, movimentações e mais."
+              title="Fio · Assistente do Pente Fino"
+              description="Sou o Fio. Pergunte sobre itens, transferências, saldo do estoque, movimentações e mais."
             />
           )}
           {messages.map((m) => (
@@ -157,7 +157,7 @@ function ChatWindow({ threadId }: { threadId: string }) {
 
       <div className="border-t p-2">
         <PromptInput onSubmit={handleSubmit}>
-          <PromptInputTextarea ref={composerRef} placeholder="Pergunte algo ao assistente…" />
+          <PromptInputTextarea ref={composerRef} placeholder="Pergunte algo ao Fio…" />
           <PromptInputFooter className="justify-end">
             <PromptInputSubmit status={status} disabled={isLoading} />
           </PromptInputFooter>
@@ -183,7 +183,7 @@ export function AgentChatWidget() {
       {!open && (
         <button
           type="button"
-          aria-label="Abrir assistente de IA"
+          aria-label="Abrir Fio (assistente de IA)"
           onClick={() => toggleOpen(true)}
           className="fixed bottom-20 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg ring-1 ring-primary/40 transition hover:scale-105 hover:shadow-xl tablet-landscape:bottom-6 desktop:bottom-6"
         >
@@ -202,7 +202,7 @@ export function AgentChatWidget() {
           <div className="flex items-center gap-2 border-b bg-card/50 px-3 py-2">
             <img src={logo} alt="" width={24} height={24} />
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-semibold leading-tight">Assistente Pente Fino</div>
+              <div className="text-sm font-semibold leading-tight">Fio</div>
               <div className="truncate text-[11px] text-muted-foreground">
                 {threads.find((t) => t.id === activeId)?.title ?? "Nova conversa"}
               </div>
