@@ -116,6 +116,206 @@ export type Database = {
         }
         Relationships: []
       }
+      auge_acabamento_itens: {
+        Row: {
+          cd_acabamento: string
+          cd_acabamento_item: string
+          cd_item_acabamento: string
+          cd_kit_complementar_1: string | null
+          cd_kit_complementar_2: string | null
+          cd_kit_complementar_3: string | null
+          cd_kit_complementar_4: string | null
+          cd_kit_complementar_5: string | null
+          cd_linha: string | null
+          created_at: string
+          ds_item_acabamento: string | null
+          ds_item_acabamento_original: string | null
+          ds_item_acabamento_reduzida: string | null
+          nm_kit_complementar_1: string | null
+          nm_kit_complementar_2: string | null
+          nm_kit_complementar_3: string | null
+          nm_kit_complementar_4: string | null
+          nm_kit_complementar_5: string | null
+          raw: Json | null
+          synced_at: string
+          updated_at: string
+        }
+        Insert: {
+          cd_acabamento: string
+          cd_acabamento_item: string
+          cd_item_acabamento: string
+          cd_kit_complementar_1?: string | null
+          cd_kit_complementar_2?: string | null
+          cd_kit_complementar_3?: string | null
+          cd_kit_complementar_4?: string | null
+          cd_kit_complementar_5?: string | null
+          cd_linha?: string | null
+          created_at?: string
+          ds_item_acabamento?: string | null
+          ds_item_acabamento_original?: string | null
+          ds_item_acabamento_reduzida?: string | null
+          nm_kit_complementar_1?: string | null
+          nm_kit_complementar_2?: string | null
+          nm_kit_complementar_3?: string | null
+          nm_kit_complementar_4?: string | null
+          nm_kit_complementar_5?: string | null
+          raw?: Json | null
+          synced_at?: string
+          updated_at?: string
+        }
+        Update: {
+          cd_acabamento?: string
+          cd_acabamento_item?: string
+          cd_item_acabamento?: string
+          cd_kit_complementar_1?: string | null
+          cd_kit_complementar_2?: string | null
+          cd_kit_complementar_3?: string | null
+          cd_kit_complementar_4?: string | null
+          cd_kit_complementar_5?: string | null
+          cd_linha?: string | null
+          created_at?: string
+          ds_item_acabamento?: string | null
+          ds_item_acabamento_original?: string | null
+          ds_item_acabamento_reduzida?: string | null
+          nm_kit_complementar_1?: string | null
+          nm_kit_complementar_2?: string | null
+          nm_kit_complementar_3?: string | null
+          nm_kit_complementar_4?: string | null
+          nm_kit_complementar_5?: string | null
+          raw?: Json | null
+          synced_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "auge_acabamento_itens_cd_acabamento_fkey"
+            columns: ["cd_acabamento"]
+            isOneToOne: false
+            referencedRelation: "auge_acabamentos"
+            referencedColumns: ["cd_acabamento"]
+          },
+        ]
+      }
+      auge_acabamentos: {
+        Row: {
+          cd_acabamento: string
+          cd_classe1: string | null
+          cd_classe2: string | null
+          cd_classe3: string | null
+          cd_combinacao1: string | null
+          cd_combinacao2: string | null
+          cd_combinacao3: string | null
+          cd_empresa: string | null
+          cd_seq_tag_calculada: string | null
+          cd_sub_classe1: string | null
+          cd_sub_classe2: string | null
+          cd_sub_classe3: string | null
+          chave_acabamento: string | null
+          chave_combinacao1: string | null
+          chave_combinacao2: string | null
+          chave_combinacao3: string | null
+          created_at: string
+          ds_descricao_tag_calculada: string | null
+          ds_tag_calculada: string | null
+          id_cancelado: string | null
+          id_herdar_colecao: string | null
+          id_limitar_tamanho: string | null
+          nm_acabamento: string
+          nm_classe1: string | null
+          nm_classe2: string | null
+          nm_classe3: string | null
+          nm_combinacao1: string | null
+          nm_combinacao2: string | null
+          nm_combinacao3: string | null
+          nm_sub_classe1: string | null
+          nm_sub_classe2: string | null
+          nm_sub_classe3: string | null
+          nr_acabamento: string | null
+          raw: Json | null
+          synced_at: string
+          tem_item_associado: string | null
+          updated_at: string
+        }
+        Insert: {
+          cd_acabamento: string
+          cd_classe1?: string | null
+          cd_classe2?: string | null
+          cd_classe3?: string | null
+          cd_combinacao1?: string | null
+          cd_combinacao2?: string | null
+          cd_combinacao3?: string | null
+          cd_empresa?: string | null
+          cd_seq_tag_calculada?: string | null
+          cd_sub_classe1?: string | null
+          cd_sub_classe2?: string | null
+          cd_sub_classe3?: string | null
+          chave_acabamento?: string | null
+          chave_combinacao1?: string | null
+          chave_combinacao2?: string | null
+          chave_combinacao3?: string | null
+          created_at?: string
+          ds_descricao_tag_calculada?: string | null
+          ds_tag_calculada?: string | null
+          id_cancelado?: string | null
+          id_herdar_colecao?: string | null
+          id_limitar_tamanho?: string | null
+          nm_acabamento: string
+          nm_classe1?: string | null
+          nm_classe2?: string | null
+          nm_classe3?: string | null
+          nm_combinacao1?: string | null
+          nm_combinacao2?: string | null
+          nm_combinacao3?: string | null
+          nm_sub_classe1?: string | null
+          nm_sub_classe2?: string | null
+          nm_sub_classe3?: string | null
+          nr_acabamento?: string | null
+          raw?: Json | null
+          synced_at?: string
+          tem_item_associado?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cd_acabamento?: string
+          cd_classe1?: string | null
+          cd_classe2?: string | null
+          cd_classe3?: string | null
+          cd_combinacao1?: string | null
+          cd_combinacao2?: string | null
+          cd_combinacao3?: string | null
+          cd_empresa?: string | null
+          cd_seq_tag_calculada?: string | null
+          cd_sub_classe1?: string | null
+          cd_sub_classe2?: string | null
+          cd_sub_classe3?: string | null
+          chave_acabamento?: string | null
+          chave_combinacao1?: string | null
+          chave_combinacao2?: string | null
+          chave_combinacao3?: string | null
+          created_at?: string
+          ds_descricao_tag_calculada?: string | null
+          ds_tag_calculada?: string | null
+          id_cancelado?: string | null
+          id_herdar_colecao?: string | null
+          id_limitar_tamanho?: string | null
+          nm_acabamento?: string
+          nm_classe1?: string | null
+          nm_classe2?: string | null
+          nm_classe3?: string | null
+          nm_combinacao1?: string | null
+          nm_combinacao2?: string | null
+          nm_combinacao3?: string | null
+          nm_sub_classe1?: string | null
+          nm_sub_classe2?: string | null
+          nm_sub_classe3?: string | null
+          nr_acabamento?: string | null
+          raw?: Json | null
+          synced_at?: string
+          tem_item_associado?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       auge_depositos: {
         Row: {
           ativo: boolean | null
