@@ -311,6 +311,47 @@ async function buildAgentContext(admin: ReturnType<typeof createClient>, text: s
           context.acabamentos_encontrados = data ?? [];
         }
       }
+
+      // Abreviações e dicionário do Auge
+      const wantsAbreviacao = /\babreviac|\babreviaç|\bdicion[aá]rio|\bsubclass|\bclasse\b|\bcombinac|\bcombinaç/i.test(text);
+      if (wantsAbreviacao) {
+        const filters = tokens.flatMap((t) => {
+          const safe = sanitizePostgrestValue(t);
+          if (!safe) return [];
+          return [`ds_atual.ilike.%${safe}%`, `ds_abreviada.ilike.%${safe}%`];
+        });
+        const q = admin
+          .from("auge_abreviacoes")
+          .select("id_tipo_abreviacao,ds_atual,ds_abreviada")
+          .limit(20);
+        const { data } = filters.length > 0 ? await q.or(filters.join(",")) : await q;
+        context.abreviacoes = data ?? [];
+
+        if (tokens.length > 0) {
+          const dicFilters = tokens.flatMap((t) => {
+            const safe = sanitizePostgrestValue(t);
+            if (!safe) return [];
+            return [`nm.ilike.%${safe}%`, `cd.ilike.%${safe}%`];
+          });
+          if (dicFilters.length > 0) {
+            const { data: dic } = await admin
+              .from("auge_dicionarios")
+              .select("tipo,cd,nm,nm_pai")
+              .or(dicFilters.join(","))
+              .limit(20);
+            context.dicionario_encontrado = dic ?? [];
+          }
+        }
+
+        // Fila de solicitações pendentes (contexto operacional)
+        const { data: pend } = await admin
+          .from("abreviacoes_solicitadas")
+          .select("ds_atual,ds_abreviada,status,solicitante_email,created_at")
+          .eq("status", "pendente")
+          .order("created_at", { ascending: false })
+          .limit(10);
+        context.abreviacoes_solicitacoes_pendentes = pend ?? [];
+      }
     }
   } catch (err) {
     context.contexto_erro = errorPayload(err);
