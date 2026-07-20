@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { BookOpen, RefreshCw, Plus, Search, CheckCircle2, XCircle, Loader2, Trash2 } from 'lucide-react';
+import { BookOpen, RefreshCw, Plus, Search, CheckCircle2, XCircle, Loader2, Trash2, Send } from 'lucide-react';
 import SolicitarAbreviacaoDialog from '@/components/abreviacoes/SolicitarAbreviacaoDialog';
 import { useAuth } from '@/hooks/use-auth';
 
@@ -105,6 +105,33 @@ export default function DicionarioPage() {
     toast.success('Solicitação removida.');
     load();
   };
+
+  const efetivarNoAuge = async (s: Sol) => {
+    if (!isGerentePlus) { toast.error('Somente gerentes/admins podem efetivar no Auge.'); return; }
+    const conf = window.confirm(`Enviar para o Auge?\n\nAtual: ${s.ds_atual}\nAbreviação: ${s.ds_abreviada}`);
+    if (!conf) return;
+    try {
+      const { data, error } = await supabase.functions.invoke('auge-sync', {
+        body: {
+          action: 'salvar_abreviacao',
+          dsAtual: s.ds_atual,
+          dsAbreviada: s.ds_abreviada,
+          idTipoAbreviacao: 1,
+          solicitacaoId: s.id,
+        },
+      });
+      if (error) throw error;
+      if ((data as any)?.cdAbreviacao) {
+        toast.success(`Efetivada no Auge (cd ${(data as any).cdAbreviacao}).`);
+      } else {
+        toast.success('Enviada ao Auge. Verifique a lista de abreviações.');
+      }
+      setTimeout(load, 2500);
+    } catch (e: any) {
+      toast.error(e?.message ?? 'Falha ao efetivar no Auge.');
+    }
+  };
+
 
   const filteredAbrevs = useMemo(() => {
     const s = q.trim().toLowerCase();
@@ -285,6 +312,11 @@ export default function DicionarioPage() {
                                 <XCircle className="h-3.5 w-3.5" /> Rejeitar
                               </Button>
                             </>
+                          )}
+                          {(s.status === 'pendente' || s.status === 'aprovada') && isGerentePlus && (
+                            <Button size="sm" onClick={() => efetivarNoAuge(s)} className="h-7 gap-1">
+                              <Send className="h-3.5 w-3.5" /> Efetivar no Auge
+                            </Button>
                           )}
                           {s.status === 'pendente' && (mine || isGerentePlus) && (
                             <Button size="sm" variant="ghost" onClick={() => excluir(s.id)} className="h-7">
