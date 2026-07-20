@@ -39,6 +39,8 @@ export default function AcabamentosPage() {
   const [editing, setEditing] = useState<any | null>(null);
   const [run, setRun] = useState<SyncRun | null>(null);
   const [showPanel, setShowPanel] = useState(false);
+  const [sortBy, setSortBy] = useState<'nome' | 'codigo'>('nome');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const channelRef = useRef<any>(null);
 
   // Recupera última execução de acabamentos ao montar
