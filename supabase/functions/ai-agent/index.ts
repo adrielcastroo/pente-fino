@@ -358,13 +358,17 @@ async function buildAgentContext(admin: ReturnType<typeof createClient>, text: s
             .filter(Boolean),
         ),
       ).slice(0, 20);
-      const codeTargets = Array.from(
+      const explicitCodeTargets = Array.from(
+        new Set(codeLike.flatMap((code) => codeVariants(code)).filter(Boolean)),
+      );
+      const relatedCodeTargets = Array.from(
         new Set(
-          [...codigos, ...codeLike]
+          codigos
             .flatMap((code) => codeVariants(code))
             .filter(Boolean),
         ),
-      ).slice(0, 120);
+      );
+      const codeTargets = (explicitCodeTargets.length > 0 ? explicitCodeTargets : relatedCodeTargets).slice(0, 120);
 
       if (codeTargets.length > 0) {
         const { data, error } = await admin
@@ -378,15 +382,16 @@ async function buildAgentContext(admin: ReturnType<typeof createClient>, text: s
           context.acabamentos_erro = error.message;
         } else {
           const rows = data ?? [];
-          const requestedCodes = codeLike.length > 0
-            ? new Set(codeLike.flatMap((code) => codeVariants(code)).map((code) => code.toUpperCase()))
+          const requestedCodes = explicitCodeTargets.length > 0
+            ? new Set(explicitCodeTargets.map((code) => code.toUpperCase()))
             : null;
           const requestedRows = requestedCodes
             ? rows.filter((r: any) => requestedCodes.has(String(r.cd_item_acabamento ?? "").toUpperCase()))
             : rows;
           context.acabamentos_do_item_total = requestedRows.length;
+          context.acabamentos_do_item_codigo_perguntado = explicitCodeTargets.find((code) => /^[A-Z]{2}\./.test(code)) ?? explicitCodeTargets[0] ?? null;
           context.acabamentos_do_item_codigos_consultados = codeTargets.filter(looksLikeAugeItemCode).slice(0, 20);
-          context.acabamentos_do_item = (data ?? []).map((r: any) => ({
+          context.acabamentos_do_item = requestedRows.map((r: any) => ({
             codigo_auge: r.auge_acabamentos?.chave_acabamento ?? r.cd_acabamento,
             cd_acabamento: r.cd_acabamento,
             nm_acabamento: r.auge_acabamentos?.nm_acabamento ?? "-",
