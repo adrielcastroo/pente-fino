@@ -98,7 +98,7 @@ export default function AcabamentosPage() {
     queryFn: async () => {
       const { data } = await (supabase as any)
         .from('auge_acabamentos')
-        .select('cd_acabamento, nm_acabamento, nm_classe1, nm_combinacao1, id_cancelado, tem_item_associado, synced_at')
+        .select('cd_acabamento, chave_acabamento, nm_acabamento, nm_classe1, nm_combinacao1, id_cancelado, tem_item_associado, synced_at')
         .order('nm_acabamento', { ascending: true })
         .limit(2000);
       return (data ?? []) as any[];
