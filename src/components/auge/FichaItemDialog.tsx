@@ -5,9 +5,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Package, Boxes, ArrowRightLeft, History, MapPin, Loader2, AlertCircle, Layers } from 'lucide-react';
+import { Package, Boxes, ArrowRightLeft, History, MapPin, Loader2, AlertCircle, Layers, Palette, Pencil } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { Button } from '@/components/ui/button';
+import AcabamentoItemEditDialog from '@/components/acabamentos/AcabamentoItemEditDialog';
+
 
 interface Props {
   codigo: string | null;
