@@ -309,18 +309,25 @@ async function buildAgentContext(admin: ReturnType<typeof createClient>, text: s
             `nm_acabamento.ilike.%${safe}%`,
             `nm_classe1.ilike.%${safe}%`,
             `nm_combinacao1.ilike.%${safe}%`,
+            `chave_acabamento.ilike.%${safe}%`,
             `cd_acabamento.ilike.%${safe}%`,
           ];
         });
         const baseSel = admin
           .from("auge_acabamentos")
-          .select("cd_acabamento,nm_acabamento,nm_classe1,nm_combinacao1,id_cancelado")
-          .order("nm_acabamento", { ascending: true })
+          .select("cd_acabamento,chave_acabamento,nm_acabamento,nm_classe1,nm_combinacao1,id_cancelado")
+          .order("chave_acabamento", { ascending: true })
           .limit(acabFilters.length > 0 ? 40 : 200);
         const { data: encontrados } = acabFilters.length > 0
           ? await baseSel.or(acabFilters.join(","))
           : await baseSel;
-        context.acabamentos_encontrados = encontrados ?? [];
+        context.acabamentos_encontrados = (encontrados ?? []).map((a: any) => ({
+          codigo_auge: a.chave_acabamento ?? a.cd_acabamento,
+          nm_acabamento: a.nm_acabamento,
+          classe: a.nm_classe1,
+          combinacao: a.nm_combinacao1,
+          cancelado: a.id_cancelado === "S",
+        }));
       }
 
       // Abreviações e dicionário do Auge
