@@ -284,7 +284,7 @@ async function buildAgentContext(admin: ReturnType<typeof createClient>, text: s
             combinacao: r.auge_acabamentos?.nm_combinacao1 ?? null,
             cancelado: r.auge_acabamentos?.id_cancelado === "S",
             codigo_item: r.cd_item_acabamento,
-            descricao: r.ds_item_acabamento ?? r.ds_item_acabamento_reduzida ?? null,
+            descricao: r.ds_item_acabamento_original ?? r.ds_item_acabamento ?? r.ds_item_acabamento_reduzida ?? null,
             kits: [1, 2, 3, 4, 5]
               .map((n) => r[`nm_kit_complementar_${n}`])
               .filter(Boolean),
