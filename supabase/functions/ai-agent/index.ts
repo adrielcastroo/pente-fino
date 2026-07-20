@@ -73,6 +73,7 @@ const DOMAIN_TERMS = [
   "cor","cores","tonalidade","screen","blackout","tecido","metros","m2","m²","peça","pecas","peças",
   "auditoria","reconciliacao","reconciliação","chao","chão","tec","fifo","descricao","descrição",
   "sincroniz","sync","importar","export","relatorio","relatório","dashboard","carga","transportadora",
+  "acabamento","acabamentos","kit","kits","classe","combinacao","combinação",
 ];
 
 const GREETING_RE = /^\s*(oi|ola|olá|bom dia|boa tarde|boa noite|e ai|eaí|hello|hi|hey|obrigad|valeu|tchau|help|ajuda)\b/i;
@@ -97,6 +98,7 @@ async function buildAgentContext(admin: ReturnType<typeof createClient>, text: s
   const tokens = textTokens(text);
   const wantsTransfers = /transfer|rascunho|efetiva/i.test(text);
   const wantsMoves = /entrada|sa[ií]da|movimenta|kardex/i.test(text);
+  const wantsAcabamentos = /acabament|\bkit\b|classe|combina/i.test(text);
   const context: Record<string, unknown> = { consulta: text, tokens_usados: tokens };
 
   try {
@@ -206,6 +208,67 @@ async function buildAgentContext(admin: ReturnType<typeof createClient>, text: s
         .order("data_movimento", { ascending: false, nullsFirst: false })
         .limit(20);
       context.movimentacoes_recentes = error ? { erro: error.message } : data ?? [];
+    }
+
+    // Acabamentos: sempre que houver códigos de itens encontrados OU o usuário
+    // perguntar explicitamente sobre acabamentos, injeta os vínculos.
+    if (wantsAcabamentos || codigos.length > 0) {
+      // Tokens que "parecem" código interno do Auge (ex.: TC.000.033, 003.003.183.001.2)
+      const codeLike = Array.from(
+        new Set(
+          (text.match(/[A-Za-z0-9]{2,}(?:\.[A-Za-z0-9]+){1,6}/g) ?? [])
+            .map((s) => s.trim())
+            .filter(Boolean),
+        ),
+      ).slice(0, 20);
+      const alvos = Array.from(new Set([...codigos, ...codeLike])).slice(0, 80);
+
+      if (alvos.length > 0) {
+        const { data, error } = await admin
+          .from("auge_acabamento_itens")
+          .select(
+            "cd_acabamento_item,cd_acabamento,cd_item_acabamento,ds_item_acabamento,ds_item_acabamento_reduzida,nm_kit_complementar_1,nm_kit_complementar_2,nm_kit_complementar_3,nm_kit_complementar_4,nm_kit_complementar_5,auge_acabamentos(cd_acabamento,nm_acabamento,nm_classe1,nm_combinacao1,id_cancelado)",
+          )
+          .in("cd_item_acabamento", alvos)
+          .limit(60);
+        if (error) {
+          context.acabamentos_erro = error.message;
+        } else {
+          context.acabamentos_do_item = (data ?? []).map((r: any) => ({
+            cd_acabamento: r.cd_acabamento,
+            nm_acabamento: r.auge_acabamentos?.nm_acabamento ?? "-",
+            classe: r.auge_acabamentos?.nm_classe1 ?? null,
+            combinacao: r.auge_acabamentos?.nm_combinacao1 ?? null,
+            cancelado: r.auge_acabamentos?.id_cancelado === "S",
+            codigo_item: r.cd_item_acabamento,
+            descricao: r.ds_item_acabamento ?? r.ds_item_acabamento_reduzida ?? null,
+            kits: [1, 2, 3, 4, 5]
+              .map((n) => r[`nm_kit_complementar_${n}`])
+              .filter(Boolean),
+          }));
+        }
+      }
+
+      // Se o usuário quer navegar pela lista mestre de acabamentos por nome/classe
+      if (wantsAcabamentos && tokens.length > 0) {
+        const acabFilters = tokens.flatMap((token) => {
+          const safe = sanitizePostgrestValue(token);
+          if (!safe) return [];
+          return [
+            `nm_acabamento.ilike.%${safe}%`,
+            `nm_classe1.ilike.%${safe}%`,
+            `nm_combinacao1.ilike.%${safe}%`,
+          ];
+        });
+        if (acabFilters.length > 0) {
+          const { data } = await admin
+            .from("auge_acabamentos")
+            .select("cd_acabamento,nm_acabamento,nm_classe1,nm_combinacao1,id_cancelado")
+            .or(acabFilters.join(","))
+            .limit(20);
+          context.acabamentos_encontrados = data ?? [];
+        }
+      }
     }
   } catch (err) {
     context.contexto_erro = errorPayload(err);
