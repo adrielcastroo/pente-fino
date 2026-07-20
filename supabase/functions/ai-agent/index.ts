@@ -25,6 +25,38 @@ function errorPayload(err: unknown) {
   return { error: typeof err === "string" ? err : JSON.stringify(err) };
 }
 
+function textStreamResponse(text: string, headers: Record<string, string> = {}) {
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream({
+    start(controller) {
+      const id = crypto.randomUUID();
+      const send = (obj: unknown) => controller.enqueue(encoder.encode(`data: ${JSON.stringify(obj)}\n\n`));
+      send({ type: "start" });
+      send({ type: "start-step" });
+      send({ type: "text-start", id });
+      const CHUNK = 80;
+      for (let i = 0; i < text.length; i += CHUNK) {
+        send({ type: "text-delta", id, delta: text.slice(i, i + CHUNK) });
+      }
+      send({ type: "text-end", id });
+      send({ type: "finish-step" });
+      send({ type: "finish" });
+      controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+      controller.close();
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      ...corsHeaders,
+      "Content-Type": "text/event-stream",
+      "x-vercel-ai-ui-message-stream": "v1",
+      "Cache-Control": "no-cache, no-transform",
+      ...headers,
+    },
+  });
+}
+
 function latestUserText(messages: ModelMessage[]) {
   const last = [...messages].reverse().find((m) => m.role === "user");
   const content = last?.content;
@@ -36,6 +68,25 @@ function latestUserText(messages: ModelMessage[]) {
       .trim();
   }
   return "";
+}
+
+function allUserText(messages: ModelMessage[]) {
+  return messages
+    .filter((m) => m.role === "user")
+    .slice(-6)
+    .map((m) => {
+      const content = m.content;
+      if (typeof content === "string") return content;
+      if (Array.isArray(content)) {
+        return content
+          .map((part: any) => (part?.type === "text" && typeof part.text === "string" ? part.text : ""))
+          .join(" ")
+          .trim();
+      }
+      return "";
+    })
+    .filter(Boolean)
+    .join("\n");
 }
 
 const STOPWORDS = new Set([
@@ -153,6 +204,31 @@ function codeVariants(value: string) {
 function looksLikeAugeItemCode(value: string) {
   const compact = value.replace(/[^a-z0-9]/gi, "");
   return /^[a-z]{2}\d{6}$/i.test(compact) || /^\d{6,}(?:\d+)?$/i.test(compact);
+}
+
+function acabamentoItemCountAnswer(context: Record<string, unknown>, text: string) {
+  if (!/quantos?/i.test(text) || !/acabament/i.test(text) || !/item|produto|c[oó]digo/i.test(text)) return null;
+  const rows = Array.isArray(context.acabamentos_do_item) ? context.acabamentos_do_item as any[] : [];
+  if (typeof context.acabamentos_do_item_total !== "number") return null;
+
+  const code = Array.isArray(context.acabamentos_do_item_codigos_consultados)
+    ? String(context.acabamentos_do_item_codigos_consultados[0] ?? "item informado")
+    : "item informado";
+  const total = context.acabamentos_do_item_total;
+
+  if (total === 0) {
+    return `Fio aqui para ajudar.\n\nO item **${code}** não possui acabamentos vinculados no Auge, conforme a consulta direta na base sincronizada.`;
+  }
+
+  const uniqueRows = Array.from(
+    new Map(rows.map((row) => [String(row.cd_acabamento ?? row.codigo_auge), row])).values(),
+  );
+  const lines = uniqueRows
+    .slice(0, 30)
+    .map((row) => `- **${row.codigo_auge ?? row.cd_acabamento}** — ${row.nm_acabamento ?? "Sem nome"}${row.cancelado ? " _(cancelado)_" : ""}`)
+    .join("\n");
+
+  return `Fio aqui para ajudar.\n\nO item **${code}** está vinculado a **${total} acabamentos** no Auge.\n\n${lines}`;
 }
 
 async function buildAgentContext(admin: ReturnType<typeof createClient>, text: string) {
