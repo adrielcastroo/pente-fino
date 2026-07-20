@@ -13,6 +13,8 @@ import {
   
   ArrowRightLeft,
   PackagePlus,
+  Palette,
+
 } from 'lucide-react';
 
 import ModuleSidebar, { type ModuleSidebarConfig } from '@/components/ModuleSidebar';
