@@ -14,6 +14,7 @@ import {
   ArrowRightLeft,
   PackagePlus,
   Palette,
+  BookOpen,
 
 } from 'lucide-react';
 
