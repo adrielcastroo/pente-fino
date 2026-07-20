@@ -362,7 +362,59 @@ export default function FichaItemDialog({ codigo, open, onOpenChange }: Props) {
                 </Card>
               </TabsContent>
 
-              {/* Posições no estoque físico */}
+              {/* Acabamentos que contêm este item */}
+              <TabsContent value="acabamentos" className="mt-2">
+                <Card className="overflow-hidden">
+                  <table className="w-full text-xs">
+                    <thead className="bg-muted"><tr className="text-left">
+                      <th className="p-2">Acabamento</th>
+                      <th className="p-2">Classe / Combinação</th>
+                      <th className="p-2">Descrição</th>
+                      <th className="p-2">Kits</th>
+                      <th className="p-2 w-24 text-right">Ações</th>
+                    </tr></thead>
+                    <tbody>
+                      {acabamentos.map((a: any) => {
+                        const kits = [1, 2, 3, 4, 5]
+                          .map((n) => a[`nm_kit_complementar_${n}`])
+                          .filter(Boolean);
+                        const ac = a.auge_acabamentos ?? {};
+                        return (
+                          <tr key={a.cd_acabamento_item} className="border-t align-top">
+                            <td className="p-2">
+                              <div className="font-medium">{ac.nm_acabamento ?? a.cd_acabamento}</div>
+                              <div className="font-mono text-[10px] text-muted-foreground">#{a.cd_acabamento}</div>
+                              {ac.id_cancelado === 'S' && <Badge variant="destructive" className="text-[9px] mt-1">Cancelado</Badge>}
+                            </td>
+                            <td className="p-2 text-[11px]">
+                              {ac.nm_classe1 && <div>{ac.nm_classe1}</div>}
+                              {ac.nm_combinacao1 && <div className="text-muted-foreground">{ac.nm_combinacao1}</div>}
+                            </td>
+                            <td className="p-2 text-[11px]">
+                              <div>{a.ds_item_acabamento ?? '—'}</div>
+                              {a.ds_item_acabamento_reduzida && (
+                                <div className="text-muted-foreground text-[10px]">↳ {a.ds_item_acabamento_reduzida}</div>
+                              )}
+                            </td>
+                            <td className="p-2 text-[10px] text-muted-foreground">
+                              {kits.length ? kits.join(', ') : '—'}
+                            </td>
+                            <td className="p-2 text-right">
+                              <Button size="sm" variant="outline" className="h-7 gap-1 text-[11px]" onClick={() => setEditingAcab(a)}>
+                                <Pencil className="h-3 w-3" /> Editar
+                              </Button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                      {acabamentos.length === 0 && (
+                        <tr><td colSpan={5} className="p-4 text-center text-muted-foreground">Este item não está em nenhum acabamento sincronizado. Rode a sincronização em /estoque/acabamentos.</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </Card>
+              </TabsContent>
+
               <TabsContent value="posicoes" className="mt-2">
                 <Card className="overflow-hidden">
                   <table className="w-full text-xs">
