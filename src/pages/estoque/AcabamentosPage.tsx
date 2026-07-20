@@ -123,6 +123,7 @@ export default function AcabamentosPage() {
     if (!t) return acabamentos;
     return acabamentos.filter((a: any) =>
       (a.nm_acabamento ?? '').toLowerCase().includes(t) ||
+      (a.chave_acabamento ?? '').toLowerCase().includes(t) ||
       (a.cd_acabamento ?? '').toLowerCase().includes(t) ||
       (a.nm_classe1 ?? '').toLowerCase().includes(t) ||
       (a.nm_combinacao1 ?? '').toLowerCase().includes(t),
