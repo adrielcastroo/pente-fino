@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Palette, RefreshCw, Search, Pencil, Loader2, AlertTriangle, CheckCircle2, X } from 'lucide-react';
+import { Palette, RefreshCw, Search, Pencil, Loader2, AlertTriangle, CheckCircle2, X, ArrowDownAZ, ArrowUpAZ, ArrowUp01, ArrowDown01 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
