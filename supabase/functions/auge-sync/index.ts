@@ -2726,13 +2726,41 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+    // -------------- ABREVIAÇÕES --------------
+    if (action === 'sync_abreviacoes') {
+      const task = syncAbreviacoesFull(admin, auth, triggeredBy).catch((e) =>
+        console.error('sync_abreviacoes error', getErrorMessage(e))
+      );
+      // @ts-ignore
+      if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime?.waitUntil) EdgeRuntime.waitUntil(task);
+      return new Response(JSON.stringify({ ok: true, background: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
+    // -------------- DICIONÁRIOS (classes/subclasses/combinacoes/tags) --------------
+    if (action === 'sync_dicionarios') {
+      const task = syncDicionariosFull(admin, auth, triggeredBy).catch((e) =>
+        console.error('sync_dicionarios error', getErrorMessage(e))
+      );
+      // @ts-ignore
+      if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime?.waitUntil) EdgeRuntime.waitUntil(task);
+      return new Response(JSON.stringify({ ok: true, background: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
-
-
-
-
-
+    // -------------- CONSULTA PARAMETRIZADA (modTI/gerirConsulta) --------------
+    if (action === 'run_consulta') {
+      let payload: any = {};
+      try { payload = await req.json(); } catch { /* ignore */ }
+      const idConsulta = String(payload?.idConsulta ?? url.searchParams.get('idConsulta') ?? '').trim();
+      if (!idConsulta) throw new Error('idConsulta é obrigatório.');
+      const data = await runConsultaAuge(auth, idConsulta);
+      return new Response(JSON.stringify({ ok: true, ...data }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
 
     if (action === 'lotes_live' || action === 'series_live') {
