@@ -118,7 +118,7 @@ const SENSITIVE_PATTERNS: Array<{ id: string; re: RegExp; minLevel: number; labe
     re: /\b(apagar|deletar|excluir|remover|zerar|limpar)\s+(tudo|todos|todas|toda|geral|base|banco|dados|hist[oó]rico|cadastros?|itens|registros)/i },
   // Escrita no Auge / Pente Fino — mínimo operador.
   { id: "write_auge", minLevel: 4, label: "ação de escrita no Auge/Pente Fino",
-    re: /\b(criar|cadastrar|efetivar|confirmar|registrar|lançar|lancar|dar\s+sa[ií]da|dar\s+entrada|transferir|estornar|editar|alterar|atualizar|corrigir|ajustar|mover|realocar|movimentar)\s+(transfer|sa[ií]da|entrada|estoque|item|itens|lote|movimenta|acabament|reserva|romaneio|carga|nfe|nf-e|nota|cadastro|posi[cç][aã]o|endere[cç]o|kardex)/i },
+    re: /\b(criar|cadastrar|efetivar|confirmar|registrar|lançar|lancar|dar\s+sa[ií]da|dar\s+entrada|transferir|estornar|editar|alterar|atualizar|corrigir|ajustar|mover|realocar|movimentar|aprovar|rejeitar)\s+(transfer|sa[ií]da|entrada|estoque|item|itens|lote|movimenta|acabament|reserva|romaneio|carga|nfe|nf-e|nota|cadastro|posi[cç][aã]o|endere[cç]o|kardex|abreviac|abreviaç|dicion[aá]rio|solicita)/i },
   { id: "secrets", minLevel: 1, label: "acesso a segredos/credenciais",
     re: /\b(api[_\s-]?key|senha|password|token|secret|credenci|service[_\s-]?role|chave\s+privada|env\b|\.env)/i },
   { id: "sql_direct", minLevel: 1, label: "execução direta de SQL",
