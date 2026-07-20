@@ -52,6 +52,7 @@ const ComprasRomaneioStarcolorEditorPage = lazy(() => import("@/pages/compras/Ro
 
 const EntradasPage = lazy(() => import("@/pages/EntradasPage"));
 const AcabamentosPage = lazy(() => import("@/pages/estoque/AcabamentosPage"));
+const DicionarioPage = lazy(() => import("@/pages/estoque/DicionarioPage"));
 const TransferenciasPage = lazy(() => import("@/pages/TransferenciasPage"));
 
 import RoleHomeRedirect from "@/components/auth/RoleHomeRedirect";
