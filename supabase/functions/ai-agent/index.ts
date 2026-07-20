@@ -269,7 +269,7 @@ async function buildAgentContext(admin: ReturnType<typeof createClient>, text: s
         const { data, error } = await admin
           .from("auge_acabamento_itens")
           .select(
-            "cd_acabamento_item,cd_acabamento,cd_item_acabamento,ds_item_acabamento,ds_item_acabamento_reduzida,nm_kit_complementar_1,nm_kit_complementar_2,nm_kit_complementar_3,nm_kit_complementar_4,nm_kit_complementar_5,auge_acabamentos(cd_acabamento,chave_acabamento,nm_acabamento,nm_classe1,nm_combinacao1,id_cancelado)",
+            "cd_acabamento_item,cd_acabamento,cd_item_acabamento,ds_item_acabamento,ds_item_acabamento_original,ds_item_acabamento_reduzida,nm_kit_complementar_1,nm_kit_complementar_2,nm_kit_complementar_3,nm_kit_complementar_4,nm_kit_complementar_5,auge_acabamentos(cd_acabamento,chave_acabamento,nm_acabamento,nm_classe1,nm_combinacao1,id_cancelado)",
           )
           .in("cd_item_acabamento", alvos)
           .limit(60);
