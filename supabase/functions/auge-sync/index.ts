@@ -2386,6 +2386,44 @@ function mapDicionarioRow(tipo: string, r: any) {
   return { tipo, cd, nm, cd_pai, nm_pai, raw: r, synced_at: new Date().toISOString() };
 }
 
+async function salvarAbreviacaoAuge(auth: any, params: {
+  cdAbreviacao?: string | null;
+  dsAtual: string;
+  dsAbreviada: string;
+  idTipoAbreviacao?: string | number;
+}): Promise<any> {
+  const body = new URLSearchParams();
+  body.set('idAcao', '1');
+  body.set('cdAbreviacao', params.cdAbreviacao ? String(params.cdAbreviacao) : '');
+  body.set('dsAtual', params.dsAtual);
+  body.set('dsAbreviada', params.dsAbreviada);
+  body.set('idTipoAbreviacao', String(params.idTipoAbreviacao ?? 1));
+  const txt = await postAugePhp(
+    auth,
+    '/l.unilux/modInventario/Controle/ctlAbreviacao.php',
+    body,
+    '/l.unilux/modInventario/manterAbreviacao.php',
+  );
+  let j: any = null;
+  try { j = JSON.parse(txt); } catch { j = { raw: txt.slice(0, 400) }; }
+  return j;
+}
+
+async function excluirAbreviacaoAuge(auth: any, cdAbreviacao: string): Promise<any> {
+  const body = new URLSearchParams();
+  body.set('idAcao', '3');
+  body.set('cdAbreviacao', String(cdAbreviacao));
+  const txt = await postAugePhp(
+    auth,
+    '/l.unilux/modInventario/Controle/ctlAbreviacao.php',
+    body,
+    '/l.unilux/modInventario/manterAbreviacao.php',
+  );
+  let j: any = null;
+  try { j = JSON.parse(txt); } catch { j = { raw: txt.slice(0, 400) }; }
+  return j;
+}
+
 async function syncDicionariosFull(admin: any, auth: any, triggeredBy: string | null) {
   const started = new Date().toISOString();
   const runIns = await admin.from('auge_sync_runs').insert({
