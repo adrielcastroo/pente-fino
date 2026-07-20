@@ -18,12 +18,6 @@ function fmtBR(n: number | null | undefined) {
   return new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n));
 }
 
-function clampLimit(value: unknown, fallback: number, max: number) {
-  const n = Number(value ?? fallback);
-  if (!Number.isFinite(n)) return fallback;
-  return Math.max(1, Math.min(Math.trunc(n), max));
-}
-
 function errorPayload(err: unknown) {
   if (err instanceof Error) return { error: err.message, stack: err.stack };
   return { error: typeof err === "string" ? err : JSON.stringify(err) };
