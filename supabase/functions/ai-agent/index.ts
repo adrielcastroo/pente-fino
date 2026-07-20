@@ -291,8 +291,16 @@ async function buildAgentContext(admin: ReturnType<typeof createClient>, text: s
         }
       }
 
-      // Se o usuário quer navegar pela lista mestre de acabamentos por nome/classe
-      if (wantsAcabamentos && tokens.length > 0) {
+      // Se o usuário quer navegar pela lista mestre de acabamentos por nome/classe.
+      // Também injeta contagem global + amostra quando não há tokens (ex.: "quantos e quais os códigos dos acabamentos existentes?").
+      if (wantsAcabamentos) {
+        const [{ count: totalAcab }, { count: ativosAcab }] = await Promise.all([
+          admin.from("auge_acabamentos").select("cd_acabamento", { count: "exact", head: true }),
+          admin.from("auge_acabamentos").select("cd_acabamento", { count: "exact", head: true }).neq("id_cancelado", "S"),
+        ]);
+        context.acabamentos_total = totalAcab ?? 0;
+        context.acabamentos_ativos = ativosAcab ?? 0;
+
         const acabFilters = tokens.flatMap((token) => {
           const safe = sanitizePostgrestValue(token);
           if (!safe) return [];
@@ -300,16 +308,18 @@ async function buildAgentContext(admin: ReturnType<typeof createClient>, text: s
             `nm_acabamento.ilike.%${safe}%`,
             `nm_classe1.ilike.%${safe}%`,
             `nm_combinacao1.ilike.%${safe}%`,
+            `cd_acabamento.ilike.%${safe}%`,
           ];
         });
-        if (acabFilters.length > 0) {
-          const { data } = await admin
-            .from("auge_acabamentos")
-            .select("cd_acabamento,nm_acabamento,nm_classe1,nm_combinacao1,id_cancelado")
-            .or(acabFilters.join(","))
-            .limit(20);
-          context.acabamentos_encontrados = data ?? [];
-        }
+        const baseSel = admin
+          .from("auge_acabamentos")
+          .select("cd_acabamento,nm_acabamento,nm_classe1,nm_combinacao1,id_cancelado")
+          .order("nm_acabamento", { ascending: true })
+          .limit(acabFilters.length > 0 ? 40 : 200);
+        const { data: encontrados } = acabFilters.length > 0
+          ? await baseSel.or(acabFilters.join(","))
+          : await baseSel;
+        context.acabamentos_encontrados = encontrados ?? [];
       }
 
       // Abreviações e dicionário do Auge
