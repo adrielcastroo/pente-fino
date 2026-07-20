@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { BookOpen, RefreshCw, Plus, Search, CheckCircle2, XCircle, Loader2, Trash2 } from 'lucide-react';
+import { BookOpen, RefreshCw, Plus, Search, CheckCircle2, XCircle, Loader2, Trash2, Send } from 'lucide-react';
 import SolicitarAbreviacaoDialog from '@/components/abreviacoes/SolicitarAbreviacaoDialog';
 import { useAuth } from '@/hooks/use-auth';
 
