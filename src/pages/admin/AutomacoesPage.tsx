@@ -440,7 +440,7 @@ function NovaAbreviacaoCard() {
   }, [dsAtual]);
 
   // Aplica a sugestão automaticamente enquanto o usuário não editou o campo manualmente
-  useMemo(() => {
+  useEffect(() => {
     if (sugestao && !abrevDirty) setDsAbreviada(sugestao);
   }, [sugestao, abrevDirty]);
 
