@@ -595,7 +595,8 @@ export default function AutomacoesPage() {
               <CalendarClock className="h-4 w-4" /> Entrega Após
             </TabsTrigger>
           </TabsList>
-          <TabsContent value="necessidade" className="mt-0">
+          <TabsContent value="necessidade" className="mt-0 space-y-4">
+            <NecessidadeCronCard />
             <NecessidadeCard />
           </TabsContent>
           <TabsContent value="entrega-apos" className="mt-0">
