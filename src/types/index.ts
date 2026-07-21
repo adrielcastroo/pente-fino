@@ -125,12 +125,15 @@ export interface AppStats {
       reserved: number;
       blocked: number;
     };
+    chao: {
+      used: number;
+    };
     madeira: {
       used: number;
       total: number;
       reserved: number;
       blocked: number;
-    };
+    } | null;
   };
 }
 
