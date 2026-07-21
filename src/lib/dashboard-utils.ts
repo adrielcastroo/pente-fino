@@ -155,6 +155,7 @@ export const computeStats = (
         total: stats_estoque?.tecido?.total || TOTAL_SLOTS,
         reserved: stats_estoque?.tecido?.reserved || 0,
         blocked: stats_estoque?.tecido?.blocked || 0,
+        semEspaco: stats_estoque?.tecido?.semEspaco || 0,
       },
       chao: {
         used: stats_estoque?.chao?.used || 0,
