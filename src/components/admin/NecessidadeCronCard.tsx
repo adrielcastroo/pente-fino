@@ -1,22 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
-import { CalendarClock, Loader2, PlayCircle, CheckCircle2, XCircle, MinusCircle, Save, KeyRound } from 'lucide-react';
+import { CalendarClock, Loader2, PlayCircle, CheckCircle2, XCircle, MinusCircle, Save, Repeat } from 'lucide-react';
 
 const DESTINOS: string[] = ['18', '20', 'EMBALAGE', 'ESPE.1', 'ESPE.2', 'PH', 'PVT'];
-
-const PRESETS: { label: string; expr: string }[] = [
-  { label: 'Seg–Sex 07:00 BRT', expr: '0 10 * * 1-5' },
-  { label: 'Seg–Sex 06:00 BRT', expr: '0 9 * * 1-5' },
-  { label: 'Seg–Sex 08:00 BRT', expr: '0 11 * * 1-5' },
-  { label: 'Todo dia 07:00 BRT', expr: '0 10 * * *' },
-];
-
 
 type ResultItem = {
   destino: string;
@@ -36,28 +29,131 @@ type Run = {
   status: string;
 };
 
+const WEEKDAYS = [
+  { key: 0, label: 'Dom' },
+  { key: 1, label: 'Seg' },
+  { key: 2, label: 'Ter' },
+  { key: 3, label: 'Qua' },
+  { key: 4, label: 'Qui' },
+  { key: 5, label: 'Sex' },
+  { key: 6, label: 'Sáb' },
+];
+
+// BRT (UTC-3) -> UTC: add 3 hours
+function brtToUtc(hh: number, mm: number, dayBrt?: number, monthBrt?: number, yearBrt?: number) {
+  if (dayBrt && monthBrt && yearBrt) {
+    const local = new Date(Date.UTC(yearBrt, monthBrt - 1, dayBrt, hh + 3, mm));
+    return {
+      minute: local.getUTCMinutes(),
+      hour: local.getUTCHours(),
+      day: local.getUTCDate(),
+      month: local.getUTCMonth() + 1,
+    };
+  }
+  let hour = hh + 3;
+  let dayShift = 0;
+  if (hour >= 24) { hour -= 24; dayShift = 1; }
+  return { minute: mm, hour, dayShift };
+}
+
+// Parse cron -> UI state (best effort)
+function parseCron(expr: string) {
+  const parts = expr.trim().split(/\s+/);
+  if (parts.length !== 5) return null;
+  const [m, h, dom, mon, dow] = parts;
+  const mi = parseInt(m, 10);
+  const hu = parseInt(h, 10);
+  if (isNaN(mi) || isNaN(hu)) return null;
+  // Convert UTC -> BRT
+  let brtH = hu - 3;
+  let dayShift = 0;
+  if (brtH < 0) { brtH += 24; dayShift = -1; }
+
+  const recurrent = dom === '*' || dow !== '*';
+  if (recurrent) {
+    let days: number[] = [];
+    if (dow === '*') days = [0,1,2,3,4,5,6];
+    else if (dow.includes('-')) {
+      const [a, b] = dow.split('-').map(n => parseInt(n, 10));
+      for (let i = a; i <= b; i++) days.push(i);
+    } else {
+      days = dow.split(',').map(n => parseInt(n, 10)).filter(n => !isNaN(n));
+    }
+    // Adjust for dayShift on weekdays
+    if (dayShift !== 0) {
+      days = days.map(d => (d + dayShift + 7) % 7);
+    }
+    return { mode: 'recurrent' as const, time: `${String(brtH).padStart(2,'0')}:${String(mi).padStart(2,'0')}`, days };
+  }
+  return { mode: 'once' as const, time: `${String(brtH).padStart(2,'0')}:${String(mi).padStart(2,'0')}`, day: parseInt(dom,10), month: parseInt(mon,10) };
+}
+
 export default function NecessidadeCronCard() {
   const [running, setRunning] = useState(false);
   const [lastRun, setLastRun] = useState<Run | null>(null);
-  const [cronExpr, setCronExpr] = useState<string>('0 10 * * 1-5');
   const [cronCurrent, setCronCurrent] = useState<string>('');
   const [savingCron, setSavingCron] = useState(false);
+
+  // UI state
+  const [recurrent, setRecurrent] = useState<boolean>(true);
+  const [time, setTime] = useState<string>('07:00');
+  const [days, setDays] = useState<number[]>([1, 2, 3, 4, 5]);
+  const today = new Date();
+  const isoToday = today.toISOString().slice(0, 10);
+  const [date, setDate] = useState<string>(isoToday);
+
+  const cronExpr = useMemo(() => {
+    const [hStr, mStr] = time.split(':');
+    const hh = parseInt(hStr, 10);
+    const mm = parseInt(mStr, 10);
+    if (isNaN(hh) || isNaN(mm)) return '';
+
+    if (recurrent) {
+      if (days.length === 0) return '';
+      const conv = brtToUtc(hh, mm);
+      const shifted = conv.dayShift ? days.map(d => (d + conv.dayShift + 7) % 7) : days;
+      const dowSorted = [...new Set(shifted)].sort((a,b)=>a-b);
+      // Detect consecutive range
+      let dowStr: string;
+      const isRange = dowSorted.length > 1 && dowSorted.every((d, i) => i === 0 || d === dowSorted[i-1] + 1);
+      if (dowSorted.length === 7) dowStr = '*';
+      else if (isRange) dowStr = `${dowSorted[0]}-${dowSorted[dowSorted.length-1]}`;
+      else dowStr = dowSorted.join(',');
+      return `${conv.minute} ${conv.hour} * * ${dowStr}`;
+    } else {
+      const [y, mo, d] = date.split('-').map(n => parseInt(n, 10));
+      if (!y || !mo || !d) return '';
+      const conv = brtToUtc(hh, mm, d, mo, y);
+      return `${conv.minute} ${conv.hour} ${conv.day} ${conv.month} *`;
+    }
+  }, [recurrent, time, days, date]);
 
   const carregarCron = async () => {
     const { data } = await (supabase as any).rpc('get_necessidade_cron');
     const row = Array.isArray(data) ? data[0] : data;
     if (row?.schedule) {
       setCronCurrent(row.schedule);
-      setCronExpr(row.schedule);
+      const parsed = parseCron(row.schedule);
+      if (parsed) {
+        setTime(parsed.time);
+        if (parsed.mode === 'recurrent') {
+          setRecurrent(true);
+          setDays(parsed.days);
+        } else {
+          setRecurrent(false);
+          const y = new Date().getFullYear();
+          setDate(`${y}-${String(parsed.month).padStart(2,'0')}-${String(parsed.day).padStart(2,'0')}`);
+        }
+      }
     }
   };
 
   const salvarCron = async () => {
-    if (!cronExpr.trim()) { toast.error('Informe uma expressão cron.'); return; }
+    if (!cronExpr.trim()) { toast.error('Configuração inválida.'); return; }
     setSavingCron(true);
     const t = toast.loading('Atualizando agendamento…');
     try {
-      const { error } = await (supabase as any).rpc('set_necessidade_cron', { cron_expr: cronExpr.trim() });
+      const { error } = await (supabase as any).rpc('set_necessidade_cron', { cron_expr: cronExpr });
       if (error) { toast.error(error.message ?? 'Falha ao salvar cron.', { id: t }); return; }
       toast.success('Agendamento atualizado.', { id: t });
       await carregarCron();
@@ -78,7 +174,6 @@ export default function NecessidadeCronCard() {
   };
 
   useEffect(() => { carregarUltimaRun(); carregarCron(); }, []);
-
 
   const executarAgora = async () => {
     setRunning(true);
@@ -110,7 +205,23 @@ export default function NecessidadeCronCard() {
     }
   };
 
+  const toggleDay = (d: number) => {
+    setDays(prev => prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d]);
+  };
+
   const resultados: ResultItem[] = lastRun?.detalhes?.resultados ?? [];
+  const changed = cronExpr && cronExpr !== cronCurrent.trim();
+
+  const resumo = useMemo(() => {
+    if (!cronExpr) return 'Configuração incompleta';
+    if (recurrent) {
+      if (days.length === 0) return 'Selecione ao menos um dia';
+      const labels = [...days].sort((a,b)=>a-b).map(d => WEEKDAYS[d].label).join(', ');
+      return `Recorrente: ${labels} às ${time} (BRT)`;
+    }
+    const [y, mo, d] = date.split('-');
+    return `Uma vez: ${d}/${mo}/${y} às ${time} (BRT)`;
+  }, [cronExpr, recurrent, days, time, date]);
 
   return (
     <Card>
@@ -122,9 +233,8 @@ export default function NecessidadeCronCard() {
             </CardTitle>
             <CardDescription className="mt-1">
               Gera rascunhos no Auge com origem sempre <span className="font-mono">01 — Central</span>.
-              Só entram itens com <strong>saldo em 01 &gt; 0</strong>. Configure o horário abaixo.
+              Só entram itens com <strong>saldo em 01 &gt; 0</strong>.
             </CardDescription>
-
             <div className="mt-2 flex flex-wrap gap-1.5">
               {DESTINOS.map(d => (
                 <Badge key={d} variant="secondary" className="font-mono text-[10px]">{d}</Badge>
@@ -138,34 +248,79 @@ export default function NecessidadeCronCard() {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="rounded-md border p-3 space-y-2 bg-muted/10">
-          <Label className="text-xs flex items-center gap-1.5"><CalendarClock className="h-3.5 w-3.5" /> Expressão cron (UTC)</Label>
-          <div className="flex flex-wrap gap-2">
-            <Input value={cronExpr} onChange={(e) => setCronExpr(e.target.value)}
-              placeholder="0 10 * * 1-5" className="font-mono text-xs h-9 max-w-[220px]" />
-            <Button onClick={salvarCron} disabled={savingCron || cronExpr.trim() === cronCurrent.trim()} size="sm" className="gap-1.5 h-9">
-              {savingCron ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-              Salvar
-            </Button>
-            {cronCurrent && (
-              <span className="text-[11px] text-muted-foreground self-center">
-                Atual: <span className="font-mono text-foreground">{cronCurrent}</span>
-              </span>
+        <div className="rounded-md border p-4 space-y-4 bg-muted/10">
+          {/* Recurrence toggle */}
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Repeat className="h-4 w-4 text-muted-foreground" />
+              <div>
+                <Label className="text-sm">Recorrente</Label>
+                <p className="text-[11px] text-muted-foreground">
+                  {recurrent ? 'Repete nos dias selecionados' : 'Executa uma única vez na data escolhida'}
+                </p>
+              </div>
+            </div>
+            <Switch checked={recurrent} onCheckedChange={setRecurrent} />
+          </div>
+
+          {/* Time + Date */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs">Horário (BRT)</Label>
+              <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="h-10" />
+            </div>
+            {!recurrent && (
+              <div className="space-y-1.5">
+                <Label className="text-xs">Data</Label>
+                <Input type="date" value={date} min={isoToday} onChange={(e) => setDate(e.target.value)} className="h-10" />
+              </div>
             )}
           </div>
-          <div className="flex flex-wrap gap-1.5 pt-1">
-            {PRESETS.map(p => (
-              <Button key={p.expr} variant="outline" size="sm" className="h-7 text-[11px]"
-                onClick={() => setCronExpr(p.expr)}>
-                {p.label} <span className="ml-1 font-mono text-muted-foreground">{p.expr}</span>
-              </Button>
-            ))}
-          </div>
-          <p className="text-[10px] text-muted-foreground">
-            Horário em UTC. Ex.: <span className="font-mono">0 10 * * 1-5</span> = seg–sex às 07:00 BRT.
-          </p>
-        </div>
 
+          {/* Weekday chips */}
+          {recurrent && (
+            <div className="space-y-1.5">
+              <Label className="text-xs">Dias da semana</Label>
+              <div className="flex flex-wrap gap-1.5">
+                {WEEKDAYS.map(w => {
+                  const active = days.includes(w.key);
+                  return (
+                    <Button
+                      key={w.key}
+                      type="button"
+                      size="sm"
+                      variant={active ? 'default' : 'outline'}
+                      className="h-8 min-w-[52px] text-xs"
+                      onClick={() => toggleDay(w.key)}
+                    >
+                      {w.label}
+                    </Button>
+                  );
+                })}
+                <Button type="button" size="sm" variant="ghost" className="h-8 text-[11px]"
+                  onClick={() => setDays([1,2,3,4,5])}>Seg–Sex</Button>
+                <Button type="button" size="sm" variant="ghost" className="h-8 text-[11px]"
+                  onClick={() => setDays([0,1,2,3,4,5,6])}>Todos</Button>
+              </div>
+            </div>
+          )}
+
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t">
+            <div className="text-[11px] text-muted-foreground">
+              {resumo}
+              {cronExpr && <span className="ml-2 font-mono text-foreground/70">({cronExpr} UTC)</span>}
+            </div>
+            <Button onClick={salvarCron} disabled={savingCron || !changed} size="sm" className="gap-1.5 h-9">
+              {savingCron ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+              Salvar agendamento
+            </Button>
+          </div>
+          {cronCurrent && (
+            <p className="text-[10px] text-muted-foreground">
+              Cron atual salvo: <span className="font-mono text-foreground">{cronCurrent}</span>
+            </p>
+          )}
+        </div>
 
         {!lastRun && (
           <div className="rounded-md border bg-muted/20 px-3 py-6 text-center text-xs text-muted-foreground">
