@@ -128,7 +128,10 @@ function ChatWindow({ threadId }: { threadId: string }) {
               >
                 {m.parts.map((part, i) => {
                   if (part.type === "text") {
-                    const { spec, cleaned } = extractAskUser(part.text);
+                    const { spec, cleaned: afterAsk } = extractAskUser(part.text);
+                    const { items: suggestions, cleaned } = extractSuggestions(afterAsk);
+                    const isLastAssistant =
+                      m.role === "assistant" && m.id === lastMessage?.id;
                     return (
                       <div key={i}>
                         {cleaned && <MessageResponse>{cleaned}</MessageResponse>}
@@ -141,9 +144,19 @@ function ChatWindow({ threadId }: { threadId: string }) {
                             }
                           />
                         )}
+                        {isLastAssistant && !isLoading && suggestions.length > 0 && (
+                          <Suggestions
+                            items={suggestions}
+                            disabled={isLoading}
+                            onPick={(text) =>
+                              void sendMessage({ parts: [{ type: "text", text }] })
+                            }
+                          />
+                        )}
                       </div>
                     );
                   }
+
                   if (part.type?.startsWith("tool-")) {
                     const p: any = part;
                     return (
