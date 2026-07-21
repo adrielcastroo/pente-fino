@@ -2971,13 +2971,21 @@ Deno.serve(async (req) => {
 
       // Preview: apenas devolve a tabela.
       if (acao === 'preview') {
-        const preview = rows.map((r) => ({
-          chave_acabamento: r.auge_acabamentos?.chave_acabamento ?? r.cd_acabamento,
-          nm_acabamento: r.auge_acabamentos?.nm_acabamento ?? null,
-          cancelado: r.auge_acabamentos?.id_cancelado === 'S',
-          descricao_atual: r.ds_item_acabamento ?? r.ds_item_acabamento_original ?? '',
-          descricao_reduzida_atual: r.ds_item_acabamento_reduzida ?? '',
-        }));
+        const preview = rows.map((r) => {
+          const desc = r.ds_item_acabamento ?? r.ds_item_acabamento_original ?? '';
+          const m = desc.match(/\(\s*Ent[_ ]?Ap[_ ]?(\d{1,2}\/\d{1,2}\/\d{2,4})\s*\)/i);
+          return {
+            cd_acabamento_item: r.cd_acabamento_item,
+            cd_acabamento: r.cd_acabamento,
+            cd_item_acabamento: r.cd_item_acabamento,
+            chave_acabamento: r.auge_acabamentos?.chave_acabamento ?? r.cd_acabamento,
+            nm_acabamento: r.auge_acabamentos?.nm_acabamento ?? null,
+            cancelado: r.auge_acabamentos?.id_cancelado === 'S',
+            descricao_atual: desc,
+            descricao_reduzida: r.ds_item_acabamento_reduzida ?? '',
+            entrega_apos_atual: m ? m[1] : null,
+          };
+        });
         return new Response(JSON.stringify({
           ok: true, acao, codigo_item: codigoItem, total: preview.length, rows: preview,
         }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
