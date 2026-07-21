@@ -11,8 +11,11 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { PageShell, PageHeader } from '@/components/expedicao/ui';
+import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { CalendarClock, Loader2, PlayCircle, Search, Sparkles, CheckCircle2, XCircle, MinusCircle } from 'lucide-react';
+import { CalendarClock, Loader2, PlayCircle, Search, Sparkles, CheckCircle2, XCircle, MinusCircle, ExternalLink, ArrowRight } from 'lucide-react';
+
+const AUGE_BASE_URL = 'https://unilux.auge.app';
 
 type Acao = 'atualizar' | 'adicionar' | 'remover';
 
@@ -20,6 +23,27 @@ function extractEntregaApos(desc: string | null | undefined): string | null {
   if (!desc) return null;
   const m = desc.match(/\(\s*Ent[_ ]?Ap[_ ]?(\d{2}\/\d{2}\/\d{2,4})\s*\)/i);
   return m ? m[1] : null;
+}
+
+const ENT_AP_RE = /\s*\(\s*Ent[_ ]?Ap[_ ]?(\d{2}\/\d{2}\/\d{2,4})\s*\)\s*/gi;
+const ABREV_RE = /\s*E\d{1,2}\/\d{1,2}\s*$/i;
+
+function abbrevFromDate(data: string): string {
+  const m = data.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+  if (!m) return '';
+  return `E${Number(m[1])}/${Number(m[2])}`;
+}
+
+function previewDescricao(desc: string, acao: Acao, novaData: string | null): string {
+  const base = (desc || '').replace(ENT_AP_RE, ' ').replace(/\s+/g, ' ').trim();
+  if (acao === 'remover' || !novaData) return base;
+  return `${base} (Ent_Ap_${novaData})`;
+}
+
+function previewReduzida(reduz: string, acao: Acao, novaData: string | null): string {
+  const base = (reduz || '').replace(ABREV_RE, '').trim();
+  if (acao === 'remover' || !novaData) return base;
+  return `${base}${abbrevFromDate(novaData)}`;
 }
 
 type PreviewRow = {
@@ -105,6 +129,9 @@ function EntregaAposCard() {
   const codigoNormalizado = useMemo(() => normalizeCodigo(codigoInput), [codigoInput]);
   const dataNormalizada = useMemo(() => normalizeData(dataInput), [dataInput]);
   const precisaData = acao === 'atualizar' || acao === 'adicionar';
+  const mostraPreview = acao === 'remover' || !!dataNormalizada;
+
+  const [execProgress, setExecProgress] = useState(0);
 
   const canPreview = !!codigoNormalizado && !previewLoading;
   const canExecute =
@@ -145,6 +172,12 @@ function EntregaAposCard() {
       return;
     }
     setExecLoading(true);
+    setResult(null);
+    setExecProgress(8);
+    // Simulação de progresso enquanto o backend processa em lote
+    const progressTimer = setInterval(() => {
+      setExecProgress((p) => (p < 90 ? p + Math.max(1, Math.floor((92 - p) / 8)) : p));
+    }, 350);
     try {
       const resp = await callAugeEntregaApos({
         codigo_item: previewCodigo,
@@ -162,6 +195,9 @@ function EntregaAposCard() {
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Erro inesperado.');
     } finally {
+      clearInterval(progressTimer);
+      setExecProgress(100);
+      setTimeout(() => setExecProgress(0), 600);
       setExecLoading(false);
     }
   };
@@ -220,27 +256,52 @@ function EntregaAposCard() {
                 Item <span className="font-mono">{previewCodigo}</span> — {previewRows.length} acabamento(s)
               </span>
             </div>
-            <div className="max-h-[360px] overflow-auto">
+            <div className="max-h-[420px] overflow-auto">
               <table className="w-full text-xs">
-                <thead className="bg-muted/20 text-muted-foreground">
+                <thead className="bg-muted/20 text-muted-foreground sticky top-0">
                   <tr>
                     <th className="px-3 py-2 text-left font-medium">Chave</th>
                     <th className="px-3 py-2 text-left font-medium">Acabamento</th>
                     <th className="px-3 py-2 text-left font-medium">Descrição atual</th>
+                    <th className="px-3 py-2 text-left font-medium">Descrição reduzida</th>
                     <th className="px-3 py-2 text-left font-medium">Ent. após</th>
+                    {mostraPreview && (
+                      <>
+                        <th className="px-3 py-2 text-left font-medium bg-primary/5">Nova descrição</th>
+                        <th className="px-3 py-2 text-left font-medium bg-primary/5">Nova reduzida</th>
+                      </>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
-                  {previewRows.map((r) => (
-                    <tr key={r.cd_acabamento_item} className={r.cancelado ? 'opacity-50' : ''}>
-                      <td className="px-3 py-2 font-mono">{r.chave_acabamento}</td>
-                      <td className="px-3 py-2">{r.nm_acabamento}</td>
-                      <td className="px-3 py-2">{r.descricao_atual}</td>
-                      <td className="px-3 py-2 font-mono">{r.entrega_apos_atual ?? extractEntregaApos(r.descricao_atual) ?? '—'}</td>
-                    </tr>
-                  ))}
+                  {previewRows.map((r) => {
+                    const novaDesc = mostraPreview ? previewDescricao(r.descricao_atual, acao, dataNormalizada) : '';
+                    const novaRed = mostraPreview ? previewReduzida(r.descricao_reduzida, acao, dataNormalizada) : '';
+                    return (
+                      <tr key={r.cd_acabamento_item} className={r.cancelado ? 'opacity-50' : ''}>
+                        <td className="px-3 py-2 font-mono">{r.chave_acabamento}</td>
+                        <td className="px-3 py-2">{r.nm_acabamento}</td>
+                        <td className="px-3 py-2">{r.descricao_atual}</td>
+                        <td className="px-3 py-2 font-mono text-[11px]">{r.descricao_reduzida || '—'}</td>
+                        <td className="px-3 py-2 font-mono">{r.entrega_apos_atual ?? extractEntregaApos(r.descricao_atual) ?? '—'}</td>
+                        {mostraPreview && (
+                          <>
+                            <td className="px-3 py-2 bg-primary/5">
+                              <div className="flex items-center gap-1.5">
+                                <ArrowRight className="h-3 w-3 text-primary shrink-0" />
+                                <span className={novaDesc !== r.descricao_atual ? 'text-primary font-medium' : 'text-muted-foreground'}>{novaDesc}</span>
+                              </div>
+                            </td>
+                            <td className="px-3 py-2 bg-primary/5 font-mono text-[11px]">
+                              <span className={novaRed !== r.descricao_reduzida ? 'text-primary font-medium' : 'text-muted-foreground'}>{novaRed || '—'}</span>
+                            </td>
+                          </>
+                        )}
+                      </tr>
+                    );
+                  })}
                   {previewRows.length === 0 && (
-                    <tr><td colSpan={4} className="px-3 py-6 text-center text-muted-foreground">Sem acabamentos vinculados.</td></tr>
+                    <tr><td colSpan={mostraPreview ? 7 : 5} className="px-3 py-6 text-center text-muted-foreground">Sem acabamentos vinculados.</td></tr>
                   )}
                 </tbody>
               </table>
@@ -284,6 +345,20 @@ function EntregaAposCard() {
           </div>
         )}
 
+        {/* Barra de progresso */}
+        {(execLoading || execProgress > 0) && (
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+              <span className="flex items-center gap-1.5">
+                <Loader2 className={`h-3 w-3 ${execLoading ? 'animate-spin' : ''}`} />
+                {execLoading ? 'Aplicando alterações no Auge…' : 'Finalizado'}
+              </span>
+              <span className="font-mono">{execProgress}%</span>
+            </div>
+            <Progress value={execProgress} className="h-2" />
+          </div>
+        )}
+
         {/* Resultado */}
         {result && (
           <div className="rounded-md border bg-card">
@@ -299,6 +374,17 @@ function EntregaAposCard() {
                   {result.abreviacao.erro && <> · <span className="text-destructive">{result.abreviacao.erro}</span></>}
                 </Badge>
               )}
+              <div className="ml-auto">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 gap-1.5 text-[11px]"
+                  onClick={() => window.open(AUGE_BASE_URL, '_blank', 'noopener,noreferrer')}
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  Abrir no Auge
+                </Button>
+              </div>
             </div>
             <div className="max-h-[300px] overflow-auto">
               <table className="w-full text-xs">
