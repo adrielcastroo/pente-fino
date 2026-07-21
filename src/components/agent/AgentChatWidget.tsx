@@ -23,6 +23,7 @@ import {
 } from "@/components/ai-elements/prompt-input";
 import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from "@/components/ai-elements/tool";
 import { Shimmer } from "@/components/ai-elements/shimmer";
+import { AskUserInline, extractAskUser } from "./AskUserDialog";
 import logo from "@/assets/fio-logo.png";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
