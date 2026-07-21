@@ -65,6 +65,8 @@ const AdminPanelPage = lazy(() => import("@/pages/admin/AdminPanelPage"));
 const N8nMonitorPage = lazy(() => import("@/pages/N8nMonitorPage"));
 const HarTransferenciasPage = lazy(() => import("@/pages/admin/HarTransferenciasPage"));
 const DepositosAdminPage = lazy(() => import("@/pages/admin/DepositosAdminPage"));
+const AutomacoesPage = lazy(() => import("@/pages/admin/AutomacoesPage"));
+
 import RequireModule from "@/components/auth/RequireModule";
 
 
@@ -257,7 +259,9 @@ const App = () => (
                   <Route path="/admin/n8n" element={<N8nMonitorPage />} />
                   <Route path="/admin/har-transferencias" element={<HarTransferenciasPage />} />
                   <Route path="/admin/depositos" element={<RequireRole role="admin" fallback={<Navigate to="/admin" replace />}><DepositosAdminPage /></RequireRole>} />
+                  <Route path="/admin/automacoes" element={<RequireRole role="admin" fallback={<Navigate to="/admin" replace />}><AutomacoesPage /></RequireRole>} />
                 </Route>
+
                 <Route path="/admin/flags" element={<Navigate to="/admin?tab=flags" replace />} />
                 <Route path="/admin/releases" element={<Navigate to="/admin?tab=releases" replace />} />
                 <Route path="/n8n" element={<Navigate to="/admin/n8n" replace />} />
