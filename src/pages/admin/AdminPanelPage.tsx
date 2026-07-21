@@ -30,6 +30,7 @@ import {
   LineChart,
   Workflow,
   Warehouse,
+  ListChecks,
 } from 'lucide-react';
 
 const FeatureFlagsPage = lazy(() => import('./FeatureFlagsPage'));
@@ -44,6 +45,7 @@ const PostHogTab = lazy(() => import('./tabs/PostHogTab'));
 const N8nMonitorPage = lazy(() => import('@/pages/N8nMonitorPage'));
 const AugeAdminPanel = lazy(() => import('@/components/auge/AugeAdminPanel'));
 const LlmTokensTab = lazy(() => import('./tabs/LlmTokensTab'));
+const BackfillTransferenciasTab = lazy(() => import('./tabs/BackfillTransferenciasTab'));
 
 
 declare const __APP_VERSION__: string;
@@ -68,6 +70,7 @@ const TAB_GROUPS: TabGroup[] = [
       { key: 'posthog', label: 'PostHog', icon: LineChart },
       { key: 'n8n', label: 'n8n', icon: Workflow },
       { key: 'auge', label: 'Auge ERP', icon: Warehouse },
+      { key: 'backfill-transf', label: 'Backfill Transf.', icon: ListChecks },
       { key: 'llm-tokens', label: 'Tokens LLM', icon: KeyRound },
     ],
   },
@@ -190,6 +193,9 @@ export default function AdminPanelPage() {
           </TabsContent>
           <TabsContent value="llm-tokens" className="mt-0">
             <Suspense fallback={tabFallback}><LlmTokensTab /></Suspense>
+          </TabsContent>
+          <TabsContent value="backfill-transf" className="mt-0">
+            <Suspense fallback={tabFallback}><BackfillTransferenciasTab /></Suspense>
           </TabsContent>
 
           <TabsContent value="flags" className="mt-0">
