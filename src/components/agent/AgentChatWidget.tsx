@@ -24,7 +24,9 @@ import {
 import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from "@/components/ai-elements/tool";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { AskUserInline, extractAskUser } from "./AskUserDialog";
+import { Suggestions, extractSuggestions } from "./Suggestions";
 import logo from "@/assets/fio-logo.png";
+
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const PUBLISHABLE_KEY = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
