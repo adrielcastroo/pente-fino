@@ -230,7 +230,7 @@ function EntregaAposCard() {
                       <td className="px-3 py-2 font-mono">{r.chave_acabamento}</td>
                       <td className="px-3 py-2">{r.nm_acabamento}</td>
                       <td className="px-3 py-2">{r.descricao_atual}</td>
-                      <td className="px-3 py-2 font-mono">{r.entrega_apos_atual ?? '—'}</td>
+                      <td className="px-3 py-2 font-mono">{r.entrega_apos_atual ?? extractEntregaApos(r.descricao_atual) ?? '—'}</td>
                     </tr>
                   ))}
                   {previewRows.length === 0 && (
