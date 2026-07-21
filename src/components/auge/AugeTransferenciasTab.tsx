@@ -67,6 +67,8 @@ export default function AugeTransferenciasTab({
   const [dateTo, setDateTo] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('data_movimento');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
 
   // Dialog Nova/Editar/Duplicar
   const [dialogMode, setDialogMode] = useState<TransfDialogMode>('novo');
