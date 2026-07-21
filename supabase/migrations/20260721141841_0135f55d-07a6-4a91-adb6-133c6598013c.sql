@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS idx_auge_transferencias_data_nulls_last ON public.auge_transferencias (data_movimento DESC NULLS LAST);
