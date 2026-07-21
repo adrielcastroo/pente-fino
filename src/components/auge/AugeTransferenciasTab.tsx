@@ -438,6 +438,44 @@ export default function AugeTransferenciasTab({
         </div>
       )}
 
+      {!loading && filtered.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 px-1">
+          <div className="text-xs text-muted-foreground">
+            Mostrando <span className="font-medium text-foreground">{startIdx + 1}</span>–
+            <span className="font-medium text-foreground">{Math.min(startIdx + pageSize, filtered.length)}</span> de{' '}
+            <span className="font-medium text-foreground">{filtered.length}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground hidden sm:inline">Por página</span>
+              <Select value={String(pageSize)} onValueChange={(v) => setPageSize(Number(v))}>
+                <SelectTrigger className="h-9 w-[80px] text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {[25, 50, 100, 200].map(n => (
+                    <SelectItem key={n} value={String(n)} className="text-xs">{n}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-1">
+              <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => setPage(1)} disabled={currentPage === 1} title="Primeira">
+                <ChevronsLeft className="w-4 h-4" />
+              </Button>
+              <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} title="Anterior">
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <span className="text-xs px-2 whitespace-nowrap">Página <span className="font-medium text-foreground">{currentPage}</span> / {totalPages}</span>
+              <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} title="Próxima">
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+              <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => setPage(totalPages)} disabled={currentPage === totalPages} title="Última">
+                <ChevronsRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <TransferenciaDetailDialog
         transferencia={detail}
         open={!!detail}
