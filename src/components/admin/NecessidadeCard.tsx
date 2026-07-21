@@ -55,7 +55,6 @@ async function callAuge(action: string, body: Record<string, unknown>) {
 export default function NecessidadeCard() {
   const [depositos, setDepositos] = useState<Deposito[]>([]);
   const [destino, setDestino] = useState('');
-  const [origemFiltro, setOrigemFiltro] = useState('all');
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState<NecessidadeRow[] | null>(null);
   const [busca, setBusca] = useState('');
@@ -77,12 +76,14 @@ export default function NecessidadeCard() {
     if (!rows) return [];
     const q = busca.trim().toLowerCase();
     return rows.filter(r => {
-      if (origemFiltro !== 'all' && r.cdDepositoOrigem !== origemFiltro) return false;
+      // Origem sempre "01 - Central" e apenas itens com saldo em 01.
+      if (r.cdDepositoOrigem !== '01') return false;
+      if (r.qtEstoque <= 0) return false;
       if (somenteRecomendados && r.qtRecomendacao <= 0) return false;
       if (!q) return true;
       return r.cdItem.toLowerCase().includes(q) || r.nmItem.toLowerCase().includes(q);
     });
-  }, [rows, busca, origemFiltro, somenteRecomendados]);
+  }, [rows, busca, somenteRecomendados]);
 
   const listar = async () => {
     if (!destino) { toast.error('Selecione o depósito destino.'); return; }
@@ -90,13 +91,14 @@ export default function NecessidadeCard() {
     setRows(null);
     setSelecionados({});
     try {
-      const resp = await callAuge('necessidade_listar', { cdDepositoDestino: destino });
+      const resp = await callAuge('necessidade_listar', { cdDepositoDestino: destino, cdDepositoOrigem: '01' });
       if (!resp?.ok) {
         toast.error(resp?.error ?? 'Falha ao consultar necessidades.');
         return;
       }
       setRows(resp.data as NecessidadeRow[]);
-      toast.success(`${resp.total} necessidade(s) encontradas.`);
+      const comSaldo = (resp.data as NecessidadeRow[]).filter(r => r.cdDepositoOrigem === '01' && r.qtEstoque > 0).length;
+      toast.success(`${comSaldo} item(ns) com saldo no depósito 01.`);
     } finally {
       setLoading(false);
     }
@@ -179,7 +181,7 @@ export default function NecessidadeCard() {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] items-end">
+        <div className="grid gap-3 sm:grid-cols-[1fr_auto_auto] items-end">
           <div className="grid gap-1.5">
             <Label className="text-xs">Depósito destino *</Label>
             <Select value={destino} onValueChange={setDestino}>
@@ -194,18 +196,10 @@ export default function NecessidadeCard() {
             </Select>
           </div>
           <div className="grid gap-1.5">
-            <Label className="text-xs">Filtrar por origem</Label>
-            <Select value={origemFiltro} onValueChange={setOrigemFiltro}>
-              <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas as origens</SelectItem>
-                {depositos.map(d => (
-                  <SelectItem key={d.codigo} value={d.codigo}>
-                    <span className="font-mono">{d.codigo}</span> {d.nome ? `— ${d.nome}` : ''}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label className="text-xs">Origem</Label>
+            <div className="h-10 px-3 flex items-center rounded-md border bg-muted text-xs font-mono">
+              01 — Central
+            </div>
           </div>
           <Button onClick={listar} disabled={!destino || loading} className="h-10 gap-2">
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
