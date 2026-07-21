@@ -23,6 +23,7 @@ import {
 } from "@/components/ai-elements/prompt-input";
 import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from "@/components/ai-elements/tool";
 import { Shimmer } from "@/components/ai-elements/shimmer";
+import { AskUserInline, extractAskUser } from "./AskUserDialog";
 import logo from "@/assets/fio-logo.png";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
@@ -124,7 +125,23 @@ function ChatWindow({ threadId }: { threadId: string }) {
                 className={m.role === "user" ? "bg-primary text-primary-foreground" : "bg-transparent"}
               >
                 {m.parts.map((part, i) => {
-                  if (part.type === "text") return <MessageResponse key={i}>{part.text}</MessageResponse>;
+                  if (part.type === "text") {
+                    const { spec, cleaned } = extractAskUser(part.text);
+                    return (
+                      <div key={i}>
+                        {cleaned && <MessageResponse>{cleaned}</MessageResponse>}
+                        {spec && m.role === "assistant" && (
+                          <AskUserInline
+                            spec={spec}
+                            disabled={isLoading}
+                            onSubmit={(formatted) =>
+                              void sendMessage({ parts: [{ type: "text", text: formatted }] })
+                            }
+                          />
+                        )}
+                      </div>
+                    );
+                  }
                   if (part.type?.startsWith("tool-")) {
                     const p: any = part;
                     return (
