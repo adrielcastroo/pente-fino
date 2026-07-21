@@ -89,6 +89,24 @@ function allUserText(messages: ModelMessage[]) {
     .join("\n");
 }
 
+function priorUserText(messages: ModelMessage[]) {
+  const users = messages
+    .filter((m) => m.role === "user")
+    .map((m) => {
+      const content = m.content;
+      if (typeof content === "string") return content;
+      if (Array.isArray(content)) {
+        return content
+          .map((part: any) => (part?.type === "text" && typeof part.text === "string" ? part.text : ""))
+          .join(" ")
+          .trim();
+      }
+      return "";
+    })
+    .filter(Boolean);
+  return users.slice(-4, -1).join("\n");
+}
+
 const STOPWORDS = new Set([
   "qual","quais","quanto","quantos","temos","mais","menos","estoque","item","itens",
   "tecido","tecidos","produto","produtos","cor","cores","codigo","código","para","com",
@@ -140,6 +158,14 @@ function isInScope(text: string): { ok: boolean; reason?: string } {
   const hit = DOMAIN_TERMS.some((term) => norm.includes(term));
   if (hit) return { ok: true };
   return { ok: false, reason: "fora_de_escopo" };
+}
+
+function isContextualFollowUp(text: string, previousText: string) {
+  const current = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const previous = previousText.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const asksFormatting = /\b(tabela|template|modelo|formato|coluna|colunas|organize|organizar|separe|separar|liste|listar|resuma|resumir|individual|um\s+por\s+um|cada\s+um)\b/i.test(current);
+  if (!asksFormatting) return false;
+  return DOMAIN_TERMS.some((term) => previous.includes(term.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()));
 }
 
 // ---------- Guardrail de PERMISSÕES ----------
