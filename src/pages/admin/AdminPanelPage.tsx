@@ -194,6 +194,9 @@ export default function AdminPanelPage() {
           <TabsContent value="llm-tokens" className="mt-0">
             <Suspense fallback={tabFallback}><LlmTokensTab /></Suspense>
           </TabsContent>
+          <TabsContent value="backfill-transf" className="mt-0">
+            <Suspense fallback={tabFallback}><BackfillTransferenciasTab /></Suspense>
+          </TabsContent>
 
           <TabsContent value="flags" className="mt-0">
             <Suspense fallback={tabFallback}><FeatureFlagsPage /></Suspense>
