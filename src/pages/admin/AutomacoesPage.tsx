@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';
@@ -429,10 +429,23 @@ function EntregaAposCard() {
 function NovaAbreviacaoCard() {
   const [dsAtual, setDsAtual] = useState('');
   const [dsAbreviada, setDsAbreviada] = useState('');
+  const [abrevDirty, setAbrevDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [lastOk, setLastOk] = useState<{ ds: string; abrev: string; cd: string | null } | null>(null);
 
+  // Sugere automaticamente a abreviação quando a descrição contém (Ent_Ap_DD/MM/AA)
+  const sugestao = useMemo(() => {
+    const m = dsAtual.match(/\(\s*Ent[_ ]?Ap[_ ]?(\d{1,2}\/\d{1,2}\/\d{2,4})\s*\)/i);
+    return m ? abbrevFromDate(m[1]) : '';
+  }, [dsAtual]);
+
+  // Aplica a sugestão automaticamente enquanto o usuário não editou o campo manualmente
+  useEffect(() => {
+    if (sugestao && !abrevDirty) setDsAbreviada(sugestao);
+  }, [sugestao, abrevDirty]);
+
   const canSave = dsAtual.trim().length > 0 && dsAbreviada.trim().length > 0 && !saving;
+
 
   const submit = async () => {
     const a = dsAtual.trim();
@@ -488,7 +501,7 @@ function NovaAbreviacaoCard() {
             id="abrev-ds-atual"
             value={dsAtual}
             onChange={(e) => setDsAtual(e.target.value.slice(0, 200))}
-            placeholder="Ex.: Zakynthos Sand"
+            placeholder="Ex.: (Ent_Ap_10/09/26)"
             className="h-10"
             maxLength={200}
           />
@@ -499,15 +512,27 @@ function NovaAbreviacaoCard() {
           <Input
             id="abrev-ds-abrev"
             value={dsAbreviada}
-            onChange={(e) => setDsAbreviada(e.target.value.slice(0, 60))}
-            placeholder="Ex.: ZakntSand"
+            onChange={(e) => { setAbrevDirty(true); setDsAbreviada(e.target.value.slice(0, 60)); }}
+            placeholder="Ex.: E10/9"
             className="h-10"
             maxLength={60}
             onKeyDown={(e) => { if (e.key === 'Enter' && canSave) submit(); }}
           />
-          <span className="text-[11px] text-muted-foreground">{dsAbreviada.length}/60</span>
+          <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+            <span>{dsAbreviada.length}/60</span>
+            {sugestao && sugestao !== dsAbreviada && (
+              <button
+                type="button"
+                onClick={() => { setAbrevDirty(false); setDsAbreviada(sugestao); }}
+                className="inline-flex items-center gap-1 text-primary underline underline-offset-2 hover:opacity-80"
+              >
+                <Sparkles className="h-3 w-3" /> usar sugestão <span className="font-mono">{sugestao}</span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
+
 
       <div className="flex flex-wrap items-center gap-2">
         <Button onClick={submit} disabled={!canSave} className="gap-2 h-10">
