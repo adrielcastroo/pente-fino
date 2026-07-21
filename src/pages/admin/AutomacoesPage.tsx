@@ -152,7 +152,7 @@ function EntregaAposCard() {
 
   const runPreview = async () => {
     if (!codigoNormalizado) {
-      toast.error('Código de item inválido. Use o formato XX.000.000 (ex.: TC.000.033).');
+      toast.error('Informe um código de item.');
       return;
     }
     setPreviewLoading(true);
