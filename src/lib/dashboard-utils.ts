@@ -86,34 +86,35 @@ export const computeStats = (
     .sort((a, b) => b.value - a.value)
     .slice(0, 5);
 
-  // Setores — mapeia modo_origem real do banco para os 3 setores operacionais.
-  // Tecidos: manual + diversos + etiq_pronta + openrouter (sub-modos da bipagem de Tecido).
-  // Madeira: madeira. Motor/Controle: motor + controle.
+  // Setores — mapeia modo_origem real do banco para os setores operacionais.
+  // "Outros" captura registros com modo_origem desconhecido/vazio para não perder linhas.
   const TECIDO_MODES = new Set(['manual', 'diversos', 'etiq_pronta', 'openrouter', 'tecido']);
   const MADEIRA_MODES = new Set(['madeira']);
   const MOTOR_MODES = new Set(['motor', 'controle']);
-  let regTecido = 0, regMadeira = 0, regMotor = 0;
+  let regTecido = 0, regMadeira = 0, regMotor = 0, regOutros = 0;
   history.forEach(h => h.registros.forEach(r => {
     const m = String(r.modoOrigem || '').toLowerCase();
     if (TECIDO_MODES.has(m)) regTecido++;
     else if (MADEIRA_MODES.has(m)) regMadeira++;
     else if (MOTOR_MODES.has(m)) regMotor++;
+    else regOutros++;
   }));
   const categorias = [
     { name: `Tecidos (${regTecido})`, value: regTecido },
     { name: `Madeira (${regMadeira})`, value: regMadeira },
     { name: `Motor/Controle (${regMotor})`, value: regMotor },
+    ...(regOutros > 0 ? [{ name: `Outros (${regOutros})`, value: regOutros }] : []),
   ];
 
   // Tipos de Materiais — resolve código → descrição (codigo_interno, codigo_fornecedor
-  // ou codigos_fornecedor[]). Quando não houver match, mostra o código truncado
-  // marcado como "(sem cadastro)" para evidenciar a lacuna de cadastro.
+  // ou codigos_fornecedor[]). Itens sem match ficam rotulados como "(sem cadastro)"
+  // e agora aparecem no gráfico para expor a lacuna de cadastro (antes eram filtrados).
   const truncate = (s: string, n = 32) => (s.length > n ? `${s.slice(0, n - 1)}…` : s);
   const tiposMap = new Map<string, number>();
   history.flatMap(h => h.registros).forEach(r => {
     const codigo = (r.item || '').trim();
     if (!codigo) {
-      tiposMap.set('Sem item', (tiposMap.get('Sem item') || 0) + 1);
+      tiposMap.set('(sem item)', (tiposMap.get('(sem item)') || 0) + 1);
       return;
     }
     const descricao = cadastroMap.get(codigo) || cadastroMap.get(codigo.toUpperCase());
@@ -123,9 +124,9 @@ export const computeStats = (
 
   const tipos = Array.from(tiposMap.entries())
     .map(([name, value]) => ({ name, value }))
-    .filter(({ name }) => !/\(sem cadastro\)/i.test(name) && name !== 'Sem item')
     .sort((a, b) => b.value - a.value)
     .slice(0, 8);
+
 
   // Conferente Details — chaveia pelo nome normalizado
   const conferenteDetails = Array.from(conferenteMap.entries()).map(([name, total]) => {
