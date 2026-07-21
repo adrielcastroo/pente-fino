@@ -2555,6 +2555,7 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
+  await loadAugeCredentials(admin);
   const url = new URL(req.url);
   const action = url.searchParams.get('action');
   const entityParam = url.searchParams.get('entity');
