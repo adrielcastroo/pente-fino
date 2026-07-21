@@ -26,7 +26,7 @@ export function useDashboard() {
 
       const stats = {
         // Tecido = apenas estruturas do padrão TECxx (mapa 2D).
-        tecido: { used: 0, total: TOTAL_SLOTS, reserved: 0, blocked: 0 },
+        tecido: { used: 0, total: TOTAL_SLOTS, reserved: 0, blocked: 0, semEspaco: 0 },
         // CHÃO = área livre, sem limite → métrica separada.
         chao: { used: 0 },
         // Madeira ainda não tem fonte real → mantemos null para ocultar o card.
