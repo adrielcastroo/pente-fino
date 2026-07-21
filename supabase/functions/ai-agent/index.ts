@@ -811,8 +811,23 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Curto-circuito 1: pergunta de capacidade sobre fluxos conhecidos do app
+    // (ex.: "vc consegue alterar a descrição de um item dentro do acabamento?").
+    // Responde direto, sem consultar contexto de itens — evita alucinação.
+    const capAnswer = capabilityAnswer(userText);
+    if (capAnswer) {
+      return textStreamResponse(capAnswer, {
+        "x-ai-provider": "backend-capability",
+        "x-ai-model": "deterministic",
+        "x-ai-task": task,
+        "x-ai-fallbacks": "0",
+      });
+    }
+
     const automaticContext = await buildAgentContext(admin, conversationText);
-    const deterministicAnswer = acabamentoItemCountAnswer(automaticContext, conversationText);
+    // Passa APENAS o texto do turno atual — o atalho determinístico não deve
+    // reaproveitar códigos de perguntas anteriores.
+    const deterministicAnswer = acabamentoItemCountAnswer(automaticContext, userText);
     if (deterministicAnswer) {
       return textStreamResponse(deterministicAnswer, {
         "x-ai-provider": "backend-query",
