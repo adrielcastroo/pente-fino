@@ -93,6 +93,9 @@ export default function NecessidadeCronCard() {
   const [lastRun, setLastRun] = useState<Run | null>(null);
   const [cronCurrent, setCronCurrent] = useState<string>('');
   const [savingCron, setSavingCron] = useState(false);
+  const [liveResults, setLiveResults] = useState<ResultItem[]>([]);
+  const [liveDestino, setLiveDestino] = useState<string | null>(null);
+  const [liveProgress, setLiveProgress] = useState<number>(0);
 
   // UI state
   const [recurrent, setRecurrent] = useState<boolean>(true);
@@ -175,33 +178,71 @@ export default function NecessidadeCronCard() {
 
   useEffect(() => { carregarUltimaRun(); carregarCron(); }, []);
 
+  const callAction = async (action: string, body: any) => {
+    const { data: session } = await supabase.auth.getSession();
+    const token = session.session?.access_token;
+    const anon = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY) as string;
+    const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/auge-sync?action=${action}`;
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: anon,
+        Authorization: `Bearer ${token ?? anon}`,
+      },
+      body: JSON.stringify(body),
+    });
+    return r.json();
+  };
+
   const executarAgora = async () => {
     setRunning(true);
-    const t = toast.loading('Gerando rascunhos no Auge para todos os depósitos…');
+    setLiveResults([]);
+    setLiveProgress(0);
+    setLiveDestino(null);
+    const total = DESTINOS.length;
+    const t = toast.loading(`Gerando rascunhos… 0/${total}`, {
+      description: 'Iniciando processamento por depósito',
+    });
+    const acumulado: ResultItem[] = [];
     try {
-      const { data: session } = await supabase.auth.getSession();
-      const token = session.session?.access_token;
-      const anon = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY) as string;
-      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/auge-sync?action=necessidade_cron_run`;
-      const r = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          apikey: anon,
-          Authorization: `Bearer ${token ?? anon}`,
-        },
-        body: JSON.stringify({}),
-      });
-      const j = await r.json();
-      if (!j?.ok) {
-        toast.error(j?.error ?? 'Falha ao executar necessidade automática.', { id: t });
-        return;
+      for (let i = 0; i < DESTINOS.length; i++) {
+        const destino = DESTINOS[i];
+        setLiveDestino(destino);
+        toast.loading(`Gerando rascunhos… ${i}/${total}`, {
+          id: t,
+          description: `Processando ${destino}…`,
+        });
+        try {
+          const j = await callAction('necessidade_cron_run', { destinos: [destino], skip_log: true });
+          const item: ResultItem = j?.resultados?.[0] ?? { destino, status: 'erro', erro: j?.error ?? 'sem resposta' };
+          acumulado.push(item);
+          setLiveResults([...acumulado]);
+          setLiveProgress(((i + 1) / total) * 100);
+          if (item.status === 'ok') {
+            toast.success(`${destino}: rascunho ${item.cdMovimentacao} (${item.itens} itens)`);
+          } else if (item.status === 'sem_itens') {
+            toast.message(`${destino}: sem itens elegíveis`);
+          } else {
+            toast.error(`${destino}: ${item.erro ?? item.status}`);
+          }
+        } catch (err: any) {
+          const item: ResultItem = { destino, status: 'erro', erro: err?.message ?? String(err) };
+          acumulado.push(item);
+          setLiveResults([...acumulado]);
+          setLiveProgress(((i + 1) / total) * 100);
+          toast.error(`${destino}: ${item.erro}`);
+        }
       }
-      const ok = (j.resultados as ResultItem[]).filter(x => x.status === 'ok').length;
-      toast.success(`${ok} rascunho(s) gerado(s).`, { id: t });
+      const ok = acumulado.filter(x => x.status === 'ok').length;
+      toast.success(`Concluído — ${ok}/${total} rascunho(s) gerado(s).`, { id: t, description: undefined });
+      try {
+        await callAction('necessidade_cron_log', { destinos: DESTINOS, resultados: acumulado });
+      } catch { /* ignore */ }
       await carregarUltimaRun();
     } finally {
       setRunning(false);
+      setLiveDestino(null);
     }
   };
 
@@ -322,7 +363,48 @@ export default function NecessidadeCronCard() {
           )}
         </div>
 
-        {!lastRun && (
+        {(running || liveResults.length > 0) && (
+          <div className="rounded-md border bg-primary/5 p-3 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-xs font-medium">
+                {running ? <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" /> : <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
+                {running
+                  ? <>Processando {liveDestino ? <span className="font-mono">{liveDestino}</span> : '…'}</>
+                  : 'Execução concluída'}
+              </div>
+              <div className="text-[11px] text-muted-foreground font-mono">
+                {liveResults.length}/{DESTINOS.length}
+              </div>
+            </div>
+            <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+              <div
+                className="h-full bg-primary transition-all duration-300"
+                style={{ width: `${liveProgress}%` }}
+              />
+            </div>
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {DESTINOS.map(d => {
+                const r = liveResults.find(x => x.destino === d);
+                const isCurrent = running && liveDestino === d && !r;
+                let icon: React.ReactNode = <MinusCircle className="h-3 w-3 opacity-40" />;
+                let cls = 'opacity-50';
+                if (isCurrent) { icon = <Loader2 className="h-3 w-3 animate-spin text-primary" />; cls = 'border-primary text-primary'; }
+                else if (r?.status === 'ok') { icon = <CheckCircle2 className="h-3 w-3 text-emerald-500" />; cls = 'border-emerald-500/40 text-emerald-600 dark:text-emerald-400'; }
+                else if (r?.status === 'sem_itens') { icon = <MinusCircle className="h-3 w-3 text-muted-foreground" />; cls = 'text-muted-foreground'; }
+                else if (r && (r.status === 'erro' || r.status === 'erro_listar')) { icon = <XCircle className="h-3 w-3 text-destructive" />; cls = 'border-destructive/40 text-destructive'; }
+                return (
+                  <Badge key={d} variant="outline" className={`gap-1 font-mono text-[10px] ${cls}`}>
+                    {icon}
+                    {d}
+                    {r?.status === 'ok' && <span className="ml-0.5">· {r.itens}</span>}
+                  </Badge>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {!lastRun && !running && liveResults.length === 0 && (
           <div className="rounded-md border bg-muted/20 px-3 py-6 text-center text-xs text-muted-foreground">
             Nenhuma execução automática registrada ainda.
           </div>

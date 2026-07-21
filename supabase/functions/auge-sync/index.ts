@@ -3248,6 +3248,7 @@ Deno.serve(async (req) => {
         ? payload.destinos.map((s: any) => String(s).trim()).filter(Boolean)
         : destinosDefault;
       const efetivar = payload?.efetivar === true;
+      const skipLog = payload?.skip_log === true;
 
       const resultados: any[] = [];
 
@@ -3333,13 +3334,30 @@ Deno.serve(async (req) => {
       }
 
 
+      if (!skipLog) {
+        await admin.from('auge_sync_runs').insert({
+          status: 'success', triggered_by: triggeredBy, entidade: 'transferencias',
+          finished_at: new Date().toISOString(),
+          detalhes: { action: 'necessidade_cron_run', destinos, resultados },
+        });
+      }
+
+      return new Response(JSON.stringify({ ok: true, destinos, resultados }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (action === 'necessidade_cron_log') {
+      let payload: any = {};
+      try { payload = await req.json(); } catch { /* ignore */ }
+      const resultados = Array.isArray(payload?.resultados) ? payload.resultados : [];
+      const destinos = Array.isArray(payload?.destinos) ? payload.destinos : [];
       await admin.from('auge_sync_runs').insert({
         status: 'success', triggered_by: triggeredBy, entidade: 'transferencias',
         finished_at: new Date().toISOString(),
         detalhes: { action: 'necessidade_cron_run', destinos, resultados },
       });
-
-      return new Response(JSON.stringify({ ok: true, destinos, resultados }), {
+      return new Response(JSON.stringify({ ok: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
