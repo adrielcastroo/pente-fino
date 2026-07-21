@@ -124,6 +124,7 @@ export interface AppStats {
       total: number;
       reserved: number;
       blocked: number;
+      semEspaco: number;
     };
     chao: {
       used: number;
