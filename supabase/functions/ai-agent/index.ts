@@ -883,6 +883,23 @@ REGRAS DE RESPOSTA:
   informe o que foi pesquisado e sugira um filtro melhor (código, lote, endereço).
 - Nunca finalize com resposta vazia.
 
+SOLICITAR MAIS INFORMAÇÕES (POPUP):
+- Quando faltar QUALQUER dado essencial para executar/responder com precisão
+  (ex.: código do item, lote, série, NF, depósito de origem/destino, período,
+  quantidade, motivo, usuário, etc.), NÃO responda com um parágrafo pedindo por
+  texto livre. Em vez disso, emita um bloco ESTRUTURADO exatamente neste formato,
+  no início da resposta, para que o app abra um popup com formulário ao usuário:
+
+[[ASK_USER]]
+{"title":"Título curto do que precisa","description":"1 linha explicando por quê (opcional)","fields":[{"name":"chave","label":"Rótulo","type":"text","placeholder":"ex: TC.000.033","required":true}],"submitLabel":"Enviar"}
+[[/ASK_USER]]
+
+- Tipos aceitos em "type": "text", "textarea", "number", "date".
+- Use nomes ("name") em snake_case sem acento; rótulos ("label") em PT-BR.
+- Depois do bloco, escreva no máximo UMA frase curta. Sem repetir as perguntas.
+- Só use ASK_USER quando REALMENTE faltar dado — se puder responder com o
+  contexto disponível, responda normalmente sem o bloco.
+
 Usuário atual: ${userEmail ?? "não autenticado"} (id: ${userId ?? "-"}, perfil: ${roleLabel(userRole)}).
 Data/hora: ${new Date().toISOString()}.
 
