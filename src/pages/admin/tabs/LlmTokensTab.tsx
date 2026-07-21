@@ -6,13 +6,25 @@ import { Badge } from "@/components/ui/badge";
 import { RefreshCw, CheckCircle2, XCircle, AlertCircle, KeyRound, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
+type Usage = {
+  requestsLimit: number | null;
+  requestsRemaining: number | null;
+  requestsReset: string | null;
+  tokensLimit: number | null;
+  tokensRemaining: number | null;
+  tokensReset: string | null;
+  retryAfter: string | null;
+} | null;
+
 type ProviderHealth = {
   ok: boolean;
   httpStatus: number;
   latencyMs: number;
   modelCount: number | null;
   error: string | null;
+  usage: Usage;
 } | null;
+
 
 type ProviderStatus = {
   id: string;
