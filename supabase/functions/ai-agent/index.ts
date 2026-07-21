@@ -1034,7 +1034,68 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ------ Automação Entrega Após (determinística) ------
+    // Passo 2: usuário submeteu o diálogo ASK_USER → executa e reporta.
+    const submitted = detectEntregaAposSubmit(userText);
+    if (submitted) {
+      if ((submitted.acao === "atualizar" || submitted.acao === "adicionar") && !submitted.nova_data) {
+        return textStreamResponse(
+          `❌ Não consegui interpretar a **nova data**. Envie novamente no formato **DD/MM/AA** (ex.: 10/09/26). Ação: ${submitted.acao}.`,
+          { "x-ai-provider": "backend-entrega-apos", "x-ai-model": "deterministic" },
+        );
+      }
+      try {
+        const resp = await callAugeEntregaApos(authHeader, {
+          codigo_item: submitted.codigo,
+          acao: submitted.acao,
+          nova_data: submitted.nova_data,
+        });
+        if (!resp?.ok && resp?.error) {
+          return textStreamResponse(
+            `❌ Erro ao executar a automação para **${submitted.codigo}**: ${resp.error}`,
+            { "x-ai-provider": "backend-entrega-apos", "x-ai-model": "deterministic" },
+          );
+        }
+        return textStreamResponse(renderExecuteReport(resp), {
+          "x-ai-provider": "backend-entrega-apos", "x-ai-model": "deterministic",
+        });
+      } catch (err) {
+        return textStreamResponse(
+          `❌ Falha inesperada ao chamar o Auge: ${err instanceof Error ? err.message : String(err)}`,
+          { "x-ai-provider": "backend-entrega-apos", "x-ai-model": "deterministic" },
+        );
+      }
+    }
+
+    // Passo 1: detecta intenção "entrega após" + código do item → mostra preview + ASK_USER.
+    if (ENTREGA_APOS_INTENT.test(userText) || ENTREGA_APOS_INTENT.test(previousText)) {
+      const codigo = extractItemCode(userText) || extractItemCode(previousText);
+      if (codigo) {
+        try {
+          const preview = await callAugeEntregaApos(authHeader, { codigo_item: codigo, acao: "preview" });
+          if (!preview?.ok) {
+            return textStreamResponse(
+              `❌ Não consegui consultar os acabamentos de **${codigo}**: ${preview?.error ?? "erro desconhecido"}`,
+              { "x-ai-provider": "backend-entrega-apos", "x-ai-model": "deterministic" },
+            );
+          }
+          const table = renderPreviewTable(codigo, preview.rows ?? []);
+          const spec = askUserActionSpec(codigo);
+          const ask = `\n\n[[ASK_USER]]${JSON.stringify(spec)}[[/ASK_USER]]`;
+          return textStreamResponse(table + ask, {
+            "x-ai-provider": "backend-entrega-apos", "x-ai-model": "deterministic",
+          });
+        } catch (err) {
+          return textStreamResponse(
+            `❌ Falha ao consultar acabamentos: ${err instanceof Error ? err.message : String(err)}`,
+            { "x-ai-provider": "backend-entrega-apos", "x-ai-model": "deterministic" },
+          );
+        }
+      }
+    }
+
     const automaticContext = await buildAgentContext(admin, conversationText);
+
     const tableAnswer = acabamentoItemTableAnswer(automaticContext, userText, previousText);
     if (tableAnswer) {
       return textStreamResponse(tableAnswer, {
