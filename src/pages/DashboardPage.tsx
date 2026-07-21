@@ -365,15 +365,25 @@ export default function DashboardPage() {
           
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-            <OccupationChart 
-              id="chart-ocupacao-tecido" 
-              title="Ocupação Tecidos" 
-              used={stats.occupation.tecido.used} 
-              total={stats.occupation.tecido.total} 
-              reserved={stats.occupation.tecido.reserved} 
-              blocked={stats.occupation.tecido.blocked} 
-              unit="alocações" 
-            />
+            <div className="space-y-2">
+              <OccupationChart 
+                id="chart-ocupacao-tecido" 
+                title="Ocupação Tecidos" 
+                used={stats.occupation.tecido.used} 
+                total={stats.occupation.tecido.total} 
+                reserved={stats.occupation.tecido.reserved} 
+                blocked={stats.occupation.tecido.blocked} 
+                unit="alocações" 
+              />
+              {stats.occupation.tecido.semEspaco > 0 && (
+                <p className="px-1 text-xs text-muted-foreground">
+                  <span className="font-medium text-foreground">
+                    {stats.occupation.tecido.semEspaco}
+                  </span>{' '}
+                  lote{stats.occupation.tecido.semEspaco === 1 ? '' : 's'} aguardando espaço no mapa
+                </p>
+              )}
+            </div>
             {stats.occupation.madeira ? (
               <OccupationChart 
                 id="chart-ocupacao-madeira"
