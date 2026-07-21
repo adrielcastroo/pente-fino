@@ -440,6 +440,7 @@ export default function AutomacoesPage() {
         className="space-y-4"
       >
         <EntregaAposCard />
+        <NovaAbreviacaoCard />
       </motion.div>
     </PageShell>
   );
