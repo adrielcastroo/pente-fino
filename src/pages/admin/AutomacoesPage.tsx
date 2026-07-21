@@ -16,6 +16,8 @@ import { toast } from 'sonner';
 import { CalendarClock, Loader2, PlayCircle, Search, Sparkles, CheckCircle2, XCircle, MinusCircle, ExternalLink, ArrowRight, Type, Plus, Boxes } from 'lucide-react';
 import NecessidadeCard from '@/components/admin/NecessidadeCard';
 import NecessidadeCronCard from '@/components/admin/NecessidadeCronCard';
+import AugeAccountCard from '@/components/admin/AugeAccountCard';
+
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 
@@ -596,6 +598,7 @@ export default function AutomacoesPage() {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="necessidade" className="mt-0 space-y-4">
+            <AugeAccountCard />
             <NecessidadeCronCard />
             <NecessidadeCard />
           </TabsContent>

@@ -3,10 +3,20 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { CalendarClock, Loader2, PlayCircle, CheckCircle2, XCircle, MinusCircle } from 'lucide-react';
+import { CalendarClock, Loader2, PlayCircle, CheckCircle2, XCircle, MinusCircle, Save, KeyRound } from 'lucide-react';
 
 const DESTINOS: string[] = ['18', '20', 'EMBALAGE', 'ESPE.1', 'ESPE.2', 'PH', 'PVT'];
+
+const PRESETS: { label: string; expr: string }[] = [
+  { label: 'Seg–Sex 07:00 BRT', expr: '0 10 * * 1-5' },
+  { label: 'Seg–Sex 06:00 BRT', expr: '0 9 * * 1-5' },
+  { label: 'Seg–Sex 08:00 BRT', expr: '0 11 * * 1-5' },
+  { label: 'Todo dia 07:00 BRT', expr: '0 10 * * *' },
+];
+
 
 type ResultItem = {
   destino: string;
@@ -29,6 +39,32 @@ type Run = {
 export default function NecessidadeCronCard() {
   const [running, setRunning] = useState(false);
   const [lastRun, setLastRun] = useState<Run | null>(null);
+  const [cronExpr, setCronExpr] = useState<string>('0 10 * * 1-5');
+  const [cronCurrent, setCronCurrent] = useState<string>('');
+  const [savingCron, setSavingCron] = useState(false);
+
+  const carregarCron = async () => {
+    const { data } = await (supabase as any).rpc('get_necessidade_cron');
+    const row = Array.isArray(data) ? data[0] : data;
+    if (row?.schedule) {
+      setCronCurrent(row.schedule);
+      setCronExpr(row.schedule);
+    }
+  };
+
+  const salvarCron = async () => {
+    if (!cronExpr.trim()) { toast.error('Informe uma expressão cron.'); return; }
+    setSavingCron(true);
+    const t = toast.loading('Atualizando agendamento…');
+    try {
+      const { error } = await (supabase as any).rpc('set_necessidade_cron', { cron_expr: cronExpr.trim() });
+      if (error) { toast.error(error.message ?? 'Falha ao salvar cron.', { id: t }); return; }
+      toast.success('Agendamento atualizado.', { id: t });
+      await carregarCron();
+    } finally {
+      setSavingCron(false);
+    }
+  };
 
   const carregarUltimaRun = async () => {
     const { data } = await (supabase as any)
@@ -41,7 +77,8 @@ export default function NecessidadeCronCard() {
     setLastRun(data?.[0] ?? null);
   };
 
-  useEffect(() => { carregarUltimaRun(); }, []);
+  useEffect(() => { carregarUltimaRun(); carregarCron(); }, []);
+
 
   const executarAgora = async () => {
     setRunning(true);
@@ -84,12 +121,10 @@ export default function NecessidadeCronCard() {
               <CalendarClock className="h-4 w-4 text-primary" /> Agendamento — Necessidade Automática
             </CardTitle>
             <CardDescription className="mt-1">
-              Roda de <strong>segunda a sexta</strong> às <strong>07:00 (BRT)</strong> e gera rascunhos
-              no Auge com origem sempre <span className="font-mono">01 — Central</span>. Só entram itens
-              com <strong>saldo em 01 &gt; 0</strong>. Para <span className="font-mono">PVT</span> gera
-              dois rascunhos: <strong>Tecidos</strong> (códigos <span className="font-mono">TC.*</span>)
-              e <strong>Outros</strong>.
+              Gera rascunhos no Auge com origem sempre <span className="font-mono">01 — Central</span>.
+              Só entram itens com <strong>saldo em 01 &gt; 0</strong>. Configure o horário abaixo.
             </CardDescription>
+
             <div className="mt-2 flex flex-wrap gap-1.5">
               {DESTINOS.map(d => (
                 <Badge key={d} variant="secondary" className="font-mono text-[10px]">{d}</Badge>
@@ -102,7 +137,36 @@ export default function NecessidadeCronCard() {
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-4">
+        <div className="rounded-md border p-3 space-y-2 bg-muted/10">
+          <Label className="text-xs flex items-center gap-1.5"><CalendarClock className="h-3.5 w-3.5" /> Expressão cron (UTC)</Label>
+          <div className="flex flex-wrap gap-2">
+            <Input value={cronExpr} onChange={(e) => setCronExpr(e.target.value)}
+              placeholder="0 10 * * 1-5" className="font-mono text-xs h-9 max-w-[220px]" />
+            <Button onClick={salvarCron} disabled={savingCron || cronExpr.trim() === cronCurrent.trim()} size="sm" className="gap-1.5 h-9">
+              {savingCron ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+              Salvar
+            </Button>
+            {cronCurrent && (
+              <span className="text-[11px] text-muted-foreground self-center">
+                Atual: <span className="font-mono text-foreground">{cronCurrent}</span>
+              </span>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {PRESETS.map(p => (
+              <Button key={p.expr} variant="outline" size="sm" className="h-7 text-[11px]"
+                onClick={() => setCronExpr(p.expr)}>
+                {p.label} <span className="ml-1 font-mono text-muted-foreground">{p.expr}</span>
+              </Button>
+            ))}
+          </div>
+          <p className="text-[10px] text-muted-foreground">
+            Horário em UTC. Ex.: <span className="font-mono">0 10 * * 1-5</span> = seg–sex às 07:00 BRT.
+          </p>
+        </div>
+
+
         {!lastRun && (
           <div className="rounded-md border bg-muted/20 px-3 py-6 text-center text-xs text-muted-foreground">
             Nenhuma execução automática registrada ainda.

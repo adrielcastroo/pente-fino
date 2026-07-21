@@ -3553,6 +3553,14 @@ export type Database = {
         Args: never
         Returns: Database["public"]["Enums"]["app_role"]
       }
+      get_necessidade_cron: {
+        Args: never
+        Returns: {
+          active: boolean
+          jobid: number
+          schedule: string
+        }[]
+      }
       has_module: { Args: { _module: string }; Returns: boolean }
       has_role: {
         Args: {
@@ -3580,6 +3588,7 @@ export type Database = {
         Args: { p_build_time: string; p_notes?: string; p_version: string }
         Returns: undefined
       }
+      set_necessidade_cron: { Args: { cron_expr: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "operador" | "user" | "supervisor" | "gerente"
