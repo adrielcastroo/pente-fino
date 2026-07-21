@@ -727,7 +727,7 @@ async function probeProvider(cfg: ProviderCfg, model: string): Promise<boolean> 
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${cfg.apiKey}`,
+        ...authHeaderFor(cfg),
       },
       body: JSON.stringify({
         model,
