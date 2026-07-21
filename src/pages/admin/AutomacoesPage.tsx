@@ -13,7 +13,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { PageShell, PageHeader } from '@/components/expedicao/ui';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { CalendarClock, Loader2, PlayCircle, Search, Sparkles, CheckCircle2, XCircle, MinusCircle, ExternalLink, ArrowRight } from 'lucide-react';
+import { CalendarClock, Loader2, PlayCircle, Search, Sparkles, CheckCircle2, XCircle, MinusCircle, ExternalLink, ArrowRight, Type, Plus } from 'lucide-react';
 
 const AUGE_BASE_URL = 'https://unilux.auge.app';
 
@@ -421,6 +421,149 @@ function EntregaAposCard() {
   );
 }
 
+// =========================================================================
+// Nova Abreviação — cria diretamente em manterAbreviacao.php do Auge
+// =========================================================================
+function NovaAbreviacaoCard() {
+  const [dsAtual, setDsAtual] = useState('');
+  const [dsAbreviada, setDsAbreviada] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [lastOk, setLastOk] = useState<{ ds: string; abrev: string; cd: string | null } | null>(null);
+
+  const canSave = dsAtual.trim().length > 0 && dsAbreviada.trim().length > 0 && !saving;
+
+  const submit = async () => {
+    const a = dsAtual.trim();
+    const b = dsAbreviada.trim();
+    if (!a || !b) {
+      toast.error('Preencha "Descrição atual" e "Abreviação".');
+      return;
+    }
+    if (b.length > a.length) {
+      toast.warning('A abreviação está maior que a descrição atual — confira antes de salvar.');
+    }
+    setSaving(true);
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      const token = session.session?.access_token;
+      const anon = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY) as string;
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/auge-sync?action=salvar_abreviacao`;
+      const r = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: anon,
+          Authorization: `Bearer ${token ?? anon}`,
+        },
+        body: JSON.stringify({ dsAtual: a, dsAbreviada: b, idTipoAbreviacao: 1 }),
+      });
+      const txt = await r.text();
+      let json: any = {};
+      try { json = JSON.parse(txt); } catch { json = { ok: false, error: txt.slice(0, 400) }; }
+      if (!json?.ok) {
+        toast.error(json?.error ?? 'Falha ao salvar abreviação no Auge.');
+        return;
+      }
+      toast.success('Abreviação criada no Auge.');
+      setLastOk({ ds: a, abrev: b, cd: json?.cdAbreviacao ?? null });
+      setDsAtual('');
+      setDsAbreviada('');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Erro inesperado.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Type className="h-4 w-4 text-primary" />
+              Nova Abreviação
+            </CardTitle>
+            <CardDescription className="mt-1">
+              Cadastra uma abreviação diretamente em
+              <a
+                href={`${AUGE_BASE_URL}/l/unilux/modInventario/manterAbreviacao.php`}
+                target="_blank"
+                rel="noreferrer"
+                className="mx-1 inline-flex items-center gap-1 underline underline-offset-2 hover:text-primary"
+              >
+                manterAbreviacao.php
+                <ExternalLink className="h-3 w-3" />
+              </a>
+              no Auge.
+            </CardDescription>
+          </div>
+          <Badge variant="outline" className="gap-1"><Sparkles className="h-3 w-3" /> Auge</Badge>
+        </div>
+      </CardHeader>
+
+      <CardContent className="space-y-4">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-1.5">
+            <Label htmlFor="abrev-ds-atual" className="text-xs">Descrição Atual</Label>
+            <Input
+              id="abrev-ds-atual"
+              value={dsAtual}
+              onChange={(e) => setDsAtual(e.target.value.slice(0, 200))}
+              placeholder="Ex.: Zakynthos Sand"
+              className="h-10"
+              maxLength={200}
+            />
+            <span className="text-[11px] text-muted-foreground">{dsAtual.length}/200</span>
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="abrev-ds-abrev" className="text-xs">Abreviação</Label>
+            <Input
+              id="abrev-ds-abrev"
+              value={dsAbreviada}
+              onChange={(e) => setDsAbreviada(e.target.value.slice(0, 60))}
+              placeholder="Ex.: ZakntSand"
+              className="h-10"
+              maxLength={60}
+              onKeyDown={(e) => { if (e.key === 'Enter' && canSave) submit(); }}
+            />
+            <span className="text-[11px] text-muted-foreground">{dsAbreviada.length}/60</span>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <Button onClick={submit} disabled={!canSave} className="gap-2 h-10">
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+            Criar abreviação
+          </Button>
+          <Button
+            asChild
+            variant="outline"
+            className="gap-2 h-10"
+          >
+            <a href={`${AUGE_BASE_URL}/l/unilux/modInventario/manterAbreviacao.php`} target="_blank" rel="noreferrer">
+              <ExternalLink className="h-4 w-4" />
+              Abrir no Auge
+            </a>
+          </Button>
+        </div>
+
+        {lastOk && (
+          <div className="rounded-md border bg-emerald-500/5 px-3 py-2 text-xs">
+            <div className="flex items-center gap-2 text-emerald-600 font-medium">
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              Criada com sucesso {lastOk.cd ? <span className="font-mono text-muted-foreground">#{lastOk.cd}</span> : null}
+            </div>
+            <div className="mt-1 text-muted-foreground">
+              <span className="font-mono">{lastOk.ds}</span> <ArrowRight className="inline h-3 w-3" /> <span className="font-mono">{lastOk.abrev}</span>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function AutomacoesPage() {
   const { isAdmin, loading } = useAuth();
   if (loading) return null;
@@ -440,6 +583,7 @@ export default function AutomacoesPage() {
         className="space-y-4"
       >
         <EntregaAposCard />
+        <NovaAbreviacaoCard />
       </motion.div>
     </PageShell>
   );
