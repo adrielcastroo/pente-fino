@@ -65,6 +65,8 @@ const AdminPanelPage = lazy(() => import("@/pages/admin/AdminPanelPage"));
 const N8nMonitorPage = lazy(() => import("@/pages/N8nMonitorPage"));
 const HarTransferenciasPage = lazy(() => import("@/pages/admin/HarTransferenciasPage"));
 const DepositosAdminPage = lazy(() => import("@/pages/admin/DepositosAdminPage"));
+const AutomacoesPage = lazy(() => import("@/pages/admin/AutomacoesPage"));
+
 import RequireModule from "@/components/auth/RequireModule";
 
 
