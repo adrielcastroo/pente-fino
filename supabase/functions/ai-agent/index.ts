@@ -1059,7 +1059,7 @@ ${JSON.stringify(automaticContext, null, 2)}`;
         const provider = createOpenAICompatible({
           name: cfg.id,
           baseURL: cfg.baseURL,
-          headers: { Authorization: `Bearer ${cfg.apiKey}` },
+          headers: authHeaderFor(cfg),
         });
         const model = provider(modelId);
         const ac = new AbortController();
