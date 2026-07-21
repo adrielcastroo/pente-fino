@@ -634,7 +634,7 @@ async function buildAgentContext(admin: ReturnType<typeof createClient>, text: s
 }
 
 // ---------- Provedores + fallback ----------
-type ProviderId = "cerebras" | "groq" | "nvidia";
+type ProviderId = "cerebras" | "groq" | "nvidia" | "lovable";
 
 interface ProviderCfg {
   id: ProviderId;
@@ -642,6 +642,7 @@ interface ProviderCfg {
   baseURL: string;
   model: string;
   fastModel: string; // usado para tarefas simples
+  extraHeaders?: Record<string, string>;
 }
 
 function getProviders(): ProviderCfg[] {
@@ -667,7 +668,36 @@ function getProviders(): ProviderCfg[] {
       model: Deno.env.get("NVIDIA_MODEL") ?? "meta/llama-3.3-70b-instruct",
       fastModel: Deno.env.get("NVIDIA_FAST_MODEL") ?? "meta/llama-3.1-8b-instruct",
     },
+    {
+      id: "lovable",
+      apiKey: Deno.env.get("LOVABLE_API_KEY"),
+      baseURL: "https://ai.gateway.lovable.dev/v1",
+      model: Deno.env.get("LOVABLE_MODEL") ?? "openai/gpt-5.5",
+      fastModel: Deno.env.get("LOVABLE_FAST_MODEL") ?? "openai/gpt-5.4-mini",
+      extraHeaders: { "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
+    },
   ];
+}
+
+async function applySettingsOverrides(admin: ReturnType<typeof createClient>, providers: ProviderCfg[]): Promise<ProviderCfg[]> {
+  try {
+    const { data } = await admin.from("llm_settings").select("*").eq("id", 1).maybeSingle();
+    if (!data) return providers;
+    const s: any = data;
+    for (const p of providers) {
+      const m = s[`${p.id}_model`];
+      const fm = s[`${p.id}_fast_model`];
+      if (m) p.model = m;
+      if (fm) p.fastModel = fm;
+    }
+    const active: string | undefined = s.active_provider;
+    if (active) {
+      providers.sort((a, b) => (a.id === active ? -1 : b.id === active ? 1 : 0));
+    }
+    return providers;
+  } catch {
+    return providers;
+  }
 }
 
 // Classifica a tarefa: "fast" para perguntas curtas/simples; "reasoning" para
@@ -683,6 +713,15 @@ function pickModel(cfg: ProviderCfg, task: "fast" | "reasoning") {
   return task === "fast" ? cfg.fastModel : cfg.model;
 }
 
+
+function authHeaderFor(cfg: ProviderCfg): Record<string, string> {
+  if (cfg.id === "lovable") {
+    return { "Lovable-API-Key": cfg.apiKey ?? "", ...(cfg.extraHeaders ?? {}) };
+  }
+  return { Authorization: `Bearer ${cfg.apiKey ?? ""}`, ...(cfg.extraHeaders ?? {}) };
+}
+
+
 /**
  * Testa disponibilidade do provedor com um POST curto (não-stream). Se responder
  * com 2xx num timeout curto, o provedor está saudável. Isso permite fallback
@@ -697,7 +736,7 @@ async function probeProvider(cfg: ProviderCfg, model: string): Promise<boolean> 
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${cfg.apiKey}`,
+        ...authHeaderFor(cfg),
       },
       body: JSON.stringify({
         model,
@@ -719,9 +758,9 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const providers = getProviders().filter((p) => !!p.apiKey);
+    let providers = getProviders().filter((p) => !!p.apiKey);
     if (providers.length === 0) {
-      return new Response(JSON.stringify({ error: "Nenhum provedor de IA configurado (CEREBRAS_API_KEY, GROQ_API_KEY ou NVIDIA_API_KEY)." }), {
+      return new Response(JSON.stringify({ error: "Nenhum provedor de IA configurado (CEREBRAS_API_KEY, GROQ_API_KEY, NVIDIA_API_KEY ou LOVABLE_API_KEY)." }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -739,6 +778,9 @@ Deno.serve(async (req) => {
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
+
+    providers = await applySettingsOverrides(admin, providers);
+
 
     // Descobre o papel efetivo do usuário (role mais alto). Sem role → visitante.
     let userRole: string | null = null;
@@ -1026,7 +1068,7 @@ ${JSON.stringify(automaticContext, null, 2)}`;
         const provider = createOpenAICompatible({
           name: cfg.id,
           baseURL: cfg.baseURL,
-          headers: { Authorization: `Bearer ${cfg.apiKey}` },
+          headers: authHeaderFor(cfg),
         });
         const model = provider(modelId);
         const ac = new AbortController();
@@ -1069,7 +1111,7 @@ ${JSON.stringify(automaticContext, null, 2)}`;
           const provider = createOpenAICompatible({
             name: cfg.id,
             baseURL: cfg.baseURL,
-            headers: { Authorization: `Bearer ${cfg.apiKey}` },
+            headers: authHeaderFor(cfg),
           });
           const { text } = await generateText({
             model: provider(modelId),

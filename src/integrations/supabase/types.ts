@@ -2552,6 +2552,51 @@ export type Database = {
         }
         Relationships: []
       }
+      llm_settings: {
+        Row: {
+          active_provider: string
+          cerebras_fast_model: string | null
+          cerebras_model: string | null
+          groq_fast_model: string | null
+          groq_model: string | null
+          id: number
+          lovable_fast_model: string | null
+          lovable_model: string | null
+          nvidia_fast_model: string | null
+          nvidia_model: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          active_provider?: string
+          cerebras_fast_model?: string | null
+          cerebras_model?: string | null
+          groq_fast_model?: string | null
+          groq_model?: string | null
+          id?: number
+          lovable_fast_model?: string | null
+          lovable_model?: string | null
+          nvidia_fast_model?: string | null
+          nvidia_model?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          active_provider?: string
+          cerebras_fast_model?: string | null
+          cerebras_model?: string | null
+          groq_fast_model?: string | null
+          groq_model?: string | null
+          id?: number
+          lovable_fast_model?: string | null
+          lovable_model?: string | null
+          nvidia_fast_model?: string | null
+          nvidia_model?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       lotes_mestres: {
         Row: {
           cor_hex: string

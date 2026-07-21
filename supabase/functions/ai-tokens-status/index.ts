@@ -119,17 +119,23 @@ async function probe(cfg: ProviderCfg, key: string) {
     clearTimeout(t);
     const latency = Math.round(performance.now() - started);
     let modelCount: number | null = null;
+    let models: Array<{ id: string; owned_by?: string | null }> = [];
     if (res.ok) {
       try {
         const body = await res.json();
-        if (Array.isArray(body?.data)) modelCount = body.data.length;
-        else if (Array.isArray(body?.models)) modelCount = body.models.length;
+        const list = Array.isArray(body?.data) ? body.data : Array.isArray(body?.models) ? body.models : [];
+        models = list
+          .map((m: any) => ({
+            id: String(m?.id ?? m?.name ?? "").trim(),
+            owned_by: m?.owned_by ?? m?.publisher ?? null,
+          }))
+          .filter((m: any) => m.id.length > 0);
+        modelCount = models.length || null;
       } catch { /* ignore */ }
     }
     let usage = collectUsage(res.headers);
     const hasUsage = usage.requestsLimit !== null || usage.tokensLimit !== null;
 
-    // If /models didn't return rate-limit headers, do a minimal chat probe
     if (res.ok && !hasUsage && cfg.usageProbe) {
       try {
         const ac2 = new AbortController();
@@ -157,6 +163,7 @@ async function probe(cfg: ProviderCfg, key: string) {
       httpStatus: res.status,
       latencyMs: latency,
       modelCount,
+      models,
       error: res.ok ? null : `HTTP ${res.status}`,
       usage,
     };
@@ -167,12 +174,20 @@ async function probe(cfg: ProviderCfg, key: string) {
       httpStatus: 0,
       latencyMs: Math.round(performance.now() - started),
       modelCount: null,
+      models: [],
       error: err instanceof Error ? err.message : String(err),
       usage: null,
     };
   }
 }
 
+
+const DEFAULT_MODELS: Record<ProviderId, { model: string; fastModel: string }> = {
+  cerebras: { model: "llama-3.3-70b", fastModel: "llama3.1-8b" },
+  groq:     { model: "llama-3.3-70b-versatile", fastModel: "llama-3.1-8b-instant" },
+  nvidia:   { model: "meta/llama-3.3-70b-instruct", fastModel: "meta/llama-3.1-8b-instruct" },
+  lovable:  { model: "openai/gpt-5.5", fastModel: "openai/gpt-5.4-mini" },
+};
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -201,7 +216,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Admin-only
     const service = createClient(SUPABASE_URL, SERVICE);
     const { data: roles } = await service
       .from("user_roles")
@@ -215,11 +229,47 @@ Deno.serve(async (req) => {
       });
     }
 
+    // POST: update active provider / model overrides
+    if (req.method === "POST") {
+      const body = await req.json().catch(() => ({}));
+      const patch: Record<string, unknown> = {};
+      const allowed = [
+        "active_provider",
+        "cerebras_model", "cerebras_fast_model",
+        "groq_model", "groq_fast_model",
+        "nvidia_model", "nvidia_fast_model",
+        "lovable_model", "lovable_fast_model",
+      ];
+      for (const k of allowed) {
+        if (k in body) patch[k] = body[k];
+      }
+      if (patch.active_provider && !["cerebras","groq","nvidia","lovable"].includes(String(patch.active_provider))) {
+        return new Response(JSON.stringify({ error: "invalid active_provider" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      patch.updated_at = new Date().toISOString();
+      patch.updated_by = userData.user.id;
+      const { error: upErr } = await service.from("llm_settings").update(patch).eq("id", 1);
+      if (upErr) {
+        return new Response(JSON.stringify({ error: upErr.message }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      return new Response(JSON.stringify({ ok: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { data: settings } = await service.from("llm_settings").select("*").eq("id", 1).maybeSingle();
+
     const results = await Promise.all(
       PROVIDERS.map(async (cfg) => {
         const key = Deno.env.get(cfg.envKey) ?? "";
         const configured = key.length > 0;
         const health = configured ? await probe(cfg, key) : null;
+        const activeModel = (settings as any)?.[`${cfg.id}_model`] ?? DEFAULT_MODELS[cfg.id].model;
+        const activeFastModel = (settings as any)?.[`${cfg.id}_fast_model`] ?? DEFAULT_MODELS[cfg.id].fastModel;
         return {
           id: cfg.id,
           label: cfg.label,
@@ -229,12 +279,20 @@ Deno.serve(async (req) => {
           length: configured ? key.length : 0,
           docs: cfg.docs,
           health,
+          activeModel,
+          activeFastModel,
+          defaultModel: DEFAULT_MODELS[cfg.id].model,
+          defaultFastModel: DEFAULT_MODELS[cfg.id].fastModel,
         };
       }),
     );
 
     return new Response(
-      JSON.stringify({ providers: results, checkedAt: new Date().toISOString() }),
+      JSON.stringify({
+        providers: results,
+        activeProvider: (settings as any)?.active_provider ?? "cerebras",
+        checkedAt: new Date().toISOString(),
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (err) {
