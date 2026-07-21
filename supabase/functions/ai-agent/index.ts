@@ -749,9 +749,9 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const providers = getProviders().filter((p) => !!p.apiKey);
+    let providers = getProviders().filter((p) => !!p.apiKey);
     if (providers.length === 0) {
-      return new Response(JSON.stringify({ error: "Nenhum provedor de IA configurado (CEREBRAS_API_KEY, GROQ_API_KEY ou NVIDIA_API_KEY)." }), {
+      return new Response(JSON.stringify({ error: "Nenhum provedor de IA configurado (CEREBRAS_API_KEY, GROQ_API_KEY, NVIDIA_API_KEY ou LOVABLE_API_KEY)." }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -769,6 +769,9 @@ Deno.serve(async (req) => {
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
+
+    providers = await applySettingsOverrides(admin, providers);
+
 
     // Descobre o papel efetivo do usuário (role mais alto). Sem role → visitante.
     let userRole: string | null = null;
