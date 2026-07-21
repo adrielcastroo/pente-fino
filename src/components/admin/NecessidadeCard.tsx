@@ -181,7 +181,7 @@ export default function NecessidadeCard() {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] items-end">
+        <div className="grid gap-3 sm:grid-cols-[1fr_auto_auto] items-end">
           <div className="grid gap-1.5">
             <Label className="text-xs">Depósito destino *</Label>
             <Select value={destino} onValueChange={setDestino}>
@@ -196,18 +196,10 @@ export default function NecessidadeCard() {
             </Select>
           </div>
           <div className="grid gap-1.5">
-            <Label className="text-xs">Filtrar por origem</Label>
-            <Select value={origemFiltro} onValueChange={setOrigemFiltro}>
-              <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas as origens</SelectItem>
-                {depositos.map(d => (
-                  <SelectItem key={d.codigo} value={d.codigo}>
-                    <span className="font-mono">{d.codigo}</span> {d.nome ? `— ${d.nome}` : ''}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label className="text-xs">Origem</Label>
+            <div className="h-10 px-3 flex items-center rounded-md border bg-muted text-xs font-mono">
+              01 — Central
+            </div>
           </div>
           <Button onClick={listar} disabled={!destino || loading} className="h-10 gap-2">
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
