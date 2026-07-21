@@ -13,8 +13,9 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { PageShell, PageHeader } from '@/components/expedicao/ui';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { CalendarClock, Loader2, PlayCircle, Search, Sparkles, CheckCircle2, XCircle, MinusCircle, ExternalLink, ArrowRight, Type, Plus } from 'lucide-react';
+import { CalendarClock, Loader2, PlayCircle, Search, Sparkles, CheckCircle2, XCircle, MinusCircle, ExternalLink, ArrowRight, Type, Plus, Boxes } from 'lucide-react';
 import NecessidadeCard from '@/components/admin/NecessidadeCard';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 
 const AUGE_BASE_URL = 'https://unilux.auge.app';
