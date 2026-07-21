@@ -126,14 +126,41 @@ async function probe(cfg: ProviderCfg, key: string) {
         else if (Array.isArray(body?.models)) modelCount = body.models.length;
       } catch { /* ignore */ }
     }
+    let usage = collectUsage(res.headers);
+    const hasUsage = usage.requestsLimit !== null || usage.tokensLimit !== null;
+
+    // If /models didn't return rate-limit headers, do a minimal chat probe
+    if (res.ok && !hasUsage && cfg.usageProbe) {
+      try {
+        const ac2 = new AbortController();
+        const t2 = setTimeout(() => ac2.abort(), 8000);
+        const r2 = await fetch(cfg.usageProbe.url, {
+          method: "POST",
+          headers: {
+            ...cfg.authHeader(key),
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify(cfg.usageProbe.body),
+          signal: ac2.signal,
+        });
+        clearTimeout(t2);
+        const u2 = collectUsage(r2.headers);
+        if (u2.requestsLimit !== null || u2.tokensLimit !== null || u2.retryAfter !== null) {
+          usage = u2;
+        }
+      } catch { /* ignore usage probe errors */ }
+    }
+
     return {
       ok: res.ok,
       httpStatus: res.status,
       latencyMs: latency,
       modelCount,
       error: res.ok ? null : `HTTP ${res.status}`,
-      usage: collectUsage(res.headers),
+      usage,
     };
+
   } catch (err) {
     return {
       ok: false,
