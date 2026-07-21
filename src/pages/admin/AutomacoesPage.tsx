@@ -11,8 +11,11 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { PageShell, PageHeader } from '@/components/expedicao/ui';
+import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { CalendarClock, Loader2, PlayCircle, Search, Sparkles, CheckCircle2, XCircle, MinusCircle } from 'lucide-react';
+import { CalendarClock, Loader2, PlayCircle, Search, Sparkles, CheckCircle2, XCircle, MinusCircle, ExternalLink, ArrowRight } from 'lucide-react';
+
+const AUGE_BASE_URL = 'https://unilux.auge.app';
 
 type Acao = 'atualizar' | 'adicionar' | 'remover';
 
