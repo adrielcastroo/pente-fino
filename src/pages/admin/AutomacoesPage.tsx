@@ -258,17 +258,17 @@ function EntregaAposCard() {
             </div>
             <div className="max-h-[420px] overflow-auto">
               <table className="w-full text-xs">
-                <thead className="bg-muted/20 text-muted-foreground sticky top-0">
+                <thead className="bg-card text-muted-foreground sticky top-0 z-10 shadow-[0_1px_0_0_hsl(var(--border))]">
                   <tr>
-                    <th className="px-3 py-2 text-left font-medium">Chave</th>
-                    <th className="px-3 py-2 text-left font-medium">Acabamento</th>
-                    <th className="px-3 py-2 text-left font-medium">Descrição atual</th>
-                    <th className="px-3 py-2 text-left font-medium">Descrição reduzida</th>
-                    <th className="px-3 py-2 text-left font-medium">Ent. após</th>
+                    <th className="px-3 py-2 text-left font-medium bg-card">Chave</th>
+                    <th className="px-3 py-2 text-left font-medium bg-card">Acabamento</th>
+                    <th className="px-3 py-2 text-left font-medium bg-card">Descrição atual</th>
+                    <th className="px-3 py-2 text-left font-medium bg-card">Descrição reduzida</th>
+                    <th className="px-3 py-2 text-left font-medium bg-card">Ent. após</th>
                     {mostraPreview && (
                       <>
-                        <th className="px-3 py-2 text-left font-medium bg-primary/5">Nova descrição</th>
-                        <th className="px-3 py-2 text-left font-medium bg-primary/5">Nova reduzida</th>
+                        <th className="px-3 py-2 text-left font-medium bg-primary/10">Nova descrição</th>
+                        <th className="px-3 py-2 text-left font-medium bg-primary/10">Nova reduzida</th>
                       </>
                     )}
                   </tr>
