@@ -406,6 +406,33 @@ export type Database = {
         }
         Relationships: []
       }
+      auge_credentials: {
+        Row: {
+          base_url: string | null
+          id: boolean
+          password: string | null
+          updated_at: string
+          updated_by: string | null
+          username: string | null
+        }
+        Insert: {
+          base_url?: string | null
+          id?: boolean
+          password?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          username?: string | null
+        }
+        Update: {
+          base_url?: string | null
+          id?: boolean
+          password?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
       auge_depositos: {
         Row: {
           ativo: boolean | null

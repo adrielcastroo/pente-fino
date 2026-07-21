@@ -14,11 +14,22 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
 };
 
-const AUGE_BASE_URL = (Deno.env.get('AUGE_BASE_URL') ?? 'https://unilux.auge.app').replace(/\/$/, '');
-const AUGE_USERNAME = Deno.env.get('AUGE_USERNAME') ?? '';
-const AUGE_PASSWORD = Deno.env.get('AUGE_PASSWORD') ?? '';
+let AUGE_BASE_URL = (Deno.env.get('AUGE_BASE_URL') ?? 'https://unilux.auge.app').replace(/\/$/, '');
+let AUGE_USERNAME = Deno.env.get('AUGE_USERNAME') ?? '';
+let AUGE_PASSWORD = Deno.env.get('AUGE_PASSWORD') ?? '';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+async function loadAugeCredentials(admin: ReturnType<typeof createClient>) {
+  try {
+    const { data } = await admin.from('auge_credentials').select('base_url,username,password').eq('id', true).maybeSingle();
+    if (data) {
+      if (data.base_url && String(data.base_url).trim()) AUGE_BASE_URL = String(data.base_url).trim().replace(/\/$/, '');
+      if (data.username && String(data.username).trim()) AUGE_USERNAME = String(data.username).trim();
+      if (data.password && String(data.password).length) AUGE_PASSWORD = String(data.password);
+    }
+  } catch (_) { /* fallback para env */ }
+}
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
 const TRANSFERENCIA_BACKFILL_BATCH = 8;
@@ -2544,6 +2555,7 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
+  await loadAugeCredentials(admin);
   const url = new URL(req.url);
   const action = url.searchParams.get('action');
   const entityParam = url.searchParams.get('entity');
