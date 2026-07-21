@@ -14,6 +14,8 @@ import { PageShell, PageHeader } from '@/components/expedicao/ui';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { CalendarClock, Loader2, PlayCircle, Search, Sparkles, CheckCircle2, XCircle, MinusCircle, ExternalLink, ArrowRight, Type, Plus } from 'lucide-react';
+import NecessidadeCard from '@/components/admin/NecessidadeCard';
+
 
 const AUGE_BASE_URL = 'https://unilux.auge.app';
 
