@@ -374,21 +374,27 @@ export default function DashboardPage() {
               blocked={stats.occupation.tecido.blocked} 
               unit="alocações" 
             />
-            <OccupationChart 
-              id="chart-ocupacao-madeira"
-              title="Ocupação Madeira" 
-              used={stats.occupation.madeira.used} 
-              total={stats.occupation.madeira.total} 
-              reserved={stats.occupation.madeira.reserved} 
-              blocked={stats.occupation.madeira.blocked}
-              unit="metros"
-              customCategories={[
-                { name: 'Lâminas', value: 0 },
-                { name: 'Bases', value: 0 },
-                { name: 'Bandôs', value: 0 },
-                { name: 'Avarias', value: 0 },
-              ]}
-            />
+            {stats.occupation.madeira ? (
+              <OccupationChart 
+                id="chart-ocupacao-madeira"
+                title="Ocupação Madeira" 
+                used={stats.occupation.madeira.used} 
+                total={stats.occupation.madeira.total} 
+                reserved={stats.occupation.madeira.reserved} 
+                blocked={stats.occupation.madeira.blocked}
+                unit="metros"
+              />
+            ) : (
+              <OccupationChart
+                id="chart-ocupacao-chao"
+                title="Alocados no CHÃO"
+                used={stats.occupation.chao.used}
+                total={stats.occupation.chao.used}
+                reserved={0}
+                blocked={0}
+                unit="lotes"
+              />
+            )}
           </div>
 
           {/* Últimas Saídas — ocupa a zona morta abaixo das ocupações */}
@@ -497,8 +503,9 @@ export default function DashboardPage() {
         <div className="md:col-span-1 lg:col-span-4 h-full">
           <SummaryChart 
             id="chart-materiais"
-            title="Tipos de Materiais" 
-            desc="Top 8 itens por nº de registros (descrição do cadastro quando disponível)" 
+            title="Top itens cadastrados" 
+            desc="Top 8 itens por nº de registros — inclui itens sem cadastro" 
+
             data={[...stats.tipos].sort((a, b) => (b.value || 0) - (a.value || 0))} 
             type="bar" 
             icon={TrendingUp} 

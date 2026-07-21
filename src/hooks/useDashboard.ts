@@ -21,15 +21,27 @@ export function useDashboard() {
     try {
       const { data: posicoes, error: e1 } = await supabase
         .from('estoque_posicoes')
-        .select('status, item');
+        .select('status, item, estrutura');
       if (e1) throw e1;
 
       const stats = {
+        // Tecido = apenas estruturas do padrão TECxx (mapa 2D).
         tecido: { used: 0, total: TOTAL_SLOTS, reserved: 0, blocked: 0 },
-        madeira: { used: 0, total: 1000, reserved: 0, blocked: 0 },
+        // CHÃO = área livre, sem limite → métrica separada.
+        chao: { used: 0 },
+        // Madeira ainda não tem fonte real → mantemos null para ocultar o card.
+        madeira: null as null | { used: number; total: number; reserved: number; blocked: number },
       };
       posicoes?.forEach((p: any) => {
+        const estrutura = String(p.estrutura ?? '').trim().toUpperCase();
+        const isTec = /^TEC/i.test(estrutura);
+        const isChao = estrutura === 'CHÃO' || estrutura === 'CHAO';
         const occupied = p.status === 'ocupado' || (p.item && String(p.item).trim() !== '');
+        if (isChao) {
+          if (occupied) stats.chao.used++;
+          return;
+        }
+        if (!isTec) return;
         if (p.status === 'reservado') stats.tecido.reserved++;
         else if (p.status === 'bloqueado') stats.tecido.blocked++;
         else if (occupied) stats.tecido.used++;

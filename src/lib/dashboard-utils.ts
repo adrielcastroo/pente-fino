@@ -49,17 +49,30 @@ export const computeStats = (
     ? '—'
     : avgHours > 0 ? `${avgHours}h ${avgMins}min` : avgMinsTotal < 1 ? '< 1min' : `${avgMins}min`;
 
-  // Timeline (last 7 sessions) — include date + conferente for richer cards
-  const timeline = history.slice(0, 7).reverse().map(h => {
-    const d = h.date ? new Date(h.date) : null;
-    const dStr = d ? `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}` : '';
-    const conf = normalizeConferente(h.conferente).split(' ')[0] || '—';
-    const proc = (h.processo || h.name || '').slice(0, 8);
-    return {
-      name: `${dStr} ${conf} ${proc}`.trim(),
-      total: h.registros.length,
-    };
+  // Timeline — agrupa registros por DIA dos últimos 7 dias (inclui o hoje).
+  // Dias sem movimentação aparecem com total = 0 para preservar a linha temporal.
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dayBuckets: { name: string; total: number }[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const label = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+    dayBuckets.push({ name: label, total: 0 });
+  }
+  const idxByLabel = new Map(dayBuckets.map((b, i) => [b.name, i]));
+  history.forEach(h => {
+    if (!h.date) return;
+    const d = new Date(h.date);
+    if (isNaN(d.getTime())) return;
+    d.setHours(0, 0, 0, 0);
+    const diffDays = Math.floor((today.getTime() - d.getTime()) / 86400000);
+    if (diffDays < 0 || diffDays > 6) return;
+    const label = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const idx = idxByLabel.get(label);
+    if (idx !== undefined) dayBuckets[idx].total += h.registros.length;
   });
+  const timeline = dayBuckets;
 
   // Top Conferentes (sorted) — usa nome normalizado para deduplicar
   const conferenteMap = new Map<string, number>();
@@ -73,34 +86,35 @@ export const computeStats = (
     .sort((a, b) => b.value - a.value)
     .slice(0, 5);
 
-  // Setores — mapeia modo_origem real do banco para os 3 setores operacionais.
-  // Tecidos: manual + diversos + etiq_pronta + openrouter (sub-modos da bipagem de Tecido).
-  // Madeira: madeira. Motor/Controle: motor + controle.
+  // Setores — mapeia modo_origem real do banco para os setores operacionais.
+  // "Outros" captura registros com modo_origem desconhecido/vazio para não perder linhas.
   const TECIDO_MODES = new Set(['manual', 'diversos', 'etiq_pronta', 'openrouter', 'tecido']);
   const MADEIRA_MODES = new Set(['madeira']);
   const MOTOR_MODES = new Set(['motor', 'controle']);
-  let regTecido = 0, regMadeira = 0, regMotor = 0;
+  let regTecido = 0, regMadeira = 0, regMotor = 0, regOutros = 0;
   history.forEach(h => h.registros.forEach(r => {
     const m = String(r.modoOrigem || '').toLowerCase();
     if (TECIDO_MODES.has(m)) regTecido++;
     else if (MADEIRA_MODES.has(m)) regMadeira++;
     else if (MOTOR_MODES.has(m)) regMotor++;
+    else regOutros++;
   }));
   const categorias = [
     { name: `Tecidos (${regTecido})`, value: regTecido },
     { name: `Madeira (${regMadeira})`, value: regMadeira },
     { name: `Motor/Controle (${regMotor})`, value: regMotor },
+    ...(regOutros > 0 ? [{ name: `Outros (${regOutros})`, value: regOutros }] : []),
   ];
 
   // Tipos de Materiais — resolve código → descrição (codigo_interno, codigo_fornecedor
-  // ou codigos_fornecedor[]). Quando não houver match, mostra o código truncado
-  // marcado como "(sem cadastro)" para evidenciar a lacuna de cadastro.
+  // ou codigos_fornecedor[]). Itens sem match ficam rotulados como "(sem cadastro)"
+  // e agora aparecem no gráfico para expor a lacuna de cadastro (antes eram filtrados).
   const truncate = (s: string, n = 32) => (s.length > n ? `${s.slice(0, n - 1)}…` : s);
   const tiposMap = new Map<string, number>();
   history.flatMap(h => h.registros).forEach(r => {
     const codigo = (r.item || '').trim();
     if (!codigo) {
-      tiposMap.set('Sem item', (tiposMap.get('Sem item') || 0) + 1);
+      tiposMap.set('(sem item)', (tiposMap.get('(sem item)') || 0) + 1);
       return;
     }
     const descricao = cadastroMap.get(codigo) || cadastroMap.get(codigo.toUpperCase());
@@ -110,9 +124,9 @@ export const computeStats = (
 
   const tipos = Array.from(tiposMap.entries())
     .map(([name, value]) => ({ name, value }))
-    .filter(({ name }) => !/\(sem cadastro\)/i.test(name) && name !== 'Sem item')
     .sort((a, b) => b.value - a.value)
     .slice(0, 8);
+
 
   // Conferente Details — chaveia pelo nome normalizado
   const conferenteDetails = Array.from(conferenteMap.entries()).map(([name, total]) => {
@@ -142,12 +156,18 @@ export const computeStats = (
         reserved: stats_estoque?.tecido?.reserved || 0,
         blocked: stats_estoque?.tecido?.blocked || 0,
       },
-      madeira: {
-        used: stats_estoque?.madeira?.used || 0,
-        total: stats_estoque?.madeira?.total || 0,
-        reserved: stats_estoque?.madeira?.reserved || 0,
-        blocked: stats_estoque?.madeira?.blocked || 0,
-      }
+      chao: {
+        used: stats_estoque?.chao?.used || 0,
+      },
+      // Sem fonte real → null. A UI oculta o card quando null.
+      madeira: stats_estoque?.madeira
+        ? {
+            used: stats_estoque.madeira.used || 0,
+            total: stats_estoque.madeira.total || 0,
+            reserved: stats_estoque.madeira.reserved || 0,
+            blocked: stats_estoque.madeira.blocked || 0,
+          }
+        : null,
     }
   };
 };
