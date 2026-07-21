@@ -156,12 +156,18 @@ export const computeStats = (
         reserved: stats_estoque?.tecido?.reserved || 0,
         blocked: stats_estoque?.tecido?.blocked || 0,
       },
-      madeira: {
-        used: stats_estoque?.madeira?.used || 0,
-        total: stats_estoque?.madeira?.total || 0,
-        reserved: stats_estoque?.madeira?.reserved || 0,
-        blocked: stats_estoque?.madeira?.blocked || 0,
-      }
+      chao: {
+        used: stats_estoque?.chao?.used || 0,
+      },
+      // Sem fonte real → null. A UI oculta o card quando null.
+      madeira: stats_estoque?.madeira
+        ? {
+            used: stats_estoque.madeira.used || 0,
+            total: stats_estoque.madeira.total || 0,
+            reserved: stats_estoque.madeira.reserved || 0,
+            blocked: stats_estoque.madeira.blocked || 0,
+          }
+        : null,
     }
   };
 };
