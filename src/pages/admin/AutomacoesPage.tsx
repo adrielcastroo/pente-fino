@@ -172,6 +172,12 @@ function EntregaAposCard() {
       return;
     }
     setExecLoading(true);
+    setResult(null);
+    setExecProgress(8);
+    // Simulação de progresso enquanto o backend processa em lote
+    const progressTimer = setInterval(() => {
+      setExecProgress((p) => (p < 90 ? p + Math.max(1, Math.floor((92 - p) / 8)) : p));
+    }, 350);
     try {
       const resp = await callAugeEntregaApos({
         codigo_item: previewCodigo,
@@ -189,6 +195,9 @@ function EntregaAposCard() {
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Erro inesperado.');
     } finally {
+      clearInterval(progressTimer);
+      setExecProgress(100);
+      setTimeout(() => setExecProgress(0), 600);
       setExecLoading(false);
     }
   };
