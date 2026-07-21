@@ -68,8 +68,10 @@ const TAB_GROUPS: TabGroup[] = [
       { key: 'posthog', label: 'PostHog', icon: LineChart },
       { key: 'n8n', label: 'n8n', icon: Workflow },
       { key: 'auge', label: 'Auge ERP', icon: Warehouse },
+      { key: 'llm-tokens', label: 'Tokens LLM', icon: KeyRound },
     ],
   },
+
   {
     label: 'Entrega',
     tabs: [
