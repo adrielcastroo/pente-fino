@@ -444,9 +444,6 @@ function NovaAbreviacaoCard() {
     }
     setSaving(true);
     try {
-      const resp = await callAugeEntregaApos({ dsAtual: a, dsAbreviada: b, idTipoAbreviacao: 1 })
-        .catch(() => null);
-      // callAugeEntregaApos aponta para action=entrega_apos — precisamos da action correta:
       const { data: session } = await supabase.auth.getSession();
       const token = session.session?.access_token;
       const anon = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY) as string;
