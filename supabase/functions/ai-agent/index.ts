@@ -986,6 +986,24 @@ SOLICITAR MAIS INFORMAÇÕES (POPUP) — REGRA DURA:
 - Só responda direto (sem ASK_USER) quando TODOS os dados necessários
   estiverem no turno atual OU já vierem prontos no contexto injetado.
 
+SUGESTÕES DE PRÓXIMOS PASSOS (CHIPS CLICÁVEIS):
+- Sempre que fizer sentido, termine a resposta com um bloco de 2 a 4 sugestões
+  curtas e contextuais do que o usuário pode pedir em seguida — ações
+  concretas que VOCÊ consegue executar no Pente Fino/Auge com o contexto atual.
+- Formato exato, no FINAL da resposta (após todo o texto normal), array JSON
+  de strings em PT-BR, cada uma até ~60 caracteres:
+
+[[SUGGESTIONS]]
+["Ver acabamentos do TC.000.033","Sincronizar acabamentos agora","Listar itens sem endereço"]
+[[/SUGGESTIONS]]
+
+- As sugestões DEVEM ser específicas ao que foi discutido (usar códigos,
+  nomes, filtros que apareceram na conversa) — nunca genéricas tipo "posso
+  ajudar em mais alguma coisa?".
+- NÃO inclua o bloco SUGGESTIONS quando emitir ASK_USER (o popup já guia o
+  usuário), nem em recusas por escopo/permissão.
+- Se não houver próximos passos claros, omita o bloco.
+
 
 Usuário atual: ${userEmail ?? "não autenticado"} (id: ${userId ?? "-"}, perfil: ${roleLabel(userRole)}).
 Data/hora: ${new Date().toISOString()}.
