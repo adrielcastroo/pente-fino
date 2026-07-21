@@ -107,9 +107,13 @@ async function callAugeEntregaApos(body: Record<string, unknown>) {
 }
 
 function normalizeCodigo(v: string): string | null {
-  const m = v.trim().match(/^([A-Za-z]{2})[\.\s-]?(\d{3})[\.\s-]?(\d{3})$/);
-  if (!m) return null;
-  return `${m[1].toUpperCase()}.${m[2]}.${m[3]}`;
+  const s = v.trim().toUpperCase();
+  if (!s) return null;
+  // Aceita qualquer tipo de código (interno, fornecedor, cd_item_acabamento, etc.).
+  // O backend expande em variantes e consulta itens_cadastro para vincular.
+  const m = s.match(/^([A-Z]{2})[\.\s-]?(\d{3})[\.\s-]?(\d{3})$/);
+  if (m) return `${m[1]}.${m[2]}.${m[3]}`;
+  return s;
 }
 
 function normalizeData(v: string): string | null {
