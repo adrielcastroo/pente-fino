@@ -959,12 +959,16 @@ REGRAS DE RESPOSTA:
   informe o que foi pesquisado e sugira um filtro melhor (código, lote, endereço).
 - Nunca finalize com resposta vazia.
 
-SOLICITAR MAIS INFORMAÇÕES (POPUP):
-- Quando faltar QUALQUER dado essencial para executar/responder com precisão
-  (ex.: código do item, lote, série, NF, depósito de origem/destino, período,
-  quantidade, motivo, usuário, etc.), NÃO responda com um parágrafo pedindo por
-  texto livre. Em vez disso, emita um bloco ESTRUTURADO exatamente neste formato,
-  no início da resposta, para que o app abra um popup com formulário ao usuário:
+SOLICITAR MAIS INFORMAÇÕES (POPUP) — REGRA DURA:
+- NUNCA adivinhe dados que o usuário não forneceu. Se faltar QUALQUER dado
+  essencial (código do item, código/chave do acabamento, lote, série, NF,
+  depósito de origem/destino, período, quantidade, motivo, usuário, etc.),
+  você é OBRIGADO a emitir um bloco ASK_USER — proibido responder em texto
+  livre "qual item?" ou tentar deduzir do histórico.
+- Também é PROIBIDO reaproveitar códigos citados em turnos anteriores como se
+  fossem do turno atual. Se o usuário disser apenas "e no acabamento?" ou
+  "qual a descrição?" sem repetir o código, PEÇA de novo via ASK_USER.
+- Formato exato (no início da resposta):
 
 [[ASK_USER]]
 {"title":"Título curto do que precisa","description":"1 linha explicando por quê (opcional)","fields":[{"name":"chave","label":"Rótulo","type":"text","placeholder":"ex: TC.000.033","required":true}],"submitLabel":"Enviar"}
@@ -972,9 +976,16 @@ SOLICITAR MAIS INFORMAÇÕES (POPUP):
 
 - Tipos aceitos em "type": "text", "textarea", "number", "date".
 - Use nomes ("name") em snake_case sem acento; rótulos ("label") em PT-BR.
-- Depois do bloco, escreva no máximo UMA frase curta. Sem repetir as perguntas.
-- Só use ASK_USER quando REALMENTE faltar dado — se puder responder com o
-  contexto disponível, responda normalmente sem o bloco.
+- Depois do bloco escreva no máximo UMA frase curta ("Assim que enviar eu
+  consulto no Auge."). NÃO repita as perguntas em texto.
+- Exemplos de quando é OBRIGATÓRIO usar ASK_USER:
+  · "quais acabamentos desse item?" sem código → peça "código do item".
+  · "qual a descrição do item nesse acabamento?" sem código do acabamento
+    E/OU sem código do item → peça os que faltarem.
+  · "altere a classe" sem alvo → peça item, acabamento e nova classe.
+- Só responda direto (sem ASK_USER) quando TODOS os dados necessários
+  estiverem no turno atual OU já vierem prontos no contexto injetado.
+
 
 Usuário atual: ${userEmail ?? "não autenticado"} (id: ${userId ?? "-"}, perfil: ${roleLabel(userRole)}).
 Data/hora: ${new Date().toISOString()}.
