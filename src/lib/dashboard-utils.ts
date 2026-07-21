@@ -49,17 +49,30 @@ export const computeStats = (
     ? '—'
     : avgHours > 0 ? `${avgHours}h ${avgMins}min` : avgMinsTotal < 1 ? '< 1min' : `${avgMins}min`;
 
-  // Timeline (last 7 sessions) — include date + conferente for richer cards
-  const timeline = history.slice(0, 7).reverse().map(h => {
-    const d = h.date ? new Date(h.date) : null;
-    const dStr = d ? `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}` : '';
-    const conf = normalizeConferente(h.conferente).split(' ')[0] || '—';
-    const proc = (h.processo || h.name || '').slice(0, 8);
-    return {
-      name: `${dStr} ${conf} ${proc}`.trim(),
-      total: h.registros.length,
-    };
+  // Timeline — agrupa registros por DIA dos últimos 7 dias (inclui o hoje).
+  // Dias sem movimentação aparecem com total = 0 para preservar a linha temporal.
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dayBuckets: { name: string; total: number }[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const label = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+    dayBuckets.push({ name: label, total: 0 });
+  }
+  const idxByLabel = new Map(dayBuckets.map((b, i) => [b.name, i]));
+  history.forEach(h => {
+    if (!h.date) return;
+    const d = new Date(h.date);
+    if (isNaN(d.getTime())) return;
+    d.setHours(0, 0, 0, 0);
+    const diffDays = Math.floor((today.getTime() - d.getTime()) / 86400000);
+    if (diffDays < 0 || diffDays > 6) return;
+    const label = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const idx = idxByLabel.get(label);
+    if (idx !== undefined) dayBuckets[idx].total += h.registros.length;
   });
+  const timeline = dayBuckets;
 
   // Top Conferentes (sorted) — usa nome normalizado para deduplicar
   const conferenteMap = new Map<string, number>();
