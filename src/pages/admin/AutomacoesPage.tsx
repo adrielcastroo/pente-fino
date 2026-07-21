@@ -584,10 +584,23 @@ export default function AutomacoesPage() {
         initial={{ opacity: 0, y: 4 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2, ease: 'easeOut' }}
-        className="space-y-4"
       >
-        <NecessidadeCard />
-        <EntregaAposCard />
+        <Tabs defaultValue="necessidade" className="space-y-4">
+          <TabsList className="w-full sm:w-auto">
+            <TabsTrigger value="necessidade" className="gap-2">
+              <Boxes className="h-4 w-4" /> Necessidade
+            </TabsTrigger>
+            <TabsTrigger value="entrega-apos" className="gap-2">
+              <CalendarClock className="h-4 w-4" /> Entrega Após
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="necessidade" className="mt-0">
+            <NecessidadeCard />
+          </TabsContent>
+          <TabsContent value="entrega-apos" className="mt-0">
+            <EntregaAposCard />
+          </TabsContent>
+        </Tabs>
       </motion.div>
 
     </PageShell>
