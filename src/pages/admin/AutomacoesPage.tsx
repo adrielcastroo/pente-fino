@@ -13,7 +13,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { PageShell, PageHeader } from '@/components/expedicao/ui';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { CalendarClock, Loader2, PlayCircle, Search, Sparkles, CheckCircle2, XCircle, MinusCircle, ExternalLink, ArrowRight } from 'lucide-react';
+import { CalendarClock, Loader2, PlayCircle, Search, Sparkles, CheckCircle2, XCircle, MinusCircle, ExternalLink, ArrowRight, Type, Plus } from 'lucide-react';
 
 const AUGE_BASE_URL = 'https://unilux.auge.app';
 
