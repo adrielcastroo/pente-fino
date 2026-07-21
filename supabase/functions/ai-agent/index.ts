@@ -634,7 +634,7 @@ async function buildAgentContext(admin: ReturnType<typeof createClient>, text: s
 }
 
 // ---------- Provedores + fallback ----------
-type ProviderId = "cerebras" | "groq" | "nvidia";
+type ProviderId = "cerebras" | "groq" | "nvidia" | "lovable";
 
 interface ProviderCfg {
   id: ProviderId;
@@ -642,6 +642,7 @@ interface ProviderCfg {
   baseURL: string;
   model: string;
   fastModel: string; // usado para tarefas simples
+  extraHeaders?: Record<string, string>;
 }
 
 function getProviders(): ProviderCfg[] {
@@ -667,7 +668,36 @@ function getProviders(): ProviderCfg[] {
       model: Deno.env.get("NVIDIA_MODEL") ?? "meta/llama-3.3-70b-instruct",
       fastModel: Deno.env.get("NVIDIA_FAST_MODEL") ?? "meta/llama-3.1-8b-instruct",
     },
+    {
+      id: "lovable",
+      apiKey: Deno.env.get("LOVABLE_API_KEY"),
+      baseURL: "https://ai.gateway.lovable.dev/v1",
+      model: Deno.env.get("LOVABLE_MODEL") ?? "openai/gpt-5.5",
+      fastModel: Deno.env.get("LOVABLE_FAST_MODEL") ?? "openai/gpt-5.4-mini",
+      extraHeaders: { "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
+    },
   ];
+}
+
+async function applySettingsOverrides(admin: ReturnType<typeof createClient>, providers: ProviderCfg[]): Promise<ProviderCfg[]> {
+  try {
+    const { data } = await admin.from("llm_settings").select("*").eq("id", 1).maybeSingle();
+    if (!data) return providers;
+    const s: any = data;
+    for (const p of providers) {
+      const m = s[`${p.id}_model`];
+      const fm = s[`${p.id}_fast_model`];
+      if (m) p.model = m;
+      if (fm) p.fastModel = fm;
+    }
+    const active: string | undefined = s.active_provider;
+    if (active) {
+      providers.sort((a, b) => (a.id === active ? -1 : b.id === active ? 1 : 0));
+    }
+    return providers;
+  } catch {
+    return providers;
+  }
 }
 
 // Classifica a tarefa: "fast" para perguntas curtas/simples; "reasoning" para
