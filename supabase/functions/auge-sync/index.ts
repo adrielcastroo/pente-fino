@@ -3248,6 +3248,7 @@ Deno.serve(async (req) => {
         ? payload.destinos.map((s: any) => String(s).trim()).filter(Boolean)
         : destinosDefault;
       const efetivar = payload?.efetivar === true;
+      const skipLog = payload?.skip_log === true;
 
       const resultados: any[] = [];
 
