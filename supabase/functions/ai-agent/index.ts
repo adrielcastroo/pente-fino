@@ -709,9 +709,13 @@ function classifyTask(text: string): "fast" | "reasoning" {
   return "fast";
 }
 
-function pickModel(cfg: ProviderCfg, task: "fast" | "reasoning") {
-  return task === "fast" ? cfg.fastModel : cfg.model;
+function authHeaderFor(cfg: ProviderCfg): Record<string, string> {
+  if (cfg.id === "lovable") {
+    return { "Lovable-API-Key": cfg.apiKey ?? "", ...(cfg.extraHeaders ?? {}) };
+  }
+  return { Authorization: `Bearer ${cfg.apiKey ?? ""}`, ...(cfg.extraHeaders ?? {}) };
 }
+
 
 /**
  * Testa disponibilidade do provedor com um POST curto (não-stream). Se responder
