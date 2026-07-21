@@ -93,6 +93,9 @@ export default function NecessidadeCronCard() {
   const [lastRun, setLastRun] = useState<Run | null>(null);
   const [cronCurrent, setCronCurrent] = useState<string>('');
   const [savingCron, setSavingCron] = useState(false);
+  const [liveResults, setLiveResults] = useState<ResultItem[]>([]);
+  const [liveDestino, setLiveDestino] = useState<string | null>(null);
+  const [liveProgress, setLiveProgress] = useState<number>(0);
 
   // UI state
   const [recurrent, setRecurrent] = useState<boolean>(true);
