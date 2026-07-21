@@ -363,7 +363,7 @@ export default function AugeTransferenciasTab({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map(r => {
+              {paginated.map(r => {
                 const rascunho = isRascunho(r) && !isEfetivada(r);
                 return (
                   <TableRow key={r.id} className="cursor-pointer hover:bg-muted/40" onClick={() => rascunho ? abrirEdicao(r) : setDetail(r)}>
