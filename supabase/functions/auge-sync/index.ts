@@ -3221,6 +3221,123 @@ Deno.serve(async (req) => {
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
+    // ==============================================================
+    // necessidade_cron_run
+    //   Executa o fluxo Necessidade automaticamente para uma lista
+    //   de depósitos destino (origem sempre "01" — Central).
+    //   Para "PVT", divide em 2 rascunhos: tecidos (TC.*) e demais.
+    //   Filtra: saldo em 01 > 0 e qtRecomendacao > 0.
+    // ==============================================================
+    if (action === 'necessidade_cron_run') {
+      let payload: any = {};
+      try { payload = await req.json(); } catch { /* ignore */ }
+      const destinosDefault = ['18', '20', 'EMBALAGE', 'ESPE.1', 'ESPE.2', 'PH', 'PVT'];
+      const destinos: string[] = Array.isArray(payload?.destinos) && payload.destinos.length
+        ? payload.destinos.map((s: any) => String(s).trim()).filter(Boolean)
+        : destinosDefault;
+      const efetivar = payload?.efetivar === true;
+
+      const resultados: any[] = [];
+
+      const listar = async (destino: string) => {
+        const body = new URLSearchParams({ cdDepositoDestino: destino, cdDepositoOrigem: '01' });
+        const j = await postAjaxJson(
+          auth,
+          '/l.unilux/modInventario/estoque/ajax/getNecessidade.php',
+          body,
+        );
+        const raw = Array.isArray(j?.data) ? j.data : [];
+        return raw.map((r: any) => ({
+          cdItem: String(r.cdItem ?? ''),
+          nmItem: String(r.nmItem ?? ''),
+          cdDepositoOrigem: String(r.cdDeposito ?? ''),
+          qtEstoque: parseBRNumber(r.qtdEstoque),
+          qtRecomendacao: parseBRNumber(r.qtdRecomendacao),
+          idControleLote: String(r.idControleLote ?? 'N').toUpperCase() === 'Y',
+          idControleSerie: String(r.idControleSerie ?? 'N').toUpperCase() === 'Y',
+        }));
+      };
+
+      const criarRascunho = async (destino: string, rows: any[], tag: string) => {
+        const elegiveis = rows.filter(r =>
+          r.cdDepositoOrigem === '01' && r.qtEstoque > 0 && r.qtRecomendacao > 0
+        );
+        if (!elegiveis.length) {
+          return { destino, tag, status: 'sem_itens', itens: 0 };
+        }
+        const itensFinais: TransferenciaItem[] = [];
+        const relatorio: any[] = [];
+        for (const it of elegiveis) {
+          const qtdAlvo = Math.min(it.qtRecomendacao, it.qtEstoque);
+          if (qtdAlvo <= 0) continue;
+          if (it.idControleLote || it.idControleSerie) {
+            try {
+              const lotes = it.idControleSerie
+                ? await fetchSeriesLive(auth, it.cdItem, '01')
+                : await fetchLotesLive(auth, it.cdItem, '01');
+              let restante = qtdAlvo;
+              const usados: any[] = [];
+              for (const r of lotes) {
+                if (restante <= 0) break;
+                const disp = Math.max(0, r.quantidade - (r.selecionado || 0));
+                if (disp <= 0) continue;
+                if (it.idControleSerie) {
+                  if (disp <= restante) {
+                    itensFinais.push({ cdItem: it.cdItem, cdDepositoOrigem: '01', cdDepositoDestino: destino, qtd: disp, nrLote: r.lote });
+                    usados.push(r.lote); restante -= disp;
+                  }
+                } else {
+                  const usar = Math.min(disp, restante);
+                  itensFinais.push({ cdItem: it.cdItem, cdDepositoOrigem: '01', cdDepositoDestino: destino, qtd: usar, nrLote: r.lote });
+                  usados.push(r.lote); restante -= usar;
+                }
+              }
+              relatorio.push({ cdItem: it.cdItem, alvo: qtdAlvo, faltou: restante > 0 ? restante : 0 });
+            } catch (err) {
+              relatorio.push({ cdItem: it.cdItem, erro: getErrorMessage(err) });
+            }
+          } else {
+            itensFinais.push({ cdItem: it.cdItem, cdDepositoOrigem: '01', cdDepositoDestino: destino, qtd: qtdAlvo });
+          }
+        }
+        if (!itensFinais.length) return { destino, tag, status: 'sem_itens', itens: 0, relatorio };
+        try {
+          const observacao = `Necessidade automática (Pente Fino) — ${tag}`;
+          const cd = await criarTransferencia(auth, itensFinais, observacao);
+          if (efetivar) await efetivarTransferencia(auth, cd);
+          return { destino, tag, status: 'ok', cdMovimentacao: cd, itens: itensFinais.length, efetivado: efetivar };
+        } catch (err) {
+          return { destino, tag, status: 'erro', itens: itensFinais.length, erro: getErrorMessage(err) };
+        }
+      };
+
+      for (const destino of destinos) {
+        try {
+          const rows = await listar(destino);
+          if (destino.toUpperCase() === 'PVT') {
+            const tecidos = rows.filter(r => /^TC\./i.test(r.cdItem));
+            const outros = rows.filter(r => !/^TC\./i.test(r.cdItem));
+            resultados.push(await criarRascunho(destino, tecidos, 'PVT-Tecidos'));
+            resultados.push(await criarRascunho(destino, outros, 'PVT-Outros'));
+          } else {
+            resultados.push(await criarRascunho(destino, rows, destino));
+          }
+        } catch (err) {
+          resultados.push({ destino, status: 'erro_listar', erro: getErrorMessage(err) });
+        }
+      }
+
+      await admin.from('auge_sync_runs').insert({
+        status: 'success', triggered_by: triggeredBy, entidade: 'transferencias',
+        finished_at: new Date().toISOString(),
+        detalhes: { action: 'necessidade_cron_run', destinos, resultados },
+      });
+
+      return new Response(JSON.stringify({ ok: true, destinos, resultados }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
 
     if (action === 'lotes_live' || action === 'series_live') {
       let payload: any = {};
