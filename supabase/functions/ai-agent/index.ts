@@ -330,6 +330,46 @@ function acabamentoItemCountAnswer(context: Record<string, unknown>, currentText
   return `Fio aqui para ajudar.\n\nO item **${code}** está vinculado a **${total} acabamentos** no Auge.\n\n${lines}`;
 }
 
+function acabamentoItemTableAnswer(context: Record<string, unknown>, currentText: string, previousText: string) {
+  const asksTable = /\b(tabela|table|colunas?|formato\s+de\s+tabela|template)\b/i.test(currentText);
+  const wantsAcabamentoContext = /acabament/i.test(`${currentText}\n${previousText}`);
+  if (!asksTable || !wantsAcabamentoContext) return null;
+
+  const rows = Array.isArray(context.acabamentos_do_item) ? (context.acabamentos_do_item as any[]) : [];
+  const total = typeof context.acabamentos_do_item_total === "number" ? context.acabamentos_do_item_total : rows.length;
+  if (rows.length === 0) return null;
+
+  const code = typeof context.acabamentos_do_item_codigo_perguntado === "string"
+    ? context.acabamentos_do_item_codigo_perguntado
+    : Array.isArray(context.acabamentos_do_item_codigos_consultados)
+      ? String(context.acabamentos_do_item_codigos_consultados[0] ?? "item informado")
+      : "item informado";
+
+  const uniqueRows = Array.from(
+    new Map(rows.map((row) => [String(row.codigo_auge ?? row.cd_acabamento), row])).values(),
+  );
+  const tableRows = uniqueRows
+    .slice(0, 60)
+    .map((row) => {
+      const codigo = String(row.codigo_auge ?? row.cd_acabamento ?? "-").replace(/\|/g, "\\|");
+      const acabamento = String(row.nm_acabamento ?? "-").replace(/\|/g, "\\|");
+      const descricao = String(row.descricao_item_no_acabamento ?? row.descricao ?? "-").replace(/\|/g, "\\|");
+      const status = row.cancelado ? "Cancelado" : "Ativo";
+      return `| ${codigo} | ${acabamento} | ${descricao} | ${status} |`;
+    })
+    .join("\n");
+
+  return [
+    "Fio aqui para ajudar.",
+    "",
+    `Segue em formato de tabela a descrição **do item ${code}** dentro de cada acabamento vinculado no Auge (**${total}** vínculos):`,
+    "",
+    "| Código do acabamento | Acabamento | Descrição do item no acabamento | Status |",
+    "|---|---|---|---|",
+    tableRows,
+  ].join("\n");
+}
+
 async function buildAgentContext(admin: ReturnType<typeof createClient>, text: string) {
   const tokens = textTokens(text);
   const wantsTransfers = /transfer|rascunho|efetiva/i.test(text);
@@ -762,8 +802,9 @@ Deno.serve(async (req) => {
     }
 
     const userText = latestUserText(modelMessages);
+    const previousText = priorUserText(modelMessages);
     const conversationText = allUserText(modelMessages) || userText;
-    const scope = isInScope(userText);
+    const scope = isContextualFollowUp(userText, previousText) ? { ok: true } : isInScope(userText);
     const task = classifyTask(userText);
 
     console.log("[ai-agent]", { msgs: modelMessages.length, task, scope: scope.ok, providers: providers.map((p) => p.id) });
@@ -851,6 +892,15 @@ Deno.serve(async (req) => {
     }
 
     const automaticContext = await buildAgentContext(admin, conversationText);
+    const tableAnswer = acabamentoItemTableAnswer(automaticContext, userText, previousText);
+    if (tableAnswer) {
+      return textStreamResponse(tableAnswer, {
+        "x-ai-provider": "backend-query",
+        "x-ai-model": "deterministic",
+        "x-ai-task": task,
+        "x-ai-fallbacks": "0",
+      });
+    }
     // Passa APENAS o texto do turno atual — o atalho determinístico não deve
     // reaproveitar códigos de perguntas anteriores.
     const deterministicAnswer = acabamentoItemCountAnswer(automaticContext, userText);
