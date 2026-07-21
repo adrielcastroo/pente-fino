@@ -2902,6 +2902,186 @@ Deno.serve(async (req) => {
     }
 
 
+    // -------------- AUTOMAÇÃO ENTREGA APÓS --------------
+    // Consulta todos os acabamentos que contêm o item e aplica a mutação
+    // solicitada (preview | atualizar | adicionar | remover) na descrição
+    // e na descrição reduzida, além de manter a abreviação Ent_Ap_ ↔ E dd/m.
+    if (action === 'entrega_apos') {
+      let payload: any = {};
+      try { payload = await req.json(); } catch { /* ignore */ }
+
+      const codigoItem = String(payload?.codigo_item ?? '').trim().toUpperCase();
+      const rawAcao = String(payload?.acao ?? 'preview').toLowerCase().trim();
+      const acao =
+        rawAcao === 'preview' || rawAcao === 'atualizar' ||
+        rawAcao === 'adicionar' || rawAcao === 'remover'
+          ? rawAcao as 'preview' | 'atualizar' | 'adicionar' | 'remover'
+          : null;
+      if (!codigoItem) throw new Error('codigo_item é obrigatório.');
+      if (!acao) throw new Error('acao inválida (use preview | atualizar | adicionar | remover).');
+
+      // Normaliza a nova data para o formato DD/MM/AA.
+      const normalizarData = (s: string | undefined | null): string | null => {
+        if (!s) return null;
+        const m = String(s).trim().match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/);
+        if (!m) return null;
+        const dd = m[1].padStart(2, '0');
+        const mm = m[2].padStart(2, '0');
+        const yy = m[3].length === 4 ? m[3].slice(-2) : m[3].padStart(2, '0');
+        return `${dd}/${mm}/${yy}`;
+      };
+      const novaData = acao !== 'remover' ? normalizarData(payload?.nova_data) : null;
+      if ((acao === 'atualizar' || acao === 'adicionar') && !novaData) {
+        throw new Error('nova_data é obrigatória e deve estar no formato DD/MM/AA.');
+      }
+
+      const longToken = (d: string) => `(Ent_Ap_${d})`;
+      const shortToken = (d: string) => {
+        const [dd, mm] = d.split('/');
+        return `E${dd}/${parseInt(mm, 10)}`;
+      };
+      const stripLong = (s: string) =>
+        (s ?? '').replace(/\s*\(\s*Ent[_\s]?Ap[_\s]?\d{1,2}\/\d{1,2}\/\d{2,4}\s*\)/gi, '').trim();
+      const stripShort = (s: string) =>
+        (s ?? '').replace(/\s*E\d{1,2}\/\d{1,2}\s*$/i, '').trim();
+
+      // Busca todas as linhas de acabamento que contêm o item.
+      const variantes = Array.from(new Set([
+        codigoItem,
+        codigoItem.replace(/\./g, ''),
+      ]));
+      const { data: linhas, error: errLinhas } = await admin
+        .from('auge_acabamento_itens')
+        .select(`cd_acabamento_item, cd_acabamento, cd_item_acabamento,
+                 ds_item_acabamento, ds_item_acabamento_reduzida, ds_item_acabamento_original,
+                 cd_kit_complementar_1, cd_kit_complementar_2, cd_kit_complementar_3,
+                 cd_kit_complementar_4, cd_kit_complementar_5,
+                 auge_acabamentos ( cd_acabamento, chave_acabamento, nm_acabamento, id_cancelado )`)
+        .in('cd_item_acabamento', variantes)
+        .limit(500);
+      if (errLinhas) throw new Error(errLinhas.message);
+
+      const rows = (linhas ?? []) as any[];
+      if (rows.length === 0) {
+        return new Response(JSON.stringify({
+          ok: true, acao, codigo_item: codigoItem, total: 0, rows: [],
+          message: `Nenhum acabamento vinculado ao item ${codigoItem}.`,
+        }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      // Preview: apenas devolve a tabela.
+      if (acao === 'preview') {
+        const preview = rows.map((r) => ({
+          chave_acabamento: r.auge_acabamentos?.chave_acabamento ?? r.cd_acabamento,
+          nm_acabamento: r.auge_acabamentos?.nm_acabamento ?? null,
+          cancelado: r.auge_acabamentos?.id_cancelado === 'S',
+          descricao_atual: r.ds_item_acabamento ?? r.ds_item_acabamento_original ?? '',
+          descricao_reduzida_atual: r.ds_item_acabamento_reduzida ?? '',
+        }));
+        return new Response(JSON.stringify({
+          ok: true, acao, codigo_item: codigoItem, total: preview.length, rows: preview,
+        }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      // Execução: aplica linha a linha (writes no Auge).
+      const results: any[] = [];
+      let sucesso = 0, falha = 0, ignoradas = 0;
+      for (const r of rows) {
+        const chave = r.auge_acabamentos?.chave_acabamento ?? r.cd_acabamento;
+        try {
+          if (r.auge_acabamentos?.id_cancelado === 'S') {
+            ignoradas++;
+            results.push({ chave_acabamento: chave, status: 'ignorada', motivo: 'acabamento cancelado' });
+            continue;
+          }
+          const baseLong = stripLong(r.ds_item_acabamento_original ?? r.ds_item_acabamento ?? '');
+          const baseLongCurr = stripLong(r.ds_item_acabamento ?? r.ds_item_acabamento_original ?? '');
+          const baseShort = stripShort(r.ds_item_acabamento_reduzida ?? '');
+
+          let newLongOrig = baseLong;
+          let newLong = baseLongCurr;
+          let newShort = baseShort;
+          if (acao !== 'remover' && novaData) {
+            newLongOrig = `${baseLong} ${longToken(novaData)}`.trim();
+            newLong = `${baseLongCurr} ${longToken(novaData)}`.trim();
+            newShort = `${baseShort}${shortToken(novaData)}`;
+          }
+
+          // Se nada mudou, pula (evita hit inútil no Auge).
+          if (
+            newLong === (r.ds_item_acabamento ?? '') &&
+            newLongOrig === (r.ds_item_acabamento_original ?? '') &&
+            newShort === (r.ds_item_acabamento_reduzida ?? '')
+          ) {
+            ignoradas++;
+            results.push({ chave_acabamento: chave, status: 'ignorada', motivo: 'sem mudanças' });
+            continue;
+          }
+
+          const resp = await updateAcabamentoItem(auth, {
+            cdAcabamento: String(r.cd_acabamento),
+            cdAcabamentoItem: String(r.cd_acabamento_item),
+            cdItemAcabamento: String(r.cd_item_acabamento),
+            dsItemAcabamento: newLong,
+            dsItemAcabamentoReduzida: newShort,
+            dsItemAcabamentoOriginal: newLongOrig,
+            cdKitComplementar1: String(r.cd_kit_complementar_1 ?? ''),
+            cdKitComplementar2: String(r.cd_kit_complementar_2 ?? ''),
+            cdKitComplementar3: String(r.cd_kit_complementar_3 ?? ''),
+            cdKitComplementar4: String(r.cd_kit_complementar_4 ?? ''),
+            cdKitComplementar5: String(r.cd_kit_complementar_5 ?? ''),
+          });
+
+          // Reflete localmente.
+          await admin.from('auge_acabamento_itens').update({
+            ds_item_acabamento: newLong,
+            ds_item_acabamento_reduzida: newShort,
+            ds_item_acabamento_original: newLongOrig,
+          }).eq('cd_acabamento_item', r.cd_acabamento_item);
+
+          sucesso++;
+          results.push({
+            chave_acabamento: chave, status: 'ok',
+            de: r.ds_item_acabamento, para: newLong, auge: resp?.message ?? null,
+          });
+        } catch (err) {
+          falha++;
+          results.push({ chave_acabamento: chave, status: 'erro', campo: 'descricao', erro: getErrorMessage(err) });
+        }
+      }
+
+      // Cria/atualiza abreviação Ent_Ap_DD/MM/AA → E{dd}/{m} (apenas em atualizar/adicionar)
+      let abreviacao: any = null;
+      if ((acao === 'atualizar' || acao === 'adicionar') && novaData) {
+        try {
+          const dsAtual = `Ent_Ap_${novaData}`;
+          const dsAbreviada = shortToken(novaData);
+          const { data: existente } = await admin
+            .from('auge_abreviacoes')
+            .select('cd_abreviacao, ds_abreviada')
+            .eq('ds_atual', dsAtual)
+            .maybeSingle();
+          if (!existente) {
+            const resp = await salvarAbreviacaoAuge(auth, { dsAtual, dsAbreviada, idTipoAbreviacao: 1 });
+            abreviacao = { status: 'criada', dsAtual, dsAbreviada, auge: resp?.message ?? resp };
+          } else if (existente.ds_abreviada !== dsAbreviada) {
+            const resp = await salvarAbreviacaoAuge(auth, {
+              cdAbreviacao: existente.cd_abreviacao, dsAtual, dsAbreviada, idTipoAbreviacao: 1,
+            });
+            abreviacao = { status: 'atualizada', dsAtual, dsAbreviada, auge: resp?.message ?? resp };
+          } else {
+            abreviacao = { status: 'ja_existia', dsAtual, dsAbreviada };
+          }
+        } catch (err) {
+          abreviacao = { status: 'erro', campo: 'abreviacao', erro: getErrorMessage(err) };
+        }
+      }
+
+      return new Response(JSON.stringify({
+        ok: falha === 0, acao, codigo_item: codigoItem, nova_data: novaData,
+        total: rows.length, sucesso, falha, ignoradas, results, abreviacao,
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
 
 
     if (action === 'lotes_live' || action === 'series_live') {
