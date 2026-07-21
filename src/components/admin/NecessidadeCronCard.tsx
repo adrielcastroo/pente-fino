@@ -137,7 +137,36 @@ export default function NecessidadeCronCard() {
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-4">
+        <div className="rounded-md border p-3 space-y-2 bg-muted/10">
+          <Label className="text-xs flex items-center gap-1.5"><CalendarClock className="h-3.5 w-3.5" /> Expressão cron (UTC)</Label>
+          <div className="flex flex-wrap gap-2">
+            <Input value={cronExpr} onChange={(e) => setCronExpr(e.target.value)}
+              placeholder="0 10 * * 1-5" className="font-mono text-xs h-9 max-w-[220px]" />
+            <Button onClick={salvarCron} disabled={savingCron || cronExpr.trim() === cronCurrent.trim()} size="sm" className="gap-1.5 h-9">
+              {savingCron ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+              Salvar
+            </Button>
+            {cronCurrent && (
+              <span className="text-[11px] text-muted-foreground self-center">
+                Atual: <span className="font-mono text-foreground">{cronCurrent}</span>
+              </span>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {PRESETS.map(p => (
+              <Button key={p.expr} variant="outline" size="sm" className="h-7 text-[11px]"
+                onClick={() => setCronExpr(p.expr)}>
+                {p.label} <span className="ml-1 font-mono text-muted-foreground">{p.expr}</span>
+              </Button>
+            ))}
+          </div>
+          <p className="text-[10px] text-muted-foreground">
+            Horário em UTC. Ex.: <span className="font-mono">0 10 * * 1-5</span> = seg–sex às 07:00 BRT.
+          </p>
+        </div>
+
+
         {!lastRun && (
           <div className="rounded-md border bg-muted/20 px-3 py-6 text-center text-xs text-muted-foreground">
             Nenhuma execução automática registrada ainda.
