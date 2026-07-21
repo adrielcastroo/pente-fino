@@ -30,6 +30,7 @@ import {
   LineChart,
   Workflow,
   Warehouse,
+  ListChecks,
 } from 'lucide-react';
 
 const FeatureFlagsPage = lazy(() => import('./FeatureFlagsPage'));
