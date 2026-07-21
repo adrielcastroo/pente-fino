@@ -345,6 +345,20 @@ function EntregaAposCard() {
           </div>
         )}
 
+        {/* Barra de progresso */}
+        {(execLoading || execProgress > 0) && (
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+              <span className="flex items-center gap-1.5">
+                <Loader2 className={`h-3 w-3 ${execLoading ? 'animate-spin' : ''}`} />
+                {execLoading ? 'Aplicando alterações no Auge…' : 'Finalizado'}
+              </span>
+              <span className="font-mono">{execProgress}%</span>
+            </div>
+            <Progress value={execProgress} className="h-2" />
+          </div>
+        )}
+
         {/* Resultado */}
         {result && (
           <div className="rounded-md border bg-card">
