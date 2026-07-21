@@ -25,6 +25,27 @@ function extractEntregaApos(desc: string | null | undefined): string | null {
   return m ? m[1] : null;
 }
 
+const ENT_AP_RE = /\s*\(\s*Ent[_ ]?Ap[_ ]?(\d{2}\/\d{2}\/\d{2,4})\s*\)\s*/gi;
+const ABREV_RE = /\s*E\d{1,2}\/\d{1,2}\s*$/i;
+
+function abbrevFromDate(data: string): string {
+  const m = data.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+  if (!m) return '';
+  return `E${Number(m[1])}/${Number(m[2])}`;
+}
+
+function previewDescricao(desc: string, acao: Acao, novaData: string | null): string {
+  const base = (desc || '').replace(ENT_AP_RE, ' ').replace(/\s+/g, ' ').trim();
+  if (acao === 'remover' || !novaData) return base;
+  return `${base} (Ent_Ap_${novaData})`;
+}
+
+function previewReduzida(reduz: string, acao: Acao, novaData: string | null): string {
+  const base = (reduz || '').replace(ABREV_RE, '').trim();
+  if (acao === 'remover' || !novaData) return base;
+  return `${base}${abbrevFromDate(novaData)}`;
+}
+
 type PreviewRow = {
   cd_acabamento_item: number;
   cd_acabamento: number;
