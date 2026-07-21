@@ -315,9 +315,28 @@ function OverviewTab() {
           </ul>
         )}
       </Card>
+
+      <Card className="p-5 rounded-md border-border/40 shadow-sm">
+        <h3 className="font-semibold mb-3 flex items-center gap-2 text-sm">
+          <Workflow className="h-4 w-4 text-primary" /> Automações
+        </h3>
+        <div className="grid gap-2.5 sm:grid-cols-2">
+          <a
+            href="/admin/automacoes"
+            className="group flex items-start gap-3 rounded-md border border-border/40 bg-card/50 p-3 transition-colors hover:border-primary/40 hover:bg-card"
+          >
+            <div className="rounded-md bg-primary/10 p-2 text-primary"><Workflow className="h-4 w-4" /></div>
+            <div className="min-w-0">
+              <div className="text-sm font-medium">Rotinas do Auge</div>
+              <div className="text-xs text-muted-foreground">Entrega Após, abreviações e outras automações administrativas.</div>
+            </div>
+          </a>
+        </div>
+      </Card>
     </div>
   );
 }
+
 
 // ============ DATABASE ============
 const MONITORED_TABLES = [
