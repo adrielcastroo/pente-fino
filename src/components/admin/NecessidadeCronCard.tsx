@@ -3,10 +3,20 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { CalendarClock, Loader2, PlayCircle, CheckCircle2, XCircle, MinusCircle } from 'lucide-react';
+import { CalendarClock, Loader2, PlayCircle, CheckCircle2, XCircle, MinusCircle, Save, KeyRound } from 'lucide-react';
 
 const DESTINOS: string[] = ['18', '20', 'EMBALAGE', 'ESPE.1', 'ESPE.2', 'PH', 'PVT'];
+
+const PRESETS: { label: string; expr: string }[] = [
+  { label: 'Seg–Sex 07:00 BRT', expr: '0 10 * * 1-5' },
+  { label: 'Seg–Sex 06:00 BRT', expr: '0 9 * * 1-5' },
+  { label: 'Seg–Sex 08:00 BRT', expr: '0 11 * * 1-5' },
+  { label: 'Todo dia 07:00 BRT', expr: '0 10 * * *' },
+];
+
 
 type ResultItem = {
   destino: string;
