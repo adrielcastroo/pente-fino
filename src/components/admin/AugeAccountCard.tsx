@@ -1,13 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { KeyRound, ExternalLink } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function AugeAccountCard() {
   const abrirSecrets = () => {
-    // Abre painel de secrets do backend (Lovable Cloud)
-    window.dispatchEvent(new CustomEvent('lovable:open-backend', { detail: { section: 'secrets' } }));
-    // Fallback informativo
+    toast.info('Atualize AUGE_USERNAME e AUGE_PASSWORD nos segredos do backend (Lovable Cloud). As próximas execuções já usam a nova conta.', { duration: 8000 });
   };
+
 
   return (
     <Card>
