@@ -121,12 +121,10 @@ export default function NecessidadeCronCard() {
               <CalendarClock className="h-4 w-4 text-primary" /> Agendamento — Necessidade Automática
             </CardTitle>
             <CardDescription className="mt-1">
-              Roda de <strong>segunda a sexta</strong> às <strong>07:00 (BRT)</strong> e gera rascunhos
-              no Auge com origem sempre <span className="font-mono">01 — Central</span>. Só entram itens
-              com <strong>saldo em 01 &gt; 0</strong>. Para <span className="font-mono">PVT</span> gera
-              dois rascunhos: <strong>Tecidos</strong> (códigos <span className="font-mono">TC.*</span>)
-              e <strong>Outros</strong>.
+              Gera rascunhos no Auge com origem sempre <span className="font-mono">01 — Central</span>.
+              Só entram itens com <strong>saldo em 01 &gt; 0</strong>. Configure o horário abaixo.
             </CardDescription>
+
             <div className="mt-2 flex flex-wrap gap-1.5">
               {DESTINOS.map(d => (
                 <Badge key={d} variant="secondary" className="font-mono text-[10px]">{d}</Badge>
