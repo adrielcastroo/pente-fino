@@ -9,7 +9,8 @@ import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
   DropdownMenuItem, DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { RefreshCw, Loader2, ArrowRightLeft, Search, Plus, Zap, MoreVertical, Pencil, Copy, Trash2, ArrowUpDown, ArrowUp, ArrowDown, CalendarDays, X } from 'lucide-react';
+import { RefreshCw, Loader2, ArrowRightLeft, Search, Plus, Zap, MoreVertical, Pencil, Copy, Trash2, ArrowUpDown, ArrowUp, ArrowDown, CalendarDays, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { formatDateBR } from '@/lib/app-utils';
 import { formatQty } from '@/lib/utils';
 import TransferenciaDetailDialog from './TransferenciaDetailDialog';
