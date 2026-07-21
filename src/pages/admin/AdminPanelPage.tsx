@@ -43,6 +43,8 @@ const SentryTab = lazy(() => import('./tabs/SentryTab'));
 const PostHogTab = lazy(() => import('./tabs/PostHogTab'));
 const N8nMonitorPage = lazy(() => import('@/pages/N8nMonitorPage'));
 const AugeAdminPanel = lazy(() => import('@/components/auge/AugeAdminPanel'));
+const LlmTokensTab = lazy(() => import('./tabs/LlmTokensTab'));
+
 
 declare const __APP_VERSION__: string;
 
