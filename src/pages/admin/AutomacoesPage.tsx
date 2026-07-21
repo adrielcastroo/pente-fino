@@ -583,8 +583,10 @@ export default function AutomacoesPage() {
         transition={{ duration: 0.2, ease: 'easeOut' }}
         className="space-y-4"
       >
+        <NecessidadeCard />
         <EntregaAposCard />
       </motion.div>
+
     </PageShell>
   );
 }
