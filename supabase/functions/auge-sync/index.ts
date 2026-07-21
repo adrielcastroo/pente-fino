@@ -3092,6 +3092,136 @@ Deno.serve(async (req) => {
     }
 
 
+    // ==============================================================
+    // Necessidade de Transferências
+    //   necessidade_listar     -> chama getNecessidade.php do Auge
+    //   necessidade_criar      -> monta rascunho no Auge (FIFO para
+    //                             itens com controle de lote/série)
+    // ==============================================================
+    if (action === 'necessidade_listar') {
+      let payload: any = {};
+      try { payload = await req.json(); } catch { /* ignore */ }
+      const cdDepositoDestino = String(payload?.cdDepositoDestino ?? '').trim();
+      const cdDepositoOrigem = String(payload?.cdDepositoOrigem ?? '').trim();
+      if (!cdDepositoDestino) throw new Error('cdDepositoDestino é obrigatório.');
+
+      const body = new URLSearchParams({ cdDepositoDestino });
+      if (cdDepositoOrigem) body.set('cdDepositoOrigem', cdDepositoOrigem);
+      const j = await postAjaxJson(
+        auth,
+        '/l.unilux/modInventario/estoque/ajax/getNecessidade.php',
+        body,
+      );
+      const raw = Array.isArray(j?.data) ? j.data : [];
+      const rows = raw.map((r: any) => ({
+        cdItem: String(r.cdItem ?? ''),
+        nmItem: String(r.nmItem ?? ''),
+        cdDepositoOrigem: String(r.cdDeposito ?? ''),
+        nmDepositoOrigem: String(r.nmDeposito ?? ''),
+        unidade: String(r.idUnidadeMedida ?? ''),
+        qtEstoqueGeral: parseBRNumber(r.qtdEstoqueGeral),
+        qtEstoque: parseBRNumber(r.qtdEstoque),
+        qtSaida: parseBRNumber(r.qtdSaida),
+        qtDisponivel: parseBRNumber(r.qtdDisponivel),
+        qtMinimo: parseBRNumber(r.qtEstoqueMinimo),
+        qtRecomendacao: parseBRNumber(r.qtdRecomendacao),
+        dsAviso: String(r.dsAviso ?? ''),
+        idControleLote: String(r.idControleLote ?? 'N').toUpperCase() === 'Y',
+        idControleSerie: String(r.idControleSerie ?? 'N').toUpperCase() === 'Y',
+        qtConsumo30d: parseBRNumber(r.qtdConsumoUlt30dias),
+        idRnpPadrao: String(r.idRnpPadrao ?? ''),
+      }));
+      return new Response(JSON.stringify({
+        ok: true, cdDepositoDestino, cdDepositoOrigem, total: rows.length, data: rows,
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    if (action === 'necessidade_criar') {
+      let payload: any = {};
+      try { payload = await req.json(); } catch { /* ignore */ }
+      const cdDepositoDestino = String(payload?.cdDepositoDestino ?? '').trim();
+      const itensIn = Array.isArray(payload?.itens) ? payload.itens : [];
+      if (!cdDepositoDestino) throw new Error('cdDepositoDestino é obrigatório.');
+      if (!itensIn.length) throw new Error('Envie ao menos 1 item em "itens".');
+
+      // Expande cada linha: FIFO em lote/série; motores nunca são fracionados.
+      const itensFinais: TransferenciaItem[] = [];
+      const relatorio: any[] = [];
+      for (const it of itensIn) {
+        const cdItem = String(it?.cdItem ?? '').trim();
+        const cdDepositoOrigem = String(it?.cdDepositoOrigem ?? '').trim();
+        const qtdAlvo = Number(it?.qtd);
+        const controleLote = !!it?.idControleLote;
+        const controleSerie = !!it?.idControleSerie;
+        if (!cdItem || !cdDepositoOrigem || !Number.isFinite(qtdAlvo) || qtdAlvo <= 0) {
+          relatorio.push({ cdItem, status: 'ignorada', motivo: 'dados inválidos' });
+          continue;
+        }
+        if (controleLote || controleSerie) {
+          try {
+            const rows = controleSerie
+              ? await fetchSeriesLive(auth, cdItem, cdDepositoOrigem)
+              : await fetchLotesLive(auth, cdItem, cdDepositoOrigem);
+            let restante = qtdAlvo;
+            const usados: any[] = [];
+            for (const r of rows) {
+              if (restante <= 0) break;
+              const disp = Math.max(0, r.quantidade - (r.selecionado || 0));
+              if (disp <= 0) continue;
+              if (controleSerie) {
+                // Motores não fracionam: só entra se couber inteiro.
+                if (disp <= restante) {
+                  itensFinais.push({ cdItem, cdDepositoOrigem, cdDepositoDestino, qtd: disp, nrLote: r.lote });
+                  usados.push({ lote: r.lote, qtd: disp });
+                  restante -= disp;
+                }
+              } else {
+                const usar = Math.min(disp, restante);
+                itensFinais.push({ cdItem, cdDepositoOrigem, cdDepositoDestino, qtd: usar, nrLote: r.lote });
+                usados.push({ lote: r.lote, qtd: usar });
+                restante -= usar;
+              }
+            }
+            relatorio.push({
+              cdItem, alvo: qtdAlvo, atendido: qtdAlvo - restante,
+              faltou: restante > 0 ? restante : 0, lotes: usados,
+              status: restante > 0 ? (usados.length ? 'parcial' : 'sem_estoque') : 'ok',
+            });
+            if (!usados.length) continue;
+          } catch (err) {
+            relatorio.push({ cdItem, status: 'erro', erro: getErrorMessage(err) });
+            continue;
+          }
+        } else {
+          itensFinais.push({ cdItem, cdDepositoOrigem, cdDepositoDestino, qtd: qtdAlvo });
+          relatorio.push({ cdItem, alvo: qtdAlvo, atendido: qtdAlvo, status: 'ok' });
+        }
+      }
+
+      if (!itensFinais.length) {
+        return new Response(JSON.stringify({
+          ok: false, error: 'Nenhum item pôde ser incluído no rascunho.', relatorio,
+        }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      const observacao = String(payload?.observacao ?? 'Necessidade (Pente Fino)');
+      const cd = await criarTransferencia(auth, itensFinais, observacao);
+      let efetivado = false;
+      if (payload?.efetivar === true) {
+        await efetivarTransferencia(auth, cd);
+        efetivado = true;
+      }
+      await admin.from('auge_sync_runs').insert({
+        status: 'success', triggered_by: triggeredBy, entidade: 'transferencias',
+        finished_at: new Date().toISOString(),
+        detalhes: { action: 'necessidade_criar', cdMovimentacao: cd, itens: itensFinais.length, efetivado },
+      });
+      return new Response(JSON.stringify({
+        ok: true, cdMovimentacao: cd, efetivado, itens_criados: itensFinais.length, relatorio,
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+
     if (action === 'lotes_live' || action === 'series_live') {
       let payload: any = {};
       try { payload = await req.json(); } catch { /* ignore */ }
