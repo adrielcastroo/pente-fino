@@ -478,23 +478,8 @@ function NovaAbreviacaoCard() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2 border-t pt-4">
-        <Type className="h-4 w-4 text-primary" />
-        <h3 className="text-sm font-semibold">Nova Abreviação</h3>
-        <span className="text-xs text-muted-foreground">
-          Cadastra em{' '}
-          <a
-            href={`${AUGE_BASE_URL}/l/unilux/modInventario/manterAbreviacao.php`}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-1 underline underline-offset-2 hover:text-primary"
-          >
-            manterAbreviacao.php
-            <ExternalLink className="h-3 w-3" />
-          </a>
-        </span>
-      </div>
+    <div className="space-y-4 border-t pt-4">
+
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="grid gap-1.5">
