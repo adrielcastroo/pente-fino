@@ -363,7 +363,48 @@ export default function NecessidadeCronCard() {
           )}
         </div>
 
-        {!lastRun && (
+        {(running || liveResults.length > 0) && (
+          <div className="rounded-md border bg-primary/5 p-3 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-xs font-medium">
+                {running ? <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" /> : <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
+                {running
+                  ? <>Processando {liveDestino ? <span className="font-mono">{liveDestino}</span> : '…'}</>
+                  : 'Execução concluída'}
+              </div>
+              <div className="text-[11px] text-muted-foreground font-mono">
+                {liveResults.length}/{DESTINOS.length}
+              </div>
+            </div>
+            <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+              <div
+                className="h-full bg-primary transition-all duration-300"
+                style={{ width: `${liveProgress}%` }}
+              />
+            </div>
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {DESTINOS.map(d => {
+                const r = liveResults.find(x => x.destino === d);
+                const isCurrent = running && liveDestino === d && !r;
+                let icon: React.ReactNode = <MinusCircle className="h-3 w-3 opacity-40" />;
+                let cls = 'opacity-50';
+                if (isCurrent) { icon = <Loader2 className="h-3 w-3 animate-spin text-primary" />; cls = 'border-primary text-primary'; }
+                else if (r?.status === 'ok') { icon = <CheckCircle2 className="h-3 w-3 text-emerald-500" />; cls = 'border-emerald-500/40 text-emerald-600 dark:text-emerald-400'; }
+                else if (r?.status === 'sem_itens') { icon = <MinusCircle className="h-3 w-3 text-muted-foreground" />; cls = 'text-muted-foreground'; }
+                else if (r && (r.status === 'erro' || r.status === 'erro_listar')) { icon = <XCircle className="h-3 w-3 text-destructive" />; cls = 'border-destructive/40 text-destructive'; }
+                return (
+                  <Badge key={d} variant="outline" className={`gap-1 font-mono text-[10px] ${cls}`}>
+                    {icon}
+                    {d}
+                    {r?.status === 'ok' && <span className="ml-0.5">· {r.itens}</span>}
+                  </Badge>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {!lastRun && !running && liveResults.length === 0 && (
           <div className="rounded-md border bg-muted/20 px-3 py-6 text-center text-xs text-muted-foreground">
             Nenhuma execução automática registrada ainda.
           </div>
