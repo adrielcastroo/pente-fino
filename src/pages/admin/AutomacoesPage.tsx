@@ -16,6 +16,12 @@ import { CalendarClock, Loader2, PlayCircle, Search, Sparkles, CheckCircle2, XCi
 
 type Acao = 'atualizar' | 'adicionar' | 'remover';
 
+function extractEntregaApos(desc: string | null | undefined): string | null {
+  if (!desc) return null;
+  const m = desc.match(/\(\s*Ent[_ ]?Ap[_ ]?(\d{2}\/\d{2}\/\d{2,4})\s*\)/i);
+  return m ? m[1] : null;
+}
+
 type PreviewRow = {
   cd_acabamento_item: number;
   cd_acabamento: number;
@@ -230,7 +236,7 @@ function EntregaAposCard() {
                       <td className="px-3 py-2 font-mono">{r.chave_acabamento}</td>
                       <td className="px-3 py-2">{r.nm_acabamento}</td>
                       <td className="px-3 py-2">{r.descricao_atual}</td>
-                      <td className="px-3 py-2 font-mono">{r.entrega_apos_atual ?? '—'}</td>
+                      <td className="px-3 py-2 font-mono">{r.entrega_apos_atual ?? extractEntregaApos(r.descricao_atual) ?? '—'}</td>
                     </tr>
                   ))}
                   {previewRows.length === 0 && (
