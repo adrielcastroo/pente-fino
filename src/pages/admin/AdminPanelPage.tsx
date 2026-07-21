@@ -43,6 +43,8 @@ const SentryTab = lazy(() => import('./tabs/SentryTab'));
 const PostHogTab = lazy(() => import('./tabs/PostHogTab'));
 const N8nMonitorPage = lazy(() => import('@/pages/N8nMonitorPage'));
 const AugeAdminPanel = lazy(() => import('@/components/auge/AugeAdminPanel'));
+const LlmTokensTab = lazy(() => import('./tabs/LlmTokensTab'));
+
 
 declare const __APP_VERSION__: string;
 
@@ -66,8 +68,10 @@ const TAB_GROUPS: TabGroup[] = [
       { key: 'posthog', label: 'PostHog', icon: LineChart },
       { key: 'n8n', label: 'n8n', icon: Workflow },
       { key: 'auge', label: 'Auge ERP', icon: Warehouse },
+      { key: 'llm-tokens', label: 'Tokens LLM', icon: KeyRound },
     ],
   },
+
   {
     label: 'Entrega',
     tabs: [
@@ -184,6 +188,10 @@ export default function AdminPanelPage() {
           <TabsContent value="auge" className="mt-0">
             <Suspense fallback={tabFallback}><AugeAdminPanel /></Suspense>
           </TabsContent>
+          <TabsContent value="llm-tokens" className="mt-0">
+            <Suspense fallback={tabFallback}><LlmTokensTab /></Suspense>
+          </TabsContent>
+
           <TabsContent value="flags" className="mt-0">
             <Suspense fallback={tabFallback}><FeatureFlagsPage /></Suspense>
           </TabsContent>
