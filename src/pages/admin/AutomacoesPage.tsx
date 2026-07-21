@@ -598,6 +598,7 @@ export default function AutomacoesPage() {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="necessidade" className="mt-0 space-y-4">
+            <AugeAccountCard />
             <NecessidadeCronCard />
             <NecessidadeCard />
           </TabsContent>
