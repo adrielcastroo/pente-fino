@@ -39,6 +39,32 @@ type Run = {
 export default function NecessidadeCronCard() {
   const [running, setRunning] = useState(false);
   const [lastRun, setLastRun] = useState<Run | null>(null);
+  const [cronExpr, setCronExpr] = useState<string>('0 10 * * 1-5');
+  const [cronCurrent, setCronCurrent] = useState<string>('');
+  const [savingCron, setSavingCron] = useState(false);
+
+  const carregarCron = async () => {
+    const { data } = await (supabase as any).rpc('get_necessidade_cron');
+    const row = Array.isArray(data) ? data[0] : data;
+    if (row?.schedule) {
+      setCronCurrent(row.schedule);
+      setCronExpr(row.schedule);
+    }
+  };
+
+  const salvarCron = async () => {
+    if (!cronExpr.trim()) { toast.error('Informe uma expressão cron.'); return; }
+    setSavingCron(true);
+    const t = toast.loading('Atualizando agendamento…');
+    try {
+      const { error } = await (supabase as any).rpc('set_necessidade_cron', { cron_expr: cronExpr.trim() });
+      if (error) { toast.error(error.message ?? 'Falha ao salvar cron.', { id: t }); return; }
+      toast.success('Agendamento atualizado.', { id: t });
+      await carregarCron();
+    } finally {
+      setSavingCron(false);
+    }
+  };
 
   const carregarUltimaRun = async () => {
     const { data } = await (supabase as any)
@@ -51,7 +77,8 @@ export default function NecessidadeCronCard() {
     setLastRun(data?.[0] ?? null);
   };
 
-  useEffect(() => { carregarUltimaRun(); }, []);
+  useEffect(() => { carregarUltimaRun(); carregarCron(); }, []);
+
 
   const executarAgora = async () => {
     setRunning(true);
