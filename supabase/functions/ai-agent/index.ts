@@ -209,9 +209,110 @@ function detectSensitive(text: string) {
   return hits.reduce((a, b) => (a.minLevel <= b.minLevel ? a : b));
 }
 
+// -------- Automação "Entrega Após" (determinística, sem LLM) -----------------
+// Fio detecta pedido, mostra tabela de acabamentos e dispara auge-sync?action=entrega_apos.
+const ENTREGA_APOS_INTENT = /entrega[_\s-]*ap[oó]s|ent[_\s-]*ap[_\s-]*|\bent[.\s-]*ap[oó]s\b/i;
+const ENTREGA_APOS_SUBMIT_HEADER = /^Automa[cç][aã]o Entrega Ap[oó]s/i;
+
+function extractItemCode(text: string): string | null {
+  // Match "TC.000.033", "MP.123.456", "PA.001.002" etc.
+  const m = text.match(/\b([A-Za-z]{2})[\.\s-]?(\d{3})[\.\s-]?(\d{3})\b/);
+  if (m) return `${m[1].toUpperCase()}.${m[2]}.${m[3]}`;
+  return null;
+}
+
+function normalizeEntregaData(s: string | null | undefined): string | null {
+  if (!s) return null;
+  const m = String(s).trim().match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/);
+  if (!m) return null;
+  const dd = m[1].padStart(2, "0");
+  const mm = m[2].padStart(2, "0");
+  const yy = m[3].length === 4 ? m[3].slice(-2) : m[3].padStart(2, "0");
+  return `${dd}/${mm}/${yy}`;
+}
+
+function parseAcaoEntrega(s: string): "atualizar" | "adicionar" | "remover" | null {
+  const t = s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  if (/\batualiz|\bnov[ao] data|\btroca(r)? data|\baltera(r)? data/.test(t)) return "atualizar";
+  if (/\badicion|\binclui|\binserir|\bcolocar/.test(t)) return "adicionar";
+  if (/\bremov|\btira(r)?|\bapagar|\bexcluir|\btirar/.test(t)) return "remover";
+  return null;
+}
+
+async function callAugeEntregaApos(authHeader: string, body: Record<string, unknown>): Promise<any> {
+  const resp = await fetch(`${SUPABASE_URL}/functions/v1/auge-sync?action=entrega_apos`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: authHeader || `Bearer ${SERVICE_ROLE}`,
+      apikey: Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+    },
+    body: JSON.stringify(body),
+  });
+  const txt = await resp.text();
+  try { return JSON.parse(txt); } catch { return { ok: false, error: txt.slice(0, 400) }; }
+}
+
+function renderPreviewTable(codigo: string, rows: any[]): string {
+  if (rows.length === 0) return `Nenhum acabamento vinculado ao item **${codigo}**.`;
+  const linhas = rows.slice(0, 40).map((r) =>
+    `| ${r.chave_acabamento} | ${(r.nm_acabamento ?? "").replace(/\|/g, "\\|")} | ${(r.descricao_atual ?? "").replace(/\|/g, "\\|")} |`
+  ).join("\n");
+  const extra = rows.length > 40 ? `\n\n_+ ${rows.length - 40} outros acabamentos._` : "";
+  return `**Acabamentos do item ${codigo}** — ${rows.length} vinculado(s):\n\n` +
+    `| Chave | Acabamento | Descrição atual |\n|---|---|---|\n${linhas}${extra}`;
+}
+
+function renderExecuteReport(payload: any): string {
+  const { acao, codigo_item, nova_data, sucesso, falha, ignoradas, results, abreviacao } = payload;
+  const acaoLbl = acao === "atualizar" ? "Atualizar" : acao === "adicionar" ? "Adicionar" : "Remover";
+  const header = `**Resultado — ${acaoLbl} Entrega Após em ${codigo_item}${nova_data ? ` (${nova_data})` : ""}**\n\n` +
+    `- ✅ Sucesso: **${sucesso}**\n- ⏭️ Ignoradas: **${ignoradas}**\n- ❌ Falha: **${falha}**\n`;
+  const detalhes = (results ?? []).slice(0, 40).map((r: any) => {
+    if (r.status === "ok") return `- ✅ **${r.chave_acabamento}** → ${r.para}`;
+    if (r.status === "ignorada") return `- ⏭️ **${r.chave_acabamento}** _(${r.motivo})_`;
+    return `- ❌ **${r.chave_acabamento}** — campo \`${r.campo ?? "?"}\`: ${r.erro}`;
+  }).join("\n");
+  let abrev = "";
+  if (abreviacao) {
+    if (abreviacao.status === "erro") {
+      abrev = `\n\n**Abreviação:** ❌ campo \`${abreviacao.campo}\`: ${abreviacao.erro}`;
+    } else {
+      abrev = `\n\n**Abreviação:** ${abreviacao.status} — \`${abreviacao.dsAtual}\` → \`${abreviacao.dsAbreviada}\``;
+    }
+  }
+  return `${header}\n${detalhes}${abrev}`;
+}
+
+function askUserActionSpec(codigo: string) {
+  return {
+    title: "Automação Entrega Após",
+    description: `Item: ${codigo}. O que fazer com o campo "Entrega Após"?`,
+    fields: [
+      { name: "acao", label: "Ação (Atualizar | Adicionar | Remover)", type: "text", required: true, placeholder: "Atualizar" },
+      { name: "nova_data", label: "Nova data (DD/MM/AA) — obrigatório em Atualizar/Adicionar", type: "text", required: false, placeholder: "10/09/26" },
+    ],
+    submitLabel: "Confirmar",
+  };
+}
+
+function detectEntregaAposSubmit(text: string): {
+  codigo: string; acao: "atualizar" | "adicionar" | "remover"; nova_data: string | null;
+} | null {
+  if (!ENTREGA_APOS_SUBMIT_HEADER.test(text)) return null;
+  const codigo = extractItemCode(text);
+  const acaoMatch = text.match(/\*\*Ação[^:]*:\*\*\s*([^\n]+)/i) || text.match(/A[cç][aã]o[^:]*:\s*([^\n]+)/i);
+  const dataMatch = text.match(/\*\*Nova data[^:]*:\*\*\s*([^\n]+)/i) || text.match(/Nova data[^:]*:\s*([^\n]+)/i);
+  const acao = acaoMatch ? parseAcaoEntrega(acaoMatch[1]) : null;
+  if (!codigo || !acao) return null;
+  const nova_data = dataMatch ? normalizeEntregaData(dataMatch[1].replace(/[—–-]/g, "").trim()) : null;
+  return { codigo, acao, nova_data };
+}
+
 function sanitizePostgrestValue(value: string) {
   return value.replace(/[(),.]/g, " ").trim();
 }
+
 
 function codeVariants(value: string) {
   const raw = value.trim().replace(/\s+/g, "");
