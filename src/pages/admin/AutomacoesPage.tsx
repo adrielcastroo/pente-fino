@@ -429,10 +429,23 @@ function EntregaAposCard() {
 function NovaAbreviacaoCard() {
   const [dsAtual, setDsAtual] = useState('');
   const [dsAbreviada, setDsAbreviada] = useState('');
+  const [abrevDirty, setAbrevDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [lastOk, setLastOk] = useState<{ ds: string; abrev: string; cd: string | null } | null>(null);
 
+  // Sugere automaticamente a abreviação quando a descrição contém (Ent_Ap_DD/MM/AA)
+  const sugestao = useMemo(() => {
+    const m = dsAtual.match(/\(\s*Ent[_ ]?Ap[_ ]?(\d{1,2}\/\d{1,2}\/\d{2,4})\s*\)/i);
+    return m ? abbrevFromDate(m[1]) : '';
+  }, [dsAtual]);
+
+  // Aplica a sugestão automaticamente enquanto o usuário não editou o campo manualmente
+  useMemo(() => {
+    if (sugestao && !abrevDirty) setDsAbreviada(sugestao);
+  }, [sugestao, abrevDirty]);
+
   const canSave = dsAtual.trim().length > 0 && dsAbreviada.trim().length > 0 && !saving;
+
 
   const submit = async () => {
     const a = dsAtual.trim();
