@@ -374,6 +374,17 @@ function EntregaAposCard() {
                   {result.abreviacao.erro && <> · <span className="text-destructive">{result.abreviacao.erro}</span></>}
                 </Badge>
               )}
+              <div className="ml-auto">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 gap-1.5 text-[11px]"
+                  onClick={() => window.open(AUGE_BASE_URL, '_blank', 'noopener,noreferrer')}
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  Abrir no Auge
+                </Button>
+              </div>
             </div>
             <div className="max-h-[300px] overflow-auto">
               <table className="w-full text-xs">
