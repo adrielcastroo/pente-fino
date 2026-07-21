@@ -10,6 +10,7 @@ interface ProviderCfg {
   probeUrl: string;
   authHeader: (key: string) => Record<string, string>;
   docs: string;
+  usageProbe?: { url: string; body: unknown };
 }
 
 const PROVIDERS: ProviderCfg[] = [
@@ -20,6 +21,10 @@ const PROVIDERS: ProviderCfg[] = [
     probeUrl: "https://api.cerebras.ai/v1/models",
     authHeader: (k) => ({ Authorization: `Bearer ${k}` }),
     docs: "https://cloud.cerebras.ai",
+    usageProbe: {
+      url: "https://api.cerebras.ai/v1/chat/completions",
+      body: { model: "llama-3.1-8b", messages: [{ role: "user", content: "hi" }], max_tokens: 1 },
+    },
   },
   {
     id: "groq",
@@ -28,6 +33,10 @@ const PROVIDERS: ProviderCfg[] = [
     probeUrl: "https://api.groq.com/openai/v1/models",
     authHeader: (k) => ({ Authorization: `Bearer ${k}` }),
     docs: "https://console.groq.com/keys",
+    usageProbe: {
+      url: "https://api.groq.com/openai/v1/chat/completions",
+      body: { model: "llama-3.1-8b-instant", messages: [{ role: "user", content: "hi" }], max_tokens: 1 },
+    },
   },
   {
     id: "nvidia",
@@ -46,6 +55,7 @@ const PROVIDERS: ProviderCfg[] = [
     docs: "https://docs.lovable.dev",
   },
 ];
+
 
 function mask(k: string): string {
   if (!k) return "";
