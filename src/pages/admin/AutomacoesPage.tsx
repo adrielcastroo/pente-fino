@@ -421,7 +421,6 @@ function EntregaAposCard() {
           </div>
         )}
 
-        <NovaAbreviacaoCard />
       </CardContent>
     </Card>
   );
