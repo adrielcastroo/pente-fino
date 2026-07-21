@@ -206,12 +206,63 @@ function looksLikeAugeItemCode(value: string) {
   return /^[a-z]{2}\d{6}$/i.test(compact) || /^\d{6,}(?:\d+)?$/i.test(compact);
 }
 
-function acabamentoItemCountAnswer(context: Record<string, unknown>, text: string) {
-  const isCount = /quantos?/i.test(text) && /acabament/i.test(text) && /item|produto|c[oó]digo/i.test(text);
+// Detecta perguntas de CAPACIDADE ("você consegue…", "é possível…", "dá para…",
+// "pode…", "como faço para…") — são perguntas sim/não sobre o app, NÃO pedidos
+// para executar/listar dados. Devem receber resposta explicativa sobre o fluxo.
+function isCapabilityQuestion(text: string) {
+  const t = text.toLowerCase();
+  if (!/\?|consegu|é possível|e possivel|da pra|dá pra|dá para|da para|posso|pode(?:ria)?|como (?:eu )?(?:faço|fazer|edito|editar|altero|alterar)|tem como|permite|é permitido/i.test(t)) {
+    return false;
+  }
+  // Não deve haver um código de item explícito no turno atual — se tem código,
+  // provavelmente é pedido operacional real.
+  const hasExplicitCode = /[A-Za-z]{2,}\.\d{2,}|^\s*\d{3}\.\d{3}/i.test(text);
+  return !hasExplicitCode;
+}
+
+function capabilityAnswer(text: string) {
+  if (!isCapabilityQuestion(text)) return null;
+  const t = text.toLowerCase();
+
+  // Alterar descrição de item dentro do acabamento
+  if (/acabament/.test(t) && /(alter|edit|mud|troc|corrig|atualiz)/.test(t) && /(descri|item|kit|nome)/.test(t)) {
+    return [
+      "Fio aqui para ajudar.",
+      "",
+      "**Sim, dá para alterar a descrição de um item dentro de um acabamento pelo Pente Fino** — a edição é enviada de volta para o Auge automaticamente.",
+      "",
+      "**Fluxo:**",
+      "1. Vá em **Estoque → Acabamentos** (`/estoque/acabamentos`).",
+      "2. Abra o acabamento desejado — a lista de itens aparece no painel de detalhes.",
+      "3. Clique em **Editar** na linha do item. Abre o diálogo `AcabamentoItemEditDialog`.",
+      "4. Edite `Descrição`, `Descrição reduzida`, `Descrição original` e/ou os 5 kits complementares.",
+      "5. **Salvar** → o app chama `auge-sync/update_acabamento_item` que envia `POST ctlAcabamentoItem.php` (idAcao=2) para o Auge e ressincroniza aquele acabamento.",
+      "",
+      "**Permissão:** essa ação exige perfil **operador** ou superior.",
+      "",
+      "Se quiser, me diga o **código do acabamento** e o **código do item** que eu confirmo os valores atuais antes de você abrir o diálogo.",
+    ].join("\n");
+  }
+
+  return null;
+}
+
+function acabamentoItemCountAnswer(context: Record<string, unknown>, currentText: string) {
+  // IMPORTANTE: só dispara quando o TURNO ATUAL pergunta explicitamente sobre
+  // contagem/descrição de acabamentos. Não usa histórico para evitar vazar
+  // códigos de turnos anteriores.
+  if (isCapabilityQuestion(currentText)) return null;
+
+  const isCount = /quantos?/i.test(currentText) && /acabament/i.test(currentText) && /item|produto|c[oó]digo/i.test(currentText);
   const isDescricao =
-    /acabament/i.test(text) &&
-    /descri[cç]|descri[cç][aã]o|como est[aá]|qual\s+a?\s*descri|em\s+cada/i.test(text);
+    /acabament/i.test(currentText) &&
+    /descri[cç]|descri[cç][aã]o|como est[aá]|qual\s+a?\s*descri|em\s+cada/i.test(currentText);
   if (!isCount && !isDescricao) return null;
+
+  // Exige código de item explícito no turno atual — senão a listagem seria
+  // baseada em contexto herdado (bug reportado).
+  const hasExplicitCode = /[A-Za-z]{2,}\.\d{2,}|\b\d{3}\.\d{3}\.\d{3}/i.test(currentText);
+  if (!hasExplicitCode) return null;
 
   const rows = Array.isArray(context.acabamentos_do_item) ? (context.acabamentos_do_item as any[]) : [];
   if (typeof context.acabamentos_do_item_total !== "number") return null;
@@ -760,8 +811,23 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Curto-circuito 1: pergunta de capacidade sobre fluxos conhecidos do app
+    // (ex.: "vc consegue alterar a descrição de um item dentro do acabamento?").
+    // Responde direto, sem consultar contexto de itens — evita alucinação.
+    const capAnswer = capabilityAnswer(userText);
+    if (capAnswer) {
+      return textStreamResponse(capAnswer, {
+        "x-ai-provider": "backend-capability",
+        "x-ai-model": "deterministic",
+        "x-ai-task": task,
+        "x-ai-fallbacks": "0",
+      });
+    }
+
     const automaticContext = await buildAgentContext(admin, conversationText);
-    const deterministicAnswer = acabamentoItemCountAnswer(automaticContext, conversationText);
+    // Passa APENAS o texto do turno atual — o atalho determinístico não deve
+    // reaproveitar códigos de perguntas anteriores.
+    const deterministicAnswer = acabamentoItemCountAnswer(automaticContext, userText);
     if (deterministicAnswer) {
       return textStreamResponse(deterministicAnswer, {
         "x-ai-provider": "backend-query",
