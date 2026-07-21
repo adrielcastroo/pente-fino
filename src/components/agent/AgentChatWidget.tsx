@@ -24,7 +24,9 @@ import {
 import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from "@/components/ai-elements/tool";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { AskUserInline, extractAskUser } from "./AskUserDialog";
+import { Suggestions, extractSuggestions } from "./Suggestions";
 import logo from "@/assets/fio-logo.png";
+
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const PUBLISHABLE_KEY = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
@@ -126,7 +128,10 @@ function ChatWindow({ threadId }: { threadId: string }) {
               >
                 {m.parts.map((part, i) => {
                   if (part.type === "text") {
-                    const { spec, cleaned } = extractAskUser(part.text);
+                    const { spec, cleaned: afterAsk } = extractAskUser(part.text);
+                    const { items: suggestions, cleaned } = extractSuggestions(afterAsk);
+                    const isLastAssistant =
+                      m.role === "assistant" && m.id === lastMessage?.id;
                     return (
                       <div key={i}>
                         {cleaned && <MessageResponse>{cleaned}</MessageResponse>}
@@ -139,9 +144,19 @@ function ChatWindow({ threadId }: { threadId: string }) {
                             }
                           />
                         )}
+                        {isLastAssistant && !isLoading && suggestions.length > 0 && (
+                          <Suggestions
+                            items={suggestions}
+                            disabled={isLoading}
+                            onPick={(text) =>
+                              void sendMessage({ parts: [{ type: "text", text }] })
+                            }
+                          />
+                        )}
                       </div>
                     );
                   }
+
                   if (part.type?.startsWith("tool-")) {
                     const p: any = part;
                     return (
