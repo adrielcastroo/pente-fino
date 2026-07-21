@@ -1200,40 +1200,45 @@ async function backfillTransferenciasChunk(admin: any, auth: { jar: Jar; csrf: s
   let sampleDebug = state.sample_debug ?? null;
   const pendingRows = rows.filter(transferenciaNeedsBackfill);
   for (const row of pendingRows) {
-    const tipoDoc = firstText(row.raw?.idTipoDocumento, row.raw?.tipoDocumento);
-    const tipoMov = firstText(row.raw?.idTipoMovimentacao) ?? 'T';
-    const mutable = { ...row };
-    const { det, itens, debug } = await fetchTransferenciaDetalhe(auth, transferenciaDetailIds(mutable), tipoDoc, tipoMov);
-    if (det) {
-      mergeTransferenciaDetalhe(mutable, det, itens);
-      const { id: _oldId, created_at: _createdAt, updated_at: _updatedAt, ...baseRow } = row;
-      const expanded = expandTransferenciaItens(mutable).map((expandedRow: any) => ({
-        ...baseRow,
-        ...transferenciaPatch(expandedRow),
-        id_externo: expandedRow.id_externo,
-        situacao: row.situacao,
-        ds_situacao: row.ds_situacao,
-        data_movimento: row.data_movimento,
-        usuario_criacao: row.usuario_criacao,
-        usuario_efetivacao: row.usuario_efetivacao,
-        usuario_enviou_logistica: row.usuario_enviou_logistica,
-        usuario_recebido_logistica: row.usuario_recebido_logistica,
-        valor: row.valor,
-      }));
-      const existing = await fetchExistingTransferencias(admin, expanded);
-      const rowsToUpsert = await fillTransferenciaProductDescriptions(
-        admin,
-        expanded.map((expandedRow: any) => preserveTransferenciaDetalhes(expandedRow, existing.get(expandedRow.id_externo)))
-      );
-      const { error: updError } = await admin.from('auge_transferencias').upsert(rowsToUpsert, { onConflict: 'id_externo' });
-      if (updError) throw updError;
-      if (expanded.some((expandedRow: any) => expandedRow.id_externo !== row.id_externo)) {
-        await admin.from('auge_transferencias').delete().eq('id', row.id);
+    try {
+      const tipoDoc = firstText(row.raw?.idTipoDocumento, row.raw?.tipoDocumento);
+      const tipoMov = firstText(row.raw?.idTipoMovimentacao) ?? 'T';
+      const mutable = { ...row };
+      const { det, itens, debug } = await fetchTransferenciaDetalhe(auth, transferenciaDetailIds(mutable), tipoDoc, tipoMov);
+      if (det) {
+        mergeTransferenciaDetalhe(mutable, det, itens);
+        const { id: _oldId, created_at: _createdAt, updated_at: _updatedAt, ...baseRow } = row;
+        const expanded = expandTransferenciaItens(mutable).map((expandedRow: any) => ({
+          ...baseRow,
+          ...transferenciaPatch(expandedRow),
+          id_externo: expandedRow.id_externo,
+          situacao: row.situacao,
+          ds_situacao: row.ds_situacao,
+          data_movimento: row.data_movimento,
+          usuario_criacao: row.usuario_criacao,
+          usuario_efetivacao: row.usuario_efetivacao,
+          usuario_enviou_logistica: row.usuario_enviou_logistica,
+          usuario_recebido_logistica: row.usuario_recebido_logistica,
+          valor: row.valor,
+        }));
+        const existing = await fetchExistingTransferencias(admin, expanded);
+        const rowsToUpsert = await fillTransferenciaProductDescriptions(
+          admin,
+          expanded.map((expandedRow: any) => preserveTransferenciaDetalhes(expandedRow, existing.get(expandedRow.id_externo)))
+        );
+        const { error: updError } = await admin.from('auge_transferencias').upsert(rowsToUpsert, { onConflict: 'id_externo' });
+        if (updError) throw updError;
+        if (expanded.some((expandedRow: any) => expandedRow.id_externo !== row.id_externo)) {
+          await admin.from('auge_transferencias').delete().eq('id', row.id);
+        }
+        enriched++;
+      } else {
+        failed++;
+        if (!sampleDebug) sampleDebug = { id: row.id, ids: transferenciaDetailIds(row), tipoDoc, debug };
       }
-      enriched++;
-    } else {
+    } catch (e) {
       failed++;
-      if (!sampleDebug) sampleDebug = { id: row.id, ids: transferenciaDetailIds(mutable), tipoDoc, debug };
+      if (!sampleDebug) sampleDebug = { id: row.id, error: String((e as any)?.message ?? e) };
     }
   }
 
