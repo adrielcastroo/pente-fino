@@ -182,6 +182,13 @@ async function probe(cfg: ProviderCfg, key: string) {
 }
 
 
+const DEFAULT_MODELS: Record<ProviderId, { model: string; fastModel: string }> = {
+  cerebras: { model: "llama-3.3-70b", fastModel: "llama3.1-8b" },
+  groq:     { model: "llama-3.3-70b-versatile", fastModel: "llama-3.1-8b-instant" },
+  nvidia:   { model: "meta/llama-3.3-70b-instruct", fastModel: "meta/llama-3.1-8b-instruct" },
+  lovable:  { model: "openai/gpt-5.5", fastModel: "openai/gpt-5.4-mini" },
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
@@ -209,7 +216,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Admin-only
     const service = createClient(SUPABASE_URL, SERVICE);
     const { data: roles } = await service
       .from("user_roles")
@@ -223,11 +229,47 @@ Deno.serve(async (req) => {
       });
     }
 
+    // POST: update active provider / model overrides
+    if (req.method === "POST") {
+      const body = await req.json().catch(() => ({}));
+      const patch: Record<string, unknown> = {};
+      const allowed = [
+        "active_provider",
+        "cerebras_model", "cerebras_fast_model",
+        "groq_model", "groq_fast_model",
+        "nvidia_model", "nvidia_fast_model",
+        "lovable_model", "lovable_fast_model",
+      ];
+      for (const k of allowed) {
+        if (k in body) patch[k] = body[k];
+      }
+      if (patch.active_provider && !["cerebras","groq","nvidia","lovable"].includes(String(patch.active_provider))) {
+        return new Response(JSON.stringify({ error: "invalid active_provider" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      patch.updated_at = new Date().toISOString();
+      patch.updated_by = userData.user.id;
+      const { error: upErr } = await service.from("llm_settings").update(patch).eq("id", 1);
+      if (upErr) {
+        return new Response(JSON.stringify({ error: upErr.message }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      return new Response(JSON.stringify({ ok: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { data: settings } = await service.from("llm_settings").select("*").eq("id", 1).maybeSingle();
+
     const results = await Promise.all(
       PROVIDERS.map(async (cfg) => {
         const key = Deno.env.get(cfg.envKey) ?? "";
         const configured = key.length > 0;
         const health = configured ? await probe(cfg, key) : null;
+        const activeModel = (settings as any)?.[`${cfg.id}_model`] ?? DEFAULT_MODELS[cfg.id].model;
+        const activeFastModel = (settings as any)?.[`${cfg.id}_fast_model`] ?? DEFAULT_MODELS[cfg.id].fastModel;
         return {
           id: cfg.id,
           label: cfg.label,
@@ -237,12 +279,20 @@ Deno.serve(async (req) => {
           length: configured ? key.length : 0,
           docs: cfg.docs,
           health,
+          activeModel,
+          activeFastModel,
+          defaultModel: DEFAULT_MODELS[cfg.id].model,
+          defaultFastModel: DEFAULT_MODELS[cfg.id].fastModel,
         };
       }),
     );
 
     return new Response(
-      JSON.stringify({ providers: results, checkedAt: new Date().toISOString() }),
+      JSON.stringify({
+        providers: results,
+        activeProvider: (settings as any)?.active_provider ?? "cerebras",
+        checkedAt: new Date().toISOString(),
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (err) {
