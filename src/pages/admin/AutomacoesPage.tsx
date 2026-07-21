@@ -223,6 +223,10 @@ function EntregaAposCard() {
       </CardHeader>
 
       <CardContent className="space-y-6">
+        <NovaAbreviacaoCard />
+
+        <div className="border-t pt-6" />
+
         {/* Passo 1 · Consulta */}
         <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
           <div className="grid gap-1.5">
