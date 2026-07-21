@@ -129,6 +129,9 @@ function EntregaAposCard() {
   const codigoNormalizado = useMemo(() => normalizeCodigo(codigoInput), [codigoInput]);
   const dataNormalizada = useMemo(() => normalizeData(dataInput), [dataInput]);
   const precisaData = acao === 'atualizar' || acao === 'adicionar';
+  const mostraPreview = acao === 'remover' || !!dataNormalizada;
+
+  const [execProgress, setExecProgress] = useState(0);
 
   const canPreview = !!codigoNormalizado && !previewLoading;
   const canExecute =
