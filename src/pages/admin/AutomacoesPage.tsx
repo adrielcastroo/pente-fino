@@ -244,27 +244,52 @@ function EntregaAposCard() {
                 Item <span className="font-mono">{previewCodigo}</span> — {previewRows.length} acabamento(s)
               </span>
             </div>
-            <div className="max-h-[360px] overflow-auto">
+            <div className="max-h-[420px] overflow-auto">
               <table className="w-full text-xs">
-                <thead className="bg-muted/20 text-muted-foreground">
+                <thead className="bg-muted/20 text-muted-foreground sticky top-0">
                   <tr>
                     <th className="px-3 py-2 text-left font-medium">Chave</th>
                     <th className="px-3 py-2 text-left font-medium">Acabamento</th>
                     <th className="px-3 py-2 text-left font-medium">Descrição atual</th>
+                    <th className="px-3 py-2 text-left font-medium">Descrição reduzida</th>
                     <th className="px-3 py-2 text-left font-medium">Ent. após</th>
+                    {mostraPreview && (
+                      <>
+                        <th className="px-3 py-2 text-left font-medium bg-primary/5">Nova descrição</th>
+                        <th className="px-3 py-2 text-left font-medium bg-primary/5">Nova reduzida</th>
+                      </>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
-                  {previewRows.map((r) => (
-                    <tr key={r.cd_acabamento_item} className={r.cancelado ? 'opacity-50' : ''}>
-                      <td className="px-3 py-2 font-mono">{r.chave_acabamento}</td>
-                      <td className="px-3 py-2">{r.nm_acabamento}</td>
-                      <td className="px-3 py-2">{r.descricao_atual}</td>
-                      <td className="px-3 py-2 font-mono">{r.entrega_apos_atual ?? extractEntregaApos(r.descricao_atual) ?? '—'}</td>
-                    </tr>
-                  ))}
+                  {previewRows.map((r) => {
+                    const novaDesc = mostraPreview ? previewDescricao(r.descricao_atual, acao, dataNormalizada) : '';
+                    const novaRed = mostraPreview ? previewReduzida(r.descricao_reduzida, acao, dataNormalizada) : '';
+                    return (
+                      <tr key={r.cd_acabamento_item} className={r.cancelado ? 'opacity-50' : ''}>
+                        <td className="px-3 py-2 font-mono">{r.chave_acabamento}</td>
+                        <td className="px-3 py-2">{r.nm_acabamento}</td>
+                        <td className="px-3 py-2">{r.descricao_atual}</td>
+                        <td className="px-3 py-2 font-mono text-[11px]">{r.descricao_reduzida || '—'}</td>
+                        <td className="px-3 py-2 font-mono">{r.entrega_apos_atual ?? extractEntregaApos(r.descricao_atual) ?? '—'}</td>
+                        {mostraPreview && (
+                          <>
+                            <td className="px-3 py-2 bg-primary/5">
+                              <div className="flex items-center gap-1.5">
+                                <ArrowRight className="h-3 w-3 text-primary shrink-0" />
+                                <span className={novaDesc !== r.descricao_atual ? 'text-primary font-medium' : 'text-muted-foreground'}>{novaDesc}</span>
+                              </div>
+                            </td>
+                            <td className="px-3 py-2 bg-primary/5 font-mono text-[11px]">
+                              <span className={novaRed !== r.descricao_reduzida ? 'text-primary font-medium' : 'text-muted-foreground'}>{novaRed || '—'}</span>
+                            </td>
+                          </>
+                        )}
+                      </tr>
+                    );
+                  })}
                   {previewRows.length === 0 && (
-                    <tr><td colSpan={4} className="px-3 py-6 text-center text-muted-foreground">Sem acabamentos vinculados.</td></tr>
+                    <tr><td colSpan={mostraPreview ? 7 : 5} className="px-3 py-6 text-center text-muted-foreground">Sem acabamentos vinculados.</td></tr>
                   )}
                 </tbody>
               </table>
