@@ -272,6 +272,14 @@ export default function AugeTransferenciasTab({
     });
   }, [rows, search, filtro, sortKey, sortDirection]);
 
+  // Reset para página 1 quando filtros/ordenação/tamanho mudam
+  useEffect(() => { setPage(1); }, [search, filtro, dateFrom, dateTo, sortKey, sortDirection, pageSize]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const startIdx = (currentPage - 1) * pageSize;
+  const paginated = useMemo(() => filtered.slice(startIdx, startIdx + pageSize), [filtered, startIdx, pageSize]);
+
   const SortableHead = ({ column, className }: { column: SortKey; className?: string }) => {
     const active = sortKey === column;
     const Icon = !active ? ArrowUpDown : sortDirection === 'asc' ? ArrowUp : ArrowDown;
