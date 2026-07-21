@@ -1136,8 +1136,10 @@ function preserveTransferenciaDetalhes(row: any, existing?: any): any {
 async function fetchExistingTransferencias(admin: any, rows: any[]) {
   const out = new Map<string, any>();
   const ids = Array.from(new Set(rows.map((r: any) => r.id_externo).filter(Boolean)));
-  for (let i = 0; i < ids.length; i += 500) {
-    const chunk = ids.slice(i, i + 500);
+  // IDs de transferências item-a-item podem ser longos; usamos chunks pequenos
+  // para não estourar o limite de URL do PostgREST (erro "error sending request").
+  for (let i = 0; i < ids.length; i += 60) {
+    const chunk = ids.slice(i, i + 60);
     const { data, error } = await admin
       .from('auge_transferencias')
       .select('id_externo,deposito_origem,deposito_destino,codigo_produto,descricao_produto,quantidade,nr_efetivacao,observacao,usuario_criacao,usuario_efetivacao,usuario_enviou_logistica,usuario_recebido_logistica,ds_efetivacao,detalhe_sincronizado_em,raw')
