@@ -119,17 +119,23 @@ async function probe(cfg: ProviderCfg, key: string) {
     clearTimeout(t);
     const latency = Math.round(performance.now() - started);
     let modelCount: number | null = null;
+    let models: Array<{ id: string; owned_by?: string | null }> = [];
     if (res.ok) {
       try {
         const body = await res.json();
-        if (Array.isArray(body?.data)) modelCount = body.data.length;
-        else if (Array.isArray(body?.models)) modelCount = body.models.length;
+        const list = Array.isArray(body?.data) ? body.data : Array.isArray(body?.models) ? body.models : [];
+        models = list
+          .map((m: any) => ({
+            id: String(m?.id ?? m?.name ?? "").trim(),
+            owned_by: m?.owned_by ?? m?.publisher ?? null,
+          }))
+          .filter((m: any) => m.id.length > 0);
+        modelCount = models.length || null;
       } catch { /* ignore */ }
     }
     let usage = collectUsage(res.headers);
     const hasUsage = usage.requestsLimit !== null || usage.tokensLimit !== null;
 
-    // If /models didn't return rate-limit headers, do a minimal chat probe
     if (res.ok && !hasUsage && cfg.usageProbe) {
       try {
         const ac2 = new AbortController();
@@ -157,6 +163,7 @@ async function probe(cfg: ProviderCfg, key: string) {
       httpStatus: res.status,
       latencyMs: latency,
       modelCount,
+      models,
       error: res.ok ? null : `HTTP ${res.status}`,
       usage,
     };
@@ -167,6 +174,7 @@ async function probe(cfg: ProviderCfg, key: string) {
       httpStatus: 0,
       latencyMs: Math.round(performance.now() - started),
       modelCount: null,
+      models: [],
       error: err instanceof Error ? err.message : String(err),
       usage: null,
     };
