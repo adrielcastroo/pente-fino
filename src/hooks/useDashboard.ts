@@ -26,7 +26,7 @@ export function useDashboard() {
 
       const stats = {
         // Tecido = apenas estruturas do padrão TECxx (mapa 2D).
-        tecido: { used: 0, total: TOTAL_SLOTS, reserved: 0, blocked: 0 },
+        tecido: { used: 0, total: TOTAL_SLOTS, reserved: 0, blocked: 0, semEspaco: 0 },
         // CHÃO = área livre, sem limite → métrica separada.
         chao: { used: 0 },
         // Madeira ainda não tem fonte real → mantemos null para ocultar o card.
@@ -46,6 +46,18 @@ export function useDashboard() {
         else if (p.status === 'bloqueado') stats.tecido.blocked++;
         else if (occupied) stats.tecido.used++;
       });
+
+      // Tecidos sem espaço — lotes vindos do Auge que ainda não puderam ser
+      // alocados no mapa 2D. Somamos como métrica auxiliar do bloco Tecidos.
+      try {
+        const { count } = await supabase
+          .from('tecidos_sem_espaco' as any)
+          .select('*', { count: 'exact', head: true });
+        stats.tecido.semEspaco = count ?? 0;
+      } catch (err) {
+        console.error('Error fetching tecidos_sem_espaco count:', err);
+      }
+
       setDbStats(stats);
     } catch (e) {
       console.error('Error fetching estoque stats:', e);
