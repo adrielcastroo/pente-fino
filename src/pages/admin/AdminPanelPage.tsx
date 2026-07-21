@@ -188,6 +188,10 @@ export default function AdminPanelPage() {
           <TabsContent value="auge" className="mt-0">
             <Suspense fallback={tabFallback}><AugeAdminPanel /></Suspense>
           </TabsContent>
+          <TabsContent value="llm-tokens" className="mt-0">
+            <Suspense fallback={tabFallback}><LlmTokensTab /></Suspense>
+          </TabsContent>
+
           <TabsContent value="flags" className="mt-0">
             <Suspense fallback={tabFallback}><FeatureFlagsPage /></Suspense>
           </TabsContent>
