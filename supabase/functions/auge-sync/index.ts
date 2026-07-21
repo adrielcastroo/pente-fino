@@ -2957,11 +2957,41 @@ Deno.serve(async (req) => {
       const stripShort = (s: string) =>
         (s ?? '').replace(/\s*E\d{1,2}\/\d{1,2}\s*$/i, '').trim();
 
-      // Busca todas as linhas de acabamento que contêm o item.
-      const variantes = Array.from(new Set([
-        codigoItem,
-        codigoItem.replace(/\./g, ''),
-      ]));
+      // Constrói o conjunto de variantes do código informado.
+      // Aceita qualquer tipo de código (interno, fornecedor, cd_item_acabamento etc).
+      const normCode = (s: string) => (s ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+      const alphaNum = normCode(codigoItem);
+      const variantsSet = new Set<string>();
+      variantsSet.add(codigoItem);
+      variantsSet.add(codigoItem.replace(/\./g, ''));
+      variantsSet.add(codigoItem.toUpperCase());
+      variantsSet.add(codigoItem.toLowerCase());
+      if (alphaNum) variantsSet.add(alphaNum);
+
+      // Consulta itens_cadastro para vincular códigos equivalentes (interno + fornecedores).
+      try {
+        const orParts: string[] = [];
+        if (alphaNum) orParts.push(`codigo_interno_normalizado.eq.${alphaNum}`);
+        if (alphaNum) orParts.push(`codigos_fornecedor_normalizado.cs.{${alphaNum}}`);
+        orParts.push(`codigo_interno.eq.${codigoItem}`);
+        const { data: cad } = await admin
+          .from('itens_cadastro')
+          .select('codigo_interno, codigo_interno_normalizado, codigos_fornecedor_normalizado')
+          .or(orParts.join(','))
+          .limit(20);
+        for (const it of (cad ?? []) as any[]) {
+          if (it.codigo_interno) {
+            variantsSet.add(String(it.codigo_interno));
+            variantsSet.add(String(it.codigo_interno).replace(/\./g, ''));
+          }
+          if (it.codigo_interno_normalizado) variantsSet.add(String(it.codigo_interno_normalizado));
+          for (const cf of (it.codigos_fornecedor_normalizado ?? []) as string[]) {
+            if (cf) variantsSet.add(String(cf));
+          }
+        }
+      } catch { /* segue com variantes básicas */ }
+
+      const variantes = Array.from(variantsSet).filter(Boolean);
       const { data: linhas, error: errLinhas } = await admin
         .from('auge_acabamento_itens')
         .select(`cd_acabamento_item, cd_acabamento, cd_item_acabamento,
