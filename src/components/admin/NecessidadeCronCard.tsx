@@ -178,33 +178,71 @@ export default function NecessidadeCronCard() {
 
   useEffect(() => { carregarUltimaRun(); carregarCron(); }, []);
 
+  const callAction = async (action: string, body: any) => {
+    const { data: session } = await supabase.auth.getSession();
+    const token = session.session?.access_token;
+    const anon = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY) as string;
+    const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/auge-sync?action=${action}`;
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: anon,
+        Authorization: `Bearer ${token ?? anon}`,
+      },
+      body: JSON.stringify(body),
+    });
+    return r.json();
+  };
+
   const executarAgora = async () => {
     setRunning(true);
-    const t = toast.loading('Gerando rascunhos no Auge para todos os depósitos…');
+    setLiveResults([]);
+    setLiveProgress(0);
+    setLiveDestino(null);
+    const total = DESTINOS.length;
+    const t = toast.loading(`Gerando rascunhos… 0/${total}`, {
+      description: 'Iniciando processamento por depósito',
+    });
+    const acumulado: ResultItem[] = [];
     try {
-      const { data: session } = await supabase.auth.getSession();
-      const token = session.session?.access_token;
-      const anon = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY) as string;
-      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/auge-sync?action=necessidade_cron_run`;
-      const r = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          apikey: anon,
-          Authorization: `Bearer ${token ?? anon}`,
-        },
-        body: JSON.stringify({}),
-      });
-      const j = await r.json();
-      if (!j?.ok) {
-        toast.error(j?.error ?? 'Falha ao executar necessidade automática.', { id: t });
-        return;
+      for (let i = 0; i < DESTINOS.length; i++) {
+        const destino = DESTINOS[i];
+        setLiveDestino(destino);
+        toast.loading(`Gerando rascunhos… ${i}/${total}`, {
+          id: t,
+          description: `Processando ${destino}…`,
+        });
+        try {
+          const j = await callAction('necessidade_cron_run', { destinos: [destino], skip_log: true });
+          const item: ResultItem = j?.resultados?.[0] ?? { destino, status: 'erro', erro: j?.error ?? 'sem resposta' };
+          acumulado.push(item);
+          setLiveResults([...acumulado]);
+          setLiveProgress(((i + 1) / total) * 100);
+          if (item.status === 'ok') {
+            toast.success(`${destino}: rascunho ${item.cdMovimentacao} (${item.itens} itens)`);
+          } else if (item.status === 'sem_itens') {
+            toast.message(`${destino}: sem itens elegíveis`);
+          } else {
+            toast.error(`${destino}: ${item.erro ?? item.status}`);
+          }
+        } catch (err: any) {
+          const item: ResultItem = { destino, status: 'erro', erro: err?.message ?? String(err) };
+          acumulado.push(item);
+          setLiveResults([...acumulado]);
+          setLiveProgress(((i + 1) / total) * 100);
+          toast.error(`${destino}: ${item.erro}`);
+        }
       }
-      const ok = (j.resultados as ResultItem[]).filter(x => x.status === 'ok').length;
-      toast.success(`${ok} rascunho(s) gerado(s).`, { id: t });
+      const ok = acumulado.filter(x => x.status === 'ok').length;
+      toast.success(`Concluído — ${ok}/${total} rascunho(s) gerado(s).`, { id: t, description: undefined });
+      try {
+        await callAction('necessidade_cron_log', { destinos: DESTINOS, resultados: acumulado });
+      } catch { /* ignore */ }
       await carregarUltimaRun();
     } finally {
       setRunning(false);
+      setLiveDestino(null);
     }
   };
 
