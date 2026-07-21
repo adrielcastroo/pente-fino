@@ -3314,18 +3314,12 @@ Deno.serve(async (req) => {
       for (const destino of destinos) {
         try {
           const rows = await listar(destino);
-          if (destino.toUpperCase() === 'PVT') {
-            const tecidos = rows.filter(r => /^TC\./i.test(r.cdItem));
-            const outros = rows.filter(r => !/^TC\./i.test(r.cdItem));
-            resultados.push(await criarRascunho(destino, tecidos, 'PVT-Tecidos'));
-            resultados.push(await criarRascunho(destino, outros, 'PVT-Outros'));
-          } else {
-            resultados.push(await criarRascunho(destino, rows, destino));
-          }
+          resultados.push(await criarRascunho(destino, rows, destino));
         } catch (err) {
           resultados.push({ destino, status: 'erro_listar', erro: getErrorMessage(err) });
         }
       }
+
 
       await admin.from('auge_sync_runs').insert({
         status: 'success', triggered_by: triggeredBy, entidade: 'transferencias',
