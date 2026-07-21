@@ -1,53 +1,61 @@
-## Endpoints mapeados no HAR
+## Objetivo
+Elevar o Fio de "chatbot que às vezes acerta" para um agente confiável, com três capacidades priorizadas: **entender contexto**, **gerar relatórios exportáveis** e **executar ações no app**.
 
-- `POST modInventario/Ajax/getListaAcabamento.php` — lista mestre de acabamentos (cdAcabamento, nmAcabamento, classes/subclasses/combinações 1‑3, tag calculada, etc).
-- `POST modInventario/Ajax/getListaItensAcabamento.php` (body `cdAcabamento=NNN`) — itens que pertencem a um acabamento (cdAcabamentoItem, **cdItemAcabamento** = código do item, descrição normal/original/reduzida, 5 kits complementares).
-- `POST modInventario/Controle/ctlAcabamentoItem.php` — CRUD (`idAcao=2` = alterar) com todos os campos acima.
-- Auxiliares p/ dropdowns: `getClasses.php`, `getSubClasses.php`, `getCombinacoes.php`, `getTags.php`.
+## Diagnóstico atual (`supabase/functions/ai-agent/index.ts`)
+- Prompt monolítico que injeta contexto pré-computado (acabamentos, transferências recentes) — o modelo "adivinha" a partir daí em vez de consultar dados sob demanda.
+- Sem ferramentas (`tools`) reais: hoje o agente responde texto livre, então qualquer número/tabela sai do palpite do LLM.
+- Histórico da conversa é enviado, mas sem resumo/âncora — referências como "esse item" dependem do LLM adivinhar.
+- Nenhuma ação de escrita: Fio só lê.
 
-Chave da relação com o item do estoque: **`cdItemAcabamento`** bate com `codigo_interno` de `itens_cadastro` (padrão `003.003.183.001.2`).
+## Arquitetura proposta
+Migrar de "prompt com contexto injetado" para **AI SDK tool calling** com Gemini 3.1 Pro (padrão) e OpenAI GPT-5.5 como fallback do admin. Cada ferramenta é código Deno determinístico com SQL parametrizado — o modelo escolhe a tool, o servidor executa, o resultado volta ao modelo para formatação. Isso elimina "invenção" de números.
 
-## Banco (migration)
+### Fase 1 — Contexto e follow-ups (prioridade 1)
+1. **Memória curta estruturada**: manter no thread os últimos N "focos" (item, acabamento, transferência, período) num JSON `conversation_focus`. Extraído a cada turno via segunda chamada barata ao Gemini Flash Lite.
+2. **Resolver referências**: quando o usuário disser "esse item", "no mesmo acabamento", "e em julho?", o servidor injeta o `conversation_focus` no prompt como fatos duros ("Item atual: TC.000.033. Acabamento atual: 198. Período atual: 2026-07."). Se o foco estiver vazio, o Fio **é obrigado** a usar `ask_user` — regra já existe, mas hoje é ignorada por falta de fatos.
+3. **Regra dura no prompt**: "Se um número, código, data ou nome não estiver no `conversation_focus` nem foi retornado por uma tool nesta resposta, você não pode escrevê-lo. Chame `ask_user` ou uma tool."
 
-Duas tabelas novas em `public` (com GRANTs e RLS `authenticated select` / admin write via `is_at_least('gerente')`):
+### Fase 2 — Ferramentas determinísticas (base para tudo)
+Novas tools registradas no Edge Function (Zod schemas, `execute` no servidor):
+- `buscar_item(codigo|descricao)` → row de `itens_cadastro` + saldo Auge.
+- `listar_itens_do_acabamento(chave_acabamento)` → junta `auge_acabamento_itens` + `itens_cadastro`.
+- `listar_transferencias(filtros: {periodo, deposito_origem, deposito_destino, item, status, limite})`.
+- `saldo_item(codigo, {deposito?})` → `auge_produtos_saldo`.
+- `kardex_item(codigo, periodo)` → `auge_movimentacoes`.
+- `posicao_estoque(item|endereco)` → `estoque_posicoes`.
+- `historico_conferencias({periodo, conferente?, item?})`.
 
-- `auge_acabamentos` — cd_acabamento (PK), nr_acabamento, nm_acabamento, id_cancelado, classes/subclasses/combinações 1..3, ds_tag_calculada, id_herdar_colecao, id_limitar_tamanho, raw jsonb, synced_at.
-- `auge_acabamento_itens` — cd_acabamento_item (PK), cd_acabamento (FK), cd_item_acabamento (indexado — usado pra achar acabamentos de um item), cd_linha, ds_item_acabamento, ds_item_acabamento_reduzida, ds_item_acabamento_original, cd_kit_complementar_1..5, nm_kit_complementar_1..5, synced_at.
+Cada tool retorna JSON compacto e é logada em `ai_chat_history` (já existe) para auditoria.
 
-Índices: `(cd_item_acabamento)` e `(cd_acabamento)`.
+### Fase 3 — Relatórios e exportação
+- Tool `gerar_relatorio({tipo, filtros, formato: "tabela"|"csv"|"xlsx"})`.
+- Tipos v1: `transferencias`, `saidas`, `entradas`, `saldo_por_deposito`, `movimentacoes_por_item`, `conferencias_por_conferente`.
+- Servidor executa SELECT parametrizado, gera arquivo em memória e retorna:
+  - Preview (primeiras 20 linhas) para o chat renderizar como tabela Markdown.
+  - URL assinada de download (bucket `relatorios-fio`, expira em 1h). Novo bucket + policy nesta fase.
+- UI: card de download aparece na resposta quando `download_url` está presente (novo componente `<ReportCard>` em `src/components/agent/`).
 
-## Edge Function `auge-sync` — novas actions
+### Fase 4 — Ações de escrita com confirmação
+Tools com `needsApproval: true` (padrão AI SDK):
+- `criar_rascunho_transferencia({origem, destino, itens[]})`.
+- `salvar_abreviacao({codigo_auge, sigla})` (já existe backend).
+- `marcar_reserva({item, quantidade, endereco})`.
 
-- `sync_acabamentos`: chama `getListaAcabamento.php` → upsert em `auge_acabamentos`. Para cada `cdAcabamento`, chama `getListaItensAcabamento.php` → upsert em `auge_acabamento_itens`. Faz em lote (concorrência ~5) e usa o padrão de state machine já existente pra respeitar o timeout se a lista crescer.
-- `update_acabamento_item`: recebe `{ cdAcabamentoItem, cdItemAcabamento, dsItemAcabamento, dsItemAcabamentoReduzida, dsItemAcabamentoOriginal, cdKitComplementar1..5 }`, envia `POST ctlAcabamentoItem.php` com `idAcao=2` + form‑urlencoded, retorna `{ message }` do Auge e re‑sincroniza só aquele acabamento.
-- `get_acabamento_form_options`: cacheia `getClasses / getSubClasses / getCombinacoes / getTags` (opcional — só se formos permitir criar acabamento novo; para edição de item os kits vêm do próprio `manterAcabamentoItem.php`).
+Fluxo: Fio propõe → UI mostra `<ConfirmActionCard>` com resumo + botões "Confirmar" / "Cancelar" → só executa após clique. Sem confirmação, nunca escreve.
 
-## UI
+## Entregáveis por fase
+- **F1**: `supabase/functions/ai-agent/index.ts` (extrair foco, injetar fatos, endurecer regras). ~1 arquivo.
+- **F2**: `supabase/functions/ai-agent/tools.ts` (novo) + wiring com AI SDK `streamText({ tools, stopWhen: stepCountIs(50) })`. Refatora index.ts para usar tools em vez de contexto pré-injetado. ~3 arquivos.
+- **F3**: migração (bucket `relatorios-fio`) + `tools.ts` estendido + `src/components/agent/ReportCard.tsx` + render no `AgentChatWidget`. ~4 arquivos + 1 migração.
+- **F4**: `ConfirmActionCard.tsx` + parsing de `[[CONFIRM_ACTION]]` no widget + tools de escrita. ~3 arquivos.
 
-1. **Nova página `/estoque/acabamentos`** (ícone na sidebar, abaixo de Entradas):
-   - Tabela dos acabamentos (busca, ordenação por coluna, filtros por classe/combinação, badge "Cancelado").
-   - Botão "Sincronizar do Auge" chamando `sync_acabamentos`.
-   - Ao clicar em um acabamento → `AcabamentoDetailDialog` com a lista dos itens daquele acabamento e, para cada linha, botão **Editar** que abre `AcabamentoItemEditDialog` (formulário com descrição, reduzida, original, 5 kits) → salva via `update_acabamento_item`.
+## Ordem de execução sugerida
+F2 primeiro (base determinística) → F1 (contexto usa as tools) → F3 → F4. Sem F2, F1 ainda deixaria o modelo inventar; por isso proponho começar pelas tools mesmo que a prioridade #1 do usuário seja contexto.
 
-2. **`FichaItemDialog` (aba nova "Acabamentos")**: dado o item aberto, consulta `auge_acabamento_itens` por `cd_item_acabamento = codigo_interno` e mostra cards com nome do acabamento, classe/combinação e um botão "Editar" que reaproveita o mesmo `AcabamentoItemEditDialog`. Assim o usuário responde "em quais acabamentos esse item está" com um clique.
+## Fora de escopo desta rodada
+- Sem RAG/embeddings — as tools SQL cobrem os dados estruturados que o app tem.
+- Sem multi-agente/planner — `stepCountIs(50)` do AI SDK já resolve loops de tool.
+- Sem streaming de arquivos grandes (>10k linhas) — split por período nessa versão.
 
-3. **`CadastrosPage`**: coluna/ícone "Acabamentos: N" quando o item pertence a ≥1 acabamento (usa `count` da mesma query).
-
-## Fio (ai-agent)
-
-Em `buildAgentContext` do `supabase/functions/ai-agent/index.ts`:
-- Se algum `textToken` bater com `cd_item_acabamento` ou o usuário mencionar "acabamento", buscar `auge_acabamento_itens` + join com `auge_acabamentos` e injetar (limit 20) — nome, classe, combinação, kits.
-- Guardrail já cobre: "acabamento" fica dentro dos `DOMAIN_TERMS`.
-
-## Detalhes técnicos
-
-- Autenticação no Auge continua no mesmo padrão do `auge-sync` (cookie de sessão via `AUGE_USERNAME` / `AUGE_PASSWORD` + `AUGE_BASE_URL`).
-- Content-Type `application/x-www-form-urlencoded` em todos os POSTs, incluindo o `update`.
-- Resposta do `ctlAcabamentoItem.php` é `{"message":"Item alterado com sucesso"}` — tratar mensagens diferentes como erro e devolver pro toast.
-- Realtime: habilitar `REPLICA IDENTITY FULL` em `auge_acabamento_itens` e publicar em `supabase_realtime` para a `FichaItemDialog` atualizar sozinha após edição.
-
-## Fora do escopo (para não crescer)
-
-- Criar / cancelar acabamento inteiro (só edição de item por enquanto).
-- Editar classes/subclasses/combinações do acabamento em si.
-- Kits complementares em CRUD — apenas seleção a partir do que o Auge já devolve.
+## Confirmação
+Posso começar por **F2 (tools determinísticas)** — é o alicerce que destrava todas as outras. Ok seguir, ou prefere que eu comece por outra fase?
