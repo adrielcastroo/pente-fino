@@ -3283,7 +3283,13 @@ Deno.serve(async (req) => {
       const resultados: any[] = [];
 
       const listar = async (destino: string) => {
-        const body = new URLSearchParams({ cdDepositoDestino: destino, cdDepositoOrigem: '01' });
+        // NOTA: getNecessidade.php ignora cdDepositoOrigem e devolve o depósito
+        // "sugerido" pelo Auge (14, Espe.1, etc.). Como a regra do cron é
+        // SEMPRE origem "01", não filtramos pelo cdDeposito retornado — apenas
+        // usamos qtRecomendacao > 0. A validação de saldo em "01" acontece
+        // depois (fetchLotes/Series para itens com controle; para os demais,
+        // o próprio Auge rejeita no criarTransferencia se não houver saldo).
+        const body = new URLSearchParams({ cdDepositoDestino: destino });
         const j = await postAjaxJson(
           auth,
           '/l.unilux/modInventario/estoque/ajax/getNecessidade.php',
@@ -3293,8 +3299,6 @@ Deno.serve(async (req) => {
         return raw.map((r: any) => ({
           cdItem: String(r.cdItem ?? ''),
           nmItem: String(r.nmItem ?? ''),
-          cdDepositoOrigem: String(r.cdDeposito ?? ''),
-          qtEstoque: parseBRNumber(r.qtdEstoque),
           qtRecomendacao: parseBRNumber(r.qtdRecomendacao),
           idControleLote: String(r.idControleLote ?? 'N').toUpperCase() === 'Y',
           idControleSerie: String(r.idControleSerie ?? 'N').toUpperCase() === 'Y',
@@ -3302,9 +3306,14 @@ Deno.serve(async (req) => {
       };
 
       const criarRascunho = async (destino: string, rows: any[], tag: string) => {
-        const elegiveis = rows.filter(r =>
-          r.cdDepositoOrigem === '01' && r.qtEstoque > 0 && r.qtRecomendacao > 0
-        );
+        // Dedup por cdItem (Auge devolve 1 linha por depósito sugerido).
+        const seen = new Set<string>();
+        const elegiveis = rows.filter(r => {
+          if (!(r.qtRecomendacao > 0)) return false;
+          if (seen.has(r.cdItem)) return false;
+          seen.add(r.cdItem);
+          return true;
+        });
         if (!elegiveis.length) {
           return { destino, tag, status: 'sem_itens', itens: 0 };
         }
