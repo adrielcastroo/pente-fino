@@ -3147,19 +3147,21 @@ Deno.serve(async (req) => {
       const cdDepositoOrigem = String(payload?.cdDepositoOrigem ?? '').trim();
       if (!cdDepositoDestino) throw new Error('cdDepositoDestino é obrigatório.');
 
-      const body = new URLSearchParams({ cdDepositoDestino });
-      if (cdDepositoOrigem) body.set('cdDepositoOrigem', cdDepositoOrigem);
+      const origemConsulta = cdDepositoOrigem || '01';
+      const body = new URLSearchParams({ cdDepositoDestino: origemConsulta });
       const j = await postAjaxJson(
         auth,
         '/l.unilux/modInventario/estoque/ajax/getNecessidade.php',
         body,
       );
       const raw = Array.isArray(j?.data) ? j.data : [];
-      const rows = raw.map((r: any) => ({
+      const rows = raw
+        .filter((r: any) => String(r.cdDeposito ?? '').trim().toUpperCase() === cdDepositoDestino.toUpperCase())
+        .map((r: any) => ({
         cdItem: String(r.cdItem ?? ''),
         nmItem: String(r.nmItem ?? ''),
-        cdDepositoOrigem: cdDepositoDestino,
-        nmDepositoOrigem: cdDepositoDestino === '01' ? 'Central [01]' : '',
+        cdDepositoOrigem: origemConsulta,
+        nmDepositoOrigem: origemConsulta === '01' ? 'Central [01]' : '',
         cdDepositoNecessidade: String(r.cdDeposito ?? ''),
         nmDepositoNecessidade: String(r.nmDeposito ?? ''),
         unidade: String(r.idUnidadeMedida ?? ''),
@@ -3176,7 +3178,7 @@ Deno.serve(async (req) => {
         idRnpPadrao: String(r.idRnpPadrao ?? ''),
       }));
       return new Response(JSON.stringify({
-        ok: true, cdDepositoDestino, cdDepositoOrigem, total: rows.length, data: rows,
+        ok: true, cdDepositoDestino, cdDepositoOrigem: origemConsulta, total: rows.length, data: rows,
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
