@@ -1614,8 +1614,24 @@ async function postAjaxJson(
 
 function parseBRNumber(v: any): number {
   if (v == null) return 0;
-  const s = String(v).replace(/\./g, '').replace(',', '.');
-  const n = Number(s);
+  const s = String(v).trim().replace(/\s/g, '');
+  if (!s) return 0;
+
+  let normalized = s;
+  if (normalized.includes(',')) {
+    normalized = normalized.replace(/\./g, '').replace(',', '.');
+  } else {
+    const dotCount = (normalized.match(/\./g) ?? []).length;
+    if (dotCount > 1) {
+      const parts = normalized.split('.');
+      const last = parts[parts.length - 1];
+      normalized = last.length === 3
+        ? parts.join('')
+        : `${parts.slice(0, -1).join('')}.${last}`;
+    }
+  }
+
+  const n = Number(normalized);
   return Number.isFinite(n) ? n : 0;
 }
 
@@ -3147,19 +3163,23 @@ Deno.serve(async (req) => {
       const cdDepositoOrigem = String(payload?.cdDepositoOrigem ?? '').trim();
       if (!cdDepositoDestino) throw new Error('cdDepositoDestino é obrigatório.');
 
-      const body = new URLSearchParams({ cdDepositoDestino });
-      if (cdDepositoOrigem) body.set('cdDepositoOrigem', cdDepositoOrigem);
+      const origemConsulta = cdDepositoOrigem || '01';
+      const body = new URLSearchParams({ cdDepositoDestino: origemConsulta });
       const j = await postAjaxJson(
         auth,
         '/l.unilux/modInventario/estoque/ajax/getNecessidade.php',
         body,
       );
       const raw = Array.isArray(j?.data) ? j.data : [];
-      const rows = raw.map((r: any) => ({
+      const rows = raw
+        .filter((r: any) => String(r.cdDeposito ?? '').trim().toUpperCase() === cdDepositoDestino.toUpperCase())
+        .map((r: any) => ({
         cdItem: String(r.cdItem ?? ''),
         nmItem: String(r.nmItem ?? ''),
-        cdDepositoOrigem: String(r.cdDeposito ?? ''),
-        nmDepositoOrigem: String(r.nmDeposito ?? ''),
+        cdDepositoOrigem: origemConsulta,
+        nmDepositoOrigem: origemConsulta === '01' ? 'Central [01]' : '',
+        cdDepositoNecessidade: String(r.cdDeposito ?? ''),
+        nmDepositoNecessidade: String(r.nmDeposito ?? ''),
         unidade: String(r.idUnidadeMedida ?? ''),
         qtEstoqueGeral: parseBRNumber(r.qtdEstoqueGeral),
         qtEstoque: parseBRNumber(r.qtdEstoque),
@@ -3174,7 +3194,7 @@ Deno.serve(async (req) => {
         idRnpPadrao: String(r.idRnpPadrao ?? ''),
       }));
       return new Response(JSON.stringify({
-        ok: true, cdDepositoDestino, cdDepositoOrigem, total: rows.length, data: rows,
+        ok: true, cdDepositoDestino, cdDepositoOrigem: origemConsulta, total: rows.length, data: rows,
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -3283,13 +3303,12 @@ Deno.serve(async (req) => {
       const resultados: any[] = [];
 
       const listar = async (destino: string) => {
-        // NOTA: getNecessidade.php ignora cdDepositoOrigem e devolve o depósito
-        // "sugerido" pelo Auge (14, Espe.1, etc.). Como a regra do cron é
-        // SEMPRE origem "01", não filtramos pelo cdDeposito retornado — apenas
-        // usamos qtRecomendacao > 0. A validação de saldo em "01" acontece
-        // depois (fetchLotes/Series para itens com controle; para os demais,
-        // o próprio Auge rejeita no criarTransferencia se não houver saldo).
-        const body = new URLSearchParams({ cdDepositoDestino: destino });
+        // No fluxo original do Auge, o campo enviado a getNecessidade.php é o
+        // depósito de ORIGEM selecionado no modal; já o campo retornado como
+        // `cdDeposito` é o depósito que possui a necessidade (destino da linha).
+        // Portanto, consultamos a origem fixa 01 e depois mantemos somente as
+        // linhas cujo destino da necessidade corresponde ao destino processado.
+        const body = new URLSearchParams({ cdDepositoDestino: '01' });
         const j = await postAjaxJson(
           auth,
           '/l.unilux/modInventario/estoque/ajax/getNecessidade.php',
@@ -3299,10 +3318,11 @@ Deno.serve(async (req) => {
         return raw.map((r: any) => ({
           cdItem: String(r.cdItem ?? ''),
           nmItem: String(r.nmItem ?? ''),
+          cdDepositoNecessidade: String(r.cdDeposito ?? '').trim(),
           qtRecomendacao: parseBRNumber(r.qtdRecomendacao),
           idControleLote: String(r.idControleLote ?? 'N').toUpperCase() === 'Y',
           idControleSerie: String(r.idControleSerie ?? 'N').toUpperCase() === 'Y',
-        }));
+        })).filter((r: any) => r.cdDepositoNecessidade.toUpperCase() === destino.toUpperCase());
       };
 
       const criarRascunho = async (destino: string, rows: any[], tag: string) => {
