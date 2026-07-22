@@ -165,7 +165,9 @@ button .lucide,
 
   body {
     @apply bg-background text-foreground antialiased selection:bg-primary/30 selection:text-primary overflow-x-hidden;
-    font-family: 'IBM Plex Sans Variable', 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+    font-family: 'Geist Variable', 'Geist', 'Inter', system-ui, -apple-system, sans-serif;
+    font-feature-settings: 'ss01', 'cv11', 'tnum';
+    font-variant-numeric: tabular-nums;
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
     padding-left: env(safe-area-inset-left);
@@ -213,10 +215,18 @@ button .lucide,
 
   button, input, select, textarea {
     @apply transition-all duration-75 ease-in-out; /* Reduced duration */
+    font-variant-numeric: tabular-nums;
   }
 
   .font-mono {
-    font-family: 'IBM Plex Mono', monospace !important;
+    font-family: 'Geist Mono Variable', 'Geist Mono', 'IBM Plex Mono', monospace !important;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Números sempre tabulares em todo o app — leitura confiante em tabelas e KPIs */
+  input[type="number"], input[inputmode="numeric"], input[inputmode="decimal"],
+  .tabular-nums, td, th {
+    font-variant-numeric: tabular-nums;
   }
 
   /* Industrial: numbers always tabular for visual alignment in tables/KPIs */
