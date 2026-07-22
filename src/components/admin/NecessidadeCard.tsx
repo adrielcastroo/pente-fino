@@ -70,19 +70,22 @@ export default function NecessidadeCard() {
     })();
   }, []);
 
-  const chave = (r: NecessidadeRow) => `${r.cdItem}::${r.cdDepositoOrigem}`;
+  const chave = (r: NecessidadeRow) => r.cdItem;
 
   const filtradas = useMemo(() => {
     if (!rows) return [];
     const q = busca.trim().toLowerCase();
-    return rows.filter(r => {
-      // Origem sempre "01 - Central" e apenas itens com saldo em 01.
-      if (r.cdDepositoOrigem !== '01') return false;
-      if (r.qtEstoque <= 0) return false;
-      if (somenteRecomendados && r.qtRecomendacao <= 0) return false;
-      if (!q) return true;
-      return r.cdItem.toLowerCase().includes(q) || r.nmItem.toLowerCase().includes(q);
-    });
+    const dedup = new Map<string, NecessidadeRow>();
+    for (const r of rows) {
+      if (somenteRecomendados && r.qtRecomendacao <= 0) continue;
+      if (q && !r.cdItem.toLowerCase().includes(q) && !r.nmItem.toLowerCase().includes(q)) continue;
+
+      const atual = dedup.get(r.cdItem);
+      if (!atual || r.qtRecomendacao > atual.qtRecomendacao) {
+        dedup.set(r.cdItem, r);
+      }
+    }
+    return Array.from(dedup.values());
   }, [rows, busca, somenteRecomendados]);
 
   const listar = async () => {
@@ -97,8 +100,12 @@ export default function NecessidadeCard() {
         return;
       }
       setRows(resp.data as NecessidadeRow[]);
-      const comSaldo = (resp.data as NecessidadeRow[]).filter(r => r.cdDepositoOrigem === '01' && r.qtEstoque > 0).length;
-      toast.success(`${comSaldo} item(ns) com saldo no depósito 01.`);
+      const recomendados = new Set(
+        (resp.data as NecessidadeRow[])
+          .filter(r => r.qtRecomendacao > 0)
+          .map(r => r.cdItem),
+      ).size;
+      toast.success(`${recomendados} item(ns) com recomendação encontrados.`);
     } finally {
       setLoading(false);
     }
@@ -132,11 +139,11 @@ export default function NecessidadeCard() {
     const t = toast.loading('Montando rascunho no Auge (FIFO automático para lotes/séries)…');
     try {
       const itens = Object.entries(selecionados).map(([k, v]) => {
-        const [cdItem, cdOrigem] = k.split('::');
-        const row = rows!.find(r => r.cdItem === cdItem && r.cdDepositoOrigem === cdOrigem)!;
+        const cdItem = k;
+        const row = rows!.find(r => r.cdItem === cdItem)!;
         return {
           cdItem,
-          cdDepositoOrigem: cdOrigem,
+          cdDepositoOrigem: '01',
           qtd: Number(String(v.qtd).replace(',', '.')) || 0,
           idControleLote: row.idControleLote,
           idControleSerie: row.idControleSerie,
