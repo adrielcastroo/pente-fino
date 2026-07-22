@@ -556,7 +556,7 @@ export default function EstoquePage() {
             { key: 'ocupado', label: 'Ocupação Atual', value: stats.occupied, percent: stats.totalSlots ? Math.round((stats.occupied / stats.totalSlots) * 100) : 0, config: { ...STATUS_CONFIG.ocupado, bg: 'bg-emerald-500/10 shadow-emerald-500/5', border: 'border-emerald-500/20' } },
             { key: 'livre', label: 'Posições Livres', value: stats.free, percent: stats.totalSlots ? Math.round((stats.free / stats.totalSlots) * 100) : 0, config: { color: 'text-primary', bg: 'bg-primary/5 shadow-primary/5', border: 'border-primary/20' } },
             { key: 'bloqueado', label: 'Bloqueado', value: stats.blocked, percent: stats.totalSlots ? Math.round((stats.blocked / stats.totalSlots) * 100) : 0, config: { ...STATUS_CONFIG.bloqueado, bg: 'bg-red-500/10 shadow-red-500/5', border: 'border-red-500/20' } },
-            { key: 'reservado', label: 'Reservado', value: stats.reserved, percent: stats.totalSlots ? Math.round((stats.reserved / stats.totalSlots) * 100) : 0, config: { ...STATUS_CONFIG.reservado, bg: 'bg-amber-500/10 shadow-amber-500/5', border: 'border-amber-500/20' } },
+            
           ].map((s, i) => (
             <motion.div
               key={s.label}
