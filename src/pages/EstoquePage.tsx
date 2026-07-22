@@ -98,6 +98,7 @@ export default function EstoquePage() {
   const [scanning, setScanning] = useState(false);
   const [scanResult, setScanResult] = useState<{ item: Posicao | null; success: boolean; message: string } | null>(null);
   const [confirmScan, setConfirmScan] = useState<Posicao | null>(null);
+  const [recentSaidas, setRecentSaidas] = useState<Array<{ id: string; item: string; lote: string | null; endereco: string | null; m_linear: number | null; conferente_saida: string | null; data_saida: string | null }>>([]);
   const scanRef = useRef<HTMLInputElement>(null);
   const [locateQuery, setLocateQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
@@ -195,6 +196,25 @@ export default function EstoquePage() {
   useEffect(() => {
     setFormData({ activeTab: 'estoque' });
   }, [setFormData]);
+
+  // Últimas saídas de lotes/tecidos — alimenta o card do dashboard do mapa.
+  const loadRecentSaidas = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('estoque_saidas')
+      .select('id,item,lote,endereco,m_linear,conferente_saida,data_saida')
+      .order('data_saida', { ascending: false, nullsFirst: false })
+      .limit(8);
+    if (!error && data) setRecentSaidas(data as any);
+  }, []);
+
+  useEffect(() => {
+    loadRecentSaidas();
+    const ch = supabase
+      .channel('estoque-saidas-recent')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'estoque_saidas' }, () => loadRecentSaidas())
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [loadRecentSaidas]);
 
   // Atalho "/" para focar a busca (ignora quando já está em input/textarea).
   useEffect(() => {
@@ -536,7 +556,7 @@ export default function EstoquePage() {
             { key: 'ocupado', label: 'Ocupação Atual', value: stats.occupied, percent: stats.totalSlots ? Math.round((stats.occupied / stats.totalSlots) * 100) : 0, config: { ...STATUS_CONFIG.ocupado, bg: 'bg-emerald-500/10 shadow-emerald-500/5', border: 'border-emerald-500/20' } },
             { key: 'livre', label: 'Posições Livres', value: stats.free, percent: stats.totalSlots ? Math.round((stats.free / stats.totalSlots) * 100) : 0, config: { color: 'text-primary', bg: 'bg-primary/5 shadow-primary/5', border: 'border-primary/20' } },
             { key: 'bloqueado', label: 'Bloqueado', value: stats.blocked, percent: stats.totalSlots ? Math.round((stats.blocked / stats.totalSlots) * 100) : 0, config: { ...STATUS_CONFIG.bloqueado, bg: 'bg-red-500/10 shadow-red-500/5', border: 'border-red-500/20' } },
-            { key: 'reservado', label: 'Reservado', value: stats.reserved, percent: stats.totalSlots ? Math.round((stats.reserved / stats.totalSlots) * 100) : 0, config: { ...STATUS_CONFIG.reservado, bg: 'bg-amber-500/10 shadow-amber-500/5', border: 'border-amber-500/20' } },
+            
           ].map((s, i) => (
             <motion.div
               key={s.label}
@@ -570,6 +590,52 @@ export default function EstoquePage() {
               </Card>
             </motion.div>
           ))}
+
+          {/* Últimas Saídas — substitui o antigo card "Reservado" */}
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25, delay: 0.2, ease: 'easeOut' }}
+          >
+            <Card
+              onClick={() => navigate('/estoque/saida')}
+              className="rounded-lg border border-violet-500/20 bg-violet-500/5 hover:bg-violet-500/10 hover:border-violet-500/40 transition-all duration-200 cursor-pointer relative overflow-hidden group shadow-sm hover:shadow-md h-full"
+            >
+              <CardContent className="p-3 tablet-portrait:p-2 relative z-10 h-full flex flex-col">
+                <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <LogOut className="w-3.5 h-3.5 text-violet-400 shrink-0" strokeWidth={1.75} />
+                    <span className="text-[9px] tablet-portrait:text-[8px] font-semibold text-muted-foreground uppercase tracking-[0.18em]">Últimas Saídas</span>
+                  </div>
+                  <span className="text-[10px] font-medium text-violet-400 tabular-nums shrink-0">{recentSaidas.length}</span>
+                </div>
+                {recentSaidas.length === 0 ? (
+                  <div className="flex-1 flex items-center justify-center text-[10px] text-muted-foreground/60 italic">
+                    Sem saídas recentes
+                  </div>
+                ) : (
+                  <ul className="flex-1 space-y-1 overflow-hidden">
+                    {recentSaidas.slice(0, 4).map((s) => (
+                      <li key={s.id} className="flex items-center justify-between gap-2 text-[10px] leading-tight min-w-0">
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate font-medium text-foreground" title={s.item || ''}>
+                            {s.item || '—'}
+                          </div>
+                          <div className="truncate text-muted-foreground/70 tabular-nums">
+                            {s.lote || s.endereco || '—'}
+                            {s.m_linear ? ` · ${Number(s.m_linear).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}m` : ''}
+                          </div>
+                        </div>
+                        <span className="text-[9px] text-muted-foreground/60 tabular-nums shrink-0">
+                          {s.data_saida ? new Date(s.data_saida).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) : ''}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
       </div>
 
