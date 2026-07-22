@@ -1,10 +1,9 @@
 import { createRoot } from "react-dom/client";
 import { HelmetProvider } from "react-helmet-async";
-// Self-hosted fonts — removes render-blocking Google Fonts request and
-// external DNS/TLS handshake on first paint.
-import "@fontsource-variable/ibm-plex-sans/index.css";
-import "@fontsource/ibm-plex-mono/400.css";
-import "@fontsource/ibm-plex-mono/500.css";
+// Self-hosted fonts — Geist for a more confident, engineered feel with
+// tabular numerals across the whole app.
+import "@fontsource-variable/geist";
+import "@fontsource-variable/geist-mono";
 import App from "./App";
 import "./index.css";
 import GlobalErrorBoundary from "./components/GlobalErrorBoundary";
