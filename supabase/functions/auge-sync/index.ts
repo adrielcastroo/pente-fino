@@ -1614,8 +1614,24 @@ async function postAjaxJson(
 
 function parseBRNumber(v: any): number {
   if (v == null) return 0;
-  const s = String(v).replace(/\./g, '').replace(',', '.');
-  const n = Number(s);
+  const s = String(v).trim().replace(/\s/g, '');
+  if (!s) return 0;
+
+  let normalized = s;
+  if (normalized.includes(',')) {
+    normalized = normalized.replace(/\./g, '').replace(',', '.');
+  } else {
+    const dotCount = (normalized.match(/\./g) ?? []).length;
+    if (dotCount > 1) {
+      const parts = normalized.split('.');
+      const last = parts[parts.length - 1];
+      normalized = last.length === 3
+        ? parts.join('')
+        : `${parts.slice(0, -1).join('')}.${last}`;
+    }
+  }
+
+  const n = Number(normalized);
   return Number.isFinite(n) ? n : 0;
 }
 
