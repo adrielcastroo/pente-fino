@@ -3320,7 +3320,7 @@ Deno.serve(async (req) => {
         const itensFinais: TransferenciaItem[] = [];
         const relatorio: any[] = [];
         for (const it of elegiveis) {
-          const qtdAlvo = Math.min(it.qtRecomendacao, it.qtEstoque);
+          const qtdAlvo = it.qtRecomendacao;
           if (qtdAlvo <= 0) continue;
           if (it.idControleLote || it.idControleSerie) {
             try {
