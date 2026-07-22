@@ -590,6 +590,52 @@ export default function EstoquePage() {
               </Card>
             </motion.div>
           ))}
+
+          {/* Últimas Saídas — substitui o antigo card "Reservado" */}
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25, delay: 0.2, ease: 'easeOut' }}
+          >
+            <Card
+              onClick={() => navigate('/estoque/saida')}
+              className="rounded-lg border border-violet-500/20 bg-violet-500/5 hover:bg-violet-500/10 hover:border-violet-500/40 transition-all duration-200 cursor-pointer relative overflow-hidden group shadow-sm hover:shadow-md h-full"
+            >
+              <CardContent className="p-3 tablet-portrait:p-2 relative z-10 h-full flex flex-col">
+                <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <LogOut className="w-3.5 h-3.5 text-violet-400 shrink-0" strokeWidth={1.75} />
+                    <span className="text-[9px] tablet-portrait:text-[8px] font-semibold text-muted-foreground uppercase tracking-[0.18em]">Últimas Saídas</span>
+                  </div>
+                  <span className="text-[10px] font-medium text-violet-400 tabular-nums shrink-0">{recentSaidas.length}</span>
+                </div>
+                {recentSaidas.length === 0 ? (
+                  <div className="flex-1 flex items-center justify-center text-[10px] text-muted-foreground/60 italic">
+                    Sem saídas recentes
+                  </div>
+                ) : (
+                  <ul className="flex-1 space-y-1 overflow-hidden">
+                    {recentSaidas.slice(0, 4).map((s) => (
+                      <li key={s.id} className="flex items-center justify-between gap-2 text-[10px] leading-tight min-w-0">
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate font-medium text-foreground" title={s.item || ''}>
+                            {s.item || '—'}
+                          </div>
+                          <div className="truncate text-muted-foreground/70 tabular-nums">
+                            {s.lote || s.endereco || '—'}
+                            {s.m_linear ? ` · ${Number(s.m_linear).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}m` : ''}
+                          </div>
+                        </div>
+                        <span className="text-[9px] text-muted-foreground/60 tabular-nums shrink-0">
+                          {s.data_saida ? new Date(s.data_saida).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) : ''}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
       </div>
 
