@@ -197,6 +197,25 @@ export default function EstoquePage() {
     setFormData({ activeTab: 'estoque' });
   }, [setFormData]);
 
+  // Últimas saídas de lotes/tecidos — alimenta o card do dashboard do mapa.
+  const loadRecentSaidas = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('estoque_saidas')
+      .select('id,item,lote,endereco,m_linear,conferente_saida,data_saida')
+      .order('data_saida', { ascending: false, nullsFirst: false })
+      .limit(8);
+    if (!error && data) setRecentSaidas(data as any);
+  }, []);
+
+  useEffect(() => {
+    loadRecentSaidas();
+    const ch = supabase
+      .channel('estoque-saidas-recent')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'estoque_saidas' }, () => loadRecentSaidas())
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [loadRecentSaidas]);
+
   // Atalho "/" para focar a busca (ignora quando já está em input/textarea).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
