@@ -98,6 +98,7 @@ export default function EstoquePage() {
   const [scanning, setScanning] = useState(false);
   const [scanResult, setScanResult] = useState<{ item: Posicao | null; success: boolean; message: string } | null>(null);
   const [confirmScan, setConfirmScan] = useState<Posicao | null>(null);
+  const [recentSaidas, setRecentSaidas] = useState<Array<{ id: string; item: string; lote: string | null; endereco: string | null; m_linear: number | null; conferente_saida: string | null; data_saida: string | null }>>([]);
   const scanRef = useRef<HTMLInputElement>(null);
   const [locateQuery, setLocateQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
