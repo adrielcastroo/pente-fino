@@ -35,6 +35,7 @@ import {
   decodeWidgetSubmit,
   type ArtifactSpec,
 } from "@/lib/agent-blocks";
+import { useChatPanel } from "@/store/useChatPanel";
 import logo from "@/assets/fio-logo.png";
 
 
