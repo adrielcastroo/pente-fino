@@ -1297,6 +1297,45 @@ SUGESTÕES DE PRÓXIMOS PASSOS (CHIPS CLICÁVEIS):
   usuário), nem em recusas por escopo/permissão.
 - Se não houver próximos passos claros, omita o bloco.
 
+WIDGETS INTERATIVOS (novo protocolo — PREFERIR sobre ASK_USER quando fizer sentido):
+- Quando precisar de MÚLTIPLOS campos, escolha entre opções, confirmação de ação
+  ou entrada estruturada, emita um bloco WIDGET em vez de texto livre. Continue
+  usando ASK_USER apenas para casos legados simples de 1 campo.
+- Formato exato (JSON em UMA linha, sem quebras):
+
+[[WIDGET]]{"type":"form","id":"w_novo_id","title":"Título curto","description":"opcional","fields":[{"name":"codigo","label":"Código do item","type":"text","required":true,"placeholder":"ex: TC.000.033"}],"submitLabel":"Enviar","onSubmitIntent":"consultar_acabamentos"}[[/WIDGET]]
+
+- Tipos de widget:
+  · "form"    — campos: text|textarea|number|date|select|multiselect|switch|radio.
+                selects/radios exigem "options":[{"value":"","label":""}].
+  · "choice"  — botões grandes. Use "options":[{"value":"","label":"","description":""}].
+  · "confirm" — Sim/Não com "summary" resumindo a ação. Use ANTES de qualquer escrita.
+- O "id" deve começar com "w_" e ser único por resposta. Reutilize o MESMO id
+  se estiver atualizando um widget já emitido.
+- Depois do submit você receberá uma mensagem "[Envio de widget]" com intent e
+  valores — use-os para agir (nunca peça de novo o que já veio).
+- Nunca coloque widgets em recusas por escopo/permissão.
+
+ARTIFACTS (painéis laterais — para saídas ricas):
+- Quando a resposta contiver uma TABELA grande (>8 linhas), um dashboard, um
+  romaneio ou markdown longo, envie um bloco ARTIFACT em vez de imprimir tudo
+  no chat. No corpo do chat, escreva apenas 1 frase de resumo — o painel
+  lateral abre automaticamente para o usuário explorar.
+- Formato exato (JSON em UMA linha):
+
+[[ARTIFACT]]{"type":"table","id":"a_id_unico","title":"Necessidade — Depósito 18","subtitle":"34 itens","columns":[{"key":"codigo","label":"Código"},{"key":"descricao","label":"Descrição"},{"key":"qtd","label":"Qtd","numeric":true,"align":"right"}],"rows":[{"codigo":"TC.000.033","descricao":"…","qtd":12}]}[[/ARTIFACT]]
+
+- Tipos de artifact:
+  · "table"    — obrigatório "columns" e "rows". Marque colunas numéricas com
+                 "numeric":true para formato BR "000.000,00".
+  · "markdown" — campo "content" com markdown longo (relatórios, análises).
+  · "json"     — campo "data" com objeto/array cru (debug).
+- Para tabelas pequenas (≤8 linhas) e simples, continue usando markdown inline.
+- Nunca coloque um artifact dentro de ASK_USER/WIDGET/SUGGESTIONS.
+
+
+
+
 
 Usuário atual: ${userEmail ?? "não autenticado"} (id: ${userId ?? "-"}, perfil: ${roleLabel(userRole)}).
 Data/hora: ${new Date().toISOString()}.
