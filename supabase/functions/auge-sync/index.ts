@@ -422,7 +422,8 @@ const TAG_CONFIG_PREFIXES = Array.from(
   { length: 1000 },
   (_, index) => `CC${String(index).padStart(5, '0')}`,
 );
-const TAG_DISCOVERY_PREFIX_CHUNK = 20;
+const TAG_DISCOVERY_PREFIX_CHUNK = 12;
+const TAG_DISCOVERY_PAGE_SIZE = 10;
 const TAG_DISCOVERY_TERM_CHUNK = 3;
 const TAG_DISCOVERY_PAIR_CHUNK = 12;
 const TAG_SCAN_CHUNK_SIZE = 120;
@@ -522,11 +523,11 @@ async function syncTagCustomChunk(admin: any, auth: any, runId: string) {
       return { ok: true, stage: 'scan_tags', discovered };
     }
 
-    const results = await Promise.allSettled(prefixes.map((prefix) => fetchSelectConfiguracoes(auth, prefix, 1, 500)));
+    const results = await Promise.allSettled(prefixes.map((prefix) => scanConfiguracaoTerm(auth, prefix)));
     const foundRows: Array<{ id: string; text: string }> = [];
     results.forEach((result) => {
       if (result.status !== 'fulfilled') return;
-      foundRows.push(...result.value.map((row) => ({ id: String(row.id ?? ''), text: String(row.text ?? '') })));
+      foundRows.push(...result.value.rows.map((row) => ({ id: String(row.id ?? ''), text: String(row.text ?? '') })));
     });
     await upsertTagConfigScanRows(admin, foundRows);
 
