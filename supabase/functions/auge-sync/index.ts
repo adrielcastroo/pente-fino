@@ -3034,22 +3034,42 @@ Deno.serve(async (req) => {
     if (action === 'sync_tag_custom') {
       const runIns = await admin.from('auge_sync_runs').insert({
         entidade: 'tag_custom', status: 'running', started_at: new Date().toISOString(),
-        triggered_by: triggeredBy, detalhes: { phase: 'descobrindo configurações', current: 0, total: 0, com_tag: 0, sem_tag: 0 },
+        triggered_by: triggeredBy, detalhes: { phase: 'limpando tabelas', current: 0, total: 0, com_tag: 0, sem_tag: 0 },
       }).select('id').single();
       const runId = runIns.data?.id;
 
       const task = (async () => {
-        // FASE 1 — descobrir universo real de CONFIGURAÇÕES via
-        // tagSelectListaConfiguracoes.php (Select2 do lookup "Configuração"
-        // da tela Manter TAG Customizada). IDs são tipo "CC000004".
-        const cfgMap = await scanAllConfiguracoes(auth, async (found, doneTerms, totalTerms) => {
-          await admin.from('auge_sync_runs').update({
-            detalhes: {
-              phase: `descobrindo configurações (${doneTerms}/${totalTerms} termos)`,
-              current: 0, total: found, com_tag: 0, sem_tag: 0,
-            },
-          }).eq('id', runId);
-        });
+        // Limpa varreduras anteriores para começar do zero.
+        await admin.from('auge_tag_custom').delete().gte('id', '00000000-0000-0000-0000-000000000000');
+        await admin.from('auge_tag_custom_scan').delete().gte('cd_configuracao', '');
+
+        // FASE 1 — descobrir universo de CONFIGURAÇÕES via
+        // tagSelectListaConfiguracoes.php. Persiste cada lote logo que aparece
+        // e reporta progresso a cada página (para a barra não parecer travada).
+        const cfgMap = await scanAllConfiguracoes(
+          auth,
+          async (foundCount, doneTerms, totalTerms, currentTerm) => {
+            await admin.from('auge_sync_runs').update({
+              detalhes: {
+                phase: `descobrindo configurações [${currentTerm}] — ${foundCount} encontradas`,
+                current: doneTerms, total: totalTerms, com_tag: 0, sem_tag: 0,
+              },
+            }).eq('id', runId);
+          },
+          async (batch) => {
+            if (!batch.length) return;
+            await admin.from('auge_tag_custom_scan').upsert(
+              batch.map((r) => ({
+                cd_configuracao: r.id,
+                nm_configuracao: r.text,
+                qtd_tags: 0,
+                last_scanned_at: null,
+                erro: null,
+              })),
+              { onConflict: 'cd_configuracao' },
+            );
+          },
+        );
 
         const prods = Array.from(cfgMap.entries()).map(([id, text]) => ({ codigo: id, descricao: text }));
         const total = prods.length;
