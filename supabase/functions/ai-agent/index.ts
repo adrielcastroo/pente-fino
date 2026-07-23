@@ -330,21 +330,55 @@ function renderExecuteReport(payload: any): string {
   return `${header}\n${detalhes}${abrev}`;
 }
 
-function askUserActionSpec(codigo: string) {
+// Widget interativo (novo protocolo) para a automação "Entrega Após".
+function entregaAposWidgetSpec(codigo: string) {
   return {
+    id: `entrega-apos-${codigo}`,
+    type: "form",
+    intent: "entrega_apos",
     title: "Automação Entrega Após",
     description: `Item: ${codigo}. O que fazer com o campo "Entrega Após"?`,
-    fields: [
-      { name: "acao", label: "Ação (Atualizar | Adicionar | Remover)", type: "text", required: true, placeholder: "Atualizar" },
-      { name: "nova_data", label: "Nova data (DD/MM/AA) — obrigatório em Atualizar/Adicionar", type: "text", required: false, placeholder: "10/09/26" },
-    ],
     submitLabel: "Confirmar",
+    fields: [
+      {
+        name: "acao",
+        label: "Ação",
+        type: "select",
+        required: true,
+        default: "atualizar",
+        options: [
+          { value: "atualizar", label: "Atualizar" },
+          { value: "adicionar", label: "Adicionar" },
+          { value: "remover", label: "Remover" },
+        ],
+      },
+      {
+        name: "nova_data",
+        label: "Nova data (DD/MM/AA)",
+        type: "text",
+        required: false,
+        placeholder: "10/09/26",
+      },
+      { name: "codigo_item", label: "Código do item", type: "text", required: true, default: codigo },
+    ],
   };
 }
 
 function detectEntregaAposSubmit(text: string): {
   codigo: string; acao: "atualizar" | "adicionar" | "remover"; nova_data: string | null;
 } | null {
+  // Formato novo — payload de widget desempacotado por expandWidgetSubmitInPlace.
+  if (/\[Envio de widget\]/i.test(text) && /intent:\s*entrega_apos/i.test(text)) {
+    const acaoM = text.match(/-\s*acao:\s*([^\n]+)/i);
+    const dataM = text.match(/-\s*nova_data:\s*([^\n]+)/i);
+    const codigoM = text.match(/-\s*codigo_item:\s*([^\n]+)/i);
+    const codigo = (codigoM ? codigoM[1].trim() : extractItemCode(text) || "").toUpperCase();
+    const acao = acaoM ? parseAcaoEntrega(acaoM[1]) : null;
+    if (!codigo || !acao) return null;
+    const nova_data = dataM ? normalizeEntregaData(dataM[1].trim()) : null;
+    return { codigo, acao, nova_data };
+  }
+  // Formato legado — dialog ASK_USER com cabeçalho markdown.
   if (!ENTREGA_APOS_SUBMIT_HEADER.test(text)) return null;
   const codigo = extractItemCode(text);
   const acaoMatch = text.match(/\*\*Ação[^:]*:\*\*\s*([^\n]+)/i) || text.match(/A[cç][aã]o[^:]*:\s*([^\n]+)/i);
@@ -1153,9 +1187,9 @@ Deno.serve(async (req) => {
             );
           }
           const table = renderPreviewTable(codigo, preview.rows ?? []);
-          const spec = askUserActionSpec(codigo);
-          const ask = `\n\n[[ASK_USER]]${JSON.stringify(spec)}[[/ASK_USER]]`;
-          return textStreamResponse(table + ask, {
+          const spec = entregaAposWidgetSpec(codigo);
+          const widget = `\n\n[[WIDGET]]${JSON.stringify(spec)}[[/WIDGET]]`;
+          return textStreamResponse(table + widget, {
             "x-ai-provider": "backend-entrega-apos", "x-ai-model": "deterministic",
           });
         } catch (err) {
@@ -1164,6 +1198,72 @@ Deno.serve(async (req) => {
             { "x-ai-provider": "backend-entrega-apos", "x-ai-model": "deterministic" },
           );
         }
+      }
+    }
+
+    // ------ Necessidade por depósito (determinístico → ARTIFACT table) ------
+    const necessidadeMatch = userText.match(
+      /necessidade[\s\S]{0,40}?(?:dep[oó]sito|dep\.?|dp)\s*0*(\d{1,3})/i,
+    ) || userText.match(/\b(?:dep[oó]sito|dep\.?)\s*0*(\d{1,3})[\s\S]{0,40}?necessidade/i);
+    if (necessidadeMatch) {
+      const cdDestino = necessidadeMatch[1].padStart(2, "0");
+      try {
+        const nResp = await fetch(`${SUPABASE_URL}/functions/v1/auge-sync?action=necessidade_listar`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: authHeader || `Bearer ${SERVICE_ROLE}`,
+            apikey: Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+          },
+          body: JSON.stringify({ cdDepositoDestino: cdDestino, cdDepositoOrigem: "01" }),
+        });
+        const j = await nResp.json();
+        if (!j?.ok) {
+          return textStreamResponse(
+            `❌ Não consegui listar a necessidade do depósito **${cdDestino}**: ${j?.error ?? "erro desconhecido"}`,
+            { "x-ai-provider": "backend-necessidade", "x-ai-model": "deterministic" },
+          );
+        }
+        const rows = Array.isArray(j.data) ? j.data : [];
+        const artSpec = {
+          type: "table",
+          id: `necessidade-${cdDestino}-${Date.now()}`,
+          title: `Necessidade — Depósito ${cdDestino}`,
+          subtitle: `Origem: 01 · ${rows.length} item(ns)`,
+          searchable: true,
+          pageSize: 25,
+          columns: [
+            { key: "cdItem", label: "Código" },
+            { key: "nmItem", label: "Descrição" },
+            { key: "unidade", label: "Un" },
+            { key: "qtEstoque", label: "Estoque origem", align: "right", format: "number" },
+            { key: "qtDisponivel", label: "Disponível", align: "right", format: "number" },
+            { key: "qtMinimo", label: "Mínimo", align: "right", format: "number" },
+            { key: "qtRecomendacao", label: "Recomendação", align: "right", format: "number" },
+          ],
+          rows: rows.map((r: any) => ({
+            cdItem: r.cdItem,
+            nmItem: r.nmItem,
+            unidade: r.unidade,
+            qtEstoque: r.qtEstoque,
+            qtDisponivel: r.qtDisponivel,
+            qtMinimo: r.qtMinimo,
+            qtRecomendacao: r.qtRecomendacao,
+          })),
+        };
+        const header =
+          rows.length === 0
+            ? `Nenhuma necessidade pendente no depósito **${cdDestino}** com origem no depósito **01**.`
+            : `Necessidade do depósito **${cdDestino}** — **${rows.length}** item(ns) com origem no depósito **01**. Abra o artifact para ver a tabela completa.`;
+        const artifact = `\n\n[[ARTIFACT]]${JSON.stringify(artSpec)}[[/ARTIFACT]]`;
+        return textStreamResponse(header + artifact, {
+          "x-ai-provider": "backend-necessidade", "x-ai-model": "deterministic",
+        });
+      } catch (err) {
+        return textStreamResponse(
+          `❌ Falha ao consultar necessidade: ${err instanceof Error ? err.message : String(err)}`,
+          { "x-ai-provider": "backend-necessidade", "x-ai-model": "deterministic" },
+        );
       }
     }
 
