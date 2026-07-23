@@ -422,7 +422,7 @@ const TAG_CONFIG_PREFIXES = Array.from(
   { length: 1000 },
   (_, index) => `CC${String(index).padStart(5, '0')}`,
 );
-const TAG_DISCOVERY_PREFIX_CHUNK = 12;
+const TAG_DISCOVERY_PREFIX_CHUNK = 4;
 const TAG_DISCOVERY_PAGE_SIZE = 10;
 const TAG_DISCOVERY_TERM_CHUNK = 3;
 const TAG_DISCOVERY_PAIR_CHUNK = 12;
@@ -478,7 +478,8 @@ async function upsertTagConfigScanRows(
   }));
 
   if (!deduped.length) return;
-  await admin.from('auge_tag_custom_scan').upsert(deduped, { onConflict: 'cd_configuracao' });
+  const { error } = await admin.from('auge_tag_custom_scan').upsert(deduped, { onConflict: 'cd_configuracao' });
+  if (error) throw new Error(`Falha ao gravar configurações de TAG: ${error.message}`);
 }
 
 async function countTagConfigs(admin: any): Promise<number> {
@@ -523,12 +524,16 @@ async function syncTagCustomChunk(admin: any, auth: any, runId: string) {
       return { ok: true, stage: 'scan_tags', discovered };
     }
 
-    const results = await Promise.allSettled(prefixes.map((prefix) => scanConfiguracaoTerm(auth, prefix)));
     const foundRows: Array<{ id: string; text: string }> = [];
-    results.forEach((result) => {
-      if (result.status !== 'fulfilled') return;
-      foundRows.push(...result.value.rows.map((row) => ({ id: String(row.id ?? ''), text: String(row.text ?? '') })));
-    });
+    let errors = Number(detalhes.errors ?? 0);
+    for (const prefix of prefixes) {
+      try {
+        const result = await scanConfiguracaoTerm(auth, prefix);
+        foundRows.push(...result.rows.map((row) => ({ id: String(row.id ?? ''), text: String(row.text ?? '') })));
+      } catch {
+        errors += 1;
+      }
+    }
     await upsertTagConfigScanRows(admin, foundRows);
 
     const discovered = await countTagConfigs(admin);
@@ -547,7 +552,7 @@ async function syncTagCustomChunk(admin: any, auth: any, runId: string) {
       cfg_count: discovered,
       com_tag: 0,
       sem_tag: 0,
-      errors: 0,
+      errors,
     };
 
     await saveTagRun(admin, runId, nextDetails, { rows_processed: 0, rows_upserted: discovered });
