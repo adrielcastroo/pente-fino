@@ -473,7 +473,7 @@ async function upsertTagConfigScanRows(
     cd_configuracao: id,
     nm_configuracao: text,
     qtd_tags: 0,
-    last_scanned_at: null,
+    last_scanned_at: new Date().toISOString(),
     erro: null,
   }));
 
@@ -3401,7 +3401,21 @@ Deno.serve(async (req) => {
     if (action === 'sync_tag_custom_chunk') {
       const runId = url.searchParams.get('run_id') ?? '';
       if (!runId) throw new Error('run_id obrigatório para continuar a varredura de TAGs.');
-      const result = await syncTagCustomChunk(admin, auth, runId);
+      let result: any;
+      try {
+        result = await syncTagCustomChunk(admin, auth, runId);
+      } catch (e) {
+        const msg = getErrorMessage(e);
+        await admin.from('auge_sync_runs').update({
+          status: 'error',
+          finished_at: new Date().toISOString(),
+          error_message: msg,
+        }).eq('id', runId);
+        return new Response(JSON.stringify({ ok: false, error: msg }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        });
+      }
       return new Response(JSON.stringify(result), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
