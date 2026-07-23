@@ -1187,9 +1187,9 @@ Deno.serve(async (req) => {
             );
           }
           const table = renderPreviewTable(codigo, preview.rows ?? []);
-          const spec = askUserActionSpec(codigo);
-          const ask = `\n\n[[ASK_USER]]${JSON.stringify(spec)}[[/ASK_USER]]`;
-          return textStreamResponse(table + ask, {
+          const spec = entregaAposWidgetSpec(codigo);
+          const widget = `\n\n[[WIDGET]]${JSON.stringify(spec)}[[/WIDGET]]`;
+          return textStreamResponse(table + widget, {
             "x-ai-provider": "backend-entrega-apos", "x-ai-model": "deterministic",
           });
         } catch (err) {
