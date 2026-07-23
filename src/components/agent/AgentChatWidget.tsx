@@ -17,10 +17,10 @@ import { Message, MessageContent, MessageResponse } from "@/components/ai-elemen
 import {
   PromptInput,
   PromptInputTextarea,
-  PromptInputFooter,
   PromptInputSubmit,
   type PromptInputMessage,
 } from "@/components/ai-elements/prompt-input";
+import { InputGroupAddon } from "@/components/ui/input-group";
 import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from "@/components/ai-elements/tool";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { AskUserInline, extractAskUser } from "./AskUserDialog";
@@ -251,12 +251,12 @@ function ChatWindow({
         onSend={(text) => void sendMessage({ parts: [{ type: "text", text }] })}
       />
 
-      <div className="border-t p-2">
+      <div className="p-2">
         <PromptInput onSubmit={handleSubmit}>
           <PromptInputTextarea ref={composerRef} placeholder="Pergunte algo ao Fio…" />
-          <PromptInputFooter className="justify-end">
+          <InputGroupAddon align="inline-end">
             <PromptInputSubmit status={status} disabled={isLoading} />
-          </PromptInputFooter>
+          </InputGroupAddon>
         </PromptInput>
       </div>
     </div>
