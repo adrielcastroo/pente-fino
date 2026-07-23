@@ -13,6 +13,10 @@ import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import AcabamentoItemEditDialog from '@/components/acabamentos/AcabamentoItemEditDialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import IncluirItemMassaTab from '@/components/acabamentos/IncluirItemMassaTab';
+import TagsTab from '@/components/acabamentos/TagsTab';
+import GerarTagTab from '@/components/acabamentos/GerarTagTab';
 
 interface SyncRun {
   id: string;
