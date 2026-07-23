@@ -417,6 +417,349 @@ async function scanAllConfiguracoes(
   return found;
 }
 
+const TAG_CONFIG_CHARS = '0123456789abcdefghijklmnopqrstuvwxyz'.split('');
+const TAG_CONFIG_PREFIXES = ['cc'];
+const TAG_DISCOVERY_PREFIX_PAGE_CHUNK = 4;
+const TAG_DISCOVERY_TERM_CHUNK = 3;
+const TAG_DISCOVERY_PAIR_CHUNK = 12;
+const TAG_SCAN_CHUNK_SIZE = 120;
+const TAG_SCAN_CONCURRENCY = 6;
+
+async function scanConfiguracaoTerm(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+  term: string,
+): Promise<{ rows: Array<{ id: string; text: string }>; saturated: boolean }> {
+  const map = new Map<string, string>();
+  let page = 1;
+  let saturated = false;
+
+  while (true) {
+    const rows = await fetchSelectConfiguracoes(auth, term, page, 500);
+    for (const r of rows) {
+      if (!r?.id) continue;
+      map.set(String(r.id), String(r.text ?? ''));
+    }
+    if (page === 1 && rows.length >= 500) saturated = true;
+    if (rows.length < 500) break;
+    page++;
+    if (page > 20) {
+      saturated = true;
+      break;
+    }
+  }
+
+  return {
+    rows: Array.from(map.entries()).map(([id, text]) => ({ id, text })),
+    saturated,
+  };
+}
+
+async function upsertTagConfigScanRows(
+  admin: any,
+  rows: Array<{ id: string; text: string }>,
+) {
+  if (!rows.length) return;
+  const deduped = Array.from(
+    rows.reduce((acc, row) => {
+      const id = String(row.id ?? '').trim();
+      if (id) acc.set(id, String(row.text ?? ''));
+      return acc;
+    }, new Map<string, string>()).entries(),
+  ).map(([id, text]) => ({
+    cd_configuracao: id,
+    nm_configuracao: text,
+    qtd_tags: 0,
+    last_scanned_at: null,
+    erro: null,
+  }));
+
+  if (!deduped.length) return;
+  await admin.from('auge_tag_custom_scan').upsert(deduped, { onConflict: 'cd_configuracao' });
+}
+
+async function countTagConfigs(admin: any): Promise<number> {
+  const { count } = await admin
+    .from('auge_tag_custom_scan')
+    .select('cd_configuracao', { count: 'exact', head: true });
+  return count ?? 0;
+}
+
+async function saveTagRun(admin: any, runId: string, detalhes: any, extra?: any) {
+  await admin.from('auge_sync_runs').update({ detalhes, ...(extra ?? {}) }).eq('id', runId);
+}
+
+async function syncTagCustomChunk(admin: any, auth: any, runId: string) {
+  const { data: run } = await admin
+    .from('auge_sync_runs')
+    .select('status, detalhes')
+    .eq('id', runId)
+    .maybeSingle();
+
+  if (!run || run.status !== 'running') return { ok: true, ignored: true };
+
+  const detalhes = (run.detalhes ?? {}) as any;
+  const stage = detalhes.stage ?? 'discover_prefix';
+
+  if (stage === 'discover_prefix') {
+    const prefixIndex = Number(detalhes.prefix_index ?? 0);
+    const prefixPage = Number(detalhes.prefix_page ?? 1);
+    const prefix = TAG_CONFIG_PREFIXES[prefixIndex] ?? '';
+
+    if (!prefix) {
+      const discovered = await countTagConfigs(admin);
+      const nextDetails = {
+        ...detalhes,
+        stage: 'discover_terms',
+        phase: `descobrindo configurações — ${discovered} encontradas`,
+        current: 0,
+        total: TAG_CONFIG_CHARS.length,
+        cfg_count: discovered,
+      };
+      await saveTagRun(admin, runId, nextDetails, { rows_upserted: discovered });
+      selfInvoke('sync_tag_custom_chunk', runId);
+      return { ok: true, stage: 'discover_terms', discovered };
+    }
+
+    const pages = Array.from({ length: TAG_DISCOVERY_PREFIX_PAGE_CHUNK }, (_, index) => prefixPage + index);
+    const results = await Promise.allSettled(pages.map((page) => fetchSelectConfiguracoes(auth, prefix, page, 500)));
+    const foundRows: Array<{ id: string; text: string }> = [];
+    let lastPageReached = false;
+    results.forEach((result) => {
+      if (result.status !== 'fulfilled') return;
+      foundRows.push(...result.value.map((row) => ({ id: String(row.id ?? ''), text: String(row.text ?? '') })));
+      if (result.value.length < 500) lastPageReached = true;
+    });
+    await upsertTagConfigScanRows(admin, foundRows);
+
+    const discovered = await countTagConfigs(admin);
+    const nextPrefixIndex = lastPageReached ? prefixIndex + 1 : prefixIndex;
+    const nextPrefixPage = lastPageReached ? 1 : prefixPage + TAG_DISCOVERY_PREFIX_PAGE_CHUNK;
+    const donePrefixes = nextPrefixIndex >= TAG_CONFIG_PREFIXES.length;
+    const nextDetails = {
+      ...detalhes,
+      stage: donePrefixes ? 'scan_tags' : 'discover_prefix',
+      phase: donePrefixes
+        ? `varrendo TAGs — ${discovered} configurações`
+        : `descobrindo configurações [${prefix.toUpperCase()} p${nextPrefixPage}] — ${discovered} encontradas`,
+      prefix_index: nextPrefixIndex,
+      prefix_page: nextPrefixPage,
+      cfg_offset: detalhes.cfg_offset ?? 0,
+      current: donePrefixes ? 0 : nextPrefixPage - 1,
+      total: donePrefixes ? discovered : Math.max(nextPrefixPage + TAG_DISCOVERY_PREFIX_PAGE_CHUNK, 1),
+      cfg_count: discovered,
+      com_tag: 0,
+      sem_tag: 0,
+      errors: 0,
+    };
+
+    await saveTagRun(admin, runId, nextDetails, { rows_processed: 0, rows_upserted: discovered });
+    selfInvoke('sync_tag_custom_chunk', runId);
+    return { ok: true, stage: nextDetails.stage, discovered };
+  }
+
+  if (stage === 'discover_terms') {
+    const termIndex = Number(detalhes.term_index ?? 0);
+    const terms = TAG_CONFIG_CHARS.slice(termIndex, termIndex + TAG_DISCOVERY_TERM_CHUNK);
+    const saturatedTerms = Array.isArray(detalhes.saturated_terms) ? [...detalhes.saturated_terms] : [];
+
+    const results = await Promise.allSettled(terms.map((term) => scanConfiguracaoTerm(auth, term)));
+    const foundRows: Array<{ id: string; text: string }> = [];
+    results.forEach((result, index) => {
+      if (result.status !== 'fulfilled') return;
+      foundRows.push(...result.value.rows);
+      if (result.value.saturated) saturatedTerms.push(terms[index]);
+    });
+    await upsertTagConfigScanRows(admin, foundRows);
+
+    const discovered = await countTagConfigs(admin);
+    const nextIndex = termIndex + terms.length;
+    const nextDetails = {
+      ...detalhes,
+      stage: nextIndex >= TAG_CONFIG_CHARS.length ? 'discover_pairs' : 'discover_terms',
+      phase: nextIndex >= TAG_CONFIG_CHARS.length
+        ? `aprofundando configurações — ${discovered} encontradas`
+        : `descobrindo configurações — ${discovered} encontradas`,
+      term_index: nextIndex,
+      total_terms: TAG_CONFIG_CHARS.length,
+      saturated_terms: Array.from(new Set(saturatedTerms)),
+      pair_index: detalhes.pair_index ?? 0,
+      current: nextIndex,
+      total: TAG_CONFIG_CHARS.length,
+      cfg_count: discovered,
+      com_tag: 0,
+      sem_tag: 0,
+      errors: 0,
+    };
+
+    await saveTagRun(admin, runId, nextDetails, { rows_processed: 0, rows_upserted: discovered });
+    selfInvoke('sync_tag_custom_chunk', runId);
+    return { ok: true, stage: nextDetails.stage, discovered };
+  }
+
+  if (stage === 'discover_pairs') {
+    const saturatedTerms = Array.isArray(detalhes.saturated_terms) ? detalhes.saturated_terms : [];
+    const pairs = saturatedTerms.flatMap((term: string) => TAG_CONFIG_CHARS.map((c) => `${term}${c}`));
+    const pairIndex = Number(detalhes.pair_index ?? 0);
+    const terms = pairs.slice(pairIndex, pairIndex + TAG_DISCOVERY_PAIR_CHUNK);
+
+    const results = await Promise.allSettled(terms.map((term) => scanConfiguracaoTerm(auth, term)));
+    const foundRows: Array<{ id: string; text: string }> = [];
+    results.forEach((result) => {
+      if (result.status === 'fulfilled') foundRows.push(...result.value.rows);
+    });
+    await upsertTagConfigScanRows(admin, foundRows);
+
+    const discovered = await countTagConfigs(admin);
+    const nextIndex = pairIndex + terms.length;
+    const donePairs = nextIndex >= pairs.length;
+    const nextDetails = {
+      ...detalhes,
+      stage: donePairs ? 'scan_tags' : 'discover_pairs',
+      phase: donePairs
+        ? `varrendo TAGs — ${discovered} configurações`
+        : `aprofundando configurações — ${discovered} encontradas`,
+      pair_index: nextIndex,
+      total_pairs: pairs.length,
+      cfg_offset: detalhes.cfg_offset ?? 0,
+      current: donePairs ? 0 : nextIndex,
+      total: donePairs ? discovered : Math.max(pairs.length, 1),
+      cfg_count: discovered,
+      com_tag: 0,
+      sem_tag: 0,
+      errors: 0,
+    };
+
+    await saveTagRun(admin, runId, nextDetails, { rows_processed: 0, rows_upserted: discovered });
+    selfInvoke('sync_tag_custom_chunk', runId);
+    return { ok: true, stage: nextDetails.stage, discovered };
+  }
+
+  if (stage === 'scan_tags') {
+    const cfgOffset = Number(detalhes.cfg_offset ?? 0);
+    const total = Number(detalhes.cfg_count ?? detalhes.total ?? 0) || await countTagConfigs(admin);
+    const { data: configs = [] } = await admin
+      .from('auge_tag_custom_scan')
+      .select('cd_configuracao, nm_configuracao')
+      .order('cd_configuracao', { ascending: true })
+      .range(cfgOffset, cfgOffset + TAG_SCAN_CHUNK_SIZE - 1);
+
+    if (!configs.length) {
+      const finalDetails = {
+        ...detalhes,
+        stage: 'done',
+        phase: 'concluído',
+        current: total,
+        total,
+      };
+      await saveTagRun(admin, runId, finalDetails, {
+        status: 'success',
+        finished_at: new Date().toISOString(),
+        rows_processed: total,
+        rows_upserted: Number(detalhes.com_tag ?? 0),
+      });
+      return { ok: true, done: true };
+    }
+
+    let idx = 0;
+    let comTagDelta = 0;
+    let semTagDelta = 0;
+    let errDelta = 0;
+    const tagRows: any[] = [];
+    const scanRows: any[] = [];
+
+    const worker = async () => {
+      while (true) {
+        const i = idx++;
+        if (i >= configs.length) return;
+        const cfg = configs[i] as any;
+        const cd = String(cfg.cd_configuracao ?? '').trim();
+        if (!cd) continue;
+        try {
+          const rows = await fetchListaTagsCustomizadas(auth, cd, '');
+          if (rows.length) {
+            comTagDelta++;
+            tagRows.push(...rows.map((r) => ({
+              cd_configuracao: cd,
+              nm_configuracao: r.nmConfiguracao ?? cfg.nm_configuracao ?? null,
+              cd_tag_customizada: String(r.cdTagCustomizada ?? ''),
+              nm_tag_customizada: r.nmTagCustomizada ?? null,
+              ds_tag_customizada: r.dsTagCustomizada ?? null,
+              cd_tag_calculada: r.cdTagCalculada ?? null,
+              ds_tag_calculada: r.dsTagCalculada ?? null,
+              ds_tag_texto: r.dsTagTexto ?? null,
+              raw: r,
+              synced_at: new Date().toISOString(),
+            })).filter((r) => r.cd_tag_customizada));
+          } else {
+            semTagDelta++;
+          }
+          scanRows.push({
+            cd_configuracao: cd,
+            nm_configuracao: cfg.nm_configuracao ?? null,
+            qtd_tags: rows.length,
+            last_scanned_at: new Date().toISOString(),
+            erro: null,
+          });
+        } catch (e) {
+          errDelta++;
+          scanRows.push({
+            cd_configuracao: cd,
+            nm_configuracao: cfg.nm_configuracao ?? null,
+            qtd_tags: 0,
+            last_scanned_at: new Date().toISOString(),
+            erro: getErrorMessage(e).slice(0, 400),
+          });
+        }
+      }
+    };
+
+    await Promise.all(Array.from({ length: TAG_SCAN_CONCURRENCY }, () => worker()));
+
+    if (tagRows.length) {
+      const dedupedTags = Array.from(
+        tagRows.reduce((acc, row) => {
+          acc.set(`${row.cd_configuracao}::${row.cd_tag_customizada}`, row);
+          return acc;
+        }, new Map<string, any>()).values(),
+      );
+      await admin.from('auge_tag_custom').upsert(dedupedTags, { onConflict: 'cd_configuracao,cd_tag_customizada' });
+    }
+    if (scanRows.length) {
+      await admin.from('auge_tag_custom_scan').upsert(scanRows, { onConflict: 'cd_configuracao' });
+    }
+
+    const nextOffset = cfgOffset + configs.length;
+    const comTag = Number(detalhes.com_tag ?? 0) + comTagDelta;
+    const semTag = Number(detalhes.sem_tag ?? 0) + semTagDelta;
+    const errors = Number(detalhes.errors ?? 0) + errDelta;
+    const done = nextOffset >= total;
+    const nextDetails = {
+      ...detalhes,
+      stage: done ? 'done' : 'scan_tags',
+      phase: done ? 'concluído' : 'varrendo TAGs',
+      cfg_offset: nextOffset,
+      current: Math.min(nextOffset, total),
+      total,
+      cfg_count: total,
+      com_tag: comTag,
+      sem_tag: semTag,
+      errors,
+    };
+
+    await saveTagRun(admin, runId, nextDetails, {
+      status: done ? 'success' : 'running',
+      finished_at: done ? new Date().toISOString() : null,
+      rows_processed: Math.min(nextOffset, total),
+      rows_upserted: comTag,
+      error_message: done && errors ? `${errors} erro(s) durante varredura` : null,
+    });
+    if (!done) selfInvoke('sync_tag_custom_chunk', runId);
+    return { ok: true, done, current: nextDetails.current, total };
+  }
+
+  return { ok: true, stage };
+}
+
 
 
 
@@ -3039,138 +3382,62 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (action === 'sync_tag_custom_chunk') {
+      const runId = url.searchParams.get('run_id') ?? '';
+      if (!runId) throw new Error('run_id obrigatório para continuar a varredura de TAGs.');
+      const result = await syncTagCustomChunk(admin, auth, runId);
+      return new Response(JSON.stringify(result), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     if (action === 'sync_tag_custom') {
       const runIns = await admin.from('auge_sync_runs').insert({
         entidade: 'tag_custom', status: 'running', started_at: new Date().toISOString(),
-        triggered_by: triggeredBy, detalhes: { phase: 'limpando tabelas', current: 0, total: 0, com_tag: 0, sem_tag: 0 },
+        triggered_by: triggeredBy,
+        detalhes: {
+          stage: 'discover_prefix',
+          phase: 'limpando tabelas',
+          prefix_index: 0,
+          prefix_page: 1,
+          term_index: 0,
+          pair_index: 0,
+          cfg_offset: 0,
+          current: 0,
+          total: 1,
+          cfg_count: 0,
+          com_tag: 0,
+          sem_tag: 0,
+          errors: 0,
+          saturated_terms: [],
+        },
       }).select('id').single();
       const runId = runIns.data?.id;
+      if (!runId) throw new Error('Não foi possível iniciar a varredura de TAGs.');
 
-      const task = (async () => {
-        // Limpa varreduras anteriores para começar do zero.
-        await admin.from('auge_tag_custom').delete().gte('id', '00000000-0000-0000-0000-000000000000');
-        await admin.from('auge_tag_custom_scan').delete().gte('cd_configuracao', '');
+      // Limpa antes de retornar para a UI mostrar imediatamente uma nova varredura limpa.
+      await admin.from('auge_tag_custom').delete().gte('id', '00000000-0000-0000-0000-000000000000');
+      await admin.from('auge_tag_custom_scan').delete().gte('cd_configuracao', '');
+      await admin.from('auge_sync_runs').update({
+        detalhes: {
+          stage: 'discover_prefix',
+          phase: 'descobrindo configurações',
+          prefix_index: 0,
+          prefix_page: 1,
+          term_index: 0,
+          pair_index: 0,
+          cfg_offset: 0,
+          current: 0,
+          total: 1,
+          cfg_count: 0,
+          com_tag: 0,
+          sem_tag: 0,
+          errors: 0,
+          saturated_terms: [],
+        },
+      }).eq('id', runId);
 
-        // FASE 1 — descobrir universo de CONFIGURAÇÕES via
-        // tagSelectListaConfiguracoes.php. Persiste cada lote logo que aparece
-        // e reporta progresso a cada página (para a barra não parecer travada).
-        const cfgMap = await scanAllConfiguracoes(
-          auth,
-          async (foundCount, doneTerms, totalTerms, currentTerm) => {
-            await admin.from('auge_sync_runs').update({
-              detalhes: {
-                phase: `descobrindo configurações [${currentTerm}] — ${foundCount} encontradas`,
-                current: doneTerms, total: totalTerms, com_tag: 0, sem_tag: 0,
-              },
-            }).eq('id', runId);
-          },
-          async (batch) => {
-            if (!batch.length) return;
-            await admin.from('auge_tag_custom_scan').upsert(
-              batch.map((r) => ({
-                cd_configuracao: r.id,
-                nm_configuracao: r.text,
-                qtd_tags: 0,
-                last_scanned_at: null,
-                erro: null,
-              })),
-              { onConflict: 'cd_configuracao' },
-            );
-          },
-        );
-
-        const prods = Array.from(cfgMap.entries()).map(([id, text]) => ({ codigo: id, descricao: text }));
-        const total = prods.length;
-        let current = 0, comTag = 0, semTag = 0, errCount = 0;
-        let lastFlush = 0;
-
-        const flush = async (force = false) => {
-          const now = Date.now();
-          if (!force && now - lastFlush < 800) return;
-          lastFlush = now;
-          await admin.from('auge_sync_runs').update({
-            rows_processed: current, rows_upserted: comTag,
-            detalhes: { phase: 'varrendo TAGs', current, total, com_tag: comTag, sem_tag: semTag, errors: errCount },
-          }).eq('id', runId);
-        };
-
-        // Buffers para upsert em lote (reduz round-trips ao banco).
-        let tagBuffer: any[] = [];
-        let scanBuffer: any[] = [];
-        const flushBuffers = async (force = false) => {
-          if (tagBuffer.length >= 200 || (force && tagBuffer.length)) {
-            const b = tagBuffer; tagBuffer = [];
-            await admin.from('auge_tag_custom').upsert(b, { onConflict: 'cd_configuracao,cd_tag_customizada' });
-          }
-          if (scanBuffer.length >= 200 || (force && scanBuffer.length)) {
-            const b = scanBuffer; scanBuffer = [];
-            await admin.from('auge_tag_custom_scan').upsert(b, { onConflict: 'cd_configuracao' });
-          }
-        };
-
-        // Worker pool: N requisições em paralelo ao Auge.
-        const CONCURRENCY = 12;
-        let idx = 0;
-        const worker = async () => {
-          while (true) {
-            const i = idx++;
-            if (i >= prods.length) return;
-            const p = prods[i];
-            const cd = String(p.codigo ?? '').trim();
-            if (!cd) { current++; continue; }
-            try {
-              const rows = await fetchListaTagsCustomizadas(auth, cd, '');
-              if (rows.length) {
-                comTag++;
-                const insertRows = rows.map((r) => ({
-                  cd_configuracao: cd,
-                  nm_configuracao: r.nmConfiguracao ?? p.descricao ?? null,
-                  cd_tag_customizada: String(r.cdTagCustomizada ?? ''),
-                  nm_tag_customizada: r.nmTagCustomizada ?? null,
-                  ds_tag_customizada: r.dsTagCustomizada ?? null,
-                  cd_tag_calculada: r.cdTagCalculada ?? null,
-                  ds_tag_calculada: r.dsTagCalculada ?? null,
-                  ds_tag_texto: r.dsTagTexto ?? null,
-                  raw: r,
-                  synced_at: new Date().toISOString(),
-                })).filter((r) => r.cd_tag_customizada);
-                if (insertRows.length) tagBuffer.push(...insertRows);
-              } else {
-                semTag++;
-              }
-              scanBuffer.push({
-                cd_configuracao: cd, nm_configuracao: p.descricao ?? null,
-                qtd_tags: rows.length, last_scanned_at: new Date().toISOString(), erro: null,
-              });
-            } catch (e: any) {
-              errCount++;
-              scanBuffer.push({
-                cd_configuracao: cd, nm_configuracao: p.descricao ?? null,
-                qtd_tags: 0, last_scanned_at: new Date().toISOString(), erro: getErrorMessage(e).slice(0, 400),
-              });
-            }
-            current++;
-            await flushBuffers(false);
-            await flush();
-          }
-        };
-        await Promise.all(Array.from({ length: CONCURRENCY }, () => worker()));
-        await flushBuffers(true);
-        await flush(true);
-        await admin.from('auge_sync_runs').update({
-          status: 'success', finished_at: new Date().toISOString(),
-          rows_processed: current, rows_upserted: comTag,
-          error_message: errCount ? `${errCount} erro(s) durante varredura` : null,
-          detalhes: { phase: 'concluido', current, total, com_tag: comTag, sem_tag: semTag, errors: errCount },
-        }).eq('id', runId);
-      })().catch(async (e) => {
-        await admin.from('auge_sync_runs').update({
-          status: 'error', finished_at: new Date().toISOString(), error_message: getErrorMessage(e),
-        }).eq('id', runId);
-      });
-
-      // @ts-ignore
-      if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime?.waitUntil) EdgeRuntime.waitUntil(task);
+      selfInvoke('sync_tag_custom_chunk', runId);
       return new Response(JSON.stringify({ ok: true, run_id: runId, background: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
