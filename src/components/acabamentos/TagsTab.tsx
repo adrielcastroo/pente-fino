@@ -78,7 +78,7 @@ export default function TagsTab() {
       }
       return map;
     },
-    refetchInterval: shouldPoll ? 3000 : false,
+    refetchInterval: shouldPoll ? 2000 : false,
   });
 
   useEffect(() => {
