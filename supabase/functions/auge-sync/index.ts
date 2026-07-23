@@ -260,6 +260,55 @@ async function fetchSaidasPHP(
   return Array.isArray(j?.data) ? j.data : [];
 }
 
+// listaTagsCustomizadas.php retorna HTML (linhas <tr>) com JSON no último <td>.
+async function fetchListaTagsCustomizadas(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+  cdConfiguracao: string,
+  dsTagCustomizada = '',
+): Promise<any[]> {
+  const path = '/l.unilux/modInventario/tag/ajax/listaTagsCustomizadas.php';
+  const body = new URLSearchParams();
+  if (cdConfiguracao) body.set('cdConfiguracao', cdConfiguracao);
+  if (dsTagCustomizada) body.set('dsTagCustomizada', dsTagCustomizada);
+  const headers: Record<string, string> = {
+    'Cookie': auth.jar.header(),
+    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+    'X-Requested-With': 'XMLHttpRequest',
+    'X-CSRF-TOKEN': auth.csrf,
+    'Origin': AUGE_BASE_URL,
+    'Referer': `${AUGE_BASE_URL}/l.unilux/modInventario/tag/manterTagCustomizada.php`,
+    'User-Agent': UA,
+    'Accept': 'text/html, */*; q=0.01',
+    'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
+  };
+  if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
+  const res = await fetch(`${AUGE_BASE_URL}${path}`, { method: 'POST', headers, body });
+  auth.jar.ingest(res);
+  const html = await res.text();
+  if (!res.ok) throw new Error(`POST ${path} HTTP ${res.status} body=${html.slice(0,200)}`);
+  const rows: any[] = [];
+  // Cada <tr> contém, no último <td> (oculto), um JSON stringificado do objeto.
+  const trRe = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = trRe.exec(html)) !== null) {
+    const inner = m[1];
+    // pega o último <td>
+    const tds = [...inner.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)];
+    if (!tds.length) continue;
+    const raw = tds[tds.length - 1][1]
+      .replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+      .replace(/<[^>]+>/g, '').trim();
+    if (!raw.startsWith('{')) continue;
+    try {
+      const obj = JSON.parse(raw);
+      if (obj && (obj.cdTagCustomizada || obj.cdConfiguracao)) rows.push(obj);
+    } catch { /* linha de cabeçalho / não-JSON */ }
+  }
+  return rows;
+}
+
+}
+
 // Endpoint real de entradas (Auge legado / módulo PHP)
 // POST /l.unilux/modInventario/estoque/ajax/getEntradaEstoque.php
 // Body: dtCriacaoDe (dd/MM/yyyy), dtCriacaoAte, idSituacao, cdDepositoOrigem, cdItem
