@@ -260,6 +260,55 @@ async function fetchSaidasPHP(
   return Array.isArray(j?.data) ? j.data : [];
 }
 
+// listaTagsCustomizadas.php retorna HTML (linhas <tr>) com JSON no último <td>.
+async function fetchListaTagsCustomizadas(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+  cdConfiguracao: string,
+  dsTagCustomizada = '',
+): Promise<any[]> {
+  const path = '/l.unilux/modInventario/tag/ajax/listaTagsCustomizadas.php';
+  const body = new URLSearchParams();
+  if (cdConfiguracao) body.set('cdConfiguracao', cdConfiguracao);
+  if (dsTagCustomizada) body.set('dsTagCustomizada', dsTagCustomizada);
+  const headers: Record<string, string> = {
+    'Cookie': auth.jar.header(),
+    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+    'X-Requested-With': 'XMLHttpRequest',
+    'X-CSRF-TOKEN': auth.csrf,
+    'Origin': AUGE_BASE_URL,
+    'Referer': `${AUGE_BASE_URL}/l.unilux/modInventario/tag/manterTagCustomizada.php`,
+    'User-Agent': UA,
+    'Accept': 'text/html, */*; q=0.01',
+    'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
+  };
+  if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
+  const res = await fetch(`${AUGE_BASE_URL}${path}`, { method: 'POST', headers, body });
+  auth.jar.ingest(res);
+  const html = await res.text();
+  if (!res.ok) throw new Error(`POST ${path} HTTP ${res.status} body=${html.slice(0,200)}`);
+  const rows: any[] = [];
+  // Cada <tr> contém, no último <td> (oculto), um JSON stringificado do objeto.
+  const trRe = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = trRe.exec(html)) !== null) {
+    const inner = m[1];
+    // pega o último <td>
+    const tds = [...inner.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)];
+    if (!tds.length) continue;
+    const raw = tds[tds.length - 1][1]
+      .replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+      .replace(/<[^>]+>/g, '').trim();
+    if (!raw.startsWith('{')) continue;
+    try {
+      const obj = JSON.parse(raw);
+      if (obj && (obj.cdTagCustomizada || obj.cdConfiguracao)) rows.push(obj);
+    } catch { /* linha de cabeçalho / não-JSON */ }
+  }
+  return rows;
+}
+
+
+
 // Endpoint real de entradas (Auge legado / módulo PHP)
 // POST /l.unilux/modInventario/estoque/ajax/getEntradaEstoque.php
 // Body: dtCriacaoDe (dd/MM/yyyy), dtCriacaoAte, idSituacao, cdDepositoOrigem, cdItem
@@ -2864,7 +2913,108 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-    // -------------- INCLUIR ITEM EM MASSA --------------
+
+    // -------------- TAGS CUSTOMIZADAS (manterTagCustomizada.php) --------------
+    if (action === 'tag_custom_por_config') {
+      let payload: any = {};
+      try { payload = await req.json(); } catch { /* ignore */ }
+      const cd = String(payload?.cdConfiguracao ?? '').trim();
+      const ds = String(payload?.dsTagCustomizada ?? '').trim();
+      if (!cd && !ds) throw new Error('Informe cdConfiguracao ou dsTagCustomizada.');
+      const rows = await fetchListaTagsCustomizadas(auth, cd, ds);
+      return new Response(JSON.stringify({ ok: true, rows }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (action === 'sync_tag_custom') {
+      const runIns = await admin.from('auge_sync_runs').insert({
+        entidade: 'tag_custom', status: 'running', started_at: new Date().toISOString(),
+        triggered_by: triggeredBy, detalhes: { phase: 'iniciando', current: 0, total: 0, com_tag: 0, sem_tag: 0 },
+      }).select('id').single();
+      const runId = runIns.data?.id;
+
+      const task = (async () => {
+        // Universo = auge_produtos ativos
+        const { data: prods } = await admin
+          .from('auge_produtos')
+          .select('codigo, descricao')
+          .eq('ativo', true)
+          .limit(20000);
+        const total = prods?.length ?? 0;
+        let current = 0, comTag = 0, semTag = 0, errCount = 0;
+        let lastFlush = 0;
+
+        const flush = async (force = false) => {
+          const now = Date.now();
+          if (!force && now - lastFlush < 800) return;
+          lastFlush = now;
+          await admin.from('auge_sync_runs').update({
+            rows_processed: current, rows_upserted: comTag,
+            detalhes: { phase: 'varrendo', current, total, com_tag: comTag, sem_tag: semTag, errors: errCount },
+          }).eq('id', runId);
+        };
+
+        for (const p of prods ?? []) {
+          const cdOriginal = String(p.codigo ?? '').trim();
+          if (!cdOriginal) { current++; continue; }
+          // Tag Custom usa código sem pontos (ex.: CC.000.004 -> CC000004)
+          const cd = cdOriginal.replace(/\./g, '');
+          try {
+            const rows = await fetchListaTagsCustomizadas(auth, cd, '');
+            if (rows.length) {
+              comTag++;
+              // grava tags
+              const insertRows = rows.map((r) => ({
+                cd_configuracao: cd,
+                nm_configuracao: r.nmConfiguracao ?? p.descricao ?? null,
+                cd_tag_customizada: String(r.cdTagCustomizada ?? ''),
+                nm_tag_customizada: r.nmTagCustomizada ?? null,
+                ds_tag_customizada: r.dsTagCustomizada ?? null,
+                cd_tag_calculada: r.cdTagCalculada ?? null,
+                ds_tag_calculada: r.dsTagCalculada ?? null,
+                ds_tag_texto: r.dsTagTexto ?? null,
+                raw: r,
+                synced_at: new Date().toISOString(),
+              })).filter((r) => r.cd_tag_customizada);
+              if (insertRows.length) {
+                await admin.from('auge_tag_custom').upsert(insertRows, { onConflict: 'cd_configuracao,cd_tag_customizada' });
+              }
+            } else {
+              semTag++;
+            }
+            await admin.from('auge_tag_custom_scan').upsert({
+              cd_configuracao: cd, nm_configuracao: p.descricao ?? null,
+              qtd_tags: rows.length, last_scanned_at: new Date().toISOString(), erro: null,
+            }, { onConflict: 'cd_configuracao' });
+          } catch (e: any) {
+            errCount++;
+            await admin.from('auge_tag_custom_scan').upsert({
+              cd_configuracao: cd, nm_configuracao: p.descricao ?? null,
+              qtd_tags: 0, last_scanned_at: new Date().toISOString(), erro: getErrorMessage(e).slice(0, 400),
+            }, { onConflict: 'cd_configuracao' });
+          }
+          current++;
+          await flush();
+        }
+        await admin.from('auge_sync_runs').update({
+          status: 'success', finished_at: new Date().toISOString(),
+          rows_processed: current, rows_upserted: comTag,
+          error_message: errCount ? `${errCount} erro(s) durante varredura` : null,
+          detalhes: { phase: 'concluido', current, total, com_tag: comTag, sem_tag: semTag, errors: errCount },
+        }).eq('id', runId);
+      })().catch(async (e) => {
+        await admin.from('auge_sync_runs').update({
+          status: 'error', finished_at: new Date().toISOString(), error_message: getErrorMessage(e),
+        }).eq('id', runId);
+      });
+      // @ts-ignore
+      if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime?.waitUntil) EdgeRuntime.waitUntil(task);
+      return new Response(JSON.stringify({ ok: true, run_id: runId, background: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     if (action === 'incluir_item_massa') {
       let payload: any = {};
       try { payload = await req.json(); } catch { /* ignore */ }
