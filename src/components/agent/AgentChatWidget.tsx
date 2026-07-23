@@ -25,7 +25,9 @@ import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from "@/componen
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { AskUserInline, extractAskUser } from "./AskUserDialog";
 import { Suggestions, extractSuggestions } from "./Suggestions";
-import { WidgetRenderer } from "./widgets/WidgetRenderer";
+import { WidgetChip } from "./widgets/WidgetChip";
+import { FloatingWidgetPanel } from "./widgets/FloatingWidgetPanel";
+import { useFloatingWidget } from "@/store/useFloatingWidget";
 import { ArtifactChip, ArtifactPanel } from "./artifacts/ArtifactPanel";
 import {
   extractArtifacts,
@@ -100,7 +102,9 @@ function ChatWindow({
     composerRef.current?.focus();
   }, [threadId, status]);
 
-  // Extract all artifacts from message stream and push to parent (deduped by id).
+  const registerFloatingWidget = useFloatingWidget((s) => s.register);
+
+  // Extract all artifacts + widgets from message stream (deduped by id).
   useEffect(() => {
     for (const m of messages) {
       if (m.role !== "assistant") continue;
@@ -108,9 +112,11 @@ function ChatWindow({
         if (part.type !== "text") continue;
         const { artifacts } = extractArtifacts(part.text);
         for (const a of artifacts) onArtifact(a);
+        const { widgets } = extractWidgets(part.text);
+        for (const w of widgets) registerFloatingWidget(w);
       }
     }
-  }, [messages, onArtifact]);
+  }, [messages, onArtifact, registerFloatingWidget]);
 
   const handleSubmit = (msg: PromptInputMessage) => {
     const text = (msg.text ?? "").trim();
@@ -183,12 +189,7 @@ function ChatWindow({
                           />
                         )}
                         {widgets.map((w) => (
-                          <WidgetRenderer
-                            key={w.id}
-                            spec={w}
-                            disabled={isLoading}
-                            onSend={(text) => void sendMessage({ parts: [{ type: "text", text }] })}
-                          />
+                          <WidgetChip key={w.id} spec={w} />
                         ))}
                         {artifacts.map((a) => (
                           <ArtifactChip
@@ -252,6 +253,11 @@ function ChatWindow({
           </PromptInputFooter>
         </PromptInput>
       </div>
+
+      <FloatingWidgetPanel
+        disabled={isLoading}
+        onSend={(text) => void sendMessage({ parts: [{ type: "text", text }] })}
+      />
     </div>
   );
 }
@@ -312,7 +318,9 @@ export function AgentChatWidget() {
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) => {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+      const target = e.target as HTMLElement | null;
+      if (target?.closest("[role='dialog']")) return; // ignora painel flutuante/artefato
+      if (panelRef.current && !panelRef.current.contains(target as Node)) {
         toggleOpen(false);
       }
     };
