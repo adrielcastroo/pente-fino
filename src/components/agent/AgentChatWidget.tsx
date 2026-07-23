@@ -253,6 +253,11 @@ function ChatWindow({
           </PromptInputFooter>
         </PromptInput>
       </div>
+
+      <FloatingWidgetPanel
+        disabled={isLoading}
+        onSend={(text) => void sendMessage({ parts: [{ type: "text", text }] })}
+      />
     </div>
   );
 }
