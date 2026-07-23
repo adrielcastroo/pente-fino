@@ -13,6 +13,10 @@ import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import AcabamentoItemEditDialog from '@/components/acabamentos/AcabamentoItemEditDialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import IncluirItemMassaTab from '@/components/acabamentos/IncluirItemMassaTab';
+import TagsTab from '@/components/acabamentos/TagsTab';
+import GerarTagTab from '@/components/acabamentos/GerarTagTab';
 
 interface SyncRun {
   id: string;
@@ -209,6 +213,16 @@ export default function AcabamentosPage() {
         }
       />
 
+      <Tabs defaultValue="consulta" className="space-y-4">
+        <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full md:w-auto">
+          <TabsTrigger value="consulta" className="text-xs">Consulta</TabsTrigger>
+          <TabsTrigger value="massa" className="text-xs">Incluir em massa</TabsTrigger>
+          <TabsTrigger value="tags" className="text-xs">TAGs</TabsTrigger>
+          <TabsTrigger value="gerar" className="text-xs">Gerar TAG</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="consulta" className="space-y-4 mt-0">
+
       {showPanel && run && (
         <Card className="p-3 md:p-4 border-primary/40 bg-primary/5">
           <div className="flex items-start justify-between gap-3 mb-2">
@@ -397,6 +411,14 @@ export default function AcabamentosPage() {
           )}
         </Card>
       </div>
+        </TabsContent>
+
+        <TabsContent value="massa" className="mt-0"><IncluirItemMassaTab /></TabsContent>
+        <TabsContent value="tags" className="mt-0"><TagsTab /></TabsContent>
+        <TabsContent value="gerar" className="mt-0"><GerarTagTab /></TabsContent>
+      </Tabs>
+
+
 
       <AcabamentoItemEditDialog
         item={editing}

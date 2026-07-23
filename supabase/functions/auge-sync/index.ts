@@ -2240,6 +2240,35 @@ async function updateAcabamentoItem(auth: any, payload: Record<string, string>):
   return j;
 }
 
+async function insertAcabamentoItem(auth: any, cdAcabamento: string, payload: Record<string, string>): Promise<any> {
+  const body = new URLSearchParams({
+    idAcao: '1',
+    cdAcabamento: cdAcabamento,
+    cdAcabamentoItem: '',
+    cdItemAcabamento: payload.cdItemAcabamento ?? '',
+    dsItemAcabamento: payload.dsItemAcabamento ?? '',
+    dsItemAcabamentoReduzida: payload.dsItemAcabamentoReduzida ?? '',
+    dsItemAcabamentoOriginal: payload.dsItemAcabamentoOriginal ?? '',
+    cdKitComplementar1: payload.cdKitComplementar1 ?? '',
+    cdKitComplementar2: payload.cdKitComplementar2 ?? '',
+    cdKitComplementar3: payload.cdKitComplementar3 ?? '',
+    cdKitComplementar4: payload.cdKitComplementar4 ?? '',
+    cdKitComplementar5: payload.cdKitComplementar5 ?? '',
+  });
+  const txt = await postAugePhp(
+    auth,
+    '/l.unilux/modInventario/Controle/ctlAcabamentoItem.php',
+    body,
+    `/l.unilux/modInventario/manterAcabamentoItem.php?cdAcabamento=${cdAcabamento}`,
+  );
+  let j: any = { message: txt };
+  try { j = JSON.parse(txt); } catch { /* keep raw */ }
+  if (typeof j?.message === 'string' && !/sucesso/i.test(j.message)) {
+    throw new Error(j.message);
+  }
+  return j;
+}
+
 function mapAcabamentoRow(r: any) {
   return {
     cd_acabamento: String(r.cdAcabamento),
@@ -2832,6 +2861,75 @@ Deno.serve(async (req) => {
         } catch (_) { /* ignore refresh error */ }
       }
       return new Response(JSON.stringify({ ok: true, auge: resp }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    // -------------- INCLUIR ITEM EM MASSA --------------
+    if (action === 'incluir_item_massa') {
+      let payload: any = {};
+      try { payload = await req.json(); } catch { /* ignore */ }
+      const item = payload?.item ?? {};
+      const cdAcabamentos: string[] = Array.isArray(payload?.cdAcabamentos) ? payload.cdAcabamentos.map(String) : [];
+      if (!item?.cdItemAcabamento) throw new Error('cdItemAcabamento é obrigatório.');
+      if (!cdAcabamentos.length) throw new Error('Selecione ao menos 1 acabamento.');
+
+      const runIns = await admin.from('auge_sync_runs').insert({
+        entidade: 'incluir_item_massa', status: 'running', started_at: new Date().toISOString(),
+        triggered_by: triggeredBy, detalhes: { phase: 'inserindo', current: 0, total: cdAcabamentos.length, item: item.cdItemAcabamento, results: [] },
+      }).select('id').single();
+      const runId = runIns.data?.id;
+
+      const task = (async () => {
+        const results: Array<{ cd: string; ok: boolean; erro?: string }> = [];
+        let flushed = 0;
+        const flush = async (force = false) => {
+          const now = Date.now();
+          if (!force && now - flushed < 600) return;
+          flushed = now;
+          await admin.from('auge_sync_runs').update({
+            rows_processed: results.length,
+            rows_upserted: results.filter(r => r.ok).length,
+            detalhes: { phase: 'inserindo', current: results.length, total: cdAcabamentos.length, item: item.cdItemAcabamento, results: results.slice(-200) },
+          }).eq('id', runId);
+        };
+        for (const cd of cdAcabamentos) {
+          try {
+            await insertAcabamentoItem(auth, cd, item);
+            results.push({ cd, ok: true });
+            // refresh local do acabamento afetado
+            try {
+              const itens = await fetchItensAcabamento(auth, cd);
+              if (itens.length) {
+                const rows = itens.map((r) => mapAcabamentoItemRow(cd, r));
+                for (let i = 0; i < rows.length; i += 500) {
+                  await admin.from('auge_acabamento_itens').upsert(rows.slice(i, i + 500), { onConflict: 'cd_acabamento_item' });
+                }
+              }
+            } catch (_) { /* ignore refresh error */ }
+          } catch (e: any) {
+            results.push({ cd, ok: false, erro: getErrorMessage(e) });
+          }
+          await flush();
+        }
+        const okCount = results.filter(r => r.ok).length;
+        const errCount = results.length - okCount;
+        await admin.from('auge_sync_runs').update({
+          status: errCount === results.length ? 'error' : 'success',
+          finished_at: new Date().toISOString(),
+          rows_processed: results.length,
+          rows_upserted: okCount,
+          error_message: errCount ? `${errCount} acabamento(s) falharam` : null,
+          detalhes: { phase: 'concluido', current: results.length, total: cdAcabamentos.length, item: item.cdItemAcabamento, results },
+        }).eq('id', runId);
+      })().catch(async (e) => {
+        await admin.from('auge_sync_runs').update({
+          status: 'error', finished_at: new Date().toISOString(), error_message: getErrorMessage(e),
+        }).eq('id', runId);
+      });
+      // @ts-ignore
+      if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime?.waitUntil) EdgeRuntime.waitUntil(task);
+
+      return new Response(JSON.stringify({ ok: true, run_id: runId, background: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
