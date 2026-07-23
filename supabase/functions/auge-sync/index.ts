@@ -438,15 +438,15 @@ async function scanConfiguracaoTerm(
   let saturated = false;
 
   while (true) {
-    const rows = await fetchSelectConfiguracoes(auth, term, page, 500);
+    const rows = await fetchSelectConfiguracoes(auth, term, page, TAG_DISCOVERY_PAGE_SIZE);
     for (const r of rows) {
       if (!r?.id) continue;
       map.set(String(r.id), String(r.text ?? ''));
     }
-    if (page === 1 && rows.length >= 500) saturated = true;
-    if (rows.length < 500) break;
+    if (page === 1 && rows.length >= TAG_DISCOVERY_PAGE_SIZE) saturated = true;
+    if (rows.length < TAG_DISCOVERY_PAGE_SIZE) break;
     page++;
-    if (page > 20) {
+    if (page > 30) {
       saturated = true;
       break;
     }
