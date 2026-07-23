@@ -189,12 +189,7 @@ function ChatWindow({
                           />
                         )}
                         {widgets.map((w) => (
-                          <WidgetRenderer
-                            key={w.id}
-                            spec={w}
-                            disabled={isLoading}
-                            onSend={(text) => void sendMessage({ parts: [{ type: "text", text }] })}
-                          />
+                          <WidgetChip key={w.id} spec={w} />
                         ))}
                         {artifacts.map((a) => (
                           <ArtifactChip
