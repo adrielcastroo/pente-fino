@@ -254,14 +254,10 @@ function ChatWindow({
       <div
         className={cn(
           "p-2",
-          // Remove qualquer divisória visual entre a textarea e o botão de envio:
-          // (1) suprime o focus-ring do InputGroup que aparece como linha vertical,
-          // (2) achata o canto esquerdo do botão para ele encostar na textarea,
-          // (3) zera o padding-right do addon para não sobrar espaço entre eles.
-          "[&_[data-slot=input-group]]:ring-0 [&_[data-slot=input-group]]:!ring-0",
-          "[&_[data-slot=input-group]]:focus-within:ring-0",
-          "[&_[data-slot=input-group-addon]]:pr-1 [&_[data-slot=input-group-addon]]:gap-0",
-          "[&_[data-slot=input-group-addon]>button]:rounded-l-none",
+          // Suprime o focus-ring do InputGroup (aplicado via has-[...]:ring-1),
+          // que era recortado pelo overflow-hidden do painel e aparecia como
+          // linha vertical entre a textarea e o botão de envio.
+          "[&_[data-slot=input-group]]:has-[[data-slot=input-group-control]:focus-visible]:ring-0",
         )}
       >
         <PromptInput onSubmit={handleSubmit}>
