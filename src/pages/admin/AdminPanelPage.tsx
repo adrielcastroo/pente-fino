@@ -211,6 +211,9 @@ export default function AdminPanelPage() {
               <Suspense fallback={tabFallback}><TeamPanel /></Suspense>
             </Card>
           </TabsContent>
+          <TabsContent value="auge-perms" className="mt-0">
+            <Suspense fallback={tabFallback}><AugePermissoesTab /></Suspense>
+          </TabsContent>
           <TabsContent value="settings" className="mt-0">
             <Suspense fallback={tabFallback}><GlobalSettingsTab /></Suspense>
           </TabsContent>
