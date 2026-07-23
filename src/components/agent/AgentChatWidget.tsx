@@ -355,13 +355,6 @@ export function AgentChatWidget() {
               className="h-full w-full rounded-2xl object-cover transition-transform duration-300 group-hover:animate-fio-peek"
               style={{ transformOrigin: "bottom center" }}
             />
-            <span
-              aria-hidden
-              className="pointer-events-none absolute -right-2 -top-3 text-2xl opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-hover:animate-fio-wave"
-              style={{ transformOrigin: "70% 80%" }}
-            >
-              👋
-            </span>
           </div>
           {hasUnread && (
             <span className="absolute -right-1 -top-1 flex h-3.5 w-3.5">
