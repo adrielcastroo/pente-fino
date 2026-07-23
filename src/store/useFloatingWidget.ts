@@ -43,14 +43,13 @@ export const useFloatingWidget = create<State & Actions>((set, get) => ({
   minimized: false,
 
   register: (spec) => {
-    const { widgets, submittedIds, activeId } = get();
-    const exists = widgets[spec.id];
-    const nextWidgets = exists ? widgets : { ...widgets, [spec.id]: spec };
-    // Auto-open first-time widgets that ainda não foram enviados.
-    const shouldAutoOpen = !exists && !submittedIds[spec.id];
+    const { widgets, submittedIds } = get();
+    const nextWidgets = widgets[spec.id] ? widgets : { ...widgets, [spec.id]: spec };
+    // Sempre abre automaticamente enquanto não estiver enviado.
+    const shouldAutoOpen = !submittedIds[spec.id];
     set({
       widgets: nextWidgets,
-      activeId: shouldAutoOpen ? spec.id : activeId,
+      activeId: shouldAutoOpen ? spec.id : get().activeId,
       minimized: shouldAutoOpen ? false : get().minimized,
     });
   },
