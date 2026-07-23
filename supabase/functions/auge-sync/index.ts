@@ -418,8 +418,11 @@ async function scanAllConfiguracoes(
 }
 
 const TAG_CONFIG_CHARS = '0123456789abcdefghijklmnopqrstuvwxyz'.split('');
-const TAG_CONFIG_PREFIXES = ['cc'];
-const TAG_DISCOVERY_PREFIX_PAGE_CHUNK = 4;
+const TAG_CONFIG_PREFIXES = Array.from(
+  { length: 100 },
+  (_, index) => `CC${String(index).padStart(4, '0')}`,
+);
+const TAG_DISCOVERY_PREFIX_CHUNK = 8;
 const TAG_DISCOVERY_TERM_CHUNK = 3;
 const TAG_DISCOVERY_PAIR_CHUNK = 12;
 const TAG_SCAN_CHUNK_SIZE = 120;
@@ -502,50 +505,44 @@ async function syncTagCustomChunk(admin: any, auth: any, runId: string) {
 
   if (stage === 'discover_prefix') {
     const prefixIndex = Number(detalhes.prefix_index ?? 0);
-    const prefixPage = Number(detalhes.prefix_page ?? 1);
-    const prefix = TAG_CONFIG_PREFIXES[prefixIndex] ?? '';
+    const prefixes = TAG_CONFIG_PREFIXES.slice(prefixIndex, prefixIndex + TAG_DISCOVERY_PREFIX_CHUNK);
 
-    if (!prefix) {
+    if (!prefixes.length) {
       const discovered = await countTagConfigs(admin);
       const nextDetails = {
         ...detalhes,
-        stage: 'discover_terms',
-        phase: `descobrindo configurações — ${discovered} encontradas`,
+        stage: 'scan_tags',
+        phase: `varrendo TAGs — ${discovered} configurações`,
         current: 0,
-        total: TAG_CONFIG_CHARS.length,
+        total: discovered,
         cfg_count: discovered,
       };
       await saveTagRun(admin, runId, nextDetails, { rows_upserted: discovered });
       selfInvoke('sync_tag_custom_chunk', runId);
-      return { ok: true, stage: 'discover_terms', discovered };
+      return { ok: true, stage: 'scan_tags', discovered };
     }
 
-    const pages = Array.from({ length: TAG_DISCOVERY_PREFIX_PAGE_CHUNK }, (_, index) => prefixPage + index);
-    const results = await Promise.allSettled(pages.map((page) => fetchSelectConfiguracoes(auth, prefix, page, 500)));
+    const results = await Promise.allSettled(prefixes.map((prefix) => fetchSelectConfiguracoes(auth, prefix, 1, 500)));
     const foundRows: Array<{ id: string; text: string }> = [];
-    let lastPageReached = false;
     results.forEach((result) => {
       if (result.status !== 'fulfilled') return;
       foundRows.push(...result.value.map((row) => ({ id: String(row.id ?? ''), text: String(row.text ?? '') })));
-      if (result.value.length < 500) lastPageReached = true;
     });
     await upsertTagConfigScanRows(admin, foundRows);
 
     const discovered = await countTagConfigs(admin);
-    const nextPrefixIndex = lastPageReached ? prefixIndex + 1 : prefixIndex;
-    const nextPrefixPage = lastPageReached ? 1 : prefixPage + TAG_DISCOVERY_PREFIX_PAGE_CHUNK;
+    const nextPrefixIndex = prefixIndex + prefixes.length;
     const donePrefixes = nextPrefixIndex >= TAG_CONFIG_PREFIXES.length;
     const nextDetails = {
       ...detalhes,
       stage: donePrefixes ? 'scan_tags' : 'discover_prefix',
       phase: donePrefixes
         ? `varrendo TAGs — ${discovered} configurações`
-        : `descobrindo configurações [${prefix.toUpperCase()} p${nextPrefixPage}] — ${discovered} encontradas`,
+        : `descobrindo configurações [${prefixes[0]}…${prefixes[prefixes.length - 1]}] — ${discovered} encontradas`,
       prefix_index: nextPrefixIndex,
-      prefix_page: nextPrefixPage,
       cfg_offset: detalhes.cfg_offset ?? 0,
-      current: donePrefixes ? 0 : nextPrefixPage - 1,
-      total: donePrefixes ? discovered : Math.max(nextPrefixPage + TAG_DISCOVERY_PREFIX_PAGE_CHUNK, 1),
+      current: donePrefixes ? 0 : nextPrefixIndex,
+      total: donePrefixes ? discovered : TAG_CONFIG_PREFIXES.length,
       cfg_count: discovered,
       com_tag: 0,
       sem_tag: 0,
