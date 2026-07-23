@@ -318,7 +318,9 @@ export function AgentChatWidget() {
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) => {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+      const target = e.target as HTMLElement | null;
+      if (target?.closest("[role='dialog']")) return; // ignora painel flutuante/artefato
+      if (panelRef.current && !panelRef.current.contains(target as Node)) {
         toggleOpen(false);
       }
     };
