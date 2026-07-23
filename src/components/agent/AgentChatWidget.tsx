@@ -368,125 +368,307 @@ export function AgentChatWidget() {
       )}
 
       {open && (
-        <div
-          ref={panelRef}
-          className={cn(
-            "fixed z-50 flex flex-col overflow-hidden rounded-xl border bg-background shadow-2xl transition-[width] duration-200",
-            "inset-x-2 bottom-2 top-14 sm:inset-auto sm:bottom-6 sm:right-6 sm:top-auto sm:h-[680px]",
-            showArtifactPane ? "sm:w-[880px]" : "sm:w-[440px]",
-          )}
-        >
-          {/* Header */}
-          <div className="flex items-center gap-2 border-b bg-card/50 px-3 py-2">
-            <img src={logo} alt="" width={24} height={24} />
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-semibold leading-tight">Fio</div>
-              <div className="truncate text-[11px] text-muted-foreground">
-                {threads.find((t) => t.id === activeId)?.title ?? "Nova conversa"}
-              </div>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={() => newThread()}
-              title="Nova conversa"
-              aria-label="Nova conversa"
-            >
-              <MessageSquarePlus className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={() => toggleOpen(false)}
-              title="Fechar"
-              aria-label="Fechar"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-
-          {/* Thread list (compact) */}
-          {threads.length > 1 && (
-            <div className="flex gap-1 overflow-x-auto border-b bg-muted/30 px-2 py-1.5">
-              {threads.map((t) => (
-                <div
-                  key={t.id}
-                  className={cn(
-                    "group flex shrink-0 items-center gap-1 rounded-md border px-2 py-1 text-xs",
-                    t.id === activeId ? "border-primary bg-primary/10" : "border-transparent hover:bg-accent",
-                  )}
-                >
-                  <button
-                    type="button"
-                    onClick={() => selectThread(t.id)}
-                    className="max-w-[140px] truncate text-left"
-                    title={t.title}
-                  >
-                    {t.title}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => deleteThread(t.id)}
-                    className="opacity-0 transition group-hover:opacity-70 hover:opacity-100"
-                    aria-label="Remover conversa"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </button>
+        <ChatPanelShell
+          panelRef={panelRef}
+          showArtifactPane={showArtifactPane}
+          headerContent={
+            <>
+              <img src={logo} alt="" width={24} height={24} />
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-semibold leading-tight">Fio</div>
+                <div className="truncate text-[11px] text-muted-foreground">
+                  {threads.find((t) => t.id === activeId)?.title ?? "Nova conversa"}
                 </div>
-              ))}
+              </div>
+              <SidebarModeToggle />
               <Button
                 variant="ghost"
                 size="icon-sm"
                 onClick={() => newThread()}
-                className="shrink-0"
+                title="Nova conversa"
                 aria-label="Nova conversa"
               >
-                <Plus className="h-3.5 w-3.5" />
+                <MessageSquarePlus className="h-4 w-4" />
               </Button>
-            </div>
-          )}
-
-          {/* Split layout: chat + optional artifact panel */}
-          <div className="flex flex-1 min-h-0 min-w-0">
-            {/* Chat column — hidden on mobile when artifact is visible */}
-            <div
-              className={cn(
-                "flex flex-1 min-w-0 flex-col",
-                showArtifactPane && "sm:max-w-[440px] sm:flex-none sm:border-r",
-                showArtifactPane && mobileArtifactVisible && "hidden sm:flex",
-              )}
-            >
-              {activeId && (
-                <ChatWindow
-                  key={activeId}
-                  threadId={activeId}
-                  onArtifact={registerArtifact}
-                  activeArtifactId={activeArtifactId}
-                  onSelectArtifact={handleSelectArtifact}
-                />
-              )}
-            </div>
-
-            {/* Artifact column */}
-            {activeArtifact && (
-              <div
-                className={cn(
-                  "flex flex-1 min-w-0 flex-col",
-                  !mobileArtifactVisible && "hidden sm:flex",
-                )}
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => toggleOpen(false)}
+                title="Fechar"
+                aria-label="Fechar"
               >
-                <ArtifactPanel
-                  spec={activeArtifact}
-                  onClose={() => {
-                    setActiveArtifactId(null);
-                    setMobileArtifactVisible(false);
-                  }}
-                />
+                <X className="h-4 w-4" />
+              </Button>
+            </>
+          }
+          threadsBar={
+            threads.length > 1 ? (
+              <div className="flex gap-1 overflow-x-auto border-b bg-muted/30 px-2 py-1.5">
+                {threads.map((t) => (
+                  <div
+                    key={t.id}
+                    className={cn(
+                      "group flex shrink-0 items-center gap-1 rounded-md border px-2 py-1 text-xs",
+                      t.id === activeId
+                        ? "border-primary bg-primary/10"
+                        : "border-transparent hover:bg-accent",
+                    )}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => selectThread(t.id)}
+                      className="max-w-[140px] truncate text-left"
+                      title={t.title}
+                    >
+                      {t.title}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => deleteThread(t.id)}
+                      className="opacity-0 transition group-hover:opacity-70 hover:opacity-100"
+                      aria-label="Remover conversa"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => newThread()}
+                  className="shrink-0"
+                  aria-label="Nova conversa"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                </Button>
               </div>
-            )}
-          </div>
-        </div>
+            ) : null
+          }
+          chatColumn={
+            activeId ? (
+              <ChatWindow
+                key={activeId}
+                threadId={activeId}
+                onArtifact={registerArtifact}
+                activeArtifactId={activeArtifactId}
+                onSelectArtifact={handleSelectArtifact}
+              />
+            ) : null
+          }
+          artifactColumn={
+            activeArtifact ? (
+              <ArtifactPanel
+                spec={activeArtifact}
+                onClose={() => {
+                  setActiveArtifactId(null);
+                  setMobileArtifactVisible(false);
+                }}
+              />
+            ) : null
+          }
+          artifactVisibleOnNarrow={mobileArtifactVisible}
+        />
       )}
     </>
+  );
+}
+
+// ---------- Chat panel shell (resizable + sidebar mode) ----------
+
+function SidebarModeToggle() {
+  const { mode, toggleMode } = useChatPanel();
+  const isSidebar = mode === "sidebar";
+  return (
+    <Button
+      variant="ghost"
+      size="icon-sm"
+      onClick={toggleMode}
+      title={isSidebar ? "Modo flutuante" : "Fixar como barra lateral"}
+      aria-label={isSidebar ? "Modo flutuante" : "Fixar como barra lateral"}
+    >
+      {isSidebar ? <PanelRightOpen className="h-4 w-4" /> : <PanelRightClose className="h-4 w-4" />}
+    </Button>
+  );
+}
+
+const MIN_W = 340;
+const MAX_W = 1400;
+const MIN_H = 400;
+
+function ChatPanelShell({
+  panelRef,
+  headerContent,
+  threadsBar,
+  chatColumn,
+  artifactColumn,
+  showArtifactPane,
+  artifactVisibleOnNarrow,
+}: {
+  panelRef: React.RefObject<HTMLDivElement>;
+  headerContent: React.ReactNode;
+  threadsBar: React.ReactNode;
+  chatColumn: React.ReactNode;
+  artifactColumn: React.ReactNode;
+  showArtifactPane: boolean;
+  artifactVisibleOnNarrow: boolean;
+}) {
+  const { mode, width, height, setWidth, setHeight } = useChatPanel();
+  const [measuredW, setMeasuredW] = useState<number>(width);
+  const dragRef = useRef<
+    | { kind: "w" | "h" | "wh"; startX: number; startY: number; origW: number; origH: number }
+    | null
+  >(null);
+
+  // Media query mobile — no mobile, ocupa a tela toda.
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== "undefined" && window.innerWidth < 640,
+  );
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  // Observa a largura real para adaptar o layout interno.
+  useEffect(() => {
+    const el = panelRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver((entries) => {
+      for (const e of entries) setMeasuredW(e.contentRect.width);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [panelRef]);
+
+  const onPointerMove = useCallback(
+    (e: PointerEvent) => {
+      const d = dragRef.current;
+      if (!d) return;
+      if (d.kind === "w" || d.kind === "wh") {
+        const dx = d.startX - e.clientX; // arrastar para a esquerda aumenta
+        const next = Math.min(MAX_W, Math.max(MIN_W, d.origW + dx));
+        setWidth(next);
+      }
+      if (d.kind === "h" || d.kind === "wh") {
+        const dy = d.startY - e.clientY; // arrastar para cima aumenta
+        const next = Math.min(window.innerHeight - 40, Math.max(MIN_H, d.origH + dy));
+        setHeight(next);
+      }
+    },
+    [setWidth, setHeight],
+  );
+
+  useEffect(() => {
+    const up = () => {
+      dragRef.current = null;
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", up);
+    };
+    const start = (kind: "w" | "h" | "wh") => (e: React.PointerEvent) => {
+      e.preventDefault();
+      dragRef.current = {
+        kind,
+        startX: e.clientX,
+        startY: e.clientY,
+        origW: width,
+        origH: height,
+      };
+      window.addEventListener("pointermove", onPointerMove);
+      window.addEventListener("pointerup", up);
+    };
+    // expose start via ref on window (simple bridge)
+    (window as any).__fioStartResize = start;
+    return () => {
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", up);
+    };
+  }, [onPointerMove, width, height]);
+
+  const isSidebar = mode === "sidebar";
+  const style: React.CSSProperties = isMobile
+    ? {}
+    : isSidebar
+      ? { width: Math.max(MIN_W, Math.min(MAX_W, width + (showArtifactPane ? 440 : 0))) }
+      : {
+          width: Math.max(MIN_W, Math.min(MAX_W, width + (showArtifactPane ? 440 : 0))),
+          height,
+        };
+
+  // Layout interno: se o painel ficar estreito, empilha chat e artifact.
+  const totalW = measuredW || width;
+  const canSideBySide = showArtifactPane && totalW >= 720;
+
+  return (
+    <div
+      ref={panelRef}
+      className={cn(
+        "fixed z-50 flex flex-col overflow-hidden border bg-background shadow-2xl",
+        isMobile
+          ? "inset-x-2 bottom-2 top-14 rounded-xl"
+          : isSidebar
+            ? "top-0 bottom-0 right-0 rounded-none border-r-0 border-t-0 border-b-0"
+            : "bottom-6 right-6 rounded-xl",
+      )}
+      style={style}
+    >
+      {/* Handles de resize (desktop apenas) */}
+      {!isMobile && (
+        <>
+          {/* Borda esquerda: resize horizontal */}
+          <div
+            onPointerDown={(e) => (window as any).__fioStartResize?.("w")(e)}
+            className="absolute left-0 top-0 z-20 h-full w-1.5 cursor-ew-resize hover:bg-primary/40"
+            aria-hidden
+          />
+          {!isSidebar && (
+            <>
+              {/* Borda superior: resize vertical */}
+              <div
+                onPointerDown={(e) => (window as any).__fioStartResize?.("h")(e)}
+                className="absolute left-0 top-0 z-20 h-1.5 w-full cursor-ns-resize hover:bg-primary/40"
+                aria-hidden
+              />
+              {/* Canto superior esquerdo: resize diagonal */}
+              <div
+                onPointerDown={(e) => (window as any).__fioStartResize?.("wh")(e)}
+                className="absolute left-0 top-0 z-30 h-3 w-3 cursor-nwse-resize"
+                aria-hidden
+              />
+            </>
+          )}
+        </>
+      )}
+
+      {/* Header */}
+      <div className="flex items-center gap-2 border-b bg-card/50 px-3 py-2 pl-4">
+        {headerContent}
+      </div>
+
+      {threadsBar}
+
+      {/* Split layout adaptativo */}
+      <div className="flex flex-1 min-h-0 min-w-0">
+        <div
+          className={cn(
+            "flex flex-1 min-w-0 flex-col",
+            canSideBySide && "max-w-[440px] flex-none border-r",
+            showArtifactPane && artifactVisibleOnNarrow && !canSideBySide && "hidden",
+          )}
+        >
+          {chatColumn}
+        </div>
+
+        {artifactColumn && (
+          <div
+            className={cn(
+              "flex flex-1 min-w-0 flex-col",
+              !canSideBySide && !artifactVisibleOnNarrow && "hidden",
+            )}
+          >
+            {artifactColumn}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
