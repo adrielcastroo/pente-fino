@@ -2240,6 +2240,35 @@ async function updateAcabamentoItem(auth: any, payload: Record<string, string>):
   return j;
 }
 
+async function insertAcabamentoItem(auth: any, cdAcabamento: string, payload: Record<string, string>): Promise<any> {
+  const body = new URLSearchParams({
+    idAcao: '1',
+    cdAcabamento: cdAcabamento,
+    cdAcabamentoItem: '',
+    cdItemAcabamento: payload.cdItemAcabamento ?? '',
+    dsItemAcabamento: payload.dsItemAcabamento ?? '',
+    dsItemAcabamentoReduzida: payload.dsItemAcabamentoReduzida ?? '',
+    dsItemAcabamentoOriginal: payload.dsItemAcabamentoOriginal ?? '',
+    cdKitComplementar1: payload.cdKitComplementar1 ?? '',
+    cdKitComplementar2: payload.cdKitComplementar2 ?? '',
+    cdKitComplementar3: payload.cdKitComplementar3 ?? '',
+    cdKitComplementar4: payload.cdKitComplementar4 ?? '',
+    cdKitComplementar5: payload.cdKitComplementar5 ?? '',
+  });
+  const txt = await postAugePhp(
+    auth,
+    '/l.unilux/modInventario/Controle/ctlAcabamentoItem.php',
+    body,
+    `/l.unilux/modInventario/manterAcabamentoItem.php?cdAcabamento=${cdAcabamento}`,
+  );
+  let j: any = { message: txt };
+  try { j = JSON.parse(txt); } catch { /* keep raw */ }
+  if (typeof j?.message === 'string' && !/sucesso/i.test(j.message)) {
+    throw new Error(j.message);
+  }
+  return j;
+}
+
 function mapAcabamentoRow(r: any) {
   return {
     cd_acabamento: String(r.cdAcabamento),
