@@ -251,12 +251,12 @@ function ChatWindow({
         onSend={(text) => void sendMessage({ parts: [{ type: "text", text }] })}
       />
 
-      <div className="border-t p-2">
+      <div className="p-2">
         <PromptInput onSubmit={handleSubmit}>
           <PromptInputTextarea ref={composerRef} placeholder="Pergunte algo ao Fio…" />
-          <PromptInputFooter className="justify-end">
+          <InputGroupAddon align="inline-end">
             <PromptInputSubmit status={status} disabled={isLoading} />
-          </PromptInputFooter>
+          </InputGroupAddon>
         </PromptInput>
       </div>
     </div>
