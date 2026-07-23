@@ -901,6 +901,28 @@ Deno.serve(async (req) => {
     }
     const userLevel = roleLevel(userRole);
 
+    // Permissões Auge (áreas + ações) — espelho manual do RBAC do Auge.
+    // Admin recebe tudo por bypass; demais usuários só o que estiver marcado.
+    let augeAreas: string[] = [];
+    let augeActions: string[] = [];
+    if (userId) {
+      try {
+        const isAdminUser = userRole === 'admin';
+        if (isAdminUser) {
+          augeAreas = ['estoque','cadastros','transferencias','acabamentos','necessidade','saidas','entradas','auditoria','expedicao','compras'];
+          augeActions = ['view','create','edit','delete','sync','export','ai_ask','ai_write'];
+        } else {
+          const { data: permRow } = await admin
+            .from('auge_permissoes')
+            .select('areas,actions')
+            .eq('user_id', userId)
+            .maybeSingle();
+          augeAreas = (permRow as any)?.areas ?? [];
+          augeActions = (permRow as any)?.actions ?? [];
+        }
+      } catch (_) { /* silencioso */ }
+    }
+
     const body = await req.json();
     const rawMessages: any[] = Array.isArray(body?.messages)
       ? body.messages
