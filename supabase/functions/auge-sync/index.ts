@@ -350,10 +350,10 @@ async function fetchSelectConfiguracoes(
 // alfanuméricos (Select2 exige minimumInputLength). Dedupa por id.
 async function scanAllConfiguracoes(
   auth: { jar: Jar; csrf: string; apiToken: string | null },
-  onProgress?: (found: number, doneTerms: number, totalTerms: number) => Promise<void>,
+  onProgress?: (found: number, doneTerms: number, totalTerms: number, currentTerm: string) => Promise<void>,
+  onBatch?: (rows: Array<{ id: string; text: string }>) => Promise<void>,
 ): Promise<Map<string, string>> {
   const chars = '0123456789abcdefghijklmnopqrstuvwxyz'.split('');
-  // 1 char primeiro; se algum retornar >=500 itens, drill-down com 2 chars.
   const found = new Map<string, string>();
   const drillDown: string[] = [];
   let done = 0;
@@ -365,7 +365,15 @@ async function scanAllConfiguracoes(
       while (true) {
         const rows = await fetchSelectConfiguracoes(auth, c, page, 500);
         got += rows.length;
-        for (const r of rows) if (r?.id) found.set(String(r.id), String(r.text ?? ''));
+        const fresh: Array<{ id: string; text: string }> = [];
+        for (const r of rows) {
+          if (!r?.id) continue;
+          const id = String(r.id);
+          if (!found.has(id)) fresh.push({ id, text: String(r.text ?? '') });
+          found.set(id, String(r.text ?? ''));
+        }
+        if (fresh.length && onBatch) await onBatch(fresh);
+        if (onProgress) await onProgress(found.size, done, total, `${c} p${page}`);
         if (rows.length < 500) break;
         page++;
         if (page > 20) { drillDown.push(c); break; }
@@ -373,23 +381,30 @@ async function scanAllConfiguracoes(
       if (got >= 500 && !drillDown.includes(c)) drillDown.push(c);
     } catch { /* segue */ }
     done++;
-    if (onProgress) await onProgress(found.size, done, total);
+    if (onProgress) await onProgress(found.size, done, total, c);
   }
-  // Drill-down 2 chars para termos "densos".
   for (const c1 of drillDown) {
     for (const c2 of chars) {
       try {
         let page = 1;
         while (true) {
           const rows = await fetchSelectConfiguracoes(auth, c1 + c2, page, 500);
-          for (const r of rows) if (r?.id) found.set(String(r.id), String(r.text ?? ''));
+          const fresh: Array<{ id: string; text: string }> = [];
+          for (const r of rows) {
+            if (!r?.id) continue;
+            const id = String(r.id);
+            if (!found.has(id)) fresh.push({ id, text: String(r.text ?? '') });
+            found.set(id, String(r.text ?? ''));
+          }
+          if (fresh.length && onBatch) await onBatch(fresh);
+          if (onProgress) await onProgress(found.size, done, total, `${c1}${c2} p${page}`);
           if (rows.length < 500) break;
           page++;
           if (page > 20) break;
         }
       } catch { /* segue */ }
     }
-    if (onProgress) await onProgress(found.size, done, total);
+    if (onProgress) await onProgress(found.size, done, total, c1);
   }
   return found;
 }
