@@ -26,7 +26,7 @@ import { Shimmer } from "@/components/ai-elements/shimmer";
 import { AskUserInline, extractAskUser } from "./AskUserDialog";
 import { Suggestions, extractSuggestions } from "./Suggestions";
 import { WidgetChip } from "./widgets/WidgetChip";
-import { FloatingWidgetPanel } from "./widgets/FloatingWidgetPanel";
+import { DockedWidgetBar } from "./widgets/DockedWidgetBar";
 import { useFloatingWidget } from "@/store/useFloatingWidget";
 import { ArtifactChip, ArtifactPanel } from "./artifacts/ArtifactPanel";
 import {
