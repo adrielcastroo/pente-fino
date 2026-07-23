@@ -835,6 +835,75 @@ export type Database = {
         }
         Relationships: []
       }
+      auge_tag_custom: {
+        Row: {
+          cd_configuracao: string
+          cd_tag_calculada: string | null
+          cd_tag_customizada: string | null
+          created_at: string
+          ds_tag_calculada: string | null
+          ds_tag_customizada: string | null
+          ds_tag_texto: string | null
+          id: string
+          nm_configuracao: string | null
+          nm_tag_customizada: string | null
+          raw: Json | null
+          synced_at: string
+        }
+        Insert: {
+          cd_configuracao: string
+          cd_tag_calculada?: string | null
+          cd_tag_customizada?: string | null
+          created_at?: string
+          ds_tag_calculada?: string | null
+          ds_tag_customizada?: string | null
+          ds_tag_texto?: string | null
+          id?: string
+          nm_configuracao?: string | null
+          nm_tag_customizada?: string | null
+          raw?: Json | null
+          synced_at?: string
+        }
+        Update: {
+          cd_configuracao?: string
+          cd_tag_calculada?: string | null
+          cd_tag_customizada?: string | null
+          created_at?: string
+          ds_tag_calculada?: string | null
+          ds_tag_customizada?: string | null
+          ds_tag_texto?: string | null
+          id?: string
+          nm_configuracao?: string | null
+          nm_tag_customizada?: string | null
+          raw?: Json | null
+          synced_at?: string
+        }
+        Relationships: []
+      }
+      auge_tag_custom_scan: {
+        Row: {
+          cd_configuracao: string
+          erro: string | null
+          last_scanned_at: string
+          nm_configuracao: string | null
+          qtd_tags: number
+        }
+        Insert: {
+          cd_configuracao: string
+          erro?: string | null
+          last_scanned_at?: string
+          nm_configuracao?: string | null
+          qtd_tags?: number
+        }
+        Update: {
+          cd_configuracao?: string
+          erro?: string | null
+          last_scanned_at?: string
+          nm_configuracao?: string | null
+          qtd_tags?: number
+        }
+        Relationships: []
+      }
       auge_transferencias: {
         Row: {
           codigo_produto: string | null
