@@ -358,54 +358,62 @@ async function scanAllConfiguracoes(
   const drillDown: string[] = [];
   let done = 0;
   const total = chars.length;
-  for (const c of chars) {
-    try {
-      let page = 1;
-      let got = 0;
-      while (true) {
-        const rows = await fetchSelectConfiguracoes(auth, c, page, 500);
-        got += rows.length;
-        const fresh: Array<{ id: string; text: string }> = [];
-        for (const r of rows) {
-          if (!r?.id) continue;
-          const id = String(r.id);
-          if (!found.has(id)) fresh.push({ id, text: String(r.text ?? '') });
-          found.set(id, String(r.text ?? ''));
-        }
-        if (fresh.length && onBatch) await onBatch(fresh);
-        if (onProgress) await onProgress(found.size, done, total, `${c} p${page}`);
-        if (rows.length < 500) break;
-        page++;
-        if (page > 20) { drillDown.push(c); break; }
+
+  const scanTerm = async (term: string): Promise<boolean> => {
+    // retorna true se saturou (>= 500 na primeira página) — candidato a drill-down
+    let page = 1;
+    let saturated = false;
+    while (true) {
+      const rows = await fetchSelectConfiguracoes(auth, term, page, 500);
+      const fresh: Array<{ id: string; text: string }> = [];
+      for (const r of rows) {
+        if (!r?.id) continue;
+        const id = String(r.id);
+        if (!found.has(id)) fresh.push({ id, text: String(r.text ?? '') });
+        found.set(id, String(r.text ?? ''));
       }
-      if (got >= 500 && !drillDown.includes(c)) drillDown.push(c);
-    } catch { /* segue */ }
-    done++;
-    if (onProgress) await onProgress(found.size, done, total, c);
-  }
-  for (const c1 of drillDown) {
-    for (const c2 of chars) {
-      try {
-        let page = 1;
-        while (true) {
-          const rows = await fetchSelectConfiguracoes(auth, c1 + c2, page, 500);
-          const fresh: Array<{ id: string; text: string }> = [];
-          for (const r of rows) {
-            if (!r?.id) continue;
-            const id = String(r.id);
-            if (!found.has(id)) fresh.push({ id, text: String(r.text ?? '') });
-            found.set(id, String(r.text ?? ''));
-          }
-          if (fresh.length && onBatch) await onBatch(fresh);
-          if (onProgress) await onProgress(found.size, done, total, `${c1}${c2} p${page}`);
-          if (rows.length < 500) break;
-          page++;
-          if (page > 20) break;
-        }
-      } catch { /* segue */ }
+      if (fresh.length && onBatch) await onBatch(fresh);
+      if (page === 1 && rows.length >= 500) saturated = true;
+      if (rows.length < 500) break;
+      page++;
+      if (page > 20) { saturated = true; break; }
     }
-    if (onProgress) await onProgress(found.size, done, total, c1);
-  }
+    return saturated;
+  };
+
+  // Concurrency para descoberta — dispara vários termos em paralelo.
+  const CONC = 6;
+  let ci = 0;
+  const runners = Array.from({ length: CONC }, () => (async () => {
+    while (true) {
+      const i = ci++;
+      if (i >= chars.length) return;
+      const c = chars[i];
+      try {
+        const sat = await scanTerm(c);
+        if (sat) drillDown.push(c);
+      } catch { /* segue */ }
+      done++;
+      if (onProgress) await onProgress(found.size, done, total, c);
+    }
+  })());
+  await Promise.all(runners);
+
+  // Drill-down também em paralelo.
+  const pairs: string[] = [];
+  for (const c1 of drillDown) for (const c2 of chars) pairs.push(c1 + c2);
+  let pi = 0;
+  const drillers = Array.from({ length: CONC }, () => (async () => {
+    while (true) {
+      const i = pi++;
+      if (i >= pairs.length) return;
+      const term = pairs[i];
+      try { await scanTerm(term); } catch { /* segue */ }
+      if (onProgress) await onProgress(found.size, done, total, term);
+    }
+  })());
+  await Promise.all(drillers);
+
   return found;
 }
 
