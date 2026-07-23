@@ -2971,7 +2971,7 @@ Deno.serve(async (req) => {
           }).eq('id', runId);
         };
 
-        for (const p of prods ?? []) {
+        for (const p of prods) {
           const cdOriginal = String(p.codigo ?? '').trim();
           if (!cdOriginal) { current++; continue; }
           // Tag Custom usa código sem pontos (ex.: CC.000.004 -> CC000004)
