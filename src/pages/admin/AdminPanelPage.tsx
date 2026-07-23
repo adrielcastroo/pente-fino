@@ -46,6 +46,7 @@ const N8nMonitorPage = lazy(() => import('@/pages/N8nMonitorPage'));
 const AugeAdminPanel = lazy(() => import('@/components/auge/AugeAdminPanel'));
 const LlmTokensTab = lazy(() => import('./tabs/LlmTokensTab'));
 const BackfillTransferenciasTab = lazy(() => import('./tabs/BackfillTransferenciasTab'));
+const AugePermissoesTab = lazy(() => import('./tabs/AugePermissoesTab'));
 
 
 declare const __APP_VERSION__: string;
@@ -86,6 +87,7 @@ const TAB_GROUPS: TabGroup[] = [
     label: 'Governança',
     tabs: [
       { key: 'team', label: 'Usuários & Acessos', icon: Users },
+      { key: 'auge-perms', label: 'Permissões Auge', icon: ShieldCheck },
       { key: 'settings', label: 'Configurações', icon: Settings2 },
       { key: 'database', label: 'Banco de Dados', icon: Database },
       { key: 'backup', label: 'Backup & Dados', icon: HardDriveDownload },
@@ -208,6 +210,9 @@ export default function AdminPanelPage() {
             <Card className="p-6 rounded-md border-border/40 shadow-sm">
               <Suspense fallback={tabFallback}><TeamPanel /></Suspense>
             </Card>
+          </TabsContent>
+          <TabsContent value="auge-perms" className="mt-0">
+            <Suspense fallback={tabFallback}><AugePermissoesTab /></Suspense>
           </TabsContent>
           <TabsContent value="settings" className="mt-0">
             <Suspense fallback={tabFallback}><GlobalSettingsTab /></Suspense>

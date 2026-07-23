@@ -631,6 +631,36 @@ export type Database = {
         }
         Relationships: []
       }
+      auge_permissoes: {
+        Row: {
+          actions: string[]
+          areas: string[]
+          created_at: string
+          notes: string | null
+          updated_at: string
+          updated_by: string | null
+          user_id: string
+        }
+        Insert: {
+          actions?: string[]
+          areas?: string[]
+          created_at?: string
+          notes?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          user_id: string
+        }
+        Update: {
+          actions?: string[]
+          areas?: string[]
+          created_at?: string
+          notes?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       auge_produtos: {
         Row: {
           ativo: boolean | null
@@ -3575,6 +3605,13 @@ export type Database = {
         Args: { _min: Database["public"]["Enums"]["app_role"] }
         Returns: boolean
       }
+      get_my_auge_permissoes: {
+        Args: never
+        Returns: {
+          actions: string[]
+          areas: string[]
+        }[]
+      }
       get_my_modules: { Args: never; Returns: string[] }
       get_my_role: {
         Args: never
@@ -3588,6 +3625,8 @@ export type Database = {
           schedule: string
         }[]
       }
+      has_auge_action: { Args: { _action: string }; Returns: boolean }
+      has_auge_area: { Args: { _area: string }; Returns: boolean }
       has_module: { Args: { _module: string }; Returns: boolean }
       has_role: {
         Args: {
