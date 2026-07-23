@@ -411,6 +411,14 @@ export default function AcabamentosPage() {
           )}
         </Card>
       </div>
+        </TabsContent>
+
+        <TabsContent value="massa" className="mt-0"><IncluirItemMassaTab /></TabsContent>
+        <TabsContent value="tags" className="mt-0"><TagsTab /></TabsContent>
+        <TabsContent value="gerar" className="mt-0"><GerarTagTab /></TabsContent>
+      </Tabs>
+
+
 
       <AcabamentoItemEditDialog
         item={editing}
