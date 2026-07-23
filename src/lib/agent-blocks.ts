@@ -68,6 +68,23 @@ export type ArtifactColumn = {
   width?: string;
 };
 
+export type DashboardKpi = {
+  label: string;
+  value: string | number;
+  hint?: string;
+  delta?: number; // ex.: +12.5 => "+12.5%"
+  tone?: "default" | "positive" | "negative" | "warning";
+};
+
+export type DashboardChart = {
+  type: "bar" | "line" | "area" | "pie";
+  title?: string;
+  data: Array<Record<string, unknown>>;
+  xKey?: string; // eixo categórico (bar/line/area)
+  series: Array<{ key: string; label?: string; color?: string }>;
+  height?: number;
+};
+
 export type ArtifactSpec =
   | {
       type: "table";
@@ -92,6 +109,14 @@ export type ArtifactSpec =
       title: string;
       subtitle?: string;
       data: unknown;
+    }
+  | {
+      type: "dashboard";
+      id: string;
+      title: string;
+      subtitle?: string;
+      kpis?: DashboardKpi[];
+      charts?: DashboardChart[];
     };
 
 const WIDGET_OPEN = "[[WIDGET]]";
