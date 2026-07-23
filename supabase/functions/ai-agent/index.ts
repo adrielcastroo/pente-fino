@@ -966,6 +966,11 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Expand widget submissions in place: last user turn may arrive as
+    // `__widget_submit__:{json}` — rewrite it into a natural summary so the
+    // LLM sees intent + values instead of an opaque payload.
+    expandWidgetSubmitInPlace(modelMessages);
+
     const userText = latestUserText(modelMessages);
     const previousText = priorUserText(modelMessages);
     const conversationText = allUserText(modelMessages) || userText;
