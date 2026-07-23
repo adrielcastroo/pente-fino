@@ -3019,33 +3019,24 @@ Deno.serve(async (req) => {
     if (action === 'sync_tag_custom') {
       const runIns = await admin.from('auge_sync_runs').insert({
         entidade: 'tag_custom', status: 'running', started_at: new Date().toISOString(),
-        triggered_by: triggeredBy, detalhes: { phase: 'iniciando', current: 0, total: 0, com_tag: 0, sem_tag: 0 },
+        triggered_by: triggeredBy, detalhes: { phase: 'descobrindo configurações', current: 0, total: 0, com_tag: 0, sem_tag: 0 },
       }).select('id').single();
       const runId = runIns.data?.id;
 
       const task = (async () => {
-        // Universo = CONFIGURAÇÕES do Auge (cd_item_acabamento distinct em
-        // auge_acabamento_itens). NÃO usar auge_produtos: aquilo é o cadastro
-        // mestre de itens; a tela "Tags Customizadas" do Auge opera sobre as
-        // configurações vinculadas a acabamentos (ex.: CC000004, Test000001).
-        const { data: cfgs } = await admin
-          .from('auge_acabamento_itens')
-          .select('cd_item_acabamento, ds_item_acabamento, ds_item_acabamento_original')
-          .not('cd_item_acabamento', 'is', null)
-          .limit(20000);
-        // Dedup por cd_item_acabamento (uma config pode aparecer em vários acabamentos).
-        const map = new Map<string, { codigo: string; descricao: string | null }>();
-        for (const r of cfgs ?? []) {
-          const codigo = String(r.cd_item_acabamento ?? '').trim();
-          if (!codigo) continue;
-          if (!map.has(codigo)) {
-            map.set(codigo, {
-              codigo,
-              descricao: r.ds_item_acabamento_original ?? r.ds_item_acabamento ?? null,
-            });
-          }
-        }
-        const prods = Array.from(map.values());
+        // FASE 1 — descobrir universo real de CONFIGURAÇÕES via
+        // tagSelectListaConfiguracoes.php (Select2 do lookup "Configuração"
+        // da tela Manter TAG Customizada). IDs são tipo "CC000004".
+        const cfgMap = await scanAllConfiguracoes(auth, async (found, doneTerms, totalTerms) => {
+          await admin.from('auge_sync_runs').update({
+            detalhes: {
+              phase: `descobrindo configurações (${doneTerms}/${totalTerms} termos)`,
+              current: 0, total: found, com_tag: 0, sem_tag: 0,
+            },
+          }).eq('id', runId);
+        });
+
+        const prods = Array.from(cfgMap.entries()).map(([id, text]) => ({ codigo: id, descricao: text }));
         const total = prods.length;
         let current = 0, comTag = 0, semTag = 0, errCount = 0;
         let lastFlush = 0;
@@ -3056,20 +3047,17 @@ Deno.serve(async (req) => {
           lastFlush = now;
           await admin.from('auge_sync_runs').update({
             rows_processed: current, rows_upserted: comTag,
-            detalhes: { phase: 'varrendo', current, total, com_tag: comTag, sem_tag: semTag, errors: errCount },
+            detalhes: { phase: 'varrendo TAGs', current, total, com_tag: comTag, sem_tag: semTag, errors: errCount },
           }).eq('id', runId);
         };
 
         for (const p of prods) {
-          const cdOriginal = String(p.codigo ?? '').trim();
-          if (!cdOriginal) { current++; continue; }
-          // Tag Custom usa código sem pontos (ex.: CC.000.004 -> CC000004)
-          const cd = cdOriginal.replace(/\./g, '');
+          const cd = String(p.codigo ?? '').trim();
+          if (!cd) { current++; continue; }
           try {
             const rows = await fetchListaTagsCustomizadas(auth, cd, '');
             if (rows.length) {
               comTag++;
-              // grava tags
               const insertRows = rows.map((r) => ({
                 cd_configuracao: cd,
                 nm_configuracao: r.nmConfiguracao ?? p.descricao ?? null,
@@ -3113,6 +3101,7 @@ Deno.serve(async (req) => {
           status: 'error', finished_at: new Date().toISOString(), error_message: getErrorMessage(e),
         }).eq('id', runId);
       });
+
       // @ts-ignore
       if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime?.waitUntil) EdgeRuntime.waitUntil(task);
       return new Response(JSON.stringify({ ok: true, run_id: runId, background: true }), {
