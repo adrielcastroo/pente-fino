@@ -74,30 +74,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchProfile = async (userId: string, email?: string) => {
+  const fetchProfile = async (userId: string, email?: string, attempt = 0) => {
     const fallback = () => {
-      setProfile({ id: userId, email, modules: ['estoque'] });
+      setProfile((prev: any) => prev ?? { id: userId, email, modules: ['estoque'] });
       if (email) setConferente(email.split('@')[0]);
     };
-    try {
-      const query = (supabase
+    const runQuery = () =>
+      (supabase
         .from('profiles' as any)
         .select('*')
         .eq('id', userId)
         .maybeSingle() as any);
-      const timeout = new Promise<{ data: null; error: any }>((resolve) =>
-        setTimeout(() => resolve({ data: null, error: new Error('profile-timeout') }), 4000),
-      );
-      const { data, error }: any = await Promise.race([query, timeout]);
-      if (!error && data) {
-        setProfile(data);
-        const name = data.display_name || email?.split('@')[0] || 'Usuário';
+    try {
+      const timeoutMs = 8000;
+      let timer: any;
+      const timeout = new Promise<any>((resolve) => {
+        timer = setTimeout(() => resolve({ __timeout: true }), timeoutMs);
+      });
+      const result: any = await Promise.race([runQuery(), timeout]);
+      clearTimeout(timer);
+      if (result?.data) {
+        setProfile(result.data);
+        const name = result.data.display_name || email?.split('@')[0] || 'Usuário';
         setConferente(name);
         return;
       }
-      if (error) console.warn('[auth] fetchProfile error', error);
-    } catch (e) {
-      console.warn('[auth] fetchProfile threw', e);
+      if (result?.__timeout) {
+        // Silent timeout: apply fallback and retry once in background
+        fallback();
+        if (attempt < 2) {
+          setTimeout(() => fetchProfile(userId, email, attempt + 1), 4000);
+        }
+        return;
+      }
+      if (result?.error) console.warn('[auth] fetchProfile error', result.error?.message ?? result.error);
+    } catch (e: any) {
+      console.warn('[auth] fetchProfile threw', e?.message ?? e);
     }
     fallback();
   };
