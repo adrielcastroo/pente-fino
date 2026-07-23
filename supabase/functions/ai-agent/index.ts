@@ -57,6 +57,52 @@ function textStreamResponse(text: string, headers: Record<string, string> = {}) 
   });
 }
 
+const WIDGET_SUBMIT_PREFIX = "__widget_submit__:";
+
+function rewriteWidgetSubmitText(text: string): string {
+  if (!text.startsWith(WIDGET_SUBMIT_PREFIX)) return text;
+  try {
+    const payload = JSON.parse(text.slice(WIDGET_SUBMIT_PREFIX.length)) as {
+      widget_id?: string;
+      intent?: string;
+      values?: Record<string, unknown>;
+    };
+    const lines: string[] = [];
+    lines.push(`[Envio de widget]`);
+    if (payload.intent) lines.push(`intent: ${payload.intent}`);
+    if (payload.widget_id) lines.push(`widget_id: ${payload.widget_id}`);
+    const values = payload.values ?? {};
+    const entries = Object.entries(values);
+    if (entries.length) {
+      lines.push(`valores:`);
+      for (const [k, v] of entries) {
+        const rendered = Array.isArray(v) ? v.join(", ") : typeof v === "object" ? JSON.stringify(v) : String(v);
+        lines.push(`  - ${k}: ${rendered}`);
+      }
+    }
+    return lines.join("\n");
+  } catch {
+    return text;
+  }
+}
+
+function expandWidgetSubmitInPlace(messages: ModelMessage[]) {
+  for (const m of messages) {
+    if (m.role !== "user") continue;
+    const content = m.content;
+    if (typeof content === "string") {
+      m.content = rewriteWidgetSubmitText(content);
+    } else if (Array.isArray(content)) {
+      for (const part of content as any[]) {
+        if (part?.type === "text" && typeof part.text === "string") {
+          part.text = rewriteWidgetSubmitText(part.text);
+        }
+      }
+    }
+  }
+}
+
+
 function latestUserText(messages: ModelMessage[]) {
   const last = [...messages].reverse().find((m) => m.role === "user");
   const content = last?.content;
@@ -966,6 +1012,11 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Expand widget submissions in place: last user turn may arrive as
+    // `__widget_submit__:{json}` — rewrite it into a natural summary so the
+    // LLM sees intent + values instead of an opaque payload.
+    expandWidgetSubmitInPlace(modelMessages);
+
     const userText = latestUserText(modelMessages);
     const previousText = priorUserText(modelMessages);
     const conversationText = allUserText(modelMessages) || userText;
@@ -1245,6 +1296,45 @@ SUGESTÕES DE PRÓXIMOS PASSOS (CHIPS CLICÁVEIS):
 - NÃO inclua o bloco SUGGESTIONS quando emitir ASK_USER (o popup já guia o
   usuário), nem em recusas por escopo/permissão.
 - Se não houver próximos passos claros, omita o bloco.
+
+WIDGETS INTERATIVOS (novo protocolo — PREFERIR sobre ASK_USER quando fizer sentido):
+- Quando precisar de MÚLTIPLOS campos, escolha entre opções, confirmação de ação
+  ou entrada estruturada, emita um bloco WIDGET em vez de texto livre. Continue
+  usando ASK_USER apenas para casos legados simples de 1 campo.
+- Formato exato (JSON em UMA linha, sem quebras):
+
+[[WIDGET]]{"type":"form","id":"w_novo_id","title":"Título curto","description":"opcional","fields":[{"name":"codigo","label":"Código do item","type":"text","required":true,"placeholder":"ex: TC.000.033"}],"submitLabel":"Enviar","onSubmitIntent":"consultar_acabamentos"}[[/WIDGET]]
+
+- Tipos de widget:
+  · "form"    — campos: text|textarea|number|date|select|multiselect|switch|radio.
+                selects/radios exigem "options":[{"value":"","label":""}].
+  · "choice"  — botões grandes. Use "options":[{"value":"","label":"","description":""}].
+  · "confirm" — Sim/Não com "summary" resumindo a ação. Use ANTES de qualquer escrita.
+- O "id" deve começar com "w_" e ser único por resposta. Reutilize o MESMO id
+  se estiver atualizando um widget já emitido.
+- Depois do submit você receberá uma mensagem "[Envio de widget]" com intent e
+  valores — use-os para agir (nunca peça de novo o que já veio).
+- Nunca coloque widgets em recusas por escopo/permissão.
+
+ARTIFACTS (painéis laterais — para saídas ricas):
+- Quando a resposta contiver uma TABELA grande (>8 linhas), um dashboard, um
+  romaneio ou markdown longo, envie um bloco ARTIFACT em vez de imprimir tudo
+  no chat. No corpo do chat, escreva apenas 1 frase de resumo — o painel
+  lateral abre automaticamente para o usuário explorar.
+- Formato exato (JSON em UMA linha):
+
+[[ARTIFACT]]{"type":"table","id":"a_id_unico","title":"Necessidade — Depósito 18","subtitle":"34 itens","columns":[{"key":"codigo","label":"Código"},{"key":"descricao","label":"Descrição"},{"key":"qtd","label":"Qtd","numeric":true,"align":"right"}],"rows":[{"codigo":"TC.000.033","descricao":"…","qtd":12}]}[[/ARTIFACT]]
+
+- Tipos de artifact:
+  · "table"    — obrigatório "columns" e "rows". Marque colunas numéricas com
+                 "numeric":true para formato BR "000.000,00".
+  · "markdown" — campo "content" com markdown longo (relatórios, análises).
+  · "json"     — campo "data" com objeto/array cru (debug).
+- Para tabelas pequenas (≤8 linhas) e simples, continue usando markdown inline.
+- Nunca coloque um artifact dentro de ASK_USER/WIDGET/SUGGESTIONS.
+
+
+
 
 
 Usuário atual: ${userEmail ?? "não autenticado"} (id: ${userId ?? "-"}, perfil: ${roleLabel(userRole)}).

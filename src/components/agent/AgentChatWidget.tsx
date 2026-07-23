@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { MessageSquarePlus, Plus, Trash2, X } from "lucide-react";
@@ -25,6 +25,14 @@ import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from "@/componen
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { AskUserInline, extractAskUser } from "./AskUserDialog";
 import { Suggestions, extractSuggestions } from "./Suggestions";
+import { WidgetRenderer } from "./widgets/WidgetRenderer";
+import { ArtifactChip, ArtifactPanel } from "./artifacts/ArtifactPanel";
+import {
+  extractArtifacts,
+  extractWidgets,
+  decodeWidgetSubmit,
+  type ArtifactSpec,
+} from "@/lib/agent-blocks";
 import logo from "@/assets/fio-logo.png";
 
 
@@ -32,12 +40,19 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const PUBLISHABLE_KEY = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
   import.meta.env.VITE_SUPABASE_ANON_KEY) as string;
 
-function ChatWindow({ threadId }: { threadId: string }) {
-  // Snapshot initial messages ONCE per mount (component is keyed by threadId,
-  // so a new thread remounts and re-snapshots). Passing a reactive array from
-  // the store as `messages` creates a feedback loop with the sync effect below
-  // and stomps the stream mid-flight — that was the cause of "Pensando…" never
-  // resolving and the user message flashing twice.
+type ArtifactMap = Record<string, ArtifactSpec>;
+
+function ChatWindow({
+  threadId,
+  onArtifact,
+  activeArtifactId,
+  onSelectArtifact,
+}: {
+  threadId: string;
+  onArtifact: (spec: ArtifactSpec) => void;
+  activeArtifactId: string | null;
+  onSelectArtifact: (id: string) => void;
+}) {
   const initialMessages = useMemo(
     () => useAgentThreads.getState().threads.find((t) => t.id === threadId)?.messages ?? [],
     [threadId],
@@ -75,18 +90,27 @@ function ChatWindow({ threadId }: { threadId: string }) {
     },
   });
 
-  // Sync back to store only when the turn settles — avoids feedback-loop
-  // re-renders while tokens are streaming.
   useEffect(() => {
     if (status === "ready" || status === "error") {
       setMessages(threadId, messages as UIMessage[]);
     }
   }, [status, messages, threadId, setMessages]);
 
-  // Focus composer on mount / thread change / after stream
   useEffect(() => {
     composerRef.current?.focus();
   }, [threadId, status]);
+
+  // Extract all artifacts from message stream and push to parent (deduped by id).
+  useEffect(() => {
+    for (const m of messages) {
+      if (m.role !== "assistant") continue;
+      for (const part of m.parts) {
+        if (part.type !== "text") continue;
+        const { artifacts } = extractArtifacts(part.text);
+        for (const a of artifacts) onArtifact(a);
+      }
+    }
+  }, [messages, onArtifact]);
 
   const handleSubmit = (msg: PromptInputMessage) => {
     const text = (msg.text ?? "").trim();
@@ -111,7 +135,7 @@ function ChatWindow({ threadId }: { threadId: string }) {
   const showThinking = isLoading && !lastAssistantHasVisibleContent;
 
   return (
-    <div className="flex flex-1 flex-col min-h-0">
+    <div className="flex flex-1 flex-col min-h-0 min-w-0">
       <Conversation className="flex-1 min-h-0">
         <ConversationContent>
           {messages.length === 0 && (
@@ -128,22 +152,52 @@ function ChatWindow({ threadId }: { threadId: string }) {
               >
                 {m.parts.map((part, i) => {
                   if (part.type === "text") {
-                    const { spec, cleaned: afterAsk } = extractAskUser(part.text);
-                    const { items: suggestions, cleaned } = extractSuggestions(afterAsk);
-                    const isLastAssistant =
-                      m.role === "assistant" && m.id === lastMessage?.id;
+                    // Hide raw widget-submit payloads on user messages.
+                    if (m.role === "user") {
+                      const submit = decodeWidgetSubmit(part.text);
+                      if (submit) {
+                        return (
+                          <div key={i} className="text-xs opacity-80">
+                            ✓ Formulário enviado
+                          </div>
+                        );
+                      }
+                      return <MessageResponse key={i}>{part.text}</MessageResponse>;
+                    }
+
+                    const { spec: askSpec, cleaned: afterAsk } = extractAskUser(part.text);
+                    const { widgets, cleaned: afterWidgets } = extractWidgets(afterAsk);
+                    const { artifacts, cleaned: afterArtifacts } = extractArtifacts(afterWidgets);
+                    const { items: suggestions, cleaned } = extractSuggestions(afterArtifacts);
+                    const isLastAssistant = m.id === lastMessage?.id;
                     return (
                       <div key={i}>
                         {cleaned && <MessageResponse>{cleaned}</MessageResponse>}
-                        {spec && m.role === "assistant" && (
+                        {askSpec && (
                           <AskUserInline
-                            spec={spec}
+                            spec={askSpec}
                             disabled={isLoading}
                             onSubmit={(formatted) =>
                               void sendMessage({ parts: [{ type: "text", text: formatted }] })
                             }
                           />
                         )}
+                        {widgets.map((w) => (
+                          <WidgetRenderer
+                            key={w.id}
+                            spec={w}
+                            disabled={isLoading}
+                            onSend={(text) => void sendMessage({ parts: [{ type: "text", text }] })}
+                          />
+                        ))}
+                        {artifacts.map((a) => (
+                          <ArtifactChip
+                            key={a.id}
+                            spec={a}
+                            active={a.id === activeArtifactId}
+                            onOpen={() => onSelectArtifact(a.id)}
+                          />
+                        ))}
                         {isLastAssistant && !isLoading && suggestions.length > 0 && (
                           <Suggestions
                             items={suggestions}
@@ -208,6 +262,33 @@ export function AgentChatWidget() {
   const [hasUnread, setHasUnread] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
+  // Artifacts state — accumulated across the active thread and reset on thread change.
+  const [artifacts, setArtifacts] = useState<ArtifactMap>({});
+  const [activeArtifactId, setActiveArtifactId] = useState<string | null>(null);
+  const [mobileArtifactVisible, setMobileArtifactVisible] = useState(false);
+
+  useEffect(() => {
+    setArtifacts({});
+    setActiveArtifactId(null);
+    setMobileArtifactVisible(false);
+  }, [activeId]);
+
+  const registerArtifact = useCallback((spec: ArtifactSpec) => {
+    setArtifacts((prev) => {
+      const existing = prev[spec.id];
+      if (existing && JSON.stringify(existing) === JSON.stringify(spec)) return prev;
+      return { ...prev, [spec.id]: spec };
+    });
+  }, []);
+
+  const handleSelectArtifact = useCallback((id: string) => {
+    setActiveArtifactId(id);
+    setMobileArtifactVisible(true);
+  }, []);
+
+  const activeArtifact = activeArtifactId ? artifacts[activeArtifactId] : null;
+  const showArtifactPane = Boolean(activeArtifact);
+
   // Ensure there's an active thread when opened
   useEffect(() => {
     if (open && !activeId) newThread();
@@ -257,7 +338,6 @@ export function AgentChatWidget() {
               className="h-full w-full rounded-2xl object-cover transition-transform duration-300 group-hover:animate-fio-peek"
               style={{ transformOrigin: "bottom center" }}
             />
-            {/* Mãozinha acenando — aparece só no hover */}
             <span
               aria-hidden
               className="pointer-events-none absolute -right-2 -top-3 text-2xl opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-hover:animate-fio-wave"
@@ -282,8 +362,9 @@ export function AgentChatWidget() {
         <div
           ref={panelRef}
           className={cn(
-            "fixed z-50 flex flex-col overflow-hidden rounded-xl border bg-background shadow-2xl",
-            "inset-x-2 bottom-2 top-14 sm:inset-auto sm:bottom-6 sm:right-6 sm:top-auto sm:h-[640px] sm:w-[440px]",
+            "fixed z-50 flex flex-col overflow-hidden rounded-xl border bg-background shadow-2xl transition-[width] duration-200",
+            "inset-x-2 bottom-2 top-14 sm:inset-auto sm:bottom-6 sm:right-6 sm:top-auto sm:h-[680px]",
+            showArtifactPane ? "sm:w-[880px]" : "sm:w-[440px]",
           )}
         >
           {/* Header */}
@@ -356,7 +437,45 @@ export function AgentChatWidget() {
             </div>
           )}
 
-          {activeId && <ChatWindow key={activeId} threadId={activeId} />}
+          {/* Split layout: chat + optional artifact panel */}
+          <div className="flex flex-1 min-h-0 min-w-0">
+            {/* Chat column — hidden on mobile when artifact is visible */}
+            <div
+              className={cn(
+                "flex flex-1 min-w-0 flex-col",
+                showArtifactPane && "sm:max-w-[440px] sm:flex-none sm:border-r",
+                showArtifactPane && mobileArtifactVisible && "hidden sm:flex",
+              )}
+            >
+              {activeId && (
+                <ChatWindow
+                  key={activeId}
+                  threadId={activeId}
+                  onArtifact={registerArtifact}
+                  activeArtifactId={activeArtifactId}
+                  onSelectArtifact={handleSelectArtifact}
+                />
+              )}
+            </div>
+
+            {/* Artifact column */}
+            {activeArtifact && (
+              <div
+                className={cn(
+                  "flex flex-1 min-w-0 flex-col",
+                  !mobileArtifactVisible && "hidden sm:flex",
+                )}
+              >
+                <ArtifactPanel
+                  spec={activeArtifact}
+                  onClose={() => {
+                    setActiveArtifactId(null);
+                    setMobileArtifactVisible(false);
+                  }}
+                />
+              </div>
+            )}
+          </div>
         </div>
       )}
     </>
