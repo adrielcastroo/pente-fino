@@ -307,7 +307,7 @@ async function fetchListaTagsCustomizadas(
   return rows;
 }
 
-}
+
 
 // Endpoint real de entradas (Auge legado / módulo PHP)
 // POST /l.unilux/modInventario/estoque/ajax/getEntradaEstoque.php
