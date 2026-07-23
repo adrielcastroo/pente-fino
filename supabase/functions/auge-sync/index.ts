@@ -358,54 +358,62 @@ async function scanAllConfiguracoes(
   const drillDown: string[] = [];
   let done = 0;
   const total = chars.length;
-  for (const c of chars) {
-    try {
-      let page = 1;
-      let got = 0;
-      while (true) {
-        const rows = await fetchSelectConfiguracoes(auth, c, page, 500);
-        got += rows.length;
-        const fresh: Array<{ id: string; text: string }> = [];
-        for (const r of rows) {
-          if (!r?.id) continue;
-          const id = String(r.id);
-          if (!found.has(id)) fresh.push({ id, text: String(r.text ?? '') });
-          found.set(id, String(r.text ?? ''));
-        }
-        if (fresh.length && onBatch) await onBatch(fresh);
-        if (onProgress) await onProgress(found.size, done, total, `${c} p${page}`);
-        if (rows.length < 500) break;
-        page++;
-        if (page > 20) { drillDown.push(c); break; }
+
+  const scanTerm = async (term: string): Promise<boolean> => {
+    // retorna true se saturou (>= 500 na primeira página) — candidato a drill-down
+    let page = 1;
+    let saturated = false;
+    while (true) {
+      const rows = await fetchSelectConfiguracoes(auth, term, page, 500);
+      const fresh: Array<{ id: string; text: string }> = [];
+      for (const r of rows) {
+        if (!r?.id) continue;
+        const id = String(r.id);
+        if (!found.has(id)) fresh.push({ id, text: String(r.text ?? '') });
+        found.set(id, String(r.text ?? ''));
       }
-      if (got >= 500 && !drillDown.includes(c)) drillDown.push(c);
-    } catch { /* segue */ }
-    done++;
-    if (onProgress) await onProgress(found.size, done, total, c);
-  }
-  for (const c1 of drillDown) {
-    for (const c2 of chars) {
-      try {
-        let page = 1;
-        while (true) {
-          const rows = await fetchSelectConfiguracoes(auth, c1 + c2, page, 500);
-          const fresh: Array<{ id: string; text: string }> = [];
-          for (const r of rows) {
-            if (!r?.id) continue;
-            const id = String(r.id);
-            if (!found.has(id)) fresh.push({ id, text: String(r.text ?? '') });
-            found.set(id, String(r.text ?? ''));
-          }
-          if (fresh.length && onBatch) await onBatch(fresh);
-          if (onProgress) await onProgress(found.size, done, total, `${c1}${c2} p${page}`);
-          if (rows.length < 500) break;
-          page++;
-          if (page > 20) break;
-        }
-      } catch { /* segue */ }
+      if (fresh.length && onBatch) await onBatch(fresh);
+      if (page === 1 && rows.length >= 500) saturated = true;
+      if (rows.length < 500) break;
+      page++;
+      if (page > 20) { saturated = true; break; }
     }
-    if (onProgress) await onProgress(found.size, done, total, c1);
-  }
+    return saturated;
+  };
+
+  // Concurrency para descoberta — dispara vários termos em paralelo.
+  const CONC = 6;
+  let ci = 0;
+  const runners = Array.from({ length: CONC }, () => (async () => {
+    while (true) {
+      const i = ci++;
+      if (i >= chars.length) return;
+      const c = chars[i];
+      try {
+        const sat = await scanTerm(c);
+        if (sat) drillDown.push(c);
+      } catch { /* segue */ }
+      done++;
+      if (onProgress) await onProgress(found.size, done, total, c);
+    }
+  })());
+  await Promise.all(runners);
+
+  // Drill-down também em paralelo.
+  const pairs: string[] = [];
+  for (const c1 of drillDown) for (const c2 of chars) pairs.push(c1 + c2);
+  let pi = 0;
+  const drillers = Array.from({ length: CONC }, () => (async () => {
+    while (true) {
+      const i = pi++;
+      if (i >= pairs.length) return;
+      const term = pairs[i];
+      try { await scanTerm(term); } catch { /* segue */ }
+      if (onProgress) await onProgress(found.size, done, total, term);
+    }
+  })());
+  await Promise.all(drillers);
+
   return found;
 }
 
@@ -3086,45 +3094,69 @@ Deno.serve(async (req) => {
           }).eq('id', runId);
         };
 
-        for (const p of prods) {
-          const cd = String(p.codigo ?? '').trim();
-          if (!cd) { current++; continue; }
-          try {
-            const rows = await fetchListaTagsCustomizadas(auth, cd, '');
-            if (rows.length) {
-              comTag++;
-              const insertRows = rows.map((r) => ({
-                cd_configuracao: cd,
-                nm_configuracao: r.nmConfiguracao ?? p.descricao ?? null,
-                cd_tag_customizada: String(r.cdTagCustomizada ?? ''),
-                nm_tag_customizada: r.nmTagCustomizada ?? null,
-                ds_tag_customizada: r.dsTagCustomizada ?? null,
-                cd_tag_calculada: r.cdTagCalculada ?? null,
-                ds_tag_calculada: r.dsTagCalculada ?? null,
-                ds_tag_texto: r.dsTagTexto ?? null,
-                raw: r,
-                synced_at: new Date().toISOString(),
-              })).filter((r) => r.cd_tag_customizada);
-              if (insertRows.length) {
-                await admin.from('auge_tag_custom').upsert(insertRows, { onConflict: 'cd_configuracao,cd_tag_customizada' });
-              }
-            } else {
-              semTag++;
-            }
-            await admin.from('auge_tag_custom_scan').upsert({
-              cd_configuracao: cd, nm_configuracao: p.descricao ?? null,
-              qtd_tags: rows.length, last_scanned_at: new Date().toISOString(), erro: null,
-            }, { onConflict: 'cd_configuracao' });
-          } catch (e: any) {
-            errCount++;
-            await admin.from('auge_tag_custom_scan').upsert({
-              cd_configuracao: cd, nm_configuracao: p.descricao ?? null,
-              qtd_tags: 0, last_scanned_at: new Date().toISOString(), erro: getErrorMessage(e).slice(0, 400),
-            }, { onConflict: 'cd_configuracao' });
+        // Buffers para upsert em lote (reduz round-trips ao banco).
+        let tagBuffer: any[] = [];
+        let scanBuffer: any[] = [];
+        const flushBuffers = async (force = false) => {
+          if (tagBuffer.length >= 200 || (force && tagBuffer.length)) {
+            const b = tagBuffer; tagBuffer = [];
+            await admin.from('auge_tag_custom').upsert(b, { onConflict: 'cd_configuracao,cd_tag_customizada' });
           }
-          current++;
-          await flush();
-        }
+          if (scanBuffer.length >= 200 || (force && scanBuffer.length)) {
+            const b = scanBuffer; scanBuffer = [];
+            await admin.from('auge_tag_custom_scan').upsert(b, { onConflict: 'cd_configuracao' });
+          }
+        };
+
+        // Worker pool: N requisições em paralelo ao Auge.
+        const CONCURRENCY = 12;
+        let idx = 0;
+        const worker = async () => {
+          while (true) {
+            const i = idx++;
+            if (i >= prods.length) return;
+            const p = prods[i];
+            const cd = String(p.codigo ?? '').trim();
+            if (!cd) { current++; continue; }
+            try {
+              const rows = await fetchListaTagsCustomizadas(auth, cd, '');
+              if (rows.length) {
+                comTag++;
+                const insertRows = rows.map((r) => ({
+                  cd_configuracao: cd,
+                  nm_configuracao: r.nmConfiguracao ?? p.descricao ?? null,
+                  cd_tag_customizada: String(r.cdTagCustomizada ?? ''),
+                  nm_tag_customizada: r.nmTagCustomizada ?? null,
+                  ds_tag_customizada: r.dsTagCustomizada ?? null,
+                  cd_tag_calculada: r.cdTagCalculada ?? null,
+                  ds_tag_calculada: r.dsTagCalculada ?? null,
+                  ds_tag_texto: r.dsTagTexto ?? null,
+                  raw: r,
+                  synced_at: new Date().toISOString(),
+                })).filter((r) => r.cd_tag_customizada);
+                if (insertRows.length) tagBuffer.push(...insertRows);
+              } else {
+                semTag++;
+              }
+              scanBuffer.push({
+                cd_configuracao: cd, nm_configuracao: p.descricao ?? null,
+                qtd_tags: rows.length, last_scanned_at: new Date().toISOString(), erro: null,
+              });
+            } catch (e: any) {
+              errCount++;
+              scanBuffer.push({
+                cd_configuracao: cd, nm_configuracao: p.descricao ?? null,
+                qtd_tags: 0, last_scanned_at: new Date().toISOString(), erro: getErrorMessage(e).slice(0, 400),
+              });
+            }
+            current++;
+            await flushBuffers(false);
+            await flush();
+          }
+        };
+        await Promise.all(Array.from({ length: CONCURRENCY }, () => worker()));
+        await flushBuffers(true);
+        await flush(true);
         await admin.from('auge_sync_runs').update({
           status: 'success', finished_at: new Date().toISOString(),
           rows_processed: current, rows_upserted: comTag,
