@@ -514,10 +514,7 @@ function ChatPanelShell({
 }) {
   const { mode, width, height, setWidth, setHeight } = useChatPanel();
   const [measuredW, setMeasuredW] = useState<number>(width);
-  const dragRef = useRef<
-    | { kind: "w" | "h" | "wh"; startX: number; startY: number; origW: number; origH: number }
-    | null
-  >(null);
+  const isSidebar = mode === "sidebar";
 
   // Media query mobile — no mobile, ocupa a tela toda.
   const [isMobile, setIsMobile] = useState(
@@ -540,51 +537,92 @@ function ChatPanelShell({
     return () => ro.disconnect();
   }, [panelRef]);
 
-  const onPointerMove = useCallback(
-    (e: PointerEvent) => {
-      const d = dragRef.current;
-      if (!d) return;
-      if (d.kind === "w" || d.kind === "wh") {
-        const dx = d.startX - e.clientX; // arrastar para a esquerda aumenta
-        const next = Math.min(MAX_W, Math.max(MIN_W, d.origW + dx));
-        setWidth(next);
+  // --- Drag/resize: refs para evitar re-execução do effect durante o drag. ---
+  const dragRef = useRef<
+    | {
+        kind: "w" | "h" | "wh";
+        startX: number;
+        startY: number;
+        origW: number;
+        origH: number;
+        artifactOffset: number;
       }
-      if (d.kind === "h" || d.kind === "wh") {
-        const dy = d.startY - e.clientY; // arrastar para cima aumenta
-        const next = Math.min(window.innerHeight - 40, Math.max(MIN_H, d.origH + dy));
-        setHeight(next);
-      }
-    },
-    [setWidth, setHeight],
-  );
-
+    | null
+  >(null);
+  const setWidthRef = useRef(setWidth);
+  const setHeightRef = useRef(setHeight);
+  const isSidebarRef = useRef(isSidebar);
   useEffect(() => {
-    const up = () => {
-      dragRef.current = null;
-      window.removeEventListener("pointermove", onPointerMove);
-      window.removeEventListener("pointerup", up);
-    };
-    const start = (kind: "w" | "h" | "wh") => (e: React.PointerEvent) => {
+    setWidthRef.current = setWidth;
+    setHeightRef.current = setHeight;
+    isSidebarRef.current = isSidebar;
+  });
+
+  const handleResizeStart = useCallback(
+    (kind: "w" | "h" | "wh") => (e: React.PointerEvent) => {
       e.preventDefault();
+      e.stopPropagation();
+      const rect = panelRef.current?.getBoundingClientRect();
+      const currentW = rect?.width ?? width;
+      const currentH = rect?.height ?? height;
+      // width no store não inclui o offset do painel de artifact;
+      // guardamos esse delta para reaplicar ao commitar.
+      const artifactOffset = Math.max(0, Math.round(currentW - width));
       dragRef.current = {
         kind,
         startX: e.clientX,
         startY: e.clientY,
-        origW: width,
-        origH: height,
+        origW: currentW,
+        origH: currentH,
+        artifactOffset,
       };
-      window.addEventListener("pointermove", onPointerMove);
-      window.addEventListener("pointerup", up);
-    };
-    // expose start via ref on window (simple bridge)
-    (window as any).__fioStartResize = start;
-    return () => {
-      window.removeEventListener("pointermove", onPointerMove);
-      window.removeEventListener("pointerup", up);
-    };
-  }, [onPointerMove, width, height]);
+      document.body.style.userSelect = "none";
+      document.body.style.cursor =
+        kind === "w" ? "ew-resize" : kind === "h" ? "ns-resize" : "nwse-resize";
+    },
+    [panelRef, width, height],
+  );
 
-  const isSidebar = mode === "sidebar";
+  useEffect(() => {
+    const onMove = (ev: PointerEvent) => {
+      const d = dragRef.current;
+      if (!d) return;
+      ev.preventDefault();
+      if (d.kind === "w" || d.kind === "wh") {
+        const dx = d.startX - ev.clientX; // arrastar para a esquerda aumenta
+        const nextTotal = Math.min(
+          MAX_W,
+          Math.max(MIN_W, d.origW + dx),
+        );
+        // Reaplica descontando o offset do painel de artifact.
+        setWidthRef.current(Math.max(MIN_W, nextTotal - d.artifactOffset));
+      }
+      if (d.kind === "h" || d.kind === "wh") {
+        if (isSidebarRef.current) return;
+        const dy = d.startY - ev.clientY;
+        const nextH = Math.min(
+          window.innerHeight - 40,
+          Math.max(MIN_H, d.origH + dy),
+        );
+        setHeightRef.current(nextH);
+      }
+    };
+    const onUp = () => {
+      if (!dragRef.current) return;
+      dragRef.current = null;
+      document.body.style.userSelect = "";
+      document.body.style.cursor = "";
+    };
+    window.addEventListener("pointermove", onMove, { passive: false });
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+    };
+  }, []);
+
   const style: React.CSSProperties = isMobile
     ? {}
     : isSidebar
@@ -616,7 +654,7 @@ function ChatPanelShell({
         <>
           {/* Borda esquerda: resize horizontal */}
           <div
-            onPointerDown={(e) => (window as any).__fioStartResize?.("w")(e)}
+            onPointerDown={handleResizeStart("w")}
             className="absolute left-0 top-0 z-20 h-full w-1.5 cursor-ew-resize hover:bg-primary/40"
             aria-hidden
           />
@@ -624,13 +662,13 @@ function ChatPanelShell({
             <>
               {/* Borda superior: resize vertical */}
               <div
-                onPointerDown={(e) => (window as any).__fioStartResize?.("h")(e)}
-                className="absolute left-0 top-0 z-20 h-1.5 w-full cursor-ns-resize hover:bg-primary/40"
+                onPointerDown={handleResizeStart("h")}
+                className="absolute left-1.5 top-0 z-20 h-1.5 w-[calc(100%-0.375rem)] cursor-ns-resize hover:bg-primary/40"
                 aria-hidden
               />
               {/* Canto superior esquerdo: resize diagonal */}
               <div
-                onPointerDown={(e) => (window as any).__fioStartResize?.("wh")(e)}
+                onPointerDown={handleResizeStart("wh")}
                 className="absolute left-0 top-0 z-30 h-3 w-3 cursor-nwse-resize"
                 aria-hidden
               />
