@@ -307,6 +307,95 @@ async function fetchListaTagsCustomizadas(
   return rows;
 }
 
+// tagSelectListaConfiguracoes.php — Select2 do lookup "Configuração".
+// Retorna [{id:"CC000004", text:"Rollo ... [CC000004]"}, ...].
+async function fetchSelectConfiguracoes(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+  term: string,
+  nrPagina = 1,
+  qtdItens = 500,
+): Promise<Array<{ id: string; text: string }>> {
+  const path = '/l.unilux/modInventario/tag/ajax/tagSelectListaConfiguracoes.php';
+  const body = new URLSearchParams({ term, nrPagina: String(nrPagina), qtdItens: String(qtdItens) });
+  const headers: Record<string, string> = {
+    'Cookie': auth.jar.header(),
+    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+    'X-Requested-With': 'XMLHttpRequest',
+    'X-CSRF-TOKEN': auth.csrf,
+    'Origin': AUGE_BASE_URL,
+    'Referer': `${AUGE_BASE_URL}/l.unilux/modInventario/tag/manterTagCustomizada.php`,
+    'User-Agent': UA,
+    'Accept': 'application/json, text/javascript, */*; q=0.01',
+    'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
+  };
+  if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
+  const res = await fetch(`${AUGE_BASE_URL}${path}`, { method: 'POST', headers, body });
+  auth.jar.ingest(res);
+  const text = await res.text();
+  if (!res.ok) throw new Error(`POST ${path} HTTP ${res.status} body=${text.slice(0,200)}`);
+  const trimmed = text.trim();
+  if (!trimmed) return [];
+  try {
+    const j = JSON.parse(trimmed);
+    if (Array.isArray(j)) return j;
+    if (Array.isArray(j?.results)) return j.results;
+    if (Array.isArray(j?.data)) return j.data;
+    return [];
+  } catch {
+    return [];
+  }
+}
+
+// Varre todas as configurações do Auge iterando termos de 1-2 caracteres
+// alfanuméricos (Select2 exige minimumInputLength). Dedupa por id.
+async function scanAllConfiguracoes(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+  onProgress?: (found: number, doneTerms: number, totalTerms: number) => Promise<void>,
+): Promise<Map<string, string>> {
+  const chars = '0123456789abcdefghijklmnopqrstuvwxyz'.split('');
+  // 1 char primeiro; se algum retornar >=500 itens, drill-down com 2 chars.
+  const found = new Map<string, string>();
+  const drillDown: string[] = [];
+  let done = 0;
+  const total = chars.length;
+  for (const c of chars) {
+    try {
+      let page = 1;
+      let got = 0;
+      while (true) {
+        const rows = await fetchSelectConfiguracoes(auth, c, page, 500);
+        got += rows.length;
+        for (const r of rows) if (r?.id) found.set(String(r.id), String(r.text ?? ''));
+        if (rows.length < 500) break;
+        page++;
+        if (page > 20) { drillDown.push(c); break; }
+      }
+      if (got >= 500 && !drillDown.includes(c)) drillDown.push(c);
+    } catch { /* segue */ }
+    done++;
+    if (onProgress) await onProgress(found.size, done, total);
+  }
+  // Drill-down 2 chars para termos "densos".
+  for (const c1 of drillDown) {
+    for (const c2 of chars) {
+      try {
+        let page = 1;
+        while (true) {
+          const rows = await fetchSelectConfiguracoes(auth, c1 + c2, page, 500);
+          for (const r of rows) if (r?.id) found.set(String(r.id), String(r.text ?? ''));
+          if (rows.length < 500) break;
+          page++;
+          if (page > 20) break;
+        }
+      } catch { /* segue */ }
+    }
+    if (onProgress) await onProgress(found.size, done, total);
+  }
+  return found;
+}
+
+
+
 
 
 // Endpoint real de entradas (Auge legado / módulo PHP)
