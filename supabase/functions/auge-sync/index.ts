@@ -350,10 +350,10 @@ async function fetchSelectConfiguracoes(
 // alfanuméricos (Select2 exige minimumInputLength). Dedupa por id.
 async function scanAllConfiguracoes(
   auth: { jar: Jar; csrf: string; apiToken: string | null },
-  onProgress?: (found: number, doneTerms: number, totalTerms: number) => Promise<void>,
+  onProgress?: (found: number, doneTerms: number, totalTerms: number, currentTerm: string) => Promise<void>,
+  onBatch?: (rows: Array<{ id: string; text: string }>) => Promise<void>,
 ): Promise<Map<string, string>> {
   const chars = '0123456789abcdefghijklmnopqrstuvwxyz'.split('');
-  // 1 char primeiro; se algum retornar >=500 itens, drill-down com 2 chars.
   const found = new Map<string, string>();
   const drillDown: string[] = [];
   let done = 0;
@@ -365,7 +365,15 @@ async function scanAllConfiguracoes(
       while (true) {
         const rows = await fetchSelectConfiguracoes(auth, c, page, 500);
         got += rows.length;
-        for (const r of rows) if (r?.id) found.set(String(r.id), String(r.text ?? ''));
+        const fresh: Array<{ id: string; text: string }> = [];
+        for (const r of rows) {
+          if (!r?.id) continue;
+          const id = String(r.id);
+          if (!found.has(id)) fresh.push({ id, text: String(r.text ?? '') });
+          found.set(id, String(r.text ?? ''));
+        }
+        if (fresh.length && onBatch) await onBatch(fresh);
+        if (onProgress) await onProgress(found.size, done, total, `${c} p${page}`);
         if (rows.length < 500) break;
         page++;
         if (page > 20) { drillDown.push(c); break; }
@@ -373,23 +381,30 @@ async function scanAllConfiguracoes(
       if (got >= 500 && !drillDown.includes(c)) drillDown.push(c);
     } catch { /* segue */ }
     done++;
-    if (onProgress) await onProgress(found.size, done, total);
+    if (onProgress) await onProgress(found.size, done, total, c);
   }
-  // Drill-down 2 chars para termos "densos".
   for (const c1 of drillDown) {
     for (const c2 of chars) {
       try {
         let page = 1;
         while (true) {
           const rows = await fetchSelectConfiguracoes(auth, c1 + c2, page, 500);
-          for (const r of rows) if (r?.id) found.set(String(r.id), String(r.text ?? ''));
+          const fresh: Array<{ id: string; text: string }> = [];
+          for (const r of rows) {
+            if (!r?.id) continue;
+            const id = String(r.id);
+            if (!found.has(id)) fresh.push({ id, text: String(r.text ?? '') });
+            found.set(id, String(r.text ?? ''));
+          }
+          if (fresh.length && onBatch) await onBatch(fresh);
+          if (onProgress) await onProgress(found.size, done, total, `${c1}${c2} p${page}`);
           if (rows.length < 500) break;
           page++;
           if (page > 20) break;
         }
       } catch { /* segue */ }
     }
-    if (onProgress) await onProgress(found.size, done, total);
+    if (onProgress) await onProgress(found.size, done, total, c1);
   }
   return found;
 }
@@ -3019,22 +3034,42 @@ Deno.serve(async (req) => {
     if (action === 'sync_tag_custom') {
       const runIns = await admin.from('auge_sync_runs').insert({
         entidade: 'tag_custom', status: 'running', started_at: new Date().toISOString(),
-        triggered_by: triggeredBy, detalhes: { phase: 'descobrindo configurações', current: 0, total: 0, com_tag: 0, sem_tag: 0 },
+        triggered_by: triggeredBy, detalhes: { phase: 'limpando tabelas', current: 0, total: 0, com_tag: 0, sem_tag: 0 },
       }).select('id').single();
       const runId = runIns.data?.id;
 
       const task = (async () => {
-        // FASE 1 — descobrir universo real de CONFIGURAÇÕES via
-        // tagSelectListaConfiguracoes.php (Select2 do lookup "Configuração"
-        // da tela Manter TAG Customizada). IDs são tipo "CC000004".
-        const cfgMap = await scanAllConfiguracoes(auth, async (found, doneTerms, totalTerms) => {
-          await admin.from('auge_sync_runs').update({
-            detalhes: {
-              phase: `descobrindo configurações (${doneTerms}/${totalTerms} termos)`,
-              current: 0, total: found, com_tag: 0, sem_tag: 0,
-            },
-          }).eq('id', runId);
-        });
+        // Limpa varreduras anteriores para começar do zero.
+        await admin.from('auge_tag_custom').delete().gte('id', '00000000-0000-0000-0000-000000000000');
+        await admin.from('auge_tag_custom_scan').delete().gte('cd_configuracao', '');
+
+        // FASE 1 — descobrir universo de CONFIGURAÇÕES via
+        // tagSelectListaConfiguracoes.php. Persiste cada lote logo que aparece
+        // e reporta progresso a cada página (para a barra não parecer travada).
+        const cfgMap = await scanAllConfiguracoes(
+          auth,
+          async (foundCount, doneTerms, totalTerms, currentTerm) => {
+            await admin.from('auge_sync_runs').update({
+              detalhes: {
+                phase: `descobrindo configurações [${currentTerm}] — ${foundCount} encontradas`,
+                current: doneTerms, total: totalTerms, com_tag: 0, sem_tag: 0,
+              },
+            }).eq('id', runId);
+          },
+          async (batch) => {
+            if (!batch.length) return;
+            await admin.from('auge_tag_custom_scan').upsert(
+              batch.map((r) => ({
+                cd_configuracao: r.id,
+                nm_configuracao: r.text,
+                qtd_tags: 0,
+                last_scanned_at: null,
+                erro: null,
+              })),
+              { onConflict: 'cd_configuracao' },
+            );
+          },
+        );
 
         const prods = Array.from(cfgMap.entries()).map(([id, text]) => ({ codigo: id, descricao: text }));
         const total = prods.length;
