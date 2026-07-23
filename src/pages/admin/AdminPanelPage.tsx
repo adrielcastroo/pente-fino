@@ -46,6 +46,7 @@ const N8nMonitorPage = lazy(() => import('@/pages/N8nMonitorPage'));
 const AugeAdminPanel = lazy(() => import('@/components/auge/AugeAdminPanel'));
 const LlmTokensTab = lazy(() => import('./tabs/LlmTokensTab'));
 const BackfillTransferenciasTab = lazy(() => import('./tabs/BackfillTransferenciasTab'));
+const AugePermissoesTab = lazy(() => import('./tabs/AugePermissoesTab'));
 
 
 declare const __APP_VERSION__: string;
