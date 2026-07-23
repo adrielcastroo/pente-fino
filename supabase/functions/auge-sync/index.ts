@@ -2935,13 +2935,29 @@ Deno.serve(async (req) => {
       const runId = runIns.data?.id;
 
       const task = (async () => {
-        // Universo = auge_produtos ativos
-        const { data: prods } = await admin
-          .from('auge_produtos')
-          .select('codigo, descricao')
-          .eq('ativo', true)
+        // Universo = CONFIGURAÇÕES do Auge (cd_item_acabamento distinct em
+        // auge_acabamento_itens). NÃO usar auge_produtos: aquilo é o cadastro
+        // mestre de itens; a tela "Tags Customizadas" do Auge opera sobre as
+        // configurações vinculadas a acabamentos (ex.: CC000004, Test000001).
+        const { data: cfgs } = await admin
+          .from('auge_acabamento_itens')
+          .select('cd_item_acabamento, ds_item_acabamento, ds_item_acabamento_original')
+          .not('cd_item_acabamento', 'is', null)
           .limit(20000);
-        const total = prods?.length ?? 0;
+        // Dedup por cd_item_acabamento (uma config pode aparecer em vários acabamentos).
+        const map = new Map<string, { codigo: string; descricao: string | null }>();
+        for (const r of cfgs ?? []) {
+          const codigo = String(r.cd_item_acabamento ?? '').trim();
+          if (!codigo) continue;
+          if (!map.has(codigo)) {
+            map.set(codigo, {
+              codigo,
+              descricao: r.ds_item_acabamento_original ?? r.ds_item_acabamento ?? null,
+            });
+          }
+        }
+        const prods = Array.from(map.values());
+        const total = prods.length;
         let current = 0, comTag = 0, semTag = 0, errCount = 0;
         let lastFlush = 0;
 
