@@ -38,15 +38,14 @@ export default function TagsTab() {
   const { data: acabamentos = [], isLoading, refetch, isFetching } = useQuery({
     queryKey: ['acabamentos-tags-sem'],
     queryFn: async () => {
-      // Puxa TODOS os acabamentos vindos do Auge que estão SEM TAG
+      // Puxa TODOS os acabamentos sincronizados do Auge (o filtro "sem TAG" é aplicado no cliente)
       const { data } = await (supabase as any)
         .from('auge_acabamentos')
         .select('cd_acabamento, chave_acabamento, nm_acabamento, ds_tag_calculada, ds_descricao_tag_calculada, id_cancelado, synced_at')
-        .neq('id_cancelado', 'S')
-        .or('ds_tag_calculada.is.null,ds_tag_calculada.eq.')
+        .or('id_cancelado.is.null,id_cancelado.neq.S')
         .order('nm_acabamento', { ascending: true })
         .limit(10000);
-      return (data ?? []) as Acabamento[];
+      return ((data ?? []) as Acabamento[]).filter(isMissingTag);
     },
   });
 
