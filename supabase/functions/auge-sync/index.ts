@@ -3380,6 +3380,19 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (action === 'tag_config_select') {
+      let payload: any = {};
+      try { payload = await req.json(); } catch { /* ignore */ }
+      const term = String(payload?.term ?? '').trim();
+      if (!term) throw new Error('Informe term para consultar configurações.');
+      const page = Number(payload?.nrPagina ?? 1);
+      const size = Number(payload?.qtdItens ?? TAG_DISCOVERY_PAGE_SIZE);
+      const rows = await fetchSelectConfiguracoes(auth, term, page, size);
+      return new Response(JSON.stringify({ ok: true, term, page, size, rows }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     if (action === 'sync_tag_custom_chunk') {
       const runId = url.searchParams.get('run_id') ?? '';
       if (!runId) throw new Error('run_id obrigatório para continuar a varredura de TAGs.');
