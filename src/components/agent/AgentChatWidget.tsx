@@ -102,7 +102,9 @@ function ChatWindow({
     composerRef.current?.focus();
   }, [threadId, status]);
 
-  // Extract all artifacts from message stream and push to parent (deduped by id).
+  const registerFloatingWidget = useFloatingWidget((s) => s.register);
+
+  // Extract all artifacts + widgets from message stream (deduped by id).
   useEffect(() => {
     for (const m of messages) {
       if (m.role !== "assistant") continue;
@@ -110,9 +112,11 @@ function ChatWindow({
         if (part.type !== "text") continue;
         const { artifacts } = extractArtifacts(part.text);
         for (const a of artifacts) onArtifact(a);
+        const { widgets } = extractWidgets(part.text);
+        for (const w of widgets) registerFloatingWidget(w);
       }
     }
-  }, [messages, onArtifact]);
+  }, [messages, onArtifact, registerFloatingWidget]);
 
   const handleSubmit = (msg: PromptInputMessage) => {
     const text = (msg.text ?? "").trim();
