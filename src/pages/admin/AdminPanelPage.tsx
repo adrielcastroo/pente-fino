@@ -87,6 +87,7 @@ const TAB_GROUPS: TabGroup[] = [
     label: 'Governança',
     tabs: [
       { key: 'team', label: 'Usuários & Acessos', icon: Users },
+      { key: 'auge-perms', label: 'Permissões Auge', icon: ShieldCheck },
       { key: 'settings', label: 'Configurações', icon: Settings2 },
       { key: 'database', label: 'Banco de Dados', icon: Database },
       { key: 'backup', label: 'Backup & Dados', icon: HardDriveDownload },
