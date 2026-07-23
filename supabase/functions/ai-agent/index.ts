@@ -1201,6 +1201,72 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ------ Necessidade por depósito (determinístico → ARTIFACT table) ------
+    const necessidadeMatch = userText.match(
+      /necessidade[\s\S]{0,40}?(?:dep[oó]sito|dep\.?|dp)\s*0*(\d{1,3})/i,
+    ) || userText.match(/\b(?:dep[oó]sito|dep\.?)\s*0*(\d{1,3})[\s\S]{0,40}?necessidade/i);
+    if (necessidadeMatch) {
+      const cdDestino = necessidadeMatch[1].padStart(2, "0");
+      try {
+        const nResp = await fetch(`${SUPABASE_URL}/functions/v1/auge-sync?action=necessidade_listar`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: authHeader || `Bearer ${SERVICE_ROLE}`,
+            apikey: Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+          },
+          body: JSON.stringify({ cdDepositoDestino: cdDestino, cdDepositoOrigem: "01" }),
+        });
+        const j = await nResp.json();
+        if (!j?.ok) {
+          return textStreamResponse(
+            `❌ Não consegui listar a necessidade do depósito **${cdDestino}**: ${j?.error ?? "erro desconhecido"}`,
+            { "x-ai-provider": "backend-necessidade", "x-ai-model": "deterministic" },
+          );
+        }
+        const rows = Array.isArray(j.data) ? j.data : [];
+        const artSpec = {
+          type: "table",
+          id: `necessidade-${cdDestino}-${Date.now()}`,
+          title: `Necessidade — Depósito ${cdDestino}`,
+          subtitle: `Origem: 01 · ${rows.length} item(ns)`,
+          searchable: true,
+          pageSize: 25,
+          columns: [
+            { key: "cdItem", label: "Código" },
+            { key: "nmItem", label: "Descrição" },
+            { key: "unidade", label: "Un" },
+            { key: "qtEstoque", label: "Estoque origem", align: "right", format: "number" },
+            { key: "qtDisponivel", label: "Disponível", align: "right", format: "number" },
+            { key: "qtMinimo", label: "Mínimo", align: "right", format: "number" },
+            { key: "qtRecomendacao", label: "Recomendação", align: "right", format: "number" },
+          ],
+          rows: rows.map((r: any) => ({
+            cdItem: r.cdItem,
+            nmItem: r.nmItem,
+            unidade: r.unidade,
+            qtEstoque: r.qtEstoque,
+            qtDisponivel: r.qtDisponivel,
+            qtMinimo: r.qtMinimo,
+            qtRecomendacao: r.qtRecomendacao,
+          })),
+        };
+        const header =
+          rows.length === 0
+            ? `Nenhuma necessidade pendente no depósito **${cdDestino}** com origem no depósito **01**.`
+            : `Necessidade do depósito **${cdDestino}** — **${rows.length}** item(ns) com origem no depósito **01**. Abra o artifact para ver a tabela completa.`;
+        const artifact = `\n\n[[ARTIFACT]]${JSON.stringify(artSpec)}[[/ARTIFACT]]`;
+        return textStreamResponse(header + artifact, {
+          "x-ai-provider": "backend-necessidade", "x-ai-model": "deterministic",
+        });
+      } catch (err) {
+        return textStreamResponse(
+          `❌ Falha ao consultar necessidade: ${err instanceof Error ? err.message : String(err)}`,
+          { "x-ai-provider": "backend-necessidade", "x-ai-model": "deterministic" },
+        );
+      }
+    }
+
     const automaticContext = await buildAgentContext(admin, conversationText);
 
     const tableAnswer = acabamentoItemTableAnswer(automaticContext, userText, previousText);
