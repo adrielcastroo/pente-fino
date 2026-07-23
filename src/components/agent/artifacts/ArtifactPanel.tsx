@@ -1,4 +1,4 @@
-import { FileText, Table2, Braces, X, ExternalLink } from "lucide-react";
+import { FileText, Table2, Braces, X, ExternalLink, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { ArtifactSpec } from "@/lib/agent-blocks";
@@ -8,6 +8,7 @@ const ICON: Record<ArtifactSpec["type"], typeof Table2> = {
   table: Table2,
   markdown: FileText,
   json: Braces,
+  dashboard: LayoutDashboard,
 };
 
 export function ArtifactChip({
