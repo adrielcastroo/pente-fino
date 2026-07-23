@@ -245,6 +245,11 @@ function ChatWindow({
         <ConversationScrollButton />
       </Conversation>
 
+      <DockedWidgetBar
+        disabled={isLoading}
+        onSend={(text) => void sendMessage({ parts: [{ type: "text", text }] })}
+      />
+
       <div className="border-t p-2">
         <PromptInput onSubmit={handleSubmit}>
           <PromptInputTextarea ref={composerRef} placeholder="Pergunte algo ao Fio…" />
@@ -253,11 +258,6 @@ function ChatWindow({
           </PromptInputFooter>
         </PromptInput>
       </div>
-
-      <FloatingWidgetPanel
-        disabled={isLoading}
-        onSend={(text) => void sendMessage({ parts: [{ type: "text", text }] })}
-      />
     </div>
   );
 }
