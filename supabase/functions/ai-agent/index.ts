@@ -57,6 +57,52 @@ function textStreamResponse(text: string, headers: Record<string, string> = {}) 
   });
 }
 
+const WIDGET_SUBMIT_PREFIX = "__widget_submit__:";
+
+function rewriteWidgetSubmitText(text: string): string {
+  if (!text.startsWith(WIDGET_SUBMIT_PREFIX)) return text;
+  try {
+    const payload = JSON.parse(text.slice(WIDGET_SUBMIT_PREFIX.length)) as {
+      widget_id?: string;
+      intent?: string;
+      values?: Record<string, unknown>;
+    };
+    const lines: string[] = [];
+    lines.push(`[Envio de widget]`);
+    if (payload.intent) lines.push(`intent: ${payload.intent}`);
+    if (payload.widget_id) lines.push(`widget_id: ${payload.widget_id}`);
+    const values = payload.values ?? {};
+    const entries = Object.entries(values);
+    if (entries.length) {
+      lines.push(`valores:`);
+      for (const [k, v] of entries) {
+        const rendered = Array.isArray(v) ? v.join(", ") : typeof v === "object" ? JSON.stringify(v) : String(v);
+        lines.push(`  - ${k}: ${rendered}`);
+      }
+    }
+    return lines.join("\n");
+  } catch {
+    return text;
+  }
+}
+
+function expandWidgetSubmitInPlace(messages: ModelMessage[]) {
+  for (const m of messages) {
+    if (m.role !== "user") continue;
+    const content = m.content;
+    if (typeof content === "string") {
+      m.content = rewriteWidgetSubmitText(content);
+    } else if (Array.isArray(content)) {
+      for (const part of content as any[]) {
+        if (part?.type === "text" && typeof part.text === "string") {
+          part.text = rewriteWidgetSubmitText(part.text);
+        }
+      }
+    }
+  }
+}
+
+
 function latestUserText(messages: ModelMessage[]) {
   const last = [...messages].reverse().find((m) => m.role === "user");
   const content = last?.content;
