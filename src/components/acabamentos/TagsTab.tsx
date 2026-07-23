@@ -61,7 +61,7 @@ export default function TagsTab() {
         .limit(50000);
       return (data ?? []) as ScanRow[];
     },
-    refetchInterval: shouldPoll ? 1500 : false,
+    refetchInterval: shouldPoll ? 1000 : false,
   });
 
   // Tags agregadas por configuração (para exibir preview quando "COM TAG")
@@ -78,7 +78,7 @@ export default function TagsTab() {
       }
       return map;
     },
-    refetchInterval: shouldPoll ? 3000 : false,
+    refetchInterval: shouldPoll ? 2000 : false,
   });
 
   useEffect(() => {
@@ -95,11 +95,30 @@ export default function TagsTab() {
       .subscribe();
     rowsChannelRef.current = ch;
 
+    // Auto-detecta varredura já em andamento (iniciada em outra aba/sessão)
+    (async () => {
+      const { data } = await (supabase as any)
+        .from('auge_sync_runs')
+        .select('*')
+        .eq('entidade', 'tag_custom')
+        .order('started_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (data && data.status === 'running') {
+        setRun(data as SyncRun);
+        setSyncing(true);
+        subscribeRun(data.id);
+        refetch();
+        refetchTags();
+      }
+    })();
+
     return () => {
       if (channelRef.current) supabase.removeChannel(channelRef.current);
       if (rowsChannelRef.current) supabase.removeChannel(rowsChannelRef.current);
     };
-  }, [refetch, refetchTags]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const subscribeRun = (runId: string) => {
     if (channelRef.current) supabase.removeChannel(channelRef.current);
