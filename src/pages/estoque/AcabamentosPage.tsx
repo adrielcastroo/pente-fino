@@ -213,6 +213,16 @@ export default function AcabamentosPage() {
         }
       />
 
+      <Tabs defaultValue="consulta" className="space-y-4">
+        <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full md:w-auto">
+          <TabsTrigger value="consulta" className="text-xs">Consulta</TabsTrigger>
+          <TabsTrigger value="massa" className="text-xs">Incluir em massa</TabsTrigger>
+          <TabsTrigger value="tags" className="text-xs">TAGs</TabsTrigger>
+          <TabsTrigger value="gerar" className="text-xs">Gerar TAG</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="consulta" className="space-y-4 mt-0">
+
       {showPanel && run && (
         <Card className="p-3 md:p-4 border-primary/40 bg-primary/5">
           <div className="flex items-start justify-between gap-3 mb-2">
