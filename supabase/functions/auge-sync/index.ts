@@ -419,10 +419,10 @@ async function scanAllConfiguracoes(
 
 const TAG_CONFIG_CHARS = '0123456789abcdefghijklmnopqrstuvwxyz'.split('');
 const TAG_CONFIG_PREFIXES = Array.from(
-  { length: 100 },
-  (_, index) => `CC${String(index).padStart(4, '0')}`,
+  { length: 1000 },
+  (_, index) => `CC${String(index).padStart(5, '0')}`,
 );
-const TAG_DISCOVERY_PREFIX_CHUNK = 8;
+const TAG_DISCOVERY_PREFIX_CHUNK = 20;
 const TAG_DISCOVERY_TERM_CHUNK = 3;
 const TAG_DISCOVERY_PAIR_CHUNK = 12;
 const TAG_SCAN_CHUNK_SIZE = 120;
