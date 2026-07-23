@@ -330,21 +330,55 @@ function renderExecuteReport(payload: any): string {
   return `${header}\n${detalhes}${abrev}`;
 }
 
-function askUserActionSpec(codigo: string) {
+// Widget interativo (novo protocolo) para a automação "Entrega Após".
+function entregaAposWidgetSpec(codigo: string) {
   return {
+    id: `entrega-apos-${codigo}`,
+    type: "form",
+    intent: "entrega_apos",
     title: "Automação Entrega Após",
     description: `Item: ${codigo}. O que fazer com o campo "Entrega Após"?`,
-    fields: [
-      { name: "acao", label: "Ação (Atualizar | Adicionar | Remover)", type: "text", required: true, placeholder: "Atualizar" },
-      { name: "nova_data", label: "Nova data (DD/MM/AA) — obrigatório em Atualizar/Adicionar", type: "text", required: false, placeholder: "10/09/26" },
-    ],
     submitLabel: "Confirmar",
+    fields: [
+      {
+        name: "acao",
+        label: "Ação",
+        type: "select",
+        required: true,
+        default: "atualizar",
+        options: [
+          { value: "atualizar", label: "Atualizar" },
+          { value: "adicionar", label: "Adicionar" },
+          { value: "remover", label: "Remover" },
+        ],
+      },
+      {
+        name: "nova_data",
+        label: "Nova data (DD/MM/AA)",
+        type: "text",
+        required: false,
+        placeholder: "10/09/26",
+      },
+      { name: "codigo_item", label: "Código do item", type: "text", required: true, default: codigo },
+    ],
   };
 }
 
 function detectEntregaAposSubmit(text: string): {
   codigo: string; acao: "atualizar" | "adicionar" | "remover"; nova_data: string | null;
 } | null {
+  // Formato novo — payload de widget desempacotado por expandWidgetSubmitInPlace.
+  if (/\[Envio de widget\]/i.test(text) && /intent:\s*entrega_apos/i.test(text)) {
+    const acaoM = text.match(/-\s*acao:\s*([^\n]+)/i);
+    const dataM = text.match(/-\s*nova_data:\s*([^\n]+)/i);
+    const codigoM = text.match(/-\s*codigo_item:\s*([^\n]+)/i);
+    const codigo = (codigoM ? codigoM[1].trim() : extractItemCode(text) || "").toUpperCase();
+    const acao = acaoM ? parseAcaoEntrega(acaoM[1]) : null;
+    if (!codigo || !acao) return null;
+    const nova_data = dataM ? normalizeEntregaData(dataM[1].trim()) : null;
+    return { codigo, acao, nova_data };
+  }
+  // Formato legado — dialog ASK_USER com cabeçalho markdown.
   if (!ENTREGA_APOS_SUBMIT_HEADER.test(text)) return null;
   const codigo = extractItemCode(text);
   const acaoMatch = text.match(/\*\*Ação[^:]*:\*\*\s*([^\n]+)/i) || text.match(/A[cç][aã]o[^:]*:\s*([^\n]+)/i);
