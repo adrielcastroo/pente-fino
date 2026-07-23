@@ -61,7 +61,7 @@ export default function TagsTab() {
         .limit(50000);
       return (data ?? []) as ScanRow[];
     },
-    refetchInterval: shouldPoll ? 1500 : false,
+    refetchInterval: shouldPoll ? 1000 : false,
   });
 
   // Tags agregadas por configuração (para exibir preview quando "COM TAG")
