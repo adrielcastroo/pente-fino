@@ -32,6 +32,7 @@ interface SyncRun {
   detalhes: {
     phase?: string; current?: number; total?: number;
     com_tag?: number; sem_tag?: number; errors?: number;
+    cfg_count?: number;
   } | null;
 }
 
@@ -45,6 +46,9 @@ export default function TagsTab() {
   const [syncing, setSyncing] = useState(false);
   const [run, setRun] = useState<SyncRun | null>(null);
   const channelRef = useRef<any>(null);
+  const rowsChannelRef = useRef<any>(null);
+  const runIsActive = run?.status === 'running';
+  const shouldPoll = syncing || runIsActive;
 
   // Lista escaneada de configurações do Auge (via Tag-Custom)
   const { data: scanRows = [], isLoading, refetch, isFetching } = useQuery({
@@ -57,10 +61,11 @@ export default function TagsTab() {
         .limit(50000);
       return (data ?? []) as ScanRow[];
     },
+    refetchInterval: shouldPoll ? 1500 : false,
   });
 
   // Tags agregadas por configuração (para exibir preview quando "COM TAG")
-  const { data: tagsByCfg = {} } = useQuery({
+  const { data: tagsByCfg = {}, refetch: refetchTags } = useQuery({
     queryKey: ['auge-tag-custom-map'],
     queryFn: async () => {
       const { data } = await (supabase as any)
@@ -73,11 +78,28 @@ export default function TagsTab() {
       }
       return map;
     },
+    refetchInterval: shouldPoll ? 3000 : false,
   });
 
-  useEffect(() => () => {
-    if (channelRef.current) supabase.removeChannel(channelRef.current);
-  }, []);
+  useEffect(() => {
+    const ch = supabase
+      .channel('tag-custom-scan-live')
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'auge_tag_custom_scan' },
+        () => refetch(),
+      )
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'auge_tag_custom' },
+        () => refetchTags(),
+      )
+      .subscribe();
+    rowsChannelRef.current = ch;
+
+    return () => {
+      if (channelRef.current) supabase.removeChannel(channelRef.current);
+      if (rowsChannelRef.current) supabase.removeChannel(rowsChannelRef.current);
+    };
+  }, [refetch, refetchTags]);
 
   const subscribeRun = (runId: string) => {
     if (channelRef.current) supabase.removeChannel(channelRef.current);
@@ -87,6 +109,8 @@ export default function TagsTab() {
         { event: 'UPDATE', schema: 'public', table: 'auge_sync_runs', filter: `id=eq.${runId}` },
         (p: any) => {
           setRun(p.new as SyncRun);
+          refetch();
+          refetchTags();
           if (p.new?.status === 'success' || p.new?.status === 'error') {
             setSyncing(false);
             if (p.new?.status === 'success') {
@@ -110,7 +134,10 @@ export default function TagsTab() {
         'auge-sync?action=sync_tag_custom', { body: {} }
       );
       if (error) throw error;
+      if (data?.ok === false) throw new Error(data.error ?? 'Erro ao iniciar varredura.');
       if (data?.run_id) {
+        await refetch();
+        await refetchTags();
         const { data: initial } = await (supabase as any)
           .from('auge_sync_runs').select('*').eq('id', data.run_id).maybeSingle();
         if (initial) setRun(initial as SyncRun);
@@ -155,7 +182,7 @@ export default function TagsTab() {
   const total = run?.detalhes?.total ?? 0;
   const current = run?.detalhes?.current ?? 0;
   const pct = total > 0 ? Math.min(100, Math.round((current / total) * 100)) : 0;
-  const isActive = run?.status === 'running';
+  const isActive = runIsActive;
 
   const toggleSort = (col: 'nome' | 'codigo' | 'qtd') => {
     if (sortBy === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
@@ -196,10 +223,13 @@ export default function TagsTab() {
                 run.status === 'error' ? 'Falhou' : 'Concluído'}
             </div>
             <div className="ml-auto text-[11px] font-mono text-muted-foreground">
-              {current}/{total} · {run.detalhes?.com_tag ?? 0} c/tag · {run.detalhes?.sem_tag ?? 0} s/tag
+              {current}/{total} · {run.detalhes?.cfg_count ?? totais.totalScan} config. · {run.detalhes?.com_tag ?? 0} c/tag · {run.detalhes?.sem_tag ?? 0} s/tag
             </div>
           </div>
           <Progress value={pct} className="h-2" />
+          {run.status === 'error' && run.error_message && (
+            <div className="mt-2 text-[11px] text-destructive">{run.error_message}</div>
+          )}
         </Card>
       )}
 
@@ -308,7 +338,9 @@ export default function TagsTab() {
               })}
               {!isLoading && lista.length === 0 && (
                 <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">
-                  Nenhuma configuração encontrada. Clique em "Varrer Auge" para escanear todas as configurações.
+                  {isActive
+                    ? 'Descobrindo configurações no Auge… elas aparecerão aqui assim que forem gravadas.'
+                    : 'Nenhuma configuração encontrada. Clique em "Varrer Auge" para escanear todas as configurações.'}
                 </td></tr>
               )}
             </tbody>
