@@ -3449,6 +3449,50 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (action === 'audit_tag_namespace') {
+      const runIns = await admin.from('auge_sync_runs').insert({
+        entidade: 'tag_audit', status: 'running', started_at: new Date().toISOString(),
+        triggered_by: triggeredBy,
+        detalhes: {
+          stage: 'audit_discover',
+          phase: 'auditando namespace CCxxxxxx',
+          prefix_index: 0,
+          extra_prefixes: [],
+          extra_index: 0,
+          errors: 0,
+          hits: 0,
+          saturated: 0,
+          current: 0,
+          total: TAG_CONFIG_PREFIXES.length,
+        },
+      }).select('id').single();
+      const runId = runIns.data?.id;
+      if (!runId) throw new Error('Não foi possível iniciar a auditoria.');
+      selfInvoke('audit_tag_namespace_chunk', runId);
+      return new Response(JSON.stringify({ ok: true, run_id: runId, background: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (action === 'audit_tag_namespace_chunk') {
+      const runId = url.searchParams.get('run_id') ?? '';
+      if (!runId) throw new Error('run_id obrigatório.');
+      try {
+        const result = await auditTagNamespaceChunk(admin, auth, runId);
+        return new Response(JSON.stringify(result), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } catch (e) {
+        const msg = getErrorMessage(e);
+        await admin.from('auge_sync_runs').update({
+          status: 'error', finished_at: new Date().toISOString(), error_message: msg,
+        }).eq('id', runId);
+        return new Response(JSON.stringify({ ok: false, error: msg }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200,
+        });
+      }
+    }
+
     if (action === 'sync_tag_custom') {
       const runIns = await admin.from('auge_sync_runs').insert({
         entidade: 'tag_custom', status: 'running', started_at: new Date().toISOString(),
