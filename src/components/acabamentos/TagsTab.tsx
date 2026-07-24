@@ -437,17 +437,6 @@ export default function TagsTab() {
             Limpar e re-varrer
           </Button>
 
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={auditar}
-            disabled={auditing || auditIsActive || syncing || isActive}
-            className="h-9 gap-2 text-[11px]"
-            title="Varre as configurações no Auge e aponta o que falta no app"
-          >
-            {auditing || auditIsActive ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ShieldCheck className="h-3.5 w-3.5" />}
-            Auditar cobertura
-          </Button>
           <Button size="sm" variant="outline" onClick={() => refetch()} disabled={isFetching} className="h-9 gap-2 text-[11px]">
             {isFetching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
             Recarregar
