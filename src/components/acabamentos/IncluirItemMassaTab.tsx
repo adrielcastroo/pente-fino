@@ -444,22 +444,103 @@ export default function IncluirItemMassaTab() {
         <div className="grid grid-cols-1 xl:grid-cols-[420px_1fr] gap-4">
           {/* Formulário do item */}
           <Card className="p-4 space-y-3 h-fit">
-            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dados do item</div>
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dados do item</div>
+              <input
+                ref={importInputRef}
+                type="file"
+                accept=".xlsx,.xls,.csv,.ods"
+                hidden
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleImportFile(f);
+                  e.target.value = '';
+                }}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => importInputRef.current?.click()}
+                className="h-8 text-[11px] gap-1.5"
+              >
+                <Upload className="h-3.5 w-3.5" /> Importar planilha
+              </Button>
+            </div>
+
+            {importedItems.length > 0 && (
+              <div className="rounded-md border border-primary/40 bg-primary/5 p-2 space-y-1.5">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <FileSpreadsheet className="h-3.5 w-3.5 text-primary shrink-0" />
+                    <div className="min-w-0">
+                      <div className="text-[11px] font-semibold truncate">{importFileName || 'Planilha carregada'}</div>
+                      <div className="text-[10px] text-muted-foreground">
+                        {importedItems.length} item(ns) — serão incluídos em cada acabamento selecionado
+                      </div>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 shrink-0"
+                    onClick={() => { setImportedItems([]); setImportFileName(''); }}
+                    disabled={enviando}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+                <div className="max-h-32 overflow-y-auto rounded bg-background/60 divide-y divide-border/40">
+                  {importedItems.slice(0, 50).map((it, i) => (
+                    <div key={i} className="px-2 py-1 text-[10px] font-mono flex items-center gap-2">
+                      <span className="text-muted-foreground w-6 text-right">{i + 1}</span>
+                      <span className="font-semibold">{it.cdItemAcabamento}</span>
+                      <span className="text-muted-foreground truncate">{it.dsItemAcabamento}</span>
+                    </div>
+                  ))}
+                  {importedItems.length > 50 && (
+                    <div className="px-2 py-1 text-[10px] text-center text-muted-foreground">
+                      … +{importedItems.length - 50} outros
+                    </div>
+                  )}
+                </div>
+                {batchProgress && (
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-[10px]">
+                      <span className="text-muted-foreground">Processando {batchProgress.current}/{batchProgress.total}</span>
+                      <span className="font-mono truncate">{batchProgress.label}</span>
+                    </div>
+                    <Progress value={(batchProgress.current / batchProgress.total) * 100} className="h-1.5" />
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="text-[10px] text-muted-foreground -mt-1">
+              Colunas aceitas (nesta ordem): <span className="font-mono">Código do Tecido/Kit · Descrição · Reduzida · Original · Kit Complementar 01–05</span>. Formatos: <code>.xlsx</code>, <code>.csv</code>, <code>.ods</code>.
+            </div>
+
             <div className="space-y-2">
-              <label className="text-[11px] font-medium">Código do Tecido/Kit *</label>
-              <Input value={item.cdItemAcabamento} onChange={(e) => setItem({ ...item, cdItemAcabamento: e.target.value.toUpperCase() })} className="h-9 text-xs font-mono" placeholder="Ex: TEC001234" />
+              <label className="text-[11px] font-medium">Código do Tecido/Kit {importedItems.length === 0 && '*'}</label>
+              <Input
+                value={item.cdItemAcabamento}
+                onChange={(e) => setItem({ ...item, cdItemAcabamento: e.target.value.toUpperCase() })}
+                className="h-9 text-xs font-mono"
+                placeholder="Ex: TEC001234"
+                disabled={importedItems.length > 0}
+              />
             </div>
             <div className="space-y-2">
               <label className="text-[11px] font-medium">Descrição do Tecido/Kit</label>
-              <Input value={item.dsItemAcabamento} onChange={(e) => setItem({ ...item, dsItemAcabamento: e.target.value })} className="h-9 text-xs" />
+              <Input value={item.dsItemAcabamento} onChange={(e) => setItem({ ...item, dsItemAcabamento: e.target.value })} className="h-9 text-xs" disabled={importedItems.length > 0} />
             </div>
             <div className="space-y-2">
               <label className="text-[11px] font-medium">Descrição Reduzida</label>
-              <Input value={item.dsItemAcabamentoReduzida} onChange={(e) => setItem({ ...item, dsItemAcabamentoReduzida: e.target.value })} className="h-9 text-xs" />
+              <Input value={item.dsItemAcabamentoReduzida} onChange={(e) => setItem({ ...item, dsItemAcabamentoReduzida: e.target.value })} className="h-9 text-xs" disabled={importedItems.length > 0} />
             </div>
             <div className="space-y-2">
               <label className="text-[11px] font-medium">Descrição Original</label>
-              <Textarea value={item.dsItemAcabamentoOriginal} onChange={(e) => setItem({ ...item, dsItemAcabamentoOriginal: e.target.value })} className="text-xs min-h-[60px]" />
+              <Textarea value={item.dsItemAcabamentoOriginal} onChange={(e) => setItem({ ...item, dsItemAcabamentoOriginal: e.target.value })} className="text-xs min-h-[60px]" disabled={importedItems.length > 0} />
             </div>
             <div className="grid grid-cols-1 gap-2">
               {[1, 2, 3, 4, 5].map((n) => (
@@ -470,13 +551,16 @@ export default function IncluirItemMassaTab() {
                     onChange={(e) => setItem({ ...item, [`cdKitComplementar${n}`]: e.target.value })}
                     className="h-8 text-xs font-mono"
                     placeholder="Código"
+                    disabled={importedItems.length > 0}
                   />
                 </div>
               ))}
             </div>
             <Button onClick={enviarIncluir} disabled={enviando || isActive} className="w-full h-10 gap-2">
               {enviando || isActive ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              Incluir em {selecionados.size} acabamento(s)
+              {importedItems.length > 0
+                ? `Incluir ${importedItems.length} item(ns) em ${selecionados.size} acabamento(s)`
+                : `Incluir em ${selecionados.size} acabamento(s)`}
             </Button>
           </Card>
 
