@@ -153,6 +153,12 @@ export default function IncluirItemMassaTab() {
   const [enviando, setEnviando] = useState(false);
   const [run, setRun] = useState<SyncRun | null>(null);
   const channelRef = useRef<any>(null);
+  const importInputRef = useRef<HTMLInputElement>(null);
+
+  // Importação de planilha (xlsx/csv/ods)
+  const [importedItems, setImportedItems] = useState<ItemPayload[]>([]);
+  const [importFileName, setImportFileName] = useState('');
+  const [batchProgress, setBatchProgress] = useState<{ current: number; total: number; label: string } | null>(null);
 
   // Excluir mode
   const [codigoExcluir, setCodigoExcluir] = useState('');
