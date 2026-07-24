@@ -187,7 +187,7 @@ function ChatWindow({
         <ConversationContent>
           {messages.length === 0 && (
             <ConversationEmptyState
-              icon={<img src={logo} alt="" width={72} height={72} className="rounded-xl opacity-95" />}
+              icon={<FioAvatar size={72} state={isLoading ? "thinking" : "idle"} />}
               title="Fio · Assistente do Pente Fino"
               description="Sou o Fio. Pergunte sobre itens, transferências, saldo do estoque, movimentações e mais."
             />
