@@ -308,7 +308,7 @@ async function fetchListaTagsCustomizadas(
 }
 
 // tagSelectListaConfiguracoes.php — Select2 do lookup "Configuração".
-// Retorna [{id:"CC000004", text:"Rollo ... [CC000004]"}, ...].
+// Retorna [{id:"<codigo>", text:"Descrição ... [<codigo>]"}, ...].
 async function fetchSelectConfiguracoes(
   auth: { jar: Jar; csrf: string; apiToken: string | null },
   term: string,
@@ -425,7 +425,7 @@ const TAG_CONFIG_SEED_TERMS = Array.from(new Set([
   '.', '-', '_', '/', ' ',
 ]));
 // Descoberta genérica de configurações: o Auge não restringe configuração ao
-// padrão CCxxxxxx. Começamos por termos alfanuméricos amplos e, quando o
+// padrão fixo. Começamos por termos alfanuméricos amplos e, quando o
 // Select2 satura, aprofundamos com todos os caracteres (a -> aa, ab, a0...).
 const TAG_CONFIG_PREFIXES = TAG_CONFIG_SEED_TERMS;
 const TAG_DISCOVERY_PREFIX_CHUNK = 8;
