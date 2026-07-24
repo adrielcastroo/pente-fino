@@ -15,6 +15,8 @@ import {
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/hooks/use-auth';
 import { atLeast, type Role } from '@/lib/permissions';
+import { usePageAccess } from '@/hooks/use-page-access';
+import { pageKeyForPath } from '@/lib/page-registry';
 import { cn } from '@/lib/utils';
 import { prefetchRoute, prefetchOnIdle } from '@/lib/route-prefetch';
 import logoComb from '@/assets/logo-comb.webp';
@@ -57,8 +59,18 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
   const isIconCollapsed = state === 'collapsed' && !isMobile;
   const canSwitch = (modules?.length ?? 0) > 1;
 
+  const { can: canPage } = usePageAccess();
+
   const visibleGroups = config.groups
-    .map(g => ({ ...g, items: g.items.filter(i => !i.minRole || atLeast(role, i.minRole)) }))
+    .map(g => ({
+      ...g,
+      items: g.items.filter(i => {
+        if (i.minRole && !atLeast(role, i.minRole)) return false;
+        const key = pageKeyForPath(i.path);
+        if (key && !canPage(key)) return false;
+        return true;
+      }),
+    }))
     .filter(g => g.items.length > 0 && (!g.minRole || atLeast(role, g.minRole)));
 
   const handleNavigate = useCallback(
