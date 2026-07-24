@@ -2992,6 +2992,26 @@ async function insertAcabamentoItem(auth: any, cdAcabamento: string, payload: Re
   return j;
 }
 
+async function deleteAcabamentoItem(auth: any, cdAcabamento: string, cdAcabamentoItem: string): Promise<any> {
+  const body = new URLSearchParams({
+    idAcao: '3',
+    cdAcabamento,
+    cdAcabamentoItem,
+  });
+  const txt = await postAugePhp(
+    auth,
+    '/l.unilux/modInventario/Controle/ctlAcabamentoItem.php',
+    body,
+    `/l.unilux/modInventario/manterAcabamentoItem.php?cdAcabamento=${cdAcabamento}`,
+  );
+  let j: any = { message: txt };
+  try { j = JSON.parse(txt); } catch { /* keep raw */ }
+  if (typeof j?.message === 'string' && !/sucesso/i.test(j.message)) {
+    throw new Error(j.message || 'Auge rejeitou exclusão do item.');
+  }
+  return j;
+}
+
 function mapAcabamentoRow(r: any) {
   return {
     cd_acabamento: String(r.cdAcabamento),
