@@ -66,6 +66,8 @@ export default function TeamPanel() {
   const [presence, setPresence] = useState<Record<string, PresenceMeta>>({});
   const [query, setQuery] = useState('');
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useTeamPresence(setPresence);
 
