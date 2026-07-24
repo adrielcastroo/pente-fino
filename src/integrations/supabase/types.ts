@@ -3575,6 +3575,97 @@ export type Database = {
         }
         Relationships: []
       }
+      team_members: {
+        Row: {
+          added_at: string
+          added_by: string | null
+          team_id: string
+          user_id: string
+        }
+        Insert: {
+          added_at?: string
+          added_by?: string | null
+          team_id: string
+          user_id: string
+        }
+        Update: {
+          added_at?: string
+          added_by?: string | null
+          team_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_members_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_page_permissions: {
+        Row: {
+          allowed: boolean
+          page_key: string
+          team_id: string
+          updated_at: string
+          updated_by: string | null
+          user_id: string
+        }
+        Insert: {
+          allowed?: boolean
+          page_key: string
+          team_id: string
+          updated_at?: string
+          updated_by?: string | null
+          user_id: string
+        }
+        Update: {
+          allowed?: boolean
+          page_key?: string
+          team_id?: string
+          updated_at?: string
+          updated_by?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_page_permissions_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tecidos_sem_espaco: {
         Row: {
           auge_cd_deposito: string | null
@@ -3706,6 +3797,12 @@ export type Database = {
         }[]
       }
       get_my_modules: { Args: never; Returns: string[] }
+      get_my_page_access: {
+        Args: never
+        Returns: {
+          page_key: string
+        }[]
+      }
       get_my_role: {
         Args: never
         Returns: Database["public"]["Enums"]["app_role"]
@@ -3721,6 +3818,7 @@ export type Database = {
       has_auge_action: { Args: { _action: string }; Returns: boolean }
       has_auge_area: { Args: { _area: string }; Returns: boolean }
       has_module: { Args: { _module: string }; Returns: boolean }
+      has_page_access: { Args: { _page_key: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -3728,6 +3826,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      i_am_in_any_team: { Args: never; Returns: boolean }
       is_at_least: {
         Args: { _min: Database["public"]["Enums"]["app_role"] }
         Returns: boolean

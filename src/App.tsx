@@ -68,6 +68,10 @@ const DepositosAdminPage = lazy(() => import("@/pages/admin/DepositosAdminPage")
 const AutomacoesPage = lazy(() => import("@/pages/admin/AutomacoesPage"));
 
 import RequireModule from "@/components/auth/RequireModule";
+import PageAccessOutlet from "@/components/auth/PageAccessOutlet";
+import { PageAccessProvider } from "@/hooks/use-page-access";
+
+const EquipesPage = lazy(() => import("@/pages/EquipesPage"));
 
 
 // LoginPage é estático — é o LCP da rota /login e não deve pagar um round-trip
@@ -129,7 +133,9 @@ const App = () => (
       <TooltipProvider>
         <BrowserRouter>
           <AuthProvider>
+            <PageAccessProvider>
             <Suspense fallback={<div className="h-screen w-screen flex items-center justify-center bg-background"><div className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin" /></div>}>
+
               <Routes>
                 <Route path="/login" element={<LoginRoute><LoginPage /></LoginRoute>} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -145,6 +151,8 @@ const App = () => (
 
                 {/* ===== MÓDULO ESTOQUE (canônico /estoque/*) ===== */}
                 <Route element={<ProtectedRoute><RequireModule module="estoque"><MainLayout /></RequireModule></ProtectedRoute>}>
+                <Route element={<PageAccessOutlet />}>
+
 
                   {/* Rotas canônicas /estoque/* */}
                   <Route path="/estoque/operacao" element={<OperacaoHomePage />} />
@@ -201,6 +209,21 @@ const App = () => (
                   <Route path="/auditoria" element={<Navigate to="/estoque/auditoria" replace />} />
                   <Route path="/minha-atividade" element={<Navigate to="/estoque/minha-atividade" replace />} />
                 </Route>
+                </Route>
+
+                {/* ===== EQUIPES (top-level, supervisor+) ===== */}
+                <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
+                  <Route
+                    path="/equipes"
+                    element={
+                      <RequireRole role="supervisor" fallback={<Navigate to="/" replace />}>
+                        <EquipesPage />
+                      </RequireRole>
+                    }
+                  />
+                </Route>
+
+
 
 
                 {/* ===== MÓDULO EXPEDIÇÃO (novo) ===== */}
@@ -212,7 +235,9 @@ const App = () => (
                     </ProtectedRoute>
                   }
                 >
+                  <Route element={<PageAccessOutlet />}>
                   <Route index element={<Navigate to="/expedicao/operacao" replace />} />
+
                   <Route path="operacao" element={<ExpedicaoOperacaoHomePage />} />
                   <Route path="painel" element={<ExpedicaoPainelPage />} />
                   
@@ -231,9 +256,9 @@ const App = () => (
                   <Route path="etiquetas/:id/imprimir" element={<ImprimirEtiquetaPage />} />
                   <Route path="etiquetas/:id/editar" element={<Navigate to="/expedicao/etiquetas" replace />} />
                   <Route path="double-check" element={<ExpedicaoDoubleCheckPage />} />
-
-
+                  </Route>
                 </Route>
+
 
                 {/* ===== MÓDULO COMPRAS ===== */}
                 <Route
@@ -244,14 +269,18 @@ const App = () => (
                     </ProtectedRoute>
                   }
                 >
+                  <Route element={<PageAccessOutlet />}>
                   <Route index element={<Navigate to="/compras/acompanhamentos" replace />} />
                   <Route path="acompanhamentos" element={<ComprasAcompanhamentosPage />} />
+
                   <Route path="acompanhamentos/starcolor" element={<ComprasStarcolorPage />} />
                   <Route path="acompanhamentos/starcolor/romaneios" element={<ComprasRomaneiosStarcolorPage />} />
                   <Route path="acompanhamentos/starcolor/romaneios/novo" element={<ComprasRomaneioStarcolorEditorPage />} />
                   <Route path="acompanhamentos/starcolor/romaneios/:id" element={<ComprasRomaneioStarcolorEditorPage />} />
                   <Route path="configuracoes" element={<SettingsPage />} />
+                  </Route>
                 </Route>
+
 
                 {/* ===== ADMIN (dentro do MainLayout — sidebar principal preservada) ===== */}
                 <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
@@ -273,7 +302,9 @@ const App = () => (
               <ReleaseRegistrar />
               <AgentChatWidget />
             </Suspense>
+            </PageAccessProvider>
           </AuthProvider>
+
           <Toaster position="top-right" closeButton duration={2000} visibleToasts={1} />
         </BrowserRouter>
       </TooltipProvider>
