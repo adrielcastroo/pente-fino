@@ -28,6 +28,7 @@ interface TagRow {
 interface SyncRun {
   id: string;
   status: string;
+  started_at?: string;
   error_message: string | null;
   detalhes: {
     phase?: string; current?: number; total?: number;
@@ -50,6 +51,7 @@ export default function TagsTab() {
   const [run, setRun] = useState<SyncRun | null>(null);
   const channelRef = useRef<any>(null);
   const rowsChannelRef = useRef<any>(null);
+  const lastResumeAttemptRef = useRef<number>(0);
   const runIsActive = run?.status === 'running';
   const shouldPoll = syncing || runIsActive;
 
@@ -193,13 +195,41 @@ export default function TagsTab() {
     }
   };
 
+  const resumeRun = async (silent: boolean = false) => {
+    if (!run?.id) return;
+    const now = Date.now();
+    if (now - lastResumeAttemptRef.current < 20000) return;
+    lastResumeAttemptRef.current = now;
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        `auge-sync?action=sync_tag_custom_chunk&run_id=${encodeURIComponent(run.id)}`,
+        { method: 'POST' },
+      );
+      if (error) throw error;
+      if (data?.ok === false) throw new Error(data.error ?? 'Erro ao retomar varredura.');
+      await refetch();
+      await refetchTags();
+      if (!silent) toast.success('Varredura retomada.');
+    } catch (e: any) {
+      if (!silent) toast.error(e?.message ?? 'Erro ao retomar varredura.');
+    }
+  };
+
 
   const totais = useMemo(() => {
     const totalScan = scanRows.length;
     const semTag = scanRows.filter(r => r.qtd_tags === 0 && !r.erro).length;
     const comTag = scanRows.filter(r => r.qtd_tags > 0).length;
     const errors = scanRows.filter(r => !!r.erro).length;
-    return { totalScan, semTag, comTag, errors };
+    const pendentes = scanRows.filter(r => !r.last_scanned_at).length;
+    const ultimaVarredura = scanRows.reduce<string | null>((latest, row) => {
+      if (!row.last_scanned_at) return latest;
+      if (!latest) return row.last_scanned_at;
+      return new Date(row.last_scanned_at).getTime() > new Date(latest).getTime()
+        ? row.last_scanned_at
+        : latest;
+    }, null);
+    return { totalScan, semTag, comTag, errors, pendentes, ultimaVarredura };
   }, [scanRows]);
 
   const lista = useMemo(() => {
@@ -223,10 +253,23 @@ export default function TagsTab() {
     return arr;
   }, [scanRows, busca, filtro, sortBy, sortDir]);
 
-  const total = run?.detalhes?.total ?? 0;
-  const current = run?.detalhes?.current ?? 0;
+  const useRealScanProgress = (run?.detalhes?.stage === 'scan_tags' || run?.detalhes?.stage === 'done') && totais.totalScan > 0;
+  const total = useRealScanProgress ? totais.totalScan : (run?.detalhes?.total ?? 0);
+  const current = useRealScanProgress
+    ? Math.max(0, totais.totalScan - totais.pendentes)
+    : (run?.detalhes?.current ?? 0);
   const pct = total > 0 ? Math.min(100, Math.round((current / total) * 100)) : 0;
   const isActive = runIsActive;
+  const lastScanMs = totais.ultimaVarredura ? new Date(totais.ultimaVarredura).getTime() : 0;
+  const runStartMs = run?.started_at ? new Date(run.started_at).getTime() : 0;
+  const lastActivityMs = Math.max(lastScanMs, runStartMs);
+  const isStalled = isActive && lastActivityMs > 0 && Date.now() - lastActivityMs > 90000;
+
+  useEffect(() => {
+    if (!isStalled) return;
+    resumeRun(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isStalled, run?.id, totais.ultimaVarredura]);
 
   const toggleSort = (col: 'nome' | 'codigo' | 'qtd') => {
     if (sortBy === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
@@ -267,10 +310,18 @@ export default function TagsTab() {
                 run.status === 'error' ? 'Falhou' : 'Concluído'}
             </div>
             <div className="ml-auto text-[11px] font-mono text-muted-foreground">
-              {current}/{total} · {run.detalhes?.cfg_count ?? totais.totalScan} config. · {run.detalhes?.com_tag ?? 0} c/tag · {run.detalhes?.sem_tag ?? 0} s/tag
+              {current}/{total} · {totais.totalScan} config. · {totais.comTag} c/tag · {totais.semTag} s/tag · restam {totais.pendentes}
             </div>
           </div>
           <Progress value={pct} className="h-2" />
+          {isStalled && (
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-amber-500">
+              <span>Varredura sem atualização recente. Retomada automática acionada; se necessário, retome manualmente.</span>
+              <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => resumeRun(false)}>
+                Retomar agora
+              </Button>
+            </div>
+          )}
           {run.status === 'error' && run.error_message && (
             <div className="mt-2 text-[11px] text-destructive">{run.error_message}</div>
           )}
