@@ -510,7 +510,15 @@ async function syncTagCustomChunk(admin: any, auth: any, runId: string) {
 
   if (stage === 'discover_prefix') {
     const prefixIndex = Number(detalhes.prefix_index ?? 0);
-    const prefixes = TAG_CONFIG_PREFIXES.slice(prefixIndex, prefixIndex + TAG_DISCOVERY_PREFIX_CHUNK);
+    const extraPrefixes: string[] = Array.isArray(detalhes.extra_prefixes) ? [...detalhes.extra_prefixes] : [];
+    const extraIndex = Number(detalhes.extra_index ?? 0);
+
+    // Combina prefixos base + extras (drill-down) numa fila unificada
+    const basePrefixes = TAG_CONFIG_PREFIXES.slice(prefixIndex, prefixIndex + TAG_DISCOVERY_PREFIX_CHUNK);
+    const needMore = basePrefixes.length < TAG_DISCOVERY_PREFIX_CHUNK;
+    const extrasNeeded = needMore ? TAG_DISCOVERY_PREFIX_CHUNK - basePrefixes.length : 0;
+    const chosenExtras = extraPrefixes.slice(extraIndex, extraIndex + Math.max(extrasNeeded, basePrefixes.length ? 0 : TAG_DISCOVERY_PREFIX_CHUNK));
+    const prefixes = [...basePrefixes, ...chosenExtras];
 
     if (!prefixes.length) {
       const discovered = await countTagConfigs(admin);
@@ -529,10 +537,15 @@ async function syncTagCustomChunk(admin: any, auth: any, runId: string) {
 
     const foundRows: Array<{ id: string; text: string }> = [];
     let errors = Number(detalhes.errors ?? 0);
+    const newDrillDowns: string[] = [];
     for (const prefix of prefixes) {
       try {
         const result = await scanConfiguracaoTerm(auth, prefix);
         foundRows.push(...result.rows.map((row) => ({ id: String(row.id ?? ''), text: String(row.text ?? '') })));
+        // Drill-down: se o prefixo saturou, adiciona 10 sub-prefixos (0-9) na fila
+        if (result.saturated && prefix.length < 8) {
+          for (let d = 0; d < 10; d++) newDrillDowns.push(`${prefix}${d}`);
+        }
       } catch {
         errors += 1;
       }
@@ -540,18 +553,30 @@ async function syncTagCustomChunk(admin: any, auth: any, runId: string) {
     await upsertTagConfigScanRows(admin, foundRows);
 
     const discovered = await countTagConfigs(admin);
-    const nextPrefixIndex = prefixIndex + prefixes.length;
-    const donePrefixes = nextPrefixIndex >= TAG_CONFIG_PREFIXES.length;
+    const nextPrefixIndex = Math.min(prefixIndex + basePrefixes.length, TAG_CONFIG_PREFIXES.length);
+    const nextExtraIndex = extraIndex + chosenExtras.length;
+    const mergedExtras = [...extraPrefixes, ...newDrillDowns];
+    const doneBase = nextPrefixIndex >= TAG_CONFIG_PREFIXES.length;
+    const doneExtras = nextExtraIndex >= mergedExtras.length;
+    const donePrefixes = doneBase && doneExtras;
+    const totalQueue = TAG_CONFIG_PREFIXES.length + mergedExtras.length;
+    const currentQueue = nextPrefixIndex + nextExtraIndex;
+
+    const label = prefixes[0] === prefixes[prefixes.length - 1]
+      ? prefixes[0]
+      : `${prefixes[0]}…${prefixes[prefixes.length - 1]}`;
     const nextDetails = {
       ...detalhes,
       stage: donePrefixes ? 'scan_tags' : 'discover_prefix',
       phase: donePrefixes
         ? `varrendo TAGs — ${discovered} configurações`
-        : `descobrindo configurações [${prefixes[0]}…${prefixes[prefixes.length - 1]}] — ${discovered} encontradas`,
+        : `descobrindo configurações [${label}] — ${discovered} encontradas`,
       prefix_index: nextPrefixIndex,
+      extra_prefixes: mergedExtras,
+      extra_index: nextExtraIndex,
       cfg_offset: detalhes.cfg_offset ?? 0,
-      current: donePrefixes ? 0 : nextPrefixIndex,
-      total: donePrefixes ? discovered : TAG_CONFIG_PREFIXES.length,
+      current: donePrefixes ? 0 : currentQueue,
+      total: donePrefixes ? discovered : totalQueue,
       cfg_count: discovered,
       com_tag: 0,
       sem_tag: 0,
