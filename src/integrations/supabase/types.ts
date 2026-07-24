@@ -908,21 +908,21 @@ export type Database = {
         Row: {
           cd_configuracao: string
           erro: string | null
-          last_scanned_at: string
+          last_scanned_at: string | null
           nm_configuracao: string | null
           qtd_tags: number
         }
         Insert: {
           cd_configuracao: string
           erro?: string | null
-          last_scanned_at?: string
+          last_scanned_at?: string | null
           nm_configuracao?: string | null
           qtd_tags?: number
         }
         Update: {
           cd_configuracao?: string
           erro?: string | null
-          last_scanned_at?: string
+          last_scanned_at?: string | null
           nm_configuracao?: string | null
           qtd_tags?: number
         }
