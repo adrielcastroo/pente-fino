@@ -391,11 +391,10 @@ export function AgentChatWidget() {
           className="group fixed bottom-20 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-2xl shadow-lg transition-all duration-200 hover:shadow-2xl tablet-landscape:bottom-6 desktop:bottom-6"
         >
           <div className="relative h-full w-full">
-            <img
-              src={logo}
-              alt="Fio"
-              className="h-full w-full rounded-2xl object-cover transition-transform duration-300 group-hover:animate-fio-peek"
-              style={{ transformOrigin: "bottom center" }}
+            <FioAvatar
+              size={56}
+              state={fioState}
+              className="h-full w-full transition-transform duration-300 group-hover:scale-105"
             />
           </div>
           {hasUnread && (
