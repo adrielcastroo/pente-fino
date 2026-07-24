@@ -12,6 +12,7 @@
         "@fontsource-variable/inter": "^5.2.8",
         "@fontsource/ibm-plex-mono": "^5.2.7",
         "@hookform/resolvers": "^3.10.0",
+        "@lottiefiles/dotlottie-react": "^0.19.12",
         "@lovable.dev/cloud-auth-js": "^1.1.1",
         "@radix-ui/react-accordion": "^1.2.11",
         "@radix-ui/react-alert-dialog": "^1.1.14",
@@ -453,6 +454,10 @@
     "@jridgewell/sourcemap-codec": ["@jridgewell/sourcemap-codec@1.5.5", "", {}, "sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og=="],
 
     "@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.25", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-vNk6aEwybGtawWmy/PzwnGDOjCkLWSD2wqvjGGAgOAwCGWySYXfYoxt00IJkTF+8Lb57DwOb3Aa0o9CApepiYQ=="],
+
+    "@lottiefiles/dotlottie-react": ["@lottiefiles/dotlottie-react@0.19.12", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@lottiefiles/dotlottie-react/-/dotlottie-react-0.19.12.tgz", { "dependencies": { "@lottiefiles/dotlottie-web": "0.78.2" }, "peerDependencies": { "react": "^17 || ^18 || ^19" } }, "sha512-Onm0XUcfU8Io4E6zbNF23hW0AwHpwAWUhazII6z/mGAcGh8RFAqqrkFJW1sZ3Z6C9JXOiiud+MmrejNKikBShw=="],
+
+    "@lottiefiles/dotlottie-web": ["@lottiefiles/dotlottie-web@0.78.2", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@lottiefiles/dotlottie-web/-/dotlottie-web-0.78.2.tgz", {}, "sha512-ERBw7qATlekpFnR1xwNoTeXsXqw0FzCiEgei0IwPiquT277m36/o0aSWZDK7CgkhVd1NYre3M9fH+6n4waUfHA=="],
 
     "@lovable.dev/cloud-auth-js": ["@lovable.dev/cloud-auth-js@1.1.1", "", {}, "sha512-80elU8dSJG6bho0Xnfj2oy53wp883nYXrG1Wy948LC/ZUaUQ0i9EGXQFmwTLOBFrWqxb6aNaOlZUvQ8BVGhjMQ=="],
 
