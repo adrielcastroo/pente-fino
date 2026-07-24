@@ -3682,12 +3682,16 @@ Deno.serve(async (req) => {
     }
 
     if (action === 'sync_tag_custom') {
+      let tagPayload: any = {};
+      try { tagPayload = await req.json(); } catch { /* ignore */ }
+      const full = tagPayload?.full === true || url.searchParams.get('full') === '1';
+
       const runIns = await admin.from('auge_sync_runs').insert({
         entidade: 'tag_custom', status: 'running', started_at: new Date().toISOString(),
         triggered_by: triggeredBy,
         detalhes: {
           stage: 'discover_prefix',
-          phase: 'limpando tabelas',
+          phase: full ? 'limpando tabelas' : 'retomando varredura (incremental)',
           prefix_index: 0,
           term_index: 0,
           pair_index: 0,
@@ -3699,37 +3703,48 @@ Deno.serve(async (req) => {
           sem_tag: 0,
           errors: 0,
           saturated_terms: [],
+          incremental: !full,
         },
       }).select('id').single();
       const runId = runIns.data?.id;
       if (!runId) throw new Error('Não foi possível iniciar a varredura de TAGs.');
 
-      // Limpa antes de retornar para a UI mostrar imediatamente uma nova varredura limpa.
-      await admin.from('auge_tag_custom').delete().gte('id', '00000000-0000-0000-0000-000000000000');
-      await admin.from('auge_tag_custom_scan').delete().gte('cd_configuracao', '');
+      // Só limpa tabelas quando o usuário pediu varredura completa.
+      // No modo incremental (padrão), preservamos o progresso anterior e
+      // pulamos configurações já escaneadas.
+      if (full) {
+        await admin.from('auge_tag_custom').delete().gte('id', '00000000-0000-0000-0000-000000000000');
+        await admin.from('auge_tag_custom_scan').delete().gte('cd_configuracao', '');
+      }
+
+      const existing = await countTagConfigs(admin);
       await admin.from('auge_sync_runs').update({
         detalhes: {
           stage: 'discover_prefix',
-          phase: 'descobrindo configurações',
+          phase: full
+            ? 'descobrindo configurações'
+            : `retomando — ${existing} já conhecidas, descobrindo novas`,
           prefix_index: 0,
           term_index: 0,
           pair_index: 0,
           cfg_offset: 0,
           current: 0,
           total: 1,
-          cfg_count: 0,
+          cfg_count: existing,
           com_tag: 0,
           sem_tag: 0,
           errors: 0,
           saturated_terms: [],
+          incremental: !full,
         },
       }).eq('id', runId);
 
       selfInvoke('sync_tag_custom_chunk', runId);
-      return new Response(JSON.stringify({ ok: true, run_id: runId, background: true }), {
+      return new Response(JSON.stringify({ ok: true, run_id: runId, background: true, incremental: !full }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
 
     if (action === 'incluir_item_massa') {
       let payload: any = {};
