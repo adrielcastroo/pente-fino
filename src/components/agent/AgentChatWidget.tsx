@@ -36,7 +36,41 @@ import {
   type ArtifactSpec,
 } from "@/lib/agent-blocks";
 import { useChatPanel } from "@/store/useChatPanel";
-import logo from "@/assets/fio-logo.png";
+
+import { FioAvatar } from "./FioAvatar";
+import type { FioAnimationState } from "@/lib/fio-lottie";
+
+// Hook: escuta eventos globais para sincronizar o avatar do Fio com o status
+// do chat mesmo quando o componente está fora do <ChatWindow>.
+function useFioAnimationState(): FioAnimationState {
+  const [state, setState] = useState<FioAnimationState>("idle");
+  useEffect(() => {
+    let respondingTimer: number | undefined;
+    const onThinking = (e: Event) => {
+      const active = (e as CustomEvent<boolean>).detail;
+      if (active) {
+        window.clearTimeout(respondingTimer);
+        setState("thinking");
+      } else {
+        setState((s) => (s === "thinking" ? "idle" : s));
+      }
+    };
+    const onResponse = () => {
+      setState("responding");
+      window.clearTimeout(respondingTimer);
+      respondingTimer = window.setTimeout(() => setState("idle"), 1600);
+    };
+    window.addEventListener("fio:thinking", onThinking as EventListener);
+    window.addEventListener("fio:response", onResponse);
+    return () => {
+      window.removeEventListener("fio:thinking", onThinking as EventListener);
+      window.removeEventListener("fio:response", onResponse);
+      window.clearTimeout(respondingTimer);
+    };
+  }, []);
+  return state;
+}
+
 
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
@@ -87,6 +121,7 @@ function ChatWindow({
     transport,
     onFinish: () => {
       window.dispatchEvent(new CustomEvent("fio:response"));
+      window.dispatchEvent(new CustomEvent<boolean>("fio:thinking", { detail: false }));
     },
     onError: (err) => {
       console.error("[ai-agent] erro no chat", err);
@@ -128,6 +163,11 @@ function ChatWindow({
   };
 
   const isLoading = status === "submitted" || status === "streaming";
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent<boolean>("fio:thinking", { detail: isLoading }),
+    );
+  }, [isLoading]);
   const lastMessage = messages[messages.length - 1];
   const lastAssistantHasVisibleContent =
     lastMessage?.role === "assistant" &&
@@ -147,7 +187,7 @@ function ChatWindow({
         <ConversationContent>
           {messages.length === 0 && (
             <ConversationEmptyState
-              icon={<img src={logo} alt="" width={72} height={72} className="rounded-xl opacity-95" />}
+              icon={<FioAvatar size={72} state={isLoading ? "thinking" : "idle"} />}
               title="Fio · Assistente do Pente Fino"
               description="Sou o Fio. Pergunte sobre itens, transferências, saldo do estoque, movimentações e mais."
             />
@@ -337,6 +377,8 @@ export function AgentChatWidget() {
     return () => document.removeEventListener("mousedown", onDown);
   }, [open, toggleOpen]);
 
+  const fioState = useFioAnimationState();
+
   if (!user) return null;
 
   return (
@@ -349,11 +391,10 @@ export function AgentChatWidget() {
           className="group fixed bottom-20 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-2xl shadow-lg transition-all duration-200 hover:shadow-2xl tablet-landscape:bottom-6 desktop:bottom-6"
         >
           <div className="relative h-full w-full">
-            <img
-              src={logo}
-              alt="Fio"
-              className="h-full w-full rounded-2xl object-cover transition-transform duration-300 group-hover:animate-fio-peek"
-              style={{ transformOrigin: "bottom center" }}
+            <FioAvatar
+              size={56}
+              state={fioState}
+              className="h-full w-full transition-transform duration-300 group-hover:scale-105"
             />
           </div>
           {hasUnread && (
@@ -374,7 +415,7 @@ export function AgentChatWidget() {
           showArtifactPane={showArtifactPane}
           headerContent={
             <>
-              <img src={logo} alt="" width={24} height={24} />
+              <FioAvatar size={28} state={fioState} hoverOnEnter={false} />
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-semibold leading-tight">Fio</div>
                 <div className="truncate text-[11px] text-muted-foreground">
