@@ -346,7 +346,7 @@ export function AgentChatWidget() {
           type="button"
           aria-label="Abrir Fio (assistente de IA)"
           onClick={() => toggleOpen(true)}
-          className="group fixed bottom-20 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 shadow-lg ring-1 ring-primary/40 transition-all duration-200 hover:shadow-2xl hover:ring-2 hover:ring-primary tablet-landscape:bottom-6 desktop:bottom-6"
+          className="group fixed bottom-20 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-2xl shadow-lg transition-all duration-200 hover:shadow-2xl tablet-landscape:bottom-6 desktop:bottom-6"
         >
           <div className="relative h-full w-full">
             <img
