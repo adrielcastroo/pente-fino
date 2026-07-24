@@ -415,7 +415,7 @@ export function AgentChatWidget() {
           showArtifactPane={showArtifactPane}
           headerContent={
             <>
-              <img src={logo} alt="" width={24} height={24} />
+              <FioAvatar size={28} state={fioState} hoverOnEnter={false} />
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-semibold leading-tight">Fio</div>
                 <div className="truncate text-[11px] text-muted-foreground">
