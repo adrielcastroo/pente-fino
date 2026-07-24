@@ -235,7 +235,9 @@ const App = () => (
                     </ProtectedRoute>
                   }
                 >
+                  <Route element={<PageAccessOutlet />}>
                   <Route index element={<Navigate to="/expedicao/operacao" replace />} />
+
                   <Route path="operacao" element={<ExpedicaoOperacaoHomePage />} />
                   <Route path="painel" element={<ExpedicaoPainelPage />} />
                   
@@ -254,9 +256,9 @@ const App = () => (
                   <Route path="etiquetas/:id/imprimir" element={<ImprimirEtiquetaPage />} />
                   <Route path="etiquetas/:id/editar" element={<Navigate to="/expedicao/etiquetas" replace />} />
                   <Route path="double-check" element={<ExpedicaoDoubleCheckPage />} />
-
-
+                  </Route>
                 </Route>
+
 
                 {/* ===== MÓDULO COMPRAS ===== */}
                 <Route
@@ -267,8 +269,10 @@ const App = () => (
                     </ProtectedRoute>
                   }
                 >
+                  <Route element={<PageAccessOutlet />}>
                   <Route index element={<Navigate to="/compras/acompanhamentos" replace />} />
                   <Route path="acompanhamentos" element={<ComprasAcompanhamentosPage />} />
+
                   <Route path="acompanhamentos/starcolor" element={<ComprasStarcolorPage />} />
                   <Route path="acompanhamentos/starcolor/romaneios" element={<ComprasRomaneiosStarcolorPage />} />
                   <Route path="acompanhamentos/starcolor/romaneios/novo" element={<ComprasRomaneioStarcolorEditorPage />} />
