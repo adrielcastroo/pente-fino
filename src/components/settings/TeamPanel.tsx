@@ -146,10 +146,34 @@ export default function TeamPanel() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (sessionError || !accessToken) {
+        throw new Error('Sessão expirada. Entre novamente antes de remover usuários.');
+      }
+
       const { data, error } = await supabase.functions.invoke('delete-account', {
+        headers: { Authorization: `Bearer ${accessToken}` },
         body: { target_user_id: deleteTarget.id },
       });
-      if (error) throw error;
+      if (error) {
+        let message = error.message || 'Falha ao remover usuário.';
+        const context = (error as { context?: { json?: () => Promise<unknown>; text?: () => Promise<string> } }).context;
+        try {
+          const payload = context?.json ? await context.json() : null;
+          if (payload && typeof payload === 'object' && 'error' in payload) {
+            message = String((payload as { error?: unknown }).error || message);
+          }
+        } catch {
+          try {
+            const text = context?.text ? await context.text() : '';
+            if (text) message = text;
+          } catch {
+            // mantém a mensagem padrão da SDK
+          }
+        }
+        throw new Error(message);
+      }
       if ((data as any)?.error) throw new Error((data as any).error);
       setProfiles((list) => list.filter((p) => p.id !== deleteTarget.id));
       toast.success(`Usuário "${deleteTarget.name}" removido.`);

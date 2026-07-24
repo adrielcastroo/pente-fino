@@ -6,6 +6,26 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const jsonResponse = (payload: Record<string, unknown>, status = 200) =>
+  new Response(JSON.stringify(payload), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+
+const getBearerToken = (authHeader: string) => {
+  const [scheme, token] = authHeader.split(" ");
+  if (scheme?.toLowerCase() !== "bearer" || !token) return null;
+  return token;
+};
+
+type CleanupMode = "delete" | "nullify";
+
+interface CleanupTarget {
+  table: string;
+  column: string;
+  mode: CleanupMode;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -14,25 +34,27 @@ serve(async (req) => {
   try {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Missing authorization" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ error: "Sessão ausente. Entre novamente antes de remover usuários." }, 401);
+    }
+
+    const bearerToken = getBearerToken(authHeader);
+    if (!bearerToken) {
+      return jsonResponse({ error: "Sessão inválida. Entre novamente antes de remover usuários." }, 401);
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    if (!supabaseUrl || !serviceKey) {
+      return jsonResponse({ error: "Configuração da função incompleta." }, 500);
+    }
 
-    // Verify caller identity using their JWT
-    const userClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY") ?? "", {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: userData, error: userErr } = await userClient.auth.getUser();
+    // Use service role inside the function only. It verifies the caller token and performs admin deletion.
+    const adminClient = createClient(supabaseUrl, serviceKey);
+
+    // Verify caller identity using their JWT, without depending on an anon key in the function env.
+    const { data: userData, error: userErr } = await adminClient.auth.getUser(bearerToken);
     if (userErr || !userData.user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ error: "Sessão expirada ou inválida. Entre novamente antes de remover usuários." }, 401);
     }
 
     const callerId = userData.user.id;
@@ -50,82 +72,106 @@ serve(async (req) => {
 
     // If deleting someone else, caller must be admin
     if (targetUserId && targetUserId !== callerId) {
-      const { data: isAdmin, error: roleErr } = await userClient.rpc("has_role", {
+      const { data: isAdmin, error: roleErr } = await adminClient.rpc("has_role", {
         _user_id: callerId,
         _role: "admin",
       });
       if (roleErr || !isAdmin) {
-        return new Response(JSON.stringify({ error: "Forbidden: admin only" }), {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return jsonResponse({ error: "Apenas administradores podem remover outros usuários." }, 403);
       }
     }
 
     const userIdToDelete = targetUserId ?? callerId;
 
-    // Use service role to delete user
-    const adminClient = createClient(supabaseUrl, serviceKey);
+    // Pre-clean every known public FK to auth users that can block auth deletion.
+    // Historical/business records are preserved by nullifying nullable user references.
+    const cleanupTables: CleanupTarget[] = [
+      { table: "abreviacoes_solicitadas", column: "revisor_id", mode: "nullify" },
+      { table: "app_releases", column: "released_by", mode: "nullify" },
+      { table: "auge_permissoes", column: "updated_by", mode: "nullify" },
+      { table: "auge_sync_runs", column: "triggered_by", mode: "nullify" },
+      { table: "compras_pedidos", column: "created_by", mode: "nullify" },
+      { table: "compras_starcolor_ops", column: "created_by", mode: "nullify" },
+      { table: "compras_starcolor_romaneios", column: "created_by", mode: "nullify" },
+      { table: "conferences", column: "created_by", mode: "nullify" },
+      { table: "contagens_diarias_limite", column: "user_id", mode: "delete" },
+      { table: "etiqueta_historico", column: "usuario_id", mode: "nullify" },
+      { table: "etiqueta_templates", column: "criado_por", mode: "nullify" },
+      { table: "expedicao_cargas", column: "criado_por", mode: "nullify" },
+      { table: "expedicao_carrinhos", column: "conferente_id", mode: "nullify" },
+      { table: "expedicao_comprovantes", column: "criado_por", mode: "nullify" },
+      { table: "expedicao_conferencias_itens", column: "conferente_id", mode: "nullify" },
+      { table: "expedicao_pecas", column: "conferente_id", mode: "nullify" },
+      { table: "expedicao_pecas", column: "embalador_id", mode: "nullify" },
+      { table: "expedicao_pecas_historico", column: "usuario_id", mode: "nullify" },
+      { table: "expedicao_picking_itens", column: "bipado_por", mode: "nullify" },
+      { table: "expedicao_pickings", column: "created_by", mode: "nullify" },
+      { table: "expedicao_romaneio_nfe", column: "vinculada_por", mode: "nullify" },
+      { table: "expedicao_romaneios", column: "cancelado_por", mode: "nullify" },
+      { table: "expedicao_romaneios", column: "created_by", mode: "nullify" },
+      { table: "import_log", column: "user_id", mode: "nullify" },
+      { table: "independent_reservations", column: "updated_by", mode: "nullify" },
+      { table: "inventory_daily_limits", column: "user_id", mode: "delete" },
+      { table: "inventory_tasks", column: "assigned_to", mode: "nullify" },
+      { table: "inventory_tasks", column: "completed_by", mode: "nullify" },
+      { table: "itens_cadastro", column: "created_by", mode: "nullify" },
+      { table: "itens_cadastro", column: "updated_by", mode: "nullify" },
+      { table: "lotes_mestres", column: "created_by", mode: "nullify" },
+      { table: "nfe_consulta_log", column: "user_id", mode: "nullify" },
+      { table: "nfe_entrada", column: "manifestada_por", mode: "nullify" },
+      { table: "nfe_entrada_eventos", column: "user_id", mode: "nullify" },
+      { table: "nfe_importadas", column: "imported_by", mode: "nullify" },
+      { table: "operation_logs", column: "user_id", mode: "nullify" },
+      { table: "report_settings", column: "user_id", mode: "nullify" },
+      { table: "reservas", column: "updated_by", mode: "nullify" },
+      { table: "tarefas_contagem", column: "conferente_id", mode: "nullify" },
+      { table: "team_members", column: "added_by", mode: "nullify" },
+      { table: "team_page_permissions", column: "updated_by", mode: "nullify" },
+      { table: "teams", column: "created_by", mode: "nullify" },
 
-    // Pre-clean tables that reference auth.users without ON DELETE (would block deletion)
-    const cleanupTables: Array<{ table: string; column: string; nullify?: boolean }> = [
-      { table: "profiles", column: "id" },
-      { table: "user_roles", column: "user_id" },
-      { table: "team_members", column: "user_id" },
-      { table: "team_page_permissions", column: "user_id" },
-      { table: "auge_permissoes", column: "user_id" },
-      { table: "ai_chat_history", column: "user_id" },
-      { table: "tarefas_contagem", column: "conferente_id", nullify: true },
-      { table: "tarefas_contagem", column: "assigned_to", nullify: true },
-      { table: "tarefas_contagem", column: "completed_by", nullify: true },
-      { table: "inventory_tasks", column: "assigned_to", nullify: true },
-      { table: "inventory_tasks", column: "completed_by", nullify: true },
-      { table: "inventory_task_items", column: "user_id", nullify: true },
-      { table: "historico_contagens", column: "user_id", nullify: true },
-      { table: "contagem_itens_bipados", column: "user_id", nullify: true },
-      { table: "audit_logs", column: "user_id", nullify: true },
-      { table: "operation_logs", column: "user_id", nullify: true },
-      { table: "auth_audit_logs", column: "user_id", nullify: true },
-      { table: "import_log", column: "user_id", nullify: true },
-      { table: "report_logs", column: "user_id", nullify: true },
-      { table: "expedicao_pecas_historico", column: "usuario_id", nullify: true },
-      { table: "nfe_consulta_log", column: "user_id", nullify: true },
-      { table: "nfe_importadas", column: "imported_by", nullify: true },
+      { table: "profiles", column: "id", mode: "delete" },
+      { table: "user_roles", column: "user_id", mode: "delete" },
+      { table: "team_members", column: "user_id", mode: "delete" },
+      { table: "team_page_permissions", column: "user_id", mode: "delete" },
+      { table: "auge_permissoes", column: "user_id", mode: "delete" },
+      { table: "ai_chat_history", column: "user_id", mode: "delete" },
     ];
 
     for (const c of cleanupTables) {
-      try {
-        if (c.nullify) {
-          await adminClient.from(c.table).update({ [c.column]: null }).eq(c.column, userIdToDelete);
-        } else {
-          await adminClient.from(c.table).delete().eq(c.column, userIdToDelete);
-        }
-      } catch (_) { /* ignore, some tables may not exist */ }
+      const result = c.mode === "nullify"
+        ? await adminClient.from(c.table).update({ [c.column]: null }).eq(c.column, userIdToDelete)
+        : await adminClient.from(c.table).delete().eq(c.column, userIdToDelete);
+      if (result.error) {
+        console.error("[delete-account] cleanup failed", {
+          table: c.table,
+          column: c.column,
+          mode: c.mode,
+          error: result.error.message,
+        });
+        return jsonResponse(
+          { error: `Falha ao limpar vínculo em ${c.table}.${c.column}: ${result.error.message}` },
+          500,
+        );
+      }
     }
 
     const { error: deleteErr } = await adminClient.auth.admin.deleteUser(userIdToDelete);
 
     if (deleteErr) {
       console.error("[delete-account] auth.admin.deleteUser failed", deleteErr);
-      return new Response(
-        JSON.stringify({
+      return jsonResponse(
+        {
           error: deleteErr.message || "Falha ao remover usuário",
-          details: (deleteErr as any).details ?? null,
+          details: "details" in deleteErr ? deleteErr.details : null,
           hint: "Verifique se há registros vinculados que impedem a exclusão.",
-        }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        },
+        500,
       );
     }
 
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  } catch (error: any) {
+    return jsonResponse({ success: true });
+  } catch (error: unknown) {
     console.error("[delete-account] unexpected error", error);
-    return new Response(JSON.stringify({ error: error?.message || String(error) }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResponse({ error: error instanceof Error ? error.message : String(error) }, 500);
   }
 });
