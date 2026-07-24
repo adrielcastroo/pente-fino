@@ -76,7 +76,7 @@ export default function TeamPanel() {
       setLoadError(null);
       try {
         const [{ data: profilesData, error: pErr }, { data: rolesData, error: rErr }] = await Promise.all([
-          supabase.from('profiles').select('id, display_name, avatar_url').order('display_name', { ascending: true }),
+          supabase.from('profiles').select('id, display_name, avatar_url, modules').order('display_name', { ascending: true }),
           (supabase.from('user_roles' as any).select('user_id, role') as any),
         ]);
         if (cancelled) return;
