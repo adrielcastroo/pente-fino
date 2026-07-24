@@ -214,12 +214,12 @@ export default function TagsTab() {
     }
   };
 
-  const varrerAuge = async () => {
+  const varrerAuge = async (full: boolean = false) => {
     setSyncing(true);
     setRun(null);
     try {
       const { data, error } = await supabase.functions.invoke(
-        'auge-sync?action=sync_tag_custom', { body: {} }
+        'auge-sync?action=sync_tag_custom', { body: { full } }
       );
       if (error) throw error;
       if (data?.ok === false) throw new Error(data.error ?? 'Erro ao iniciar varredura.');
@@ -230,13 +230,18 @@ export default function TagsTab() {
           .from('auge_sync_runs').select('*').eq('id', data.run_id).maybeSingle();
         if (initial) setRun(initial as SyncRun);
         subscribeRun(data.run_id);
-        toast.info('Varredura iniciada. Isso pode levar alguns minutos…');
+        toast.info(
+          full
+            ? 'Varredura completa iniciada (limpando e re-escaneando tudo)…'
+            : 'Varredura incremental iniciada — pulando já escaneadas.'
+        );
       }
     } catch (e: any) {
       toast.error(e?.message ?? 'Erro ao iniciar varredura.');
       setSyncing(false);
     }
   };
+
 
   const totais = useMemo(() => {
     const totalScan = scanRows.length;
@@ -408,10 +413,30 @@ export default function TagsTab() {
               </Button>
             ))}
           </div>
-          <Button size="sm" onClick={varrerAuge} disabled={syncing || isActive} className="h-9 gap-2 text-[11px]">
+          <Button
+            size="sm"
+            onClick={() => varrerAuge(false)}
+            disabled={syncing || isActive}
+            className="h-9 gap-2 text-[11px]"
+            title="Retoma varredura pulando configurações já escaneadas"
+          >
             {syncing || isActive ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
             Varrer Auge
           </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              if (confirm('Isso apaga todas as configurações e TAGs escaneadas e recomeça do zero. Continuar?')) varrerAuge(true);
+            }}
+            disabled={syncing || isActive}
+            className="h-9 gap-2 text-[11px]"
+            title="Limpa tudo e re-escaneia do zero"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            Limpar e re-varrer
+          </Button>
+
           <Button
             size="sm"
             variant="secondary"
