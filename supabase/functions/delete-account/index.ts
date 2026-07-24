@@ -6,6 +6,18 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const jsonResponse = (payload: Record<string, unknown>, status = 200) =>
+  new Response(JSON.stringify(payload), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+
+const getBearerToken = (authHeader: string) => {
+  const [scheme, token] = authHeader.split(" ");
+  if (scheme?.toLowerCase() !== "bearer" || !token) return null;
+  return token;
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -14,25 +26,27 @@ serve(async (req) => {
   try {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Missing authorization" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ error: "Sessão ausente. Entre novamente antes de remover usuários." }, 401);
+    }
+
+    const bearerToken = getBearerToken(authHeader);
+    if (!bearerToken) {
+      return jsonResponse({ error: "Sessão inválida. Entre novamente antes de remover usuários." }, 401);
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    if (!supabaseUrl || !serviceKey) {
+      return jsonResponse({ error: "Configuração da função incompleta." }, 500);
+    }
 
-    // Verify caller identity using their JWT
-    const userClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY") ?? "", {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: userData, error: userErr } = await userClient.auth.getUser();
+    // Use service role inside the function only. It verifies the caller token and performs admin deletion.
+    const adminClient = createClient(supabaseUrl, serviceKey);
+
+    // Verify caller identity using their JWT, without depending on an anon key in the function env.
+    const { data: userData, error: userErr } = await adminClient.auth.getUser(bearerToken);
     if (userErr || !userData.user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ error: "Sessão expirada ou inválida. Entre novamente antes de remover usuários." }, 401);
     }
 
     const callerId = userData.user.id;
@@ -50,22 +64,16 @@ serve(async (req) => {
 
     // If deleting someone else, caller must be admin
     if (targetUserId && targetUserId !== callerId) {
-      const { data: isAdmin, error: roleErr } = await userClient.rpc("has_role", {
+      const { data: isAdmin, error: roleErr } = await adminClient.rpc("has_role", {
         _user_id: callerId,
         _role: "admin",
       });
       if (roleErr || !isAdmin) {
-        return new Response(JSON.stringify({ error: "Forbidden: admin only" }), {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return jsonResponse({ error: "Apenas administradores podem remover outros usuários." }, 403);
       }
     }
 
     const userIdToDelete = targetUserId ?? callerId;
-
-    // Use service role to delete user
-    const adminClient = createClient(supabaseUrl, serviceKey);
 
     // Pre-clean tables that reference auth.users without ON DELETE (would block deletion)
     const cleanupTables: Array<{ table: string; column: string; nullify?: boolean }> = [
@@ -107,25 +115,19 @@ serve(async (req) => {
 
     if (deleteErr) {
       console.error("[delete-account] auth.admin.deleteUser failed", deleteErr);
-      return new Response(
-        JSON.stringify({
+      return jsonResponse(
+        {
           error: deleteErr.message || "Falha ao remover usuário",
-          details: (deleteErr as any).details ?? null,
+          details: "details" in deleteErr ? deleteErr.details : null,
           hint: "Verifique se há registros vinculados que impedem a exclusão.",
-        }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        },
+        500,
       );
     }
 
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  } catch (error: any) {
+    return jsonResponse({ success: true });
+  } catch (error: unknown) {
     console.error("[delete-account] unexpected error", error);
-    return new Response(JSON.stringify({ error: error?.message || String(error) }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResponse({ error: error instanceof Error ? error.message : String(error) }, 500);
   }
 });
