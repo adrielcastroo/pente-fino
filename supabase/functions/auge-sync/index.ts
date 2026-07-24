@@ -682,26 +682,28 @@ async function syncTagCustomChunk(admin: any, auth: any, runId: string) {
   }
 
   if (stage === 'scan_tags') {
-    const cfgOffset = Number(detalhes.cfg_offset ?? 0);
-    const total = Number(detalhes.cfg_count ?? detalhes.total ?? 0) || await countTagConfigs(admin);
+    const totalKnown = Number(detalhes.cfg_count ?? 0) || await countTagConfigs(admin);
+    // Busca próximos pendentes (last_scanned_at IS NULL) — pula automaticamente
+    // configurações já escaneadas em execuções anteriores.
     const { data: configs = [] } = await admin
       .from('auge_tag_custom_scan')
       .select('cd_configuracao, nm_configuracao')
+      .is('last_scanned_at', null)
       .order('cd_configuracao', { ascending: true })
-      .range(cfgOffset, cfgOffset + TAG_SCAN_CHUNK_SIZE - 1);
+      .limit(TAG_SCAN_CHUNK_SIZE);
 
     if (!configs.length) {
       const finalDetails = {
         ...detalhes,
         stage: 'done',
         phase: 'concluído',
-        current: total,
-        total,
+        current: totalKnown,
+        total: totalKnown,
       };
       await saveTagRun(admin, runId, finalDetails, {
         status: 'success',
         finished_at: new Date().toISOString(),
-        rows_processed: total,
+        rows_processed: totalKnown,
         rows_upserted: Number(detalhes.com_tag ?? 0),
       });
       return { ok: true, done: true };
@@ -775,19 +777,20 @@ async function syncTagCustomChunk(admin: any, auth: any, runId: string) {
       await admin.from('auge_tag_custom_scan').upsert(scanRows, { onConflict: 'cd_configuracao' });
     }
 
-    const nextOffset = cfgOffset + configs.length;
+    const pendingLeft = await countTagConfigsPending(admin);
+    const scannedNow = Math.max(0, totalKnown - pendingLeft);
     const comTag = Number(detalhes.com_tag ?? 0) + comTagDelta;
     const semTag = Number(detalhes.sem_tag ?? 0) + semTagDelta;
     const errors = Number(detalhes.errors ?? 0) + errDelta;
-    const done = nextOffset >= total;
+    const done = pendingLeft === 0;
     const nextDetails = {
       ...detalhes,
       stage: done ? 'done' : 'scan_tags',
-      phase: done ? 'concluído' : 'varrendo TAGs',
-      cfg_offset: nextOffset,
-      current: Math.min(nextOffset, total),
-      total,
-      cfg_count: total,
+      phase: done ? 'concluído' : `varrendo TAGs (pulando já escaneadas) — restam ${pendingLeft}`,
+      cfg_offset: scannedNow,
+      current: scannedNow,
+      total: totalKnown,
+      cfg_count: totalKnown,
       com_tag: comTag,
       sem_tag: semTag,
       errors,
@@ -796,13 +799,14 @@ async function syncTagCustomChunk(admin: any, auth: any, runId: string) {
     await saveTagRun(admin, runId, nextDetails, {
       status: done ? 'success' : 'running',
       finished_at: done ? new Date().toISOString() : null,
-      rows_processed: Math.min(nextOffset, total),
+      rows_processed: scannedNow,
       rows_upserted: comTag,
       error_message: done && errors ? `${errors} erro(s) durante varredura` : null,
     });
     if (!done) selfInvoke('sync_tag_custom_chunk', runId);
-    return { ok: true, done, current: nextDetails.current, total };
+    return { ok: true, done, current: nextDetails.current, total: totalKnown };
   }
+
 
   return { ok: true, stage };
 }
