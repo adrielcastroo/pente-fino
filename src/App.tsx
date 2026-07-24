@@ -278,7 +278,9 @@ const App = () => (
                   <Route path="acompanhamentos/starcolor/romaneios/novo" element={<ComprasRomaneioStarcolorEditorPage />} />
                   <Route path="acompanhamentos/starcolor/romaneios/:id" element={<ComprasRomaneioStarcolorEditorPage />} />
                   <Route path="configuracoes" element={<SettingsPage />} />
+                  </Route>
                 </Route>
+
 
                 {/* ===== ADMIN (dentro do MainLayout — sidebar principal preservada) ===== */}
                 <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
