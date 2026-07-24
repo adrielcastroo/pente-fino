@@ -791,6 +791,173 @@ async function syncTagCustomChunk(admin: any, auth: any, runId: string) {
   return { ok: true, stage };
 }
 
+// ============================================================================
+// AUDITORIA DE COBERTURA — varre CCxxxxxx no Auge e compara com o que temos
+// gravado em auge_tag_custom_scan. Grava cada ID descoberto em
+// auge_tag_audit_hits, e ao final calcula gaps (faltantes) e extras (órfãos).
+// ============================================================================
+async function auditTagNamespaceChunk(admin: any, auth: any, runId: string) {
+  const { data: run } = await admin
+    .from('auge_sync_runs')
+    .select('status, detalhes')
+    .eq('id', runId)
+    .maybeSingle();
+  if (!run || run.status !== 'running') return { ok: true, ignored: true };
+  const detalhes = (run.detalhes ?? {}) as any;
+  const stage = detalhes.stage ?? 'audit_discover';
+
+  if (stage === 'audit_discover') {
+    const prefixIndex = Number(detalhes.prefix_index ?? 0);
+    const extraPrefixes: string[] = Array.isArray(detalhes.extra_prefixes) ? [...detalhes.extra_prefixes] : [];
+    const extraIndex = Number(detalhes.extra_index ?? 0);
+
+    const basePrefixes = TAG_CONFIG_PREFIXES.slice(prefixIndex, prefixIndex + TAG_DISCOVERY_PREFIX_CHUNK);
+    const extrasNeeded = Math.max(0, TAG_DISCOVERY_PREFIX_CHUNK - basePrefixes.length);
+    const chosenExtras = extraPrefixes.slice(extraIndex, extraIndex + extrasNeeded);
+    const prefixes = [...basePrefixes, ...chosenExtras];
+
+    if (!prefixes.length) {
+      // Fim da descoberta → calcula diff
+      await saveTagRun(admin, runId, { ...detalhes, stage: 'audit_diff', phase: 'calculando lacunas' });
+      selfInvoke('audit_tag_namespace_chunk', runId);
+      return { ok: true, stage: 'audit_diff' };
+    }
+
+    let errors = Number(detalhes.errors ?? 0);
+    let saturated = Number(detalhes.saturated ?? 0);
+    const newDrillDowns: string[] = [];
+    const hitRows: Array<{ run_id: string; cd_configuracao: string; nm_configuracao: string | null; prefix: string }> = [];
+
+    const results = await Promise.allSettled(prefixes.map((p) => scanConfiguracaoTerm(auth, p)));
+    results.forEach((r, i) => {
+      const prefix = prefixes[i];
+      if (r.status !== 'fulfilled') { errors++; return; }
+      for (const row of r.value.rows) {
+        const cd = String(row.id ?? '').trim();
+        if (!cd) continue;
+        hitRows.push({ run_id: runId, cd_configuracao: cd, nm_configuracao: String(row.text ?? '') || null, prefix });
+      }
+      if (r.value.saturated && prefix.length < 8) {
+        saturated++;
+        for (let d = 0; d < 10; d++) newDrillDowns.push(`${prefix}${d}`);
+      }
+    });
+
+    if (hitRows.length) {
+      // dedupe por cd_configuracao (mantém primeiro)
+      const map = new Map<string, typeof hitRows[number]>();
+      for (const r of hitRows) if (!map.has(r.cd_configuracao)) map.set(r.cd_configuracao, r);
+      const deduped = Array.from(map.values());
+      // chunked insert para evitar payload gigante
+      for (let i = 0; i < deduped.length; i += 500) {
+        const slice = deduped.slice(i, i + 500);
+        await admin.from('auge_tag_audit_hits').upsert(slice, { onConflict: 'run_id,cd_configuracao' });
+      }
+    }
+
+    const nextPrefixIndex = Math.min(prefixIndex + basePrefixes.length, TAG_CONFIG_PREFIXES.length);
+    const nextExtraIndex = extraIndex + chosenExtras.length;
+    const mergedExtras = [...extraPrefixes, ...newDrillDowns];
+    const doneBase = nextPrefixIndex >= TAG_CONFIG_PREFIXES.length;
+    const doneExtras = nextExtraIndex >= mergedExtras.length;
+    const done = doneBase && doneExtras;
+
+    const { count: hitsCount = 0 } = await admin
+      .from('auge_tag_audit_hits')
+      .select('cd_configuracao', { count: 'exact', head: true })
+      .eq('run_id', runId);
+
+    const totalQueue = TAG_CONFIG_PREFIXES.length + mergedExtras.length;
+    const currentQueue = nextPrefixIndex + nextExtraIndex;
+    const label = prefixes[0] === prefixes[prefixes.length - 1]
+      ? prefixes[0] : `${prefixes[0]}…${prefixes[prefixes.length - 1]}`;
+
+    const nextDetails = {
+      ...detalhes,
+      stage: done ? 'audit_diff' : 'audit_discover',
+      phase: done ? 'calculando lacunas' : `auditando [${label}] — ${hitsCount} IDs no Auge`,
+      prefix_index: nextPrefixIndex,
+      extra_prefixes: mergedExtras,
+      extra_index: nextExtraIndex,
+      current: done ? totalQueue : currentQueue,
+      total: totalQueue,
+      hits: hitsCount,
+      saturated,
+      errors,
+    };
+    await saveTagRun(admin, runId, nextDetails);
+    selfInvoke('audit_tag_namespace_chunk', runId);
+    return { ok: true, stage: nextDetails.stage, hits: hitsCount };
+  }
+
+  if (stage === 'audit_diff') {
+    // Compara auge_tag_audit_hits (run_id) vs auge_tag_custom_scan
+    const remoteSet = new Set<string>();
+    let from = 0;
+    const step = 1000;
+    while (true) {
+      const { data } = await admin
+        .from('auge_tag_audit_hits')
+        .select('cd_configuracao')
+        .eq('run_id', runId)
+        .range(from, from + step - 1);
+      const rows = (data ?? []) as Array<{ cd_configuracao: string }>;
+      for (const r of rows) remoteSet.add(r.cd_configuracao);
+      if (rows.length < step) break;
+      from += step;
+    }
+
+    const localSet = new Set<string>();
+    from = 0;
+    while (true) {
+      const { data } = await admin
+        .from('auge_tag_custom_scan')
+        .select('cd_configuracao')
+        .range(from, from + step - 1);
+      const rows = (data ?? []) as Array<{ cd_configuracao: string }>;
+      for (const r of rows) localSet.add(r.cd_configuracao);
+      if (rows.length < step) break;
+      from += step;
+    }
+
+    const missing: string[] = []; // no Auge mas não temos localmente
+    const extras: string[] = [];  // temos localmente mas não veio na varredura
+    for (const cd of remoteSet) if (!localSet.has(cd)) missing.push(cd);
+    for (const cd of localSet) if (!remoteSet.has(cd)) extras.push(cd);
+    missing.sort();
+    extras.sort();
+
+    const coveragePct = remoteSet.size === 0 ? 100
+      : Math.round(((remoteSet.size - missing.length) / remoteSet.size) * 10000) / 100;
+
+    const finalDetails = {
+      ...detalhes,
+      stage: 'done',
+      phase: 'auditoria concluída',
+      hits: remoteSet.size,
+      local_count: localSet.size,
+      missing_count: missing.length,
+      extras_count: extras.length,
+      coverage_pct: coveragePct,
+      // limita as amostras para não estourar JSONB
+      missing_sample: missing.slice(0, 500),
+      extras_sample: extras.slice(0, 500),
+    };
+    await saveTagRun(admin, runId, finalDetails, {
+      status: 'success',
+      finished_at: new Date().toISOString(),
+      rows_processed: remoteSet.size,
+      rows_upserted: missing.length,
+      error_message: missing.length
+        ? `${missing.length} configuração(ões) não estão em auge_tag_custom_scan`
+        : null,
+    });
+    return { ok: true, done: true, missing: missing.length, extras: extras.length };
+  }
+
+  return { ok: true, stage };
+}
+
 
 
 
@@ -3447,6 +3614,50 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify(result), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
+    }
+
+    if (action === 'audit_tag_namespace') {
+      const runIns = await admin.from('auge_sync_runs').insert({
+        entidade: 'tag_audit', status: 'running', started_at: new Date().toISOString(),
+        triggered_by: triggeredBy,
+        detalhes: {
+          stage: 'audit_discover',
+          phase: 'auditando namespace CCxxxxxx',
+          prefix_index: 0,
+          extra_prefixes: [],
+          extra_index: 0,
+          errors: 0,
+          hits: 0,
+          saturated: 0,
+          current: 0,
+          total: TAG_CONFIG_PREFIXES.length,
+        },
+      }).select('id').single();
+      const runId = runIns.data?.id;
+      if (!runId) throw new Error('Não foi possível iniciar a auditoria.');
+      selfInvoke('audit_tag_namespace_chunk', runId);
+      return new Response(JSON.stringify({ ok: true, run_id: runId, background: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (action === 'audit_tag_namespace_chunk') {
+      const runId = url.searchParams.get('run_id') ?? '';
+      if (!runId) throw new Error('run_id obrigatório.');
+      try {
+        const result = await auditTagNamespaceChunk(admin, auth, runId);
+        return new Response(JSON.stringify(result), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } catch (e) {
+        const msg = getErrorMessage(e);
+        await admin.from('auge_sync_runs').update({
+          status: 'error', finished_at: new Date().toISOString(), error_message: msg,
+        }).eq('id', runId);
+        return new Response(JSON.stringify({ ok: false, error: msg }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200,
+        });
+      }
     }
 
     if (action === 'sync_tag_custom') {

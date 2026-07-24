@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import {
   Search, Loader2, ArrowDownAZ, ArrowUpAZ, AlertTriangle,
-  RefreshCw, CheckCircle2, Tag as TagIcon, Filter
+  RefreshCw, CheckCircle2, Tag as TagIcon, Filter, ShieldCheck
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -33,6 +33,9 @@ interface SyncRun {
     phase?: string; current?: number; total?: number;
     com_tag?: number; sem_tag?: number; errors?: number;
     cfg_count?: number;
+    hits?: number; local_count?: number; missing_count?: number; extras_count?: number;
+    coverage_pct?: number; missing_sample?: string[]; extras_sample?: string[];
+    stage?: string;
   } | null;
 }
 
@@ -44,10 +47,14 @@ export default function TagsTab() {
   const [sortBy, setSortBy] = useState<'nome' | 'codigo' | 'qtd'>('nome');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [syncing, setSyncing] = useState(false);
+  const [auditing, setAuditing] = useState(false);
   const [run, setRun] = useState<SyncRun | null>(null);
+  const [auditRun, setAuditRun] = useState<SyncRun | null>(null);
   const channelRef = useRef<any>(null);
+  const auditChannelRef = useRef<any>(null);
   const rowsChannelRef = useRef<any>(null);
   const runIsActive = run?.status === 'running';
+  const auditIsActive = auditRun?.status === 'running';
   const shouldPoll = syncing || runIsActive;
 
   // Lista escaneada de configurações do Auge (via Tag-Custom)
@@ -111,10 +118,26 @@ export default function TagsTab() {
         refetch();
         refetchTags();
       }
+      // Auto-detecta auditoria em andamento
+      const { data: audit } = await (supabase as any)
+        .from('auge_sync_runs')
+        .select('*')
+        .eq('entidade', 'tag_audit')
+        .order('started_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (audit) {
+        setAuditRun(audit as SyncRun);
+        if (audit.status === 'running') {
+          setAuditing(true);
+          subscribeAuditRun(audit.id);
+        }
+      }
     })();
 
     return () => {
       if (channelRef.current) supabase.removeChannel(channelRef.current);
+      if (auditChannelRef.current) supabase.removeChannel(auditChannelRef.current);
       if (rowsChannelRef.current) supabase.removeChannel(rowsChannelRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -143,6 +166,52 @@ export default function TagsTab() {
       )
       .subscribe();
     channelRef.current = ch;
+  };
+
+  const subscribeAuditRun = (runId: string) => {
+    if (auditChannelRef.current) supabase.removeChannel(auditChannelRef.current);
+    const ch = supabase
+      .channel(`tag-audit-${runId}`)
+      .on('postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'auge_sync_runs', filter: `id=eq.${runId}` },
+        (p: any) => {
+          setAuditRun(p.new as SyncRun);
+          if (p.new?.status === 'success' || p.new?.status === 'error') {
+            setAuditing(false);
+            const miss = p.new?.detalhes?.missing_count ?? 0;
+            if (p.new?.status === 'success') {
+              if (miss > 0) toast.warning(`Auditoria: ${miss} lacuna(s) detectadas.`);
+              else toast.success('Auditoria: cobertura 100% do namespace.');
+            } else {
+              toast.error(p.new?.error_message ?? 'Falha na auditoria.');
+            }
+          }
+        }
+      )
+      .subscribe();
+    auditChannelRef.current = ch;
+  };
+
+  const auditar = async () => {
+    setAuditing(true);
+    setAuditRun(null);
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        'auge-sync?action=audit_tag_namespace', { body: {} }
+      );
+      if (error) throw error;
+      if (data?.ok === false) throw new Error(data.error ?? 'Erro ao iniciar auditoria.');
+      if (data?.run_id) {
+        const { data: initial } = await (supabase as any)
+          .from('auge_sync_runs').select('*').eq('id', data.run_id).maybeSingle();
+        if (initial) setAuditRun(initial as SyncRun);
+        subscribeAuditRun(data.run_id);
+        toast.info('Auditoria iniciada. Varrendo CCxxxxxx no Auge…');
+      }
+    } catch (e: any) {
+      toast.error(e?.message ?? 'Erro ao iniciar auditoria.');
+      setAuditing(false);
+    }
   };
 
   const varrerAuge = async () => {
@@ -252,6 +321,68 @@ export default function TagsTab() {
         </Card>
       )}
 
+      {auditRun && (() => {
+        const d = auditRun.detalhes ?? {};
+        const auditPct = d.total ? Math.min(100, Math.round(((d.current ?? 0) / (d.total || 1)) * 100)) : 0;
+        const missing = d.missing_sample ?? [];
+        const extras = d.extras_sample ?? [];
+        const isDone = auditRun.status === 'success';
+        const isErr = auditRun.status === 'error';
+        const cov = d.coverage_pct;
+        return (
+          <Card className={`p-3 border-2 ${
+            isErr ? 'border-destructive/40 bg-destructive/5'
+            : isDone && (d.missing_count ?? 0) === 0 ? 'border-emerald-500/40 bg-emerald-500/5'
+            : isDone ? 'border-amber-500/40 bg-amber-500/5'
+            : 'border-primary/40 bg-primary/5'
+          }`}>
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+              <ShieldCheck className="h-4 w-4 text-primary" />
+              <div className="text-xs font-semibold">
+                {auditIsActive ? `Auditoria de cobertura — ${d.phase ?? ''}`
+                  : isErr ? 'Auditoria falhou'
+                  : (d.missing_count ?? 0) === 0 ? 'Cobertura 100% do namespace CCxxxxxx'
+                  : `Auditoria concluída — ${d.missing_count} lacuna(s) detectada(s)`}
+              </div>
+              <div className="ml-auto text-[11px] font-mono text-muted-foreground">
+                {d.hits ?? 0} no Auge · {d.local_count ?? 0} no app
+                {typeof cov === 'number' && ` · ${cov.toFixed(2)}% cobertura`}
+              </div>
+            </div>
+            {auditIsActive && <Progress value={auditPct} className="h-2" />}
+            {isErr && auditRun.error_message && (
+              <div className="mt-2 text-[11px] text-destructive">{auditRun.error_message}</div>
+            )}
+            {isDone && missing.length > 0 && (
+              <div className="mt-3">
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-amber-600 mb-1">
+                  Faltando no app ({d.missing_count}{d.missing_count! > missing.length && ` — mostrando ${missing.length}`})
+                </div>
+                <div className="flex flex-wrap gap-1 max-h-32 overflow-auto">
+                  {missing.map((cd) => (
+                    <Badge key={cd} variant="outline" className="text-[10px] font-mono border-amber-500/60 text-amber-700 dark:text-amber-400">
+                      {cd}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+            {isDone && extras.length > 0 && (
+              <div className="mt-3">
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                  Órfãos no app ({d.extras_count}{d.extras_count! > extras.length && ` — mostrando ${extras.length}`})
+                </div>
+                <div className="flex flex-wrap gap-1 max-h-32 overflow-auto">
+                  {extras.map((cd) => (
+                    <Badge key={cd} variant="secondary" className="text-[10px] font-mono">{cd}</Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </Card>
+        );
+      })()}
+
       <Card className="p-3 space-y-3">
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative flex-1 min-w-[220px]">
@@ -280,6 +411,17 @@ export default function TagsTab() {
           <Button size="sm" onClick={varrerAuge} disabled={syncing || isActive} className="h-9 gap-2 text-[11px]">
             {syncing || isActive ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
             Varrer Auge
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={auditar}
+            disabled={auditing || auditIsActive || syncing || isActive}
+            className="h-9 gap-2 text-[11px]"
+            title="Varre 100% do namespace CCxxxxxx no Auge e aponta o que falta no app"
+          >
+            {auditing || auditIsActive ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ShieldCheck className="h-3.5 w-3.5" />}
+            Auditar cobertura
           </Button>
           <Button size="sm" variant="outline" onClick={() => refetch()} disabled={isFetching} className="h-9 gap-2 text-[11px]">
             {isFetching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
