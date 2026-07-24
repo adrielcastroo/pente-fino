@@ -47,14 +47,10 @@ export default function TagsTab() {
   const [sortBy, setSortBy] = useState<'nome' | 'codigo' | 'qtd'>('nome');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [syncing, setSyncing] = useState(false);
-  const [auditing, setAuditing] = useState(false);
   const [run, setRun] = useState<SyncRun | null>(null);
-  const [auditRun, setAuditRun] = useState<SyncRun | null>(null);
   const channelRef = useRef<any>(null);
-  const auditChannelRef = useRef<any>(null);
   const rowsChannelRef = useRef<any>(null);
   const runIsActive = run?.status === 'running';
-  const auditIsActive = auditRun?.status === 'running';
   const shouldPoll = syncing || runIsActive;
 
   // Lista escaneada de configurações do Auge (via Tag-Custom)
