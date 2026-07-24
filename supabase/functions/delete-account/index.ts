@@ -66,16 +66,64 @@ serve(async (req) => {
 
     // Use service role to delete user
     const adminClient = createClient(supabaseUrl, serviceKey);
+
+    // Pre-clean tables that reference auth.users without ON DELETE (would block deletion)
+    const cleanupTables: Array<{ table: string; column: string; nullify?: boolean }> = [
+      { table: "profiles", column: "id" },
+      { table: "user_roles", column: "user_id" },
+      { table: "team_members", column: "user_id" },
+      { table: "team_page_permissions", column: "user_id" },
+      { table: "auge_permissoes", column: "user_id" },
+      { table: "ai_chat_history", column: "user_id" },
+      { table: "tarefas_contagem", column: "conferente_id", nullify: true },
+      { table: "tarefas_contagem", column: "assigned_to", nullify: true },
+      { table: "tarefas_contagem", column: "completed_by", nullify: true },
+      { table: "inventory_tasks", column: "assigned_to", nullify: true },
+      { table: "inventory_tasks", column: "completed_by", nullify: true },
+      { table: "inventory_task_items", column: "user_id", nullify: true },
+      { table: "historico_contagens", column: "user_id", nullify: true },
+      { table: "contagem_itens_bipados", column: "user_id", nullify: true },
+      { table: "audit_logs", column: "user_id", nullify: true },
+      { table: "operation_logs", column: "user_id", nullify: true },
+      { table: "auth_audit_logs", column: "user_id", nullify: true },
+      { table: "import_log", column: "user_id", nullify: true },
+      { table: "report_logs", column: "user_id", nullify: true },
+      { table: "expedicao_pecas_historico", column: "usuario_id", nullify: true },
+      { table: "nfe_consulta_log", column: "user_id", nullify: true },
+      { table: "nfe_importadas", column: "imported_by", nullify: true },
+    ];
+
+    for (const c of cleanupTables) {
+      try {
+        if (c.nullify) {
+          await adminClient.from(c.table).update({ [c.column]: null }).eq(c.column, userIdToDelete);
+        } else {
+          await adminClient.from(c.table).delete().eq(c.column, userIdToDelete);
+        }
+      } catch (_) { /* ignore, some tables may not exist */ }
+    }
+
     const { error: deleteErr } = await adminClient.auth.admin.deleteUser(userIdToDelete);
 
-    if (deleteErr) throw deleteErr;
+    if (deleteErr) {
+      console.error("[delete-account] auth.admin.deleteUser failed", deleteErr);
+      return new Response(
+        JSON.stringify({
+          error: deleteErr.message || "Falha ao remover usuário",
+          details: (deleteErr as any).details ?? null,
+          hint: "Verifique se há registros vinculados que impedem a exclusão.",
+        }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error: any) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error("[delete-account] unexpected error", error);
+    return new Response(JSON.stringify({ error: error?.message || String(error) }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
