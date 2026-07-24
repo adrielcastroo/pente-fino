@@ -377,6 +377,8 @@ export function AgentChatWidget() {
     return () => document.removeEventListener("mousedown", onDown);
   }, [open, toggleOpen]);
 
+  const fioState = useFioAnimationState();
+
   if (!user) return null;
 
   return (
