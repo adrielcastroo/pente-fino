@@ -479,12 +479,16 @@ async function upsertTagConfigScanRows(
     cd_configuracao: id,
     nm_configuracao: text,
     qtd_tags: 0,
-    last_scanned_at: new Date().toISOString(),
+    // Deixa null para que a fase scan_tags só varra pendentes (incremental).
+    // Configurações já escaneadas anteriormente NÃO são resetadas graças ao ignoreDuplicates.
+    last_scanned_at: null,
     erro: null,
   }));
 
   if (!deduped.length) return;
-  const { error } = await admin.from('auge_tag_custom_scan').upsert(deduped, { onConflict: 'cd_configuracao' });
+  const { error } = await admin
+    .from('auge_tag_custom_scan')
+    .upsert(deduped, { onConflict: 'cd_configuracao', ignoreDuplicates: true });
   if (error) throw new Error(`Falha ao gravar configurações de TAG: ${error.message}`);
 }
 
@@ -494,6 +498,15 @@ async function countTagConfigs(admin: any): Promise<number> {
     .select('cd_configuracao', { count: 'exact', head: true });
   return count ?? 0;
 }
+
+async function countTagConfigsPending(admin: any): Promise<number> {
+  const { count } = await admin
+    .from('auge_tag_custom_scan')
+    .select('cd_configuracao', { count: 'exact', head: true })
+    .is('last_scanned_at', null);
+  return count ?? 0;
+}
+
 
 async function saveTagRun(admin: any, runId: string, detalhes: any, extra?: any) {
   await admin.from('auge_sync_runs').update({ detalhes, ...(extra ?? {}) }).eq('id', runId);
