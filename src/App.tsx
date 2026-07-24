@@ -68,6 +68,10 @@ const DepositosAdminPage = lazy(() => import("@/pages/admin/DepositosAdminPage")
 const AutomacoesPage = lazy(() => import("@/pages/admin/AutomacoesPage"));
 
 import RequireModule from "@/components/auth/RequireModule";
+import PageAccessOutlet from "@/components/auth/PageAccessOutlet";
+import { PageAccessProvider } from "@/hooks/use-page-access";
+
+const EquipesPage = lazy(() => import("@/pages/EquipesPage"));
 
 
 // LoginPage é estático — é o LCP da rota /login e não deve pagar um round-trip
@@ -129,7 +133,9 @@ const App = () => (
       <TooltipProvider>
         <BrowserRouter>
           <AuthProvider>
+            <PageAccessProvider>
             <Suspense fallback={<div className="h-screen w-screen flex items-center justify-center bg-background"><div className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin" /></div>}>
+
               <Routes>
                 <Route path="/login" element={<LoginRoute><LoginPage /></LoginRoute>} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -145,6 +151,8 @@ const App = () => (
 
                 {/* ===== MÓDULO ESTOQUE (canônico /estoque/*) ===== */}
                 <Route element={<ProtectedRoute><RequireModule module="estoque"><MainLayout /></RequireModule></ProtectedRoute>}>
+                <Route element={<PageAccessOutlet />}>
+
 
                   {/* Rotas canônicas /estoque/* */}
                   <Route path="/estoque/operacao" element={<OperacaoHomePage />} />
