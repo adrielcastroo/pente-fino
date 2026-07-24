@@ -82,14 +82,15 @@ export function FioAvatar({
           loop={loop}
           autoplay={autoplay}
           dotLottieRefCallback={(ref) => {
-            dotlottieRef.current = ref;
+            dotlottieRef.current = ref ?? null;
+            if (!ref) return;
             try {
-              ref?.setSpeed(speed);
+              ref.setSpeed(speed);
+              ref.addEventListener("loadError", () => setFailed(true));
             } catch {
               // ignore
             }
           }}
-          onLoadError={() => setFailed(true)}
           style={{ width: "100%", height: "100%" }}
         />
       )}
