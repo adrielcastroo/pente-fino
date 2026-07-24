@@ -214,7 +214,7 @@ export default function TagsTab() {
     }
   };
 
-
+  const varrerAuge = async () => {
     setSyncing(true);
     setRun(null);
     try {
