@@ -3718,18 +3718,23 @@ Deno.serve(async (req) => {
       }
 
       const existing = await countTagConfigs(admin);
+      const pending = await countTagConfigsPending(admin);
+      // Incremental: se já temos configurações descobertas, pula direto para
+      // scan_tags. A fase de descoberta com drill-down é lentíssima e trava
+      // a barra de progresso — só faz sentido no modo `full`.
+      const skipDiscovery = !full && existing > 0;
       await admin.from('auge_sync_runs').update({
         detalhes: {
-          stage: 'discover_prefix',
-          phase: full
-            ? 'descobrindo configurações'
-            : `retomando — ${existing} já conhecidas, descobrindo novas`,
+          stage: skipDiscovery ? 'scan_tags' : 'discover_prefix',
+          phase: skipDiscovery
+            ? `varrendo TAGs — ${pending} pendente(s) de ${existing}`
+            : (full ? 'descobrindo configurações' : `retomando — ${existing} já conhecidas, descobrindo novas`),
           prefix_index: 0,
           term_index: 0,
           pair_index: 0,
-          cfg_offset: 0,
-          current: 0,
-          total: 1,
+          cfg_offset: skipDiscovery ? Math.max(0, existing - pending) : 0,
+          current: skipDiscovery ? Math.max(0, existing - pending) : 0,
+          total: skipDiscovery ? existing : 1,
           cfg_count: existing,
           com_tag: 0,
           sem_tag: 0,
@@ -3740,7 +3745,7 @@ Deno.serve(async (req) => {
       }).eq('id', runId);
 
       selfInvoke('sync_tag_custom_chunk', runId);
-      return new Response(JSON.stringify({ ok: true, run_id: runId, background: true, incremental: !full }), {
+      return new Response(JSON.stringify({ ok: true, run_id: runId, background: true, incremental: !full, skipDiscovery }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
