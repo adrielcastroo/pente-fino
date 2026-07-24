@@ -134,6 +134,26 @@ export default {
           "50%": { transform: "rotate(14deg)" },
           "75%": { transform: "rotate(-10deg)" },
         },
+        "fio-float": {
+          "0%, 100%": { transform: "translateY(0px)" },
+          "50%": { transform: "translateY(-4px)" },
+        },
+        "fio-bounce": {
+          "0%": { transform: "scale(1)" },
+          "40%": { transform: "scale(1.12) translateY(-3px)" },
+          "70%": { transform: "scale(0.96)" },
+          "100%": { transform: "scale(1)" },
+        },
+        "fio-tilt": {
+          "0%, 100%": { transform: "rotate(-3deg) translateY(0)" },
+          "50%": { transform: "rotate(3deg) translateY(-2px)" },
+        },
+        "fio-pop": {
+          "0%": { transform: "scale(0.85)", opacity: "0.6" },
+          "45%": { transform: "scale(1.18)", opacity: "1" },
+          "70%": { transform: "scale(0.95)" },
+          "100%": { transform: "scale(1)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -142,6 +162,10 @@ export default {
         "toast-in": "toast-in 0.22s ease",
         "fio-peek": "fio-peek 0.9s ease-out forwards",
         "fio-wave": "fio-wave 1.1s ease-in-out 0.4s infinite",
+        "fio-float": "fio-float 3.2s ease-in-out infinite",
+        "fio-bounce": "fio-bounce 0.55s ease-out",
+        "fio-tilt": "fio-tilt 1.4s ease-in-out infinite",
+        "fio-pop": "fio-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)",
       },
     },
   },

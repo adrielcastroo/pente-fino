@@ -38,7 +38,7 @@ import {
 import { useChatPanel } from "@/store/useChatPanel";
 
 import { FioAvatar } from "./FioAvatar";
-import type { FioAnimationState } from "@/lib/fio-lottie";
+import type { FioAnimationState } from "@/components/agent/FioAvatar";
 
 // Hook: escuta eventos globais para sincronizar o avatar do Fio com o status
 // do chat mesmo quando o componente está fora do <ChatWindow>.
