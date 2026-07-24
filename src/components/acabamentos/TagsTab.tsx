@@ -57,12 +57,21 @@ export default function TagsTab() {
   const { data: scanRows = [], isLoading, refetch, isFetching } = useQuery({
     queryKey: ['auge-tag-custom-scan'],
     queryFn: async () => {
-      const { data } = await (supabase as any)
-        .from('auge_tag_custom_scan')
-        .select('cd_configuracao, nm_configuracao, qtd_tags, last_scanned_at, erro')
-        .order('nm_configuracao', { ascending: true })
-        .limit(50000);
-      return (data ?? []) as ScanRow[];
+      const PAGE = 1000;
+      const all: ScanRow[] = [];
+      for (let from = 0; ; from += PAGE) {
+        const { data, error } = await (supabase as any)
+          .from('auge_tag_custom_scan')
+          .select('cd_configuracao, nm_configuracao, qtd_tags, last_scanned_at, erro')
+          .order('nm_configuracao', { ascending: true })
+          .range(from, from + PAGE - 1);
+        if (error) break;
+        const chunk = (data ?? []) as ScanRow[];
+        all.push(...chunk);
+        if (chunk.length < PAGE) break;
+        if (all.length >= 200000) break;
+      }
+      return all;
     },
     refetchInterval: shouldPoll ? 1000 : false,
   });
@@ -71,18 +80,24 @@ export default function TagsTab() {
   const { data: tagsByCfg = {}, refetch: refetchTags } = useQuery({
     queryKey: ['auge-tag-custom-map'],
     queryFn: async () => {
-      const { data } = await (supabase as any)
-        .from('auge_tag_custom')
-        .select('cd_configuracao, ds_tag_customizada, ds_tag_calculada, ds_tag_texto')
-        .limit(50000);
+      const PAGE = 1000;
       const map: Record<string, TagRow[]> = {};
-      for (const r of (data ?? []) as TagRow[]) {
-        (map[r.cd_configuracao] ??= []).push(r);
+      for (let from = 0; ; from += PAGE) {
+        const { data, error } = await (supabase as any)
+          .from('auge_tag_custom')
+          .select('cd_configuracao, ds_tag_customizada, ds_tag_calculada, ds_tag_texto')
+          .range(from, from + PAGE - 1);
+        if (error) break;
+        const chunk = (data ?? []) as TagRow[];
+        for (const r of chunk) (map[r.cd_configuracao] ??= []).push(r);
+        if (chunk.length < PAGE) break;
+        if (from > 500000) break;
       }
       return map;
     },
     refetchInterval: shouldPoll ? 2000 : false,
   });
+
 
   useEffect(() => {
     const ch = supabase
