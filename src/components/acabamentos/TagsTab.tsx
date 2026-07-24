@@ -118,7 +118,7 @@ export default function TagsTab() {
 
     return () => {
       if (channelRef.current) supabase.removeChannel(channelRef.current);
-      if (auditChannelRef.current) supabase.removeChannel(auditChannelRef.current);
+      
       if (rowsChannelRef.current) supabase.removeChannel(rowsChannelRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
