@@ -209,6 +209,21 @@ const App = () => (
                   <Route path="/auditoria" element={<Navigate to="/estoque/auditoria" replace />} />
                   <Route path="/minha-atividade" element={<Navigate to="/estoque/minha-atividade" replace />} />
                 </Route>
+                </Route>
+
+                {/* ===== EQUIPES (top-level, supervisor+) ===== */}
+                <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
+                  <Route
+                    path="/equipes"
+                    element={
+                      <RequireRole role="supervisor" fallback={<Navigate to="/" replace />}>
+                        <EquipesPage />
+                      </RequireRole>
+                    }
+                  />
+                </Route>
+
+
 
 
                 {/* ===== MÓDULO EXPEDIÇÃO (novo) ===== */}
@@ -281,7 +296,9 @@ const App = () => (
               <ReleaseRegistrar />
               <AgentChatWidget />
             </Suspense>
+            </PageAccessProvider>
           </AuthProvider>
+
           <Toaster position="top-right" closeButton duration={2000} visibleToasts={1} />
         </BrowserRouter>
       </TooltipProvider>
