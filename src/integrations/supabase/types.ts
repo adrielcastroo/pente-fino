@@ -835,6 +835,30 @@ export type Database = {
         }
         Relationships: []
       }
+      auge_tag_audit_hits: {
+        Row: {
+          cd_configuracao: string
+          found_at: string
+          nm_configuracao: string | null
+          prefix: string | null
+          run_id: string
+        }
+        Insert: {
+          cd_configuracao: string
+          found_at?: string
+          nm_configuracao?: string | null
+          prefix?: string | null
+          run_id: string
+        }
+        Update: {
+          cd_configuracao?: string
+          found_at?: string
+          nm_configuracao?: string | null
+          prefix?: string | null
+          run_id?: string
+        }
+        Relationships: []
+      }
       auge_tag_custom: {
         Row: {
           cd_configuracao: string
