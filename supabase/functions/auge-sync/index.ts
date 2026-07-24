@@ -418,12 +418,15 @@ async function scanAllConfiguracoes(
 }
 
 const TAG_CONFIG_CHARS = '0123456789abcdefghijklmnopqrstuvwxyz'.split('');
+// Cobre TODO o namespace CCxxxxxx: 1000 prefixos de 5 chars (CC000..CC999),
+// cada um retornando até ~1000 IDs paginados. Se algum saturar, drill-down
+// automático adiciona CCxxx0..CCxxx9 (6 chars) na fila.
 const TAG_CONFIG_PREFIXES = Array.from(
   { length: 1000 },
-  (_, index) => `CC${String(index).padStart(5, '0')}`,
+  (_, index) => `CC${String(index).padStart(3, '0')}`,
 );
-const TAG_DISCOVERY_PREFIX_CHUNK = 4;
-const TAG_DISCOVERY_PAGE_SIZE = 10;
+const TAG_DISCOVERY_PREFIX_CHUNK = 8;
+const TAG_DISCOVERY_PAGE_SIZE = 500;
 const TAG_DISCOVERY_TERM_CHUNK = 3;
 const TAG_DISCOVERY_PAIR_CHUNK = 12;
 const TAG_SCAN_CHUNK_SIZE = 120;
