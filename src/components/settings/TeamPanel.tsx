@@ -267,20 +267,64 @@ export default function TeamPanel() {
                 </div>
 
                 {isAdmin && !isSelf ? (
-                  <Select value={m.role} onValueChange={(v) => changeRole(m.id, v as Role)} disabled={savingId === m.id}>
-                    <SelectTrigger className="h-9 w-[140px] text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ASSIGNABLE_ROLES.map((r) => (
-                        <SelectItem key={r} value={r} className="text-xs">{ROLE_LABEL[r]}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex items-center gap-1.5 rounded-md border border-border/40 bg-background/40 px-2 py-1">
+                      {ALL_MODULES.map(({ key, label, icon: Icon }) => {
+                        const enabled = m.modules.includes(key);
+                        return (
+                          <label
+                            key={key}
+                            className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider cursor-pointer px-1.5 py-0.5 rounded ${enabled ? 'text-foreground' : 'text-muted-foreground/60'}`}
+                            title={`${enabled ? 'Remover' : 'Liberar'} acesso a ${label}`}
+                          >
+                            <Switch
+                              checked={enabled}
+                              onCheckedChange={(v) => toggleModule(m.id, key, !!v)}
+                              disabled={savingId === m.id}
+                              className="scale-75"
+                              aria-label={`Alternar módulo ${label}`}
+                            />
+                            <Icon className="h-3 w-3" />
+                            <span className="hidden sm:inline">{label}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                    <Select value={m.role} onValueChange={(v) => changeRole(m.id, v as Role)} disabled={savingId === m.id}>
+                      <SelectTrigger className="h-9 w-[140px] text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ASSIGNABLE_ROLES.map((r) => (
+                          <SelectItem key={r} value={r} className="text-xs">{ROLE_LABEL[r]}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                      onClick={() => setDeleteTarget({ id: m.id, name: m.name })}
+                      disabled={savingId === m.id}
+                      title="Remover usuário"
+                      aria-label={`Remover usuário ${m.name}`}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 ) : (
-                  <Badge variant="outline" className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${ROLE_BADGE[m.role]}`}>
-                    {ROLE_LABEL[m.role]}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <div className="hidden sm:flex items-center gap-1">
+                      {ALL_MODULES.filter((mod) => m.modules.includes(mod.key)).map(({ key, label, icon: Icon }) => (
+                        <Badge key={key} variant="outline" className="text-[10px] gap-1 px-2 py-0.5">
+                          <Icon className="h-3 w-3" /> {label}
+                        </Badge>
+                      ))}
+                    </div>
+                    <Badge variant="outline" className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${ROLE_BADGE[m.role]}`}>
+                      {ROLE_LABEL[m.role]}
+                    </Badge>
+                  </div>
                 )}
               </div>
             );
