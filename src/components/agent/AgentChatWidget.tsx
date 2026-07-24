@@ -36,7 +36,7 @@ import {
   type ArtifactSpec,
 } from "@/lib/agent-blocks";
 import { useChatPanel } from "@/store/useChatPanel";
-import logo from "@/assets/fio-logo.png";
+
 import { FioAvatar } from "./FioAvatar";
 import type { FioAnimationState } from "@/lib/fio-lottie";
 
