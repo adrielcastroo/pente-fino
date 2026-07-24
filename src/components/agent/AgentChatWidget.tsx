@@ -163,6 +163,11 @@ function ChatWindow({
   };
 
   const isLoading = status === "submitted" || status === "streaming";
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent<boolean>("fio:thinking", { detail: isLoading }),
+    );
+  }, [isLoading]);
   const lastMessage = messages[messages.length - 1];
   const lastAssistantHasVisibleContent =
     lastMessage?.role === "assistant" &&
