@@ -121,6 +121,7 @@ function ChatWindow({
     transport,
     onFinish: () => {
       window.dispatchEvent(new CustomEvent("fio:response"));
+      window.dispatchEvent(new CustomEvent<boolean>("fio:thinking", { detail: false }));
     },
     onError: (err) => {
       console.error("[ai-agent] erro no chat", err);
