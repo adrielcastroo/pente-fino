@@ -118,10 +118,26 @@ export default function TagsTab() {
         refetch();
         refetchTags();
       }
+      // Auto-detecta auditoria em andamento
+      const { data: audit } = await (supabase as any)
+        .from('auge_sync_runs')
+        .select('*')
+        .eq('entidade', 'tag_audit')
+        .order('started_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (audit) {
+        setAuditRun(audit as SyncRun);
+        if (audit.status === 'running') {
+          setAuditing(true);
+          subscribeAuditRun(audit.id);
+        }
+      }
     })();
 
     return () => {
       if (channelRef.current) supabase.removeChannel(channelRef.current);
+      if (auditChannelRef.current) supabase.removeChannel(auditChannelRef.current);
       if (rowsChannelRef.current) supabase.removeChannel(rowsChannelRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
