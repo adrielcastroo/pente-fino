@@ -321,6 +321,68 @@ export default function TagsTab() {
         </Card>
       )}
 
+      {auditRun && (() => {
+        const d = auditRun.detalhes ?? {};
+        const auditPct = d.total ? Math.min(100, Math.round(((d.current ?? 0) / (d.total || 1)) * 100)) : 0;
+        const missing = d.missing_sample ?? [];
+        const extras = d.extras_sample ?? [];
+        const isDone = auditRun.status === 'success';
+        const isErr = auditRun.status === 'error';
+        const cov = d.coverage_pct;
+        return (
+          <Card className={`p-3 border-2 ${
+            isErr ? 'border-destructive/40 bg-destructive/5'
+            : isDone && (d.missing_count ?? 0) === 0 ? 'border-emerald-500/40 bg-emerald-500/5'
+            : isDone ? 'border-amber-500/40 bg-amber-500/5'
+            : 'border-primary/40 bg-primary/5'
+          }`}>
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+              <ShieldCheck className="h-4 w-4 text-primary" />
+              <div className="text-xs font-semibold">
+                {auditIsActive ? `Auditoria de cobertura — ${d.phase ?? ''}`
+                  : isErr ? 'Auditoria falhou'
+                  : (d.missing_count ?? 0) === 0 ? 'Cobertura 100% do namespace CCxxxxxx'
+                  : `Auditoria concluída — ${d.missing_count} lacuna(s) detectada(s)`}
+              </div>
+              <div className="ml-auto text-[11px] font-mono text-muted-foreground">
+                {d.hits ?? 0} no Auge · {d.local_count ?? 0} no app
+                {typeof cov === 'number' && ` · ${cov.toFixed(2)}% cobertura`}
+              </div>
+            </div>
+            {auditIsActive && <Progress value={auditPct} className="h-2" />}
+            {isErr && auditRun.error_message && (
+              <div className="mt-2 text-[11px] text-destructive">{auditRun.error_message}</div>
+            )}
+            {isDone && missing.length > 0 && (
+              <div className="mt-3">
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-amber-600 mb-1">
+                  Faltando no app ({d.missing_count}{d.missing_count! > missing.length && ` — mostrando ${missing.length}`})
+                </div>
+                <div className="flex flex-wrap gap-1 max-h-32 overflow-auto">
+                  {missing.map((cd) => (
+                    <Badge key={cd} variant="outline" className="text-[10px] font-mono border-amber-500/60 text-amber-700 dark:text-amber-400">
+                      {cd}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+            {isDone && extras.length > 0 && (
+              <div className="mt-3">
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                  Órfãos no app ({d.extras_count}{d.extras_count! > extras.length && ` — mostrando ${extras.length}`})
+                </div>
+                <div className="flex flex-wrap gap-1 max-h-32 overflow-auto">
+                  {extras.map((cd) => (
+                    <Badge key={cd} variant="secondary" className="text-[10px] font-mono">{cd}</Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </Card>
+        );
+      })()}
+
       <Card className="p-3 space-y-3">
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative flex-1 min-w-[220px]">
