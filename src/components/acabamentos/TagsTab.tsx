@@ -206,7 +206,7 @@ export default function TagsTab() {
           .from('auge_sync_runs').select('*').eq('id', data.run_id).maybeSingle();
         if (initial) setAuditRun(initial as SyncRun);
         subscribeAuditRun(data.run_id);
-        toast.info('Auditoria iniciada. Varrendo CCxxxxxx no Auge…');
+        toast.info('Auditoria iniciada. Varrendo configurações no Auge…');
       }
     } catch (e: any) {
       toast.error(e?.message ?? 'Erro ao iniciar auditoria.');
@@ -341,7 +341,7 @@ export default function TagsTab() {
               <div className="text-xs font-semibold">
                 {auditIsActive ? `Auditoria de cobertura — ${d.phase ?? ''}`
                   : isErr ? 'Auditoria falhou'
-                  : (d.missing_count ?? 0) === 0 ? 'Cobertura 100% do namespace CCxxxxxx'
+                  : (d.missing_count ?? 0) === 0 ? 'Cobertura 100% das configurações encontradas'
                   : `Auditoria concluída — ${d.missing_count} lacuna(s) detectada(s)`}
               </div>
               <div className="ml-auto text-[11px] font-mono text-muted-foreground">
@@ -390,7 +390,7 @@ export default function TagsTab() {
             <Input
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
-              placeholder="Buscar por configuração ou código (ex.: CC000004)…"
+              placeholder="Buscar por configuração ou código…"
               className="h-9 pl-7 text-xs"
             />
           </div>
@@ -418,7 +418,7 @@ export default function TagsTab() {
             onClick={auditar}
             disabled={auditing || auditIsActive || syncing || isActive}
             className="h-9 gap-2 text-[11px]"
-            title="Varre 100% do namespace CCxxxxxx no Auge e aponta o que falta no app"
+            title="Varre as configurações no Auge e aponta o que falta no app"
           >
             {auditing || auditIsActive ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ShieldCheck className="h-3.5 w-3.5" />}
             Auditar cobertura
