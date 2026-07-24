@@ -37,6 +37,40 @@ import {
 } from "@/lib/agent-blocks";
 import { useChatPanel } from "@/store/useChatPanel";
 import logo from "@/assets/fio-logo.png";
+import { FioAvatar } from "./FioAvatar";
+import type { FioAnimationState } from "@/lib/fio-lottie";
+
+// Hook: escuta eventos globais para sincronizar o avatar do Fio com o status
+// do chat mesmo quando o componente está fora do <ChatWindow>.
+function useFioAnimationState(): FioAnimationState {
+  const [state, setState] = useState<FioAnimationState>("idle");
+  useEffect(() => {
+    let respondingTimer: number | undefined;
+    const onThinking = (e: Event) => {
+      const active = (e as CustomEvent<boolean>).detail;
+      if (active) {
+        window.clearTimeout(respondingTimer);
+        setState("thinking");
+      } else {
+        setState((s) => (s === "thinking" ? "idle" : s));
+      }
+    };
+    const onResponse = () => {
+      setState("responding");
+      window.clearTimeout(respondingTimer);
+      respondingTimer = window.setTimeout(() => setState("idle"), 1600);
+    };
+    window.addEventListener("fio:thinking", onThinking as EventListener);
+    window.addEventListener("fio:response", onResponse);
+    return () => {
+      window.removeEventListener("fio:thinking", onThinking as EventListener);
+      window.removeEventListener("fio:response", onResponse);
+      window.clearTimeout(respondingTimer);
+    };
+  }, []);
+  return state;
+}
+
 
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
