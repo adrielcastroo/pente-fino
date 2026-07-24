@@ -418,13 +418,10 @@ async function scanAllConfiguracoes(
 }
 
 const TAG_CONFIG_CHARS = '0123456789abcdefghijklmnopqrstuvwxyz'.split('');
-// Cobre TODO o namespace CCxxxxxx: 1000 prefixos de 5 chars (CC000..CC999),
-// cada um retornando até ~1000 IDs paginados. Se algum saturar, drill-down
-// automático adiciona CCxxx0..CCxxx9 (6 chars) na fila.
-const TAG_CONFIG_PREFIXES = Array.from(
-  { length: 1000 },
-  (_, index) => `CC${String(index).padStart(3, '0')}`,
-);
+// Descoberta genérica de configurações: o Auge não restringe configuração ao
+// padrão CCxxxxxx. Começamos por termos alfanuméricos amplos e, quando o
+// Select2 satura, aprofundamos com todos os caracteres (a -> aa, ab, a0...).
+const TAG_CONFIG_PREFIXES = TAG_CONFIG_CHARS;
 const TAG_DISCOVERY_PREFIX_CHUNK = 8;
 const TAG_DISCOVERY_PAGE_SIZE = 500;
 const TAG_DISCOVERY_TERM_CHUNK = 3;
@@ -542,9 +539,9 @@ async function syncTagCustomChunk(admin: any, auth: any, runId: string) {
       try {
         const result = await scanConfiguracaoTerm(auth, prefix);
         foundRows.push(...result.rows.map((row) => ({ id: String(row.id ?? ''), text: String(row.text ?? '') })));
-        // Drill-down: se o prefixo saturou, adiciona 10 sub-prefixos (0-9) na fila
+        // Drill-down: se o termo saturou, aprofunda em todo alfanumérico.
         if (result.saturated && prefix.length < 8) {
-          for (let d = 0; d < 10; d++) newDrillDowns.push(`${prefix}${d}`);
+          for (const char of TAG_CONFIG_CHARS) newDrillDowns.push(`${prefix}${char}`);
         }
       } catch {
         errors += 1;
@@ -792,8 +789,8 @@ async function syncTagCustomChunk(admin: any, auth: any, runId: string) {
 }
 
 // ============================================================================
-// AUDITORIA DE COBERTURA — varre CCxxxxxx no Auge e compara com o que temos
-// gravado em auge_tag_custom_scan. Grava cada ID descoberto em
+// AUDITORIA DE COBERTURA — varre configurações no Auge sem assumir padrão de
+// código e compara com o que temos gravado em auge_tag_custom_scan. Grava cada ID descoberto em
 // auge_tag_audit_hits, e ao final calcula gaps (faltantes) e extras (órfãos).
 // ============================================================================
 async function auditTagNamespaceChunk(admin: any, auth: any, runId: string) {
@@ -839,7 +836,7 @@ async function auditTagNamespaceChunk(admin: any, auth: any, runId: string) {
       }
       if (r.value.saturated && prefix.length < 8) {
         saturated++;
-        for (let d = 0; d < 10; d++) newDrillDowns.push(`${prefix}${d}`);
+        for (const char of TAG_CONFIG_CHARS) newDrillDowns.push(`${prefix}${char}`);
       }
     });
 
@@ -3622,7 +3619,7 @@ Deno.serve(async (req) => {
         triggered_by: triggeredBy,
         detalhes: {
           stage: 'audit_discover',
-          phase: 'auditando namespace CCxxxxxx',
+          phase: 'auditando configurações',
           prefix_index: 0,
           extra_prefixes: [],
           extra_index: 0,
