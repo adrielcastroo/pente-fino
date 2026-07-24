@@ -120,7 +120,48 @@ export default function TeamPanel() {
     }
   };
 
-  const members = useMemo(() => {
+  const toggleModule = async (userId: string, moduleKey: ModuleKey, enabled: boolean) => {
+    setSavingId(userId);
+    try {
+      const current = profiles.find((p) => p.id === userId)?.modules ?? ['estoque'];
+      const set = new Set(current);
+      if (enabled) set.add(moduleKey); else set.delete(moduleKey);
+      const next = Array.from(set);
+      if (next.length === 0) {
+        toast.error('O usuário precisa ter pelo menos um módulo liberado.');
+        return;
+      }
+      const { error } = await supabase.from('profiles').update({ modules: next }).eq('id', userId);
+      if (error) throw error;
+      setProfiles((list) => list.map((p) => (p.id === userId ? { ...p, modules: next } : p)));
+      toast.success('Módulos atualizados.');
+    } catch (err: any) {
+      toast.error(err?.message || 'Falha ao atualizar módulos.');
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const deleteUser = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('delete-account', {
+        body: { target_user_id: deleteTarget.id },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      setProfiles((list) => list.filter((p) => p.id !== deleteTarget.id));
+      toast.success(`Usuário "${deleteTarget.name}" removido.`);
+      setDeleteTarget(null);
+    } catch (err: any) {
+      toast.error(err?.message || 'Falha ao remover usuário.');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+
     const list = profiles.map((p) => {
       const pres = presence[p.id];
       const status: PresenceStatus = pres?.status ?? 'offline';
