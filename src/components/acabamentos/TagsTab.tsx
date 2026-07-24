@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import {
   Search, Loader2, ArrowDownAZ, ArrowUpAZ, AlertTriangle,
-  RefreshCw, CheckCircle2, Tag as TagIcon, Filter
+  RefreshCw, CheckCircle2, Tag as TagIcon, Filter, ShieldCheck
 } from 'lucide-react';
 import { toast } from 'sonner';
 
