@@ -214,12 +214,12 @@ export default function TagsTab() {
     }
   };
 
-  const varrerAuge = async () => {
+  const varrerAuge = async (full: boolean = false) => {
     setSyncing(true);
     setRun(null);
     try {
       const { data, error } = await supabase.functions.invoke(
-        'auge-sync?action=sync_tag_custom', { body: {} }
+        'auge-sync?action=sync_tag_custom', { body: { full } }
       );
       if (error) throw error;
       if (data?.ok === false) throw new Error(data.error ?? 'Erro ao iniciar varredura.');
@@ -230,13 +230,18 @@ export default function TagsTab() {
           .from('auge_sync_runs').select('*').eq('id', data.run_id).maybeSingle();
         if (initial) setRun(initial as SyncRun);
         subscribeRun(data.run_id);
-        toast.info('Varredura iniciada. Isso pode levar alguns minutos…');
+        toast.info(
+          full
+            ? 'Varredura completa iniciada (limpando e re-escaneando tudo)…'
+            : 'Varredura incremental iniciada — pulando já escaneadas.'
+        );
       }
     } catch (e: any) {
       toast.error(e?.message ?? 'Erro ao iniciar varredura.');
       setSyncing(false);
     }
   };
+
 
   const totais = useMemo(() => {
     const totalScan = scanRows.length;
