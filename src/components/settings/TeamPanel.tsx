@@ -161,7 +161,7 @@ export default function TeamPanel() {
     }
   };
 
-
+  const members = useMemo(() => {
     const list = profiles.map((p) => {
       const pres = presence[p.id];
       const status: PresenceStatus = pres?.status ?? 'offline';
@@ -171,6 +171,7 @@ export default function TeamPanel() {
         avatar: p.avatar_url,
         status,
         role: rolesByUser[p.id] ?? 'operador',
+        modules: (p.modules ?? ['estoque']) as string[],
         lastSeen: pres?.online_at ?? null,
       };
     });
