@@ -117,29 +117,33 @@ export function FioAvatar({
         />
       )}
 
-      <img
-        key={`${src}-${bounceKey}`}
-        ref={imgRef}
-        src={src}
-        alt="Fio"
-        width={size}
-        height={size}
-        draggable={false}
-        loading="lazy"
+      {/* Camada de animação CSS (float/bounce/pop) */}
+      <div
+        key={`anim-${effective}-${bounceKey}`}
         className={cn(
-          "relative h-full w-full object-contain select-none pointer-events-none",
-          "will-change-transform transition-transform duration-500 ease-out",
-          // Bounce/float sutil no idle
+          "relative h-full w-full",
           effective === "idle" && "animate-fio-float",
           effective === "hover" && "animate-fio-bounce",
           effective === "thinking" && "animate-fio-tilt",
           effective === "responding" && "animate-fio-pop",
         )}
-        style={{
-          transform: "perspective(600px) rotateX(0deg) rotateY(0deg)",
-          filter: "drop-shadow(0 6px 12px rgba(0, 102, 255, 0.25))",
-        }}
-      />
+      >
+        {/* Camada de tilt controlada pelo mouse */}
+        <img
+          ref={imgRef}
+          src={src}
+          alt="Fio"
+          width={size}
+          height={size}
+          draggable={false}
+          loading="lazy"
+          className="h-full w-full object-contain select-none pointer-events-none will-change-transform transition-transform duration-300 ease-out"
+          style={{
+            transform: "perspective(600px) rotateX(0deg) rotateY(0deg)",
+            filter: "drop-shadow(0 6px 12px rgba(0, 102, 255, 0.25))",
+          }}
+        />
+      </div>
     </div>
   );
 }
