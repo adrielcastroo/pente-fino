@@ -289,23 +289,94 @@ export default function IncluirItemMassaTab() {
     setCodigoBuscado(codigoExcluir.trim());
   };
 
+  const handleImportFile = async (file: File) => {
+    try {
+      const buf = await file.arrayBuffer();
+      const parsed = parseImportedSheet(buf);
+      if (!parsed.length) {
+        toast.error('Nenhuma linha válida encontrada na planilha.');
+        return;
+      }
+      setImportedItems(parsed);
+      setImportFileName(file.name);
+      toast.success(`${parsed.length} item(ns) carregado(s) da planilha.`);
+    } catch (e: any) {
+      toast.error(`Falha ao ler planilha: ${e?.message ?? e}`);
+    }
+  };
+
+  const invokeIncluirRun = async (payload: ItemPayload): Promise<string | null> => {
+    const { data, error } = await supabase.functions.invoke('auge-sync?action=incluir_item_massa', {
+      body: { item: payload, cdAcabamentos: Array.from(selecionados) },
+    });
+    if (error) throw error;
+    if (data?.ok === false) throw new Error(data?.error ?? 'Falha ao iniciar');
+    return data?.run_id ?? null;
+  };
+
+  const waitRunTerminal = async (runId: string): Promise<SyncRun | null> => {
+    // Poll até terminal (success|error). Timeout de segurança: 10min.
+    const deadline = Date.now() + 10 * 60 * 1000;
+    while (Date.now() < deadline) {
+      const { data } = await (supabase as any)
+        .from('auge_sync_runs').select('*').eq('id', runId).maybeSingle();
+      if (data) {
+        setRun(data as SyncRun);
+        if (data.status === 'success' || data.status === 'error') return data as SyncRun;
+      }
+      await new Promise((r) => setTimeout(r, 1500));
+    }
+    return null;
+  };
+
   const enviarIncluir = async () => {
-    if (!item.cdItemAcabamento.trim()) return toast.error('Informe o Código do Tecido/Kit.');
     if (selecionados.size === 0) return toast.error('Selecione ao menos 1 acabamento.');
+
+    // Modo em lote (planilha importada)
+    if (importedItems.length > 0) {
+      setEnviando(true);
+      setRun(null);
+      let sucesso = 0;
+      let falha = 0;
+      try {
+        for (let i = 0; i < importedItems.length; i++) {
+          const it = importedItems[i];
+          setBatchProgress({ current: i + 1, total: importedItems.length, label: it.cdItemAcabamento });
+          try {
+            const runId = await invokeIncluirRun(it);
+            if (runId) {
+              subscribeRun(runId);
+              const final = await waitRunTerminal(runId);
+              if (final?.status === 'success') sucesso++;
+              else falha++;
+            } else {
+              falha++;
+            }
+          } catch (e: any) {
+            falha++;
+            toast.error(`${it.cdItemAcabamento}: ${e?.message ?? e}`);
+          }
+        }
+        toast.success(`Lote concluído — ${sucesso} sucesso · ${falha} falha(s).`);
+      } finally {
+        setBatchProgress(null);
+        setEnviando(false);
+      }
+      return;
+    }
+
+    // Modo item único (formulário)
+    if (!item.cdItemAcabamento.trim()) return toast.error('Informe o Código do Tecido/Kit ou importe uma planilha.');
 
     setEnviando(true);
     setRun(null);
     try {
-      const { data, error } = await supabase.functions.invoke('auge-sync?action=incluir_item_massa', {
-        body: { item, cdAcabamentos: Array.from(selecionados) },
-      });
-      if (error) throw error;
-      if (data?.ok === false) throw new Error(data?.error ?? 'Falha ao iniciar');
-      if (data?.run_id) {
+      const runId = await invokeIncluirRun(item);
+      if (runId) {
         const { data: initial } = await (supabase as any)
-          .from('auge_sync_runs').select('*').eq('id', data.run_id).maybeSingle();
+          .from('auge_sync_runs').select('*').eq('id', runId).maybeSingle();
         if (initial) setRun(initial as SyncRun);
-        subscribeRun(data.run_id);
+        subscribeRun(runId);
         toast.info(`Iniciando inclusão em ${selecionados.size} acabamentos…`);
       }
     } catch (e: any) {
