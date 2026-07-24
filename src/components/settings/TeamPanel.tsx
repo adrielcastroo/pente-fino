@@ -1,19 +1,33 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useTeamPresence, type PresenceMeta, type PresenceStatus } from '@/hooks/use-presence';
-import { Users, Circle, Search, ShieldCheck } from 'lucide-react';
+import { Users, Circle, Search, ShieldCheck, Trash2, Package, Truck, ShoppingCart } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useAuth } from '@/hooks/use-auth';
 import { ROLE_LABEL, normalizeRole, type Role } from '@/lib/permissions';
 import { toast } from 'sonner';
+
+type ModuleKey = 'estoque' | 'expedicao' | 'compras';
+const ALL_MODULES: { key: ModuleKey; label: string; icon: typeof Package }[] = [
+  { key: 'estoque', label: 'Estoque', icon: Package },
+  { key: 'expedicao', label: 'Expedição', icon: Truck },
+  { key: 'compras', label: 'Compras', icon: ShoppingCart },
+];
 
 interface ProfileRow {
   id: string;
   display_name: string | null;
   avatar_url: string | null;
+  modules: string[] | null;
 }
 
 const STATUS_LABEL: Record<PresenceStatus, string> = {
@@ -52,6 +66,8 @@ export default function TeamPanel() {
   const [presence, setPresence] = useState<Record<string, PresenceMeta>>({});
   const [query, setQuery] = useState('');
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useTeamPresence(setPresence);
 
@@ -62,7 +78,7 @@ export default function TeamPanel() {
       setLoadError(null);
       try {
         const [{ data: profilesData, error: pErr }, { data: rolesData, error: rErr }] = await Promise.all([
-          supabase.from('profiles').select('id, display_name, avatar_url').order('display_name', { ascending: true }),
+          supabase.from('profiles').select('id, display_name, avatar_url, modules').order('display_name', { ascending: true }),
           (supabase.from('user_roles' as any).select('user_id, role') as any),
         ]);
         if (cancelled) return;
@@ -104,6 +120,47 @@ export default function TeamPanel() {
     }
   };
 
+  const toggleModule = async (userId: string, moduleKey: ModuleKey, enabled: boolean) => {
+    setSavingId(userId);
+    try {
+      const current = profiles.find((p) => p.id === userId)?.modules ?? ['estoque'];
+      const set = new Set(current);
+      if (enabled) set.add(moduleKey); else set.delete(moduleKey);
+      const next = Array.from(set);
+      if (next.length === 0) {
+        toast.error('O usuário precisa ter pelo menos um módulo liberado.');
+        return;
+      }
+      const { error } = await supabase.from('profiles').update({ modules: next }).eq('id', userId);
+      if (error) throw error;
+      setProfiles((list) => list.map((p) => (p.id === userId ? { ...p, modules: next } : p)));
+      toast.success('Módulos atualizados.');
+    } catch (err: any) {
+      toast.error(err?.message || 'Falha ao atualizar módulos.');
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const deleteUser = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('delete-account', {
+        body: { target_user_id: deleteTarget.id },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      setProfiles((list) => list.filter((p) => p.id !== deleteTarget.id));
+      toast.success(`Usuário "${deleteTarget.name}" removido.`);
+      setDeleteTarget(null);
+    } catch (err: any) {
+      toast.error(err?.message || 'Falha ao remover usuário.');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const members = useMemo(() => {
     const list = profiles.map((p) => {
       const pres = presence[p.id];
@@ -114,6 +171,7 @@ export default function TeamPanel() {
         avatar: p.avatar_url,
         status,
         role: rolesByUser[p.id] ?? 'operador',
+        modules: (p.modules ?? ['estoque']) as string[],
         lastSeen: pres?.online_at ?? null,
       };
     });
@@ -209,26 +267,93 @@ export default function TeamPanel() {
                 </div>
 
                 {isAdmin && !isSelf ? (
-                  <Select value={m.role} onValueChange={(v) => changeRole(m.id, v as Role)} disabled={savingId === m.id}>
-                    <SelectTrigger className="h-9 w-[140px] text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ASSIGNABLE_ROLES.map((r) => (
-                        <SelectItem key={r} value={r} className="text-xs">{ROLE_LABEL[r]}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex items-center gap-1.5 rounded-md border border-border/40 bg-background/40 px-2 py-1">
+                      {ALL_MODULES.map(({ key, label, icon: Icon }) => {
+                        const enabled = m.modules.includes(key);
+                        return (
+                          <label
+                            key={key}
+                            className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider cursor-pointer px-1.5 py-0.5 rounded ${enabled ? 'text-foreground' : 'text-muted-foreground/60'}`}
+                            title={`${enabled ? 'Remover' : 'Liberar'} acesso a ${label}`}
+                          >
+                            <Switch
+                              checked={enabled}
+                              onCheckedChange={(v) => toggleModule(m.id, key, !!v)}
+                              disabled={savingId === m.id}
+                              className="scale-75"
+                              aria-label={`Alternar módulo ${label}`}
+                            />
+                            <Icon className="h-3 w-3" />
+                            <span className="hidden sm:inline">{label}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                    <Select value={m.role} onValueChange={(v) => changeRole(m.id, v as Role)} disabled={savingId === m.id}>
+                      <SelectTrigger className="h-9 w-[140px] text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ASSIGNABLE_ROLES.map((r) => (
+                          <SelectItem key={r} value={r} className="text-xs">{ROLE_LABEL[r]}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                      onClick={() => setDeleteTarget({ id: m.id, name: m.name })}
+                      disabled={savingId === m.id}
+                      title="Remover usuário"
+                      aria-label={`Remover usuário ${m.name}`}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 ) : (
-                  <Badge variant="outline" className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${ROLE_BADGE[m.role]}`}>
-                    {ROLE_LABEL[m.role]}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <div className="hidden sm:flex items-center gap-1">
+                      {ALL_MODULES.filter((mod) => m.modules.includes(mod.key)).map(({ key, label, icon: Icon }) => (
+                        <Badge key={key} variant="outline" className="text-[10px] gap-1 px-2 py-0.5">
+                          <Icon className="h-3 w-3" /> {label}
+                        </Badge>
+                      ))}
+                    </div>
+                    <Badge variant="outline" className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${ROLE_BADGE[m.role]}`}>
+                      {ROLE_LABEL[m.role]}
+                    </Badge>
+                  </div>
                 )}
               </div>
             );
           })
         )}
       </div>
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(v) => !v && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover usuário?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação exclui permanentemente <strong>{deleteTarget?.name}</strong> do sistema,
+              incluindo credenciais de acesso. Registros históricos ligados a este usuário serão
+              preservados. Esta operação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); deleteUser(); }}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? 'Removendo…' : 'Sim, remover'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

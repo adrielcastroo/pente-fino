@@ -35,11 +35,38 @@ serve(async (req) => {
       });
     }
 
-    const userId = userData.user.id;
+    const callerId = userData.user.id;
+
+    // Optional body: { target_user_id }
+    let targetUserId: string | null = null;
+    try {
+      const body = await req.json();
+      if (body && typeof body.target_user_id === "string") {
+        targetUserId = body.target_user_id;
+      }
+    } catch (_) {
+      // no body — self-delete
+    }
+
+    // If deleting someone else, caller must be admin
+    if (targetUserId && targetUserId !== callerId) {
+      const { data: isAdmin, error: roleErr } = await userClient.rpc("has_role", {
+        _user_id: callerId,
+        _role: "admin",
+      });
+      if (roleErr || !isAdmin) {
+        return new Response(JSON.stringify({ error: "Forbidden: admin only" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    const userIdToDelete = targetUserId ?? callerId;
 
     // Use service role to delete user
     const adminClient = createClient(supabaseUrl, serviceKey);
-    const { error: deleteErr } = await adminClient.auth.admin.deleteUser(userId);
+    const { error: deleteErr } = await adminClient.auth.admin.deleteUser(userIdToDelete);
 
     if (deleteErr) throw deleteErr;
 
