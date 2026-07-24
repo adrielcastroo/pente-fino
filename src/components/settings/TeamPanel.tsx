@@ -1,19 +1,33 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useTeamPresence, type PresenceMeta, type PresenceStatus } from '@/hooks/use-presence';
-import { Users, Circle, Search, ShieldCheck } from 'lucide-react';
+import { Users, Circle, Search, ShieldCheck, Trash2, Package, Truck, ShoppingCart } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useAuth } from '@/hooks/use-auth';
 import { ROLE_LABEL, normalizeRole, type Role } from '@/lib/permissions';
 import { toast } from 'sonner';
+
+type ModuleKey = 'estoque' | 'expedicao' | 'compras';
+const ALL_MODULES: { key: ModuleKey; label: string; icon: typeof Package }[] = [
+  { key: 'estoque', label: 'Estoque', icon: Package },
+  { key: 'expedicao', label: 'Expedição', icon: Truck },
+  { key: 'compras', label: 'Compras', icon: ShoppingCart },
+];
 
 interface ProfileRow {
   id: string;
   display_name: string | null;
   avatar_url: string | null;
+  modules: string[] | null;
 }
 
 const STATUS_LABEL: Record<PresenceStatus, string> = {
