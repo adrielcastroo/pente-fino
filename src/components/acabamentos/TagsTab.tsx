@@ -153,51 +153,6 @@ export default function TagsTab() {
     channelRef.current = ch;
   };
 
-  const subscribeAuditRun = (runId: string) => {
-    if (auditChannelRef.current) supabase.removeChannel(auditChannelRef.current);
-    const ch = supabase
-      .channel(`tag-audit-${runId}`)
-      .on('postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'auge_sync_runs', filter: `id=eq.${runId}` },
-        (p: any) => {
-          setAuditRun(p.new as SyncRun);
-          if (p.new?.status === 'success' || p.new?.status === 'error') {
-            setAuditing(false);
-            const miss = p.new?.detalhes?.missing_count ?? 0;
-            if (p.new?.status === 'success') {
-              if (miss > 0) toast.warning(`Auditoria: ${miss} lacuna(s) detectadas.`);
-              else toast.success('Auditoria: cobertura 100% do namespace.');
-            } else {
-              toast.error(p.new?.error_message ?? 'Falha na auditoria.');
-            }
-          }
-        }
-      )
-      .subscribe();
-    auditChannelRef.current = ch;
-  };
-
-  const auditar = async () => {
-    setAuditing(true);
-    setAuditRun(null);
-    try {
-      const { data, error } = await supabase.functions.invoke(
-        'auge-sync?action=audit_tag_namespace', { body: {} }
-      );
-      if (error) throw error;
-      if (data?.ok === false) throw new Error(data.error ?? 'Erro ao iniciar auditoria.');
-      if (data?.run_id) {
-        const { data: initial } = await (supabase as any)
-          .from('auge_sync_runs').select('*').eq('id', data.run_id).maybeSingle();
-        if (initial) setAuditRun(initial as SyncRun);
-        subscribeAuditRun(data.run_id);
-        toast.info('Auditoria iniciada. Varrendo configurações no Auge…');
-      }
-    } catch (e: any) {
-      toast.error(e?.message ?? 'Erro ao iniciar auditoria.');
-      setAuditing(false);
-    }
-  };
 
   const varrerAuge = async (full: boolean = false) => {
     setSyncing(true);
