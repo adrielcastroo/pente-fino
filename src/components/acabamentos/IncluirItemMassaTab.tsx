@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import * as XLSX from 'xlsx';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -8,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, Loader2, Send, CheckCircle2, AlertTriangle, X, Trash2, Plus } from 'lucide-react';
+import { Search, Loader2, Send, CheckCircle2, AlertTriangle, X, Trash2, Plus, FileSpreadsheet, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Acabamento {
@@ -44,7 +45,19 @@ interface ItemVinculo {
 
 type Mode = 'incluir' | 'excluir';
 
-const emptyItem = {
+type ItemPayload = {
+  cdItemAcabamento: string;
+  dsItemAcabamento: string;
+  dsItemAcabamentoReduzida: string;
+  dsItemAcabamentoOriginal: string;
+  cdKitComplementar1: string;
+  cdKitComplementar2: string;
+  cdKitComplementar3: string;
+  cdKitComplementar4: string;
+  cdKitComplementar5: string;
+};
+
+const emptyItem: ItemPayload = {
   cdItemAcabamento: '',
   dsItemAcabamento: '',
   dsItemAcabamentoReduzida: '',
@@ -56,6 +69,82 @@ const emptyItem = {
   cdKitComplementar5: '',
 };
 
+const IMPORT_HEADER_ALIASES: Array<{ key: keyof ItemPayload; aliases: string[] }> = [
+  { key: 'cdItemAcabamento', aliases: ['codigo do tecido kit', 'codigo do tecido/kit', 'codigo tecido kit', 'codigo', 'cod', 'codigo tecido', 'codigo kit', 'sku', 'item'] },
+  { key: 'dsItemAcabamento', aliases: ['descricao do tecido kit', 'descricao do tecido/kit', 'descricao tecido kit', 'descricao', 'descricao completa'] },
+  { key: 'dsItemAcabamentoReduzida', aliases: ['descricao reduzida', 'desc reduzida', 'reduzida'] },
+  { key: 'dsItemAcabamentoOriginal', aliases: ['descricao original', 'desc original', 'original'] },
+  { key: 'cdKitComplementar1', aliases: ['kit complementar 01', 'kit complementar 1', 'kit 01', 'kit 1', 'complementar 01', 'complementar 1'] },
+  { key: 'cdKitComplementar2', aliases: ['kit complementar 02', 'kit complementar 2', 'kit 02', 'kit 2', 'complementar 02', 'complementar 2'] },
+  { key: 'cdKitComplementar3', aliases: ['kit complementar 03', 'kit complementar 3', 'kit 03', 'kit 3', 'complementar 03', 'complementar 3'] },
+  { key: 'cdKitComplementar4', aliases: ['kit complementar 04', 'kit complementar 4', 'kit 04', 'kit 4', 'complementar 04', 'complementar 4'] },
+  { key: 'cdKitComplementar5', aliases: ['kit complementar 05', 'kit complementar 5', 'kit 05', 'kit 5', 'complementar 05', 'complementar 5'] },
+];
+
+const POSITIONAL_ORDER: Array<keyof ItemPayload> = [
+  'cdItemAcabamento',
+  'dsItemAcabamento',
+  'dsItemAcabamentoReduzida',
+  'dsItemAcabamentoOriginal',
+  'cdKitComplementar1',
+  'cdKitComplementar2',
+  'cdKitComplementar3',
+  'cdKitComplementar4',
+  'cdKitComplementar5',
+];
+
+const normHeader = (s: string) =>
+  (s || '')
+    .toString()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+function parseImportedSheet(buf: ArrayBuffer): ItemPayload[] {
+  const wb = XLSX.read(buf, { type: 'array' });
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  if (!ws) return [];
+  const rows: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '', blankrows: false });
+  if (!rows.length) return [];
+
+  // Detect header row
+  const firstRow = rows[0].map((c) => normHeader(String(c ?? '')));
+  const headerMap: Partial<Record<keyof ItemPayload, number>> = {};
+  let hasHeader = false;
+  IMPORT_HEADER_ALIASES.forEach(({ key, aliases }) => {
+    const wanted = new Set(aliases.map(normHeader));
+    const idx = firstRow.findIndex((h) => wanted.has(h));
+    if (idx >= 0) {
+      headerMap[key] = idx;
+      hasHeader = true;
+    }
+  });
+
+  const dataRows = hasHeader ? rows.slice(1) : rows;
+  const out: ItemPayload[] = [];
+  for (const r of dataRows) {
+    const item: ItemPayload = { ...emptyItem };
+    if (hasHeader) {
+      (Object.keys(headerMap) as (keyof ItemPayload)[]).forEach((k) => {
+        const idx = headerMap[k];
+        if (idx != null) item[k] = String(r[idx] ?? '').trim();
+      });
+    } else {
+      POSITIONAL_ORDER.forEach((k, i) => {
+        item[k] = String(r[i] ?? '').trim();
+      });
+    }
+    if (item.cdItemAcabamento) {
+      item.cdItemAcabamento = item.cdItemAcabamento.toUpperCase();
+      out.push(item);
+    }
+  }
+  return out;
+}
+
 export default function IncluirItemMassaTab() {
   const [mode, setMode] = useState<Mode>('incluir');
   const [item, setItem] = useState({ ...emptyItem });
@@ -64,6 +153,12 @@ export default function IncluirItemMassaTab() {
   const [enviando, setEnviando] = useState(false);
   const [run, setRun] = useState<SyncRun | null>(null);
   const channelRef = useRef<any>(null);
+  const importInputRef = useRef<HTMLInputElement>(null);
+
+  // Importação de planilha (xlsx/csv/ods)
+  const [importedItems, setImportedItems] = useState<ItemPayload[]>([]);
+  const [importFileName, setImportFileName] = useState('');
+  const [batchProgress, setBatchProgress] = useState<{ current: number; total: number; label: string } | null>(null);
 
   // Excluir mode
   const [codigoExcluir, setCodigoExcluir] = useState('');
@@ -194,23 +289,94 @@ export default function IncluirItemMassaTab() {
     setCodigoBuscado(codigoExcluir.trim());
   };
 
+  const handleImportFile = async (file: File) => {
+    try {
+      const buf = await file.arrayBuffer();
+      const parsed = parseImportedSheet(buf);
+      if (!parsed.length) {
+        toast.error('Nenhuma linha válida encontrada na planilha.');
+        return;
+      }
+      setImportedItems(parsed);
+      setImportFileName(file.name);
+      toast.success(`${parsed.length} item(ns) carregado(s) da planilha.`);
+    } catch (e: any) {
+      toast.error(`Falha ao ler planilha: ${e?.message ?? e}`);
+    }
+  };
+
+  const invokeIncluirRun = async (payload: ItemPayload): Promise<string | null> => {
+    const { data, error } = await supabase.functions.invoke('auge-sync?action=incluir_item_massa', {
+      body: { item: payload, cdAcabamentos: Array.from(selecionados) },
+    });
+    if (error) throw error;
+    if (data?.ok === false) throw new Error(data?.error ?? 'Falha ao iniciar');
+    return data?.run_id ?? null;
+  };
+
+  const waitRunTerminal = async (runId: string): Promise<SyncRun | null> => {
+    // Poll até terminal (success|error). Timeout de segurança: 10min.
+    const deadline = Date.now() + 10 * 60 * 1000;
+    while (Date.now() < deadline) {
+      const { data } = await (supabase as any)
+        .from('auge_sync_runs').select('*').eq('id', runId).maybeSingle();
+      if (data) {
+        setRun(data as SyncRun);
+        if (data.status === 'success' || data.status === 'error') return data as SyncRun;
+      }
+      await new Promise((r) => setTimeout(r, 1500));
+    }
+    return null;
+  };
+
   const enviarIncluir = async () => {
-    if (!item.cdItemAcabamento.trim()) return toast.error('Informe o Código do Tecido/Kit.');
     if (selecionados.size === 0) return toast.error('Selecione ao menos 1 acabamento.');
+
+    // Modo em lote (planilha importada)
+    if (importedItems.length > 0) {
+      setEnviando(true);
+      setRun(null);
+      let sucesso = 0;
+      let falha = 0;
+      try {
+        for (let i = 0; i < importedItems.length; i++) {
+          const it = importedItems[i];
+          setBatchProgress({ current: i + 1, total: importedItems.length, label: it.cdItemAcabamento });
+          try {
+            const runId = await invokeIncluirRun(it);
+            if (runId) {
+              subscribeRun(runId);
+              const final = await waitRunTerminal(runId);
+              if (final?.status === 'success') sucesso++;
+              else falha++;
+            } else {
+              falha++;
+            }
+          } catch (e: any) {
+            falha++;
+            toast.error(`${it.cdItemAcabamento}: ${e?.message ?? e}`);
+          }
+        }
+        toast.success(`Lote concluído — ${sucesso} sucesso · ${falha} falha(s).`);
+      } finally {
+        setBatchProgress(null);
+        setEnviando(false);
+      }
+      return;
+    }
+
+    // Modo item único (formulário)
+    if (!item.cdItemAcabamento.trim()) return toast.error('Informe o Código do Tecido/Kit ou importe uma planilha.');
 
     setEnviando(true);
     setRun(null);
     try {
-      const { data, error } = await supabase.functions.invoke('auge-sync?action=incluir_item_massa', {
-        body: { item, cdAcabamentos: Array.from(selecionados) },
-      });
-      if (error) throw error;
-      if (data?.ok === false) throw new Error(data?.error ?? 'Falha ao iniciar');
-      if (data?.run_id) {
+      const runId = await invokeIncluirRun(item);
+      if (runId) {
         const { data: initial } = await (supabase as any)
-          .from('auge_sync_runs').select('*').eq('id', data.run_id).maybeSingle();
+          .from('auge_sync_runs').select('*').eq('id', runId).maybeSingle();
         if (initial) setRun(initial as SyncRun);
-        subscribeRun(data.run_id);
+        subscribeRun(runId);
         toast.info(`Iniciando inclusão em ${selecionados.size} acabamentos…`);
       }
     } catch (e: any) {
@@ -278,22 +444,103 @@ export default function IncluirItemMassaTab() {
         <div className="grid grid-cols-1 xl:grid-cols-[420px_1fr] gap-4">
           {/* Formulário do item */}
           <Card className="p-4 space-y-3 h-fit">
-            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dados do item</div>
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dados do item</div>
+              <input
+                ref={importInputRef}
+                type="file"
+                accept=".xlsx,.xls,.csv,.ods"
+                hidden
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleImportFile(f);
+                  e.target.value = '';
+                }}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => importInputRef.current?.click()}
+                className="h-8 text-[11px] gap-1.5"
+              >
+                <Upload className="h-3.5 w-3.5" /> Importar planilha
+              </Button>
+            </div>
+
+            {importedItems.length > 0 && (
+              <div className="rounded-md border border-primary/40 bg-primary/5 p-2 space-y-1.5">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <FileSpreadsheet className="h-3.5 w-3.5 text-primary shrink-0" />
+                    <div className="min-w-0">
+                      <div className="text-[11px] font-semibold truncate">{importFileName || 'Planilha carregada'}</div>
+                      <div className="text-[10px] text-muted-foreground">
+                        {importedItems.length} item(ns) — serão incluídos em cada acabamento selecionado
+                      </div>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 shrink-0"
+                    onClick={() => { setImportedItems([]); setImportFileName(''); }}
+                    disabled={enviando}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+                <div className="max-h-32 overflow-y-auto rounded bg-background/60 divide-y divide-border/40">
+                  {importedItems.slice(0, 50).map((it, i) => (
+                    <div key={i} className="px-2 py-1 text-[10px] font-mono flex items-center gap-2">
+                      <span className="text-muted-foreground w-6 text-right">{i + 1}</span>
+                      <span className="font-semibold">{it.cdItemAcabamento}</span>
+                      <span className="text-muted-foreground truncate">{it.dsItemAcabamento}</span>
+                    </div>
+                  ))}
+                  {importedItems.length > 50 && (
+                    <div className="px-2 py-1 text-[10px] text-center text-muted-foreground">
+                      … +{importedItems.length - 50} outros
+                    </div>
+                  )}
+                </div>
+                {batchProgress && (
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-[10px]">
+                      <span className="text-muted-foreground">Processando {batchProgress.current}/{batchProgress.total}</span>
+                      <span className="font-mono truncate">{batchProgress.label}</span>
+                    </div>
+                    <Progress value={(batchProgress.current / batchProgress.total) * 100} className="h-1.5" />
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="text-[10px] text-muted-foreground -mt-1">
+              Colunas aceitas (nesta ordem): <span className="font-mono">Código do Tecido/Kit · Descrição · Reduzida · Original · Kit Complementar 01–05</span>. Formatos: <code>.xlsx</code>, <code>.csv</code>, <code>.ods</code>.
+            </div>
+
             <div className="space-y-2">
-              <label className="text-[11px] font-medium">Código do Tecido/Kit *</label>
-              <Input value={item.cdItemAcabamento} onChange={(e) => setItem({ ...item, cdItemAcabamento: e.target.value.toUpperCase() })} className="h-9 text-xs font-mono" placeholder="Ex: TEC001234" />
+              <label className="text-[11px] font-medium">Código do Tecido/Kit {importedItems.length === 0 && '*'}</label>
+              <Input
+                value={item.cdItemAcabamento}
+                onChange={(e) => setItem({ ...item, cdItemAcabamento: e.target.value.toUpperCase() })}
+                className="h-9 text-xs font-mono"
+                placeholder="Ex: TEC001234"
+                disabled={importedItems.length > 0}
+              />
             </div>
             <div className="space-y-2">
               <label className="text-[11px] font-medium">Descrição do Tecido/Kit</label>
-              <Input value={item.dsItemAcabamento} onChange={(e) => setItem({ ...item, dsItemAcabamento: e.target.value })} className="h-9 text-xs" />
+              <Input value={item.dsItemAcabamento} onChange={(e) => setItem({ ...item, dsItemAcabamento: e.target.value })} className="h-9 text-xs" disabled={importedItems.length > 0} />
             </div>
             <div className="space-y-2">
               <label className="text-[11px] font-medium">Descrição Reduzida</label>
-              <Input value={item.dsItemAcabamentoReduzida} onChange={(e) => setItem({ ...item, dsItemAcabamentoReduzida: e.target.value })} className="h-9 text-xs" />
+              <Input value={item.dsItemAcabamentoReduzida} onChange={(e) => setItem({ ...item, dsItemAcabamentoReduzida: e.target.value })} className="h-9 text-xs" disabled={importedItems.length > 0} />
             </div>
             <div className="space-y-2">
               <label className="text-[11px] font-medium">Descrição Original</label>
-              <Textarea value={item.dsItemAcabamentoOriginal} onChange={(e) => setItem({ ...item, dsItemAcabamentoOriginal: e.target.value })} className="text-xs min-h-[60px]" />
+              <Textarea value={item.dsItemAcabamentoOriginal} onChange={(e) => setItem({ ...item, dsItemAcabamentoOriginal: e.target.value })} className="text-xs min-h-[60px]" disabled={importedItems.length > 0} />
             </div>
             <div className="grid grid-cols-1 gap-2">
               {[1, 2, 3, 4, 5].map((n) => (
@@ -304,13 +551,16 @@ export default function IncluirItemMassaTab() {
                     onChange={(e) => setItem({ ...item, [`cdKitComplementar${n}`]: e.target.value })}
                     className="h-8 text-xs font-mono"
                     placeholder="Código"
+                    disabled={importedItems.length > 0}
                   />
                 </div>
               ))}
             </div>
             <Button onClick={enviarIncluir} disabled={enviando || isActive} className="w-full h-10 gap-2">
               {enviando || isActive ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              Incluir em {selecionados.size} acabamento(s)
+              {importedItems.length > 0
+                ? `Incluir ${importedItems.length} item(ns) em ${selecionados.size} acabamento(s)`
+                : `Incluir em ${selecionados.size} acabamento(s)`}
             </Button>
           </Card>
 
