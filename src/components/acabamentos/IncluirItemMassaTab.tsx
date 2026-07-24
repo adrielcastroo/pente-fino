@@ -45,7 +45,19 @@ interface ItemVinculo {
 
 type Mode = 'incluir' | 'excluir';
 
-const emptyItem = {
+type ItemPayload = {
+  cdItemAcabamento: string;
+  dsItemAcabamento: string;
+  dsItemAcabamentoReduzida: string;
+  dsItemAcabamentoOriginal: string;
+  cdKitComplementar1: string;
+  cdKitComplementar2: string;
+  cdKitComplementar3: string;
+  cdKitComplementar4: string;
+  cdKitComplementar5: string;
+};
+
+const emptyItem: ItemPayload = {
   cdItemAcabamento: '',
   dsItemAcabamento: '',
   dsItemAcabamentoReduzida: '',
@@ -56,6 +68,82 @@ const emptyItem = {
   cdKitComplementar4: '',
   cdKitComplementar5: '',
 };
+
+const IMPORT_HEADER_ALIASES: Array<{ key: keyof ItemPayload; aliases: string[] }> = [
+  { key: 'cdItemAcabamento', aliases: ['codigo do tecido kit', 'codigo do tecido/kit', 'codigo tecido kit', 'codigo', 'cod', 'codigo tecido', 'codigo kit', 'sku', 'item'] },
+  { key: 'dsItemAcabamento', aliases: ['descricao do tecido kit', 'descricao do tecido/kit', 'descricao tecido kit', 'descricao', 'descricao completa'] },
+  { key: 'dsItemAcabamentoReduzida', aliases: ['descricao reduzida', 'desc reduzida', 'reduzida'] },
+  { key: 'dsItemAcabamentoOriginal', aliases: ['descricao original', 'desc original', 'original'] },
+  { key: 'cdKitComplementar1', aliases: ['kit complementar 01', 'kit complementar 1', 'kit 01', 'kit 1', 'complementar 01', 'complementar 1'] },
+  { key: 'cdKitComplementar2', aliases: ['kit complementar 02', 'kit complementar 2', 'kit 02', 'kit 2', 'complementar 02', 'complementar 2'] },
+  { key: 'cdKitComplementar3', aliases: ['kit complementar 03', 'kit complementar 3', 'kit 03', 'kit 3', 'complementar 03', 'complementar 3'] },
+  { key: 'cdKitComplementar4', aliases: ['kit complementar 04', 'kit complementar 4', 'kit 04', 'kit 4', 'complementar 04', 'complementar 4'] },
+  { key: 'cdKitComplementar5', aliases: ['kit complementar 05', 'kit complementar 5', 'kit 05', 'kit 5', 'complementar 05', 'complementar 5'] },
+];
+
+const POSITIONAL_ORDER: Array<keyof ItemPayload> = [
+  'cdItemAcabamento',
+  'dsItemAcabamento',
+  'dsItemAcabamentoReduzida',
+  'dsItemAcabamentoOriginal',
+  'cdKitComplementar1',
+  'cdKitComplementar2',
+  'cdKitComplementar3',
+  'cdKitComplementar4',
+  'cdKitComplementar5',
+];
+
+const normHeader = (s: string) =>
+  (s || '')
+    .toString()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+function parseImportedSheet(buf: ArrayBuffer): ItemPayload[] {
+  const wb = XLSX.read(buf, { type: 'array' });
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  if (!ws) return [];
+  const rows: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '', blankrows: false });
+  if (!rows.length) return [];
+
+  // Detect header row
+  const firstRow = rows[0].map((c) => normHeader(String(c ?? '')));
+  const headerMap: Partial<Record<keyof ItemPayload, number>> = {};
+  let hasHeader = false;
+  IMPORT_HEADER_ALIASES.forEach(({ key, aliases }) => {
+    const wanted = new Set(aliases.map(normHeader));
+    const idx = firstRow.findIndex((h) => wanted.has(h));
+    if (idx >= 0) {
+      headerMap[key] = idx;
+      hasHeader = true;
+    }
+  });
+
+  const dataRows = hasHeader ? rows.slice(1) : rows;
+  const out: ItemPayload[] = [];
+  for (const r of dataRows) {
+    const item: ItemPayload = { ...emptyItem };
+    if (hasHeader) {
+      (Object.keys(headerMap) as (keyof ItemPayload)[]).forEach((k) => {
+        const idx = headerMap[k];
+        if (idx != null) item[k] = String(r[idx] ?? '').trim();
+      });
+    } else {
+      POSITIONAL_ORDER.forEach((k, i) => {
+        item[k] = String(r[i] ?? '').trim();
+      });
+    }
+    if (item.cdItemAcabamento) {
+      item.cdItemAcabamento = item.cdItemAcabamento.toUpperCase();
+      out.push(item);
+    }
+  }
+  return out;
+}
 
 export default function IncluirItemMassaTab() {
   const [mode, setMode] = useState<Mode>('incluir');
