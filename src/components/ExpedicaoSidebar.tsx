@@ -12,7 +12,8 @@ import {
   FileDown,
   Tag,
   ShieldCheck,
-  
+  Users,
+
 } from 'lucide-react';
 import ModuleSidebar, { type ModuleSidebarConfig } from '@/components/ModuleSidebar';
 import { useExpedicaoAlertCounts } from '@/hooks/expedicao/useExpedicaoAlertCounts';
@@ -60,6 +61,7 @@ export const EXPEDICAO_NAV: ModuleSidebarConfig = {
       items: [
         { key: 'historico', label: 'Histórico', icon: History, path: '/expedicao/historico' },
         { key: 'relatorios', label: 'Relatórios', icon: FileDown, path: '/expedicao/relatorios' },
+        { key: 'equipes', label: 'Equipes', icon: Users, path: '/equipes', minRole: 'supervisor' },
       ],
     },
   ],
