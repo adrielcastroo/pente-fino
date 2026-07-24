@@ -418,10 +418,16 @@ async function scanAllConfiguracoes(
 }
 
 const TAG_CONFIG_CHARS = '0123456789abcdefghijklmnopqrstuvwxyz'.split('');
+const TAG_CONFIG_SEED_TERMS = Array.from(new Set([
+  '',
+  ...TAG_CONFIG_CHARS,
+  ...'áàãâéêíóôõúüç'.split(''),
+  '.', '-', '_', '/', ' ',
+]));
 // Descoberta genérica de configurações: o Auge não restringe configuração ao
 // padrão CCxxxxxx. Começamos por termos alfanuméricos amplos e, quando o
 // Select2 satura, aprofundamos com todos os caracteres (a -> aa, ab, a0...).
-const TAG_CONFIG_PREFIXES = TAG_CONFIG_CHARS;
+const TAG_CONFIG_PREFIXES = TAG_CONFIG_SEED_TERMS;
 const TAG_DISCOVERY_PREFIX_CHUNK = 8;
 const TAG_DISCOVERY_PAGE_SIZE = 500;
 const TAG_DISCOVERY_TERM_CHUNK = 3;
@@ -552,16 +558,16 @@ async function syncTagCustomChunk(admin: any, auth: any, runId: string) {
     const discovered = await countTagConfigs(admin);
     const nextPrefixIndex = Math.min(prefixIndex + basePrefixes.length, TAG_CONFIG_PREFIXES.length);
     const nextExtraIndex = extraIndex + chosenExtras.length;
-    const mergedExtras = [...extraPrefixes, ...newDrillDowns];
+      const mergedExtras = Array.from(new Set([...extraPrefixes, ...newDrillDowns]));
     const doneBase = nextPrefixIndex >= TAG_CONFIG_PREFIXES.length;
     const doneExtras = nextExtraIndex >= mergedExtras.length;
     const donePrefixes = doneBase && doneExtras;
     const totalQueue = TAG_CONFIG_PREFIXES.length + mergedExtras.length;
     const currentQueue = nextPrefixIndex + nextExtraIndex;
 
-    const label = prefixes[0] === prefixes[prefixes.length - 1]
-      ? prefixes[0]
-      : `${prefixes[0]}…${prefixes[prefixes.length - 1]}`;
+    const firstLabel = prefixes[0] || 'todos';
+    const lastLabel = prefixes[prefixes.length - 1] || 'todos';
+    const label = firstLabel === lastLabel ? firstLabel : `${firstLabel}…${lastLabel}`;
     const nextDetails = {
       ...detalhes,
       stage: donePrefixes ? 'scan_tags' : 'discover_prefix',
@@ -854,7 +860,7 @@ async function auditTagNamespaceChunk(admin: any, auth: any, runId: string) {
 
     const nextPrefixIndex = Math.min(prefixIndex + basePrefixes.length, TAG_CONFIG_PREFIXES.length);
     const nextExtraIndex = extraIndex + chosenExtras.length;
-    const mergedExtras = [...extraPrefixes, ...newDrillDowns];
+      const mergedExtras = Array.from(new Set([...extraPrefixes, ...newDrillDowns]));
     const doneBase = nextPrefixIndex >= TAG_CONFIG_PREFIXES.length;
     const doneExtras = nextExtraIndex >= mergedExtras.length;
     const done = doneBase && doneExtras;
@@ -866,8 +872,9 @@ async function auditTagNamespaceChunk(admin: any, auth: any, runId: string) {
 
     const totalQueue = TAG_CONFIG_PREFIXES.length + mergedExtras.length;
     const currentQueue = nextPrefixIndex + nextExtraIndex;
-    const label = prefixes[0] === prefixes[prefixes.length - 1]
-      ? prefixes[0] : `${prefixes[0]}…${prefixes[prefixes.length - 1]}`;
+    const firstLabel = prefixes[0] || 'todos';
+    const lastLabel = prefixes[prefixes.length - 1] || 'todos';
+    const label = firstLabel === lastLabel ? firstLabel : `${firstLabel}…${lastLabel}`;
 
     const nextDetails = {
       ...detalhes,
