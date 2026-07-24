@@ -33,6 +33,9 @@ interface SyncRun {
     phase?: string; current?: number; total?: number;
     com_tag?: number; sem_tag?: number; errors?: number;
     cfg_count?: number;
+    hits?: number; local_count?: number; missing_count?: number; extras_count?: number;
+    coverage_pct?: number; missing_sample?: string[]; extras_sample?: string[];
+    stage?: string;
   } | null;
 }
 
