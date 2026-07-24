@@ -390,7 +390,7 @@ export default function TagsTab() {
             <Input
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
-              placeholder="Buscar por configuração ou código (ex.: CC000004)…"
+              placeholder="Buscar por configuração ou código…"
               className="h-9 pl-7 text-xs"
             />
           </div>
