@@ -26,7 +26,6 @@ export default function AugeUserCredentialsDialog({ open, onOpenChange, required
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
-  const [baseUrl, setBaseUrl] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [hasPassword, setHasPassword] = useState(false);
@@ -38,18 +37,16 @@ export default function AugeUserCredentialsDialog({ open, onOpenChange, required
     (async () => {
       const { data, error } = await (supabase as any)
         .from('auge_user_credentials')
-        .select('base_url,username,password')
+        .select('username,password')
         .eq('user_id', user.id)
         .maybeSingle();
       if (cancelled) return;
       if (error) {
         toast.error('Falha ao carregar credenciais: ' + error.message);
       } else if (data) {
-        setBaseUrl(data.base_url ?? '');
         setUsername(data.username ?? '');
         setHasPassword(!!data.password);
       } else {
-        setBaseUrl('');
         setUsername(user.email ?? '');
         setHasPassword(false);
       }
@@ -65,7 +62,6 @@ export default function AugeUserCredentialsDialog({ open, onOpenChange, required
     setSaving(true);
     const payload: any = {
       user_id: user.id,
-      base_url: baseUrl.trim() || null,
       username: username.trim(),
     };
     if (password.length) payload.password = password;
@@ -108,7 +104,6 @@ export default function AugeUserCredentialsDialog({ open, onOpenChange, required
     if (!user || !username.trim()) return;
     const payload: any = {
       user_id: user.id,
-      base_url: baseUrl.trim() || null,
       username: username.trim(),
     };
     if (password.length) payload.password = password;
@@ -156,16 +151,6 @@ export default function AugeUserCredentialsDialog({ open, onOpenChange, required
           </div>
         ) : (
           <div className="grid gap-3">
-            <div className="grid gap-1.5">
-              <Label htmlFor="auge-u-url" className="text-xs">Base URL (opcional)</Label>
-              <Input
-                id="auge-u-url"
-                value={baseUrl}
-                onChange={(e) => setBaseUrl(e.target.value)}
-                placeholder="https://unilux.auge.app"
-                className="h-10 font-mono text-sm"
-              />
-            </div>
             <div className="grid gap-1.5">
               <Label htmlFor="auge-u-user" className="text-xs">Usuário (e-mail) *</Label>
               <Input
