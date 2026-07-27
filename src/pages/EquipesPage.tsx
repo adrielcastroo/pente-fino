@@ -485,18 +485,33 @@ function priority(r: Role): number {
 interface MemberPermissionsDialogProps {
   member: Member;
   team: Team;
+  grantableModules: string[];
   onClose: () => void;
   onSaved: () => Promise<void> | void;
 }
 
-function MemberPermissionsDialog({ member, team, onClose, onSaved }: MemberPermissionsDialogProps) {
+function MemberPermissionsDialog({ member, team, grantableModules, onClose, onSaved }: MemberPermissionsDialogProps) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [allowedInTeam, setAllowedInTeam] = useState<Set<string>>(new Set());
   const [effectiveUnion, setEffectiveUnion] = useState<Set<string>>(new Set());
   const [filter, setFilter] = useState('');
-  const grouped = useMemo(() => pagesByModule(), []);
+  const allGrouped = useMemo(() => pagesByModule(), []);
+  // Interseção entre módulos do gestor e módulos do membro-alvo. Só esses aparecem.
+  const visibleModules = useMemo(() => {
+    const memberSet = new Set(member.modules ?? ['estoque']);
+    return grantableModules.filter((m) => memberSet.has(m));
+  }, [grantableModules, member.modules]);
+  const grouped = useMemo(() => {
+    const out: Partial<Record<PageModule, PageEntry[]>> = {};
+    visibleModules.forEach((m) => {
+      const key = m as PageModule;
+      if (allGrouped[key]) out[key] = allGrouped[key];
+    });
+    return out as Record<PageModule, PageEntry[]>;
+  }, [allGrouped, visibleModules]);
+
 
   useEffect(() => {
     let cancelled = false;
