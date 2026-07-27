@@ -796,7 +796,169 @@ export default function IncluirItemMassaTab() {
           )}
         </div>
       )}
+
+      <ImportPlanilhaDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        onPickFile={() => importInputRef.current?.click()}
+        importedItems={importedItems}
+        importFileName={importFileName}
+        onClear={() => { setImportedItems([]); setImportFileName(''); }}
+        resolveTokens={resolveTokens}
+        fallbackSelecionados={acabamentos.filter((a) => selecionados.has(a.cd_acabamento))}
+      />
     </div>
+  );
+}
+
+function ImportPlanilhaDialog({
+  open, onOpenChange, onPickFile, importedItems, importFileName, onClear, resolveTokens, fallbackSelecionados,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  onPickFile: () => void;
+  importedItems: ImportedItem[];
+  importFileName: string;
+  onClear: () => void;
+  resolveTokens: (tokens: string[]) => { resolved: Acabamento[]; unresolved: string[] };
+  fallbackSelecionados: Acabamento[];
+}) {
+  const preview = useMemo(() => {
+    return importedItems.map((it) => {
+      const { resolved, unresolved } = resolveTokens(it.acabamentosCodes);
+      const targets = resolved.length ? resolved : fallbackSelecionados;
+      return { it, resolved, unresolved, targets, usouFallback: resolved.length === 0 && fallbackSelecionados.length > 0 };
+    });
+  }, [importedItems, resolveTokens, fallbackSelecionados]);
+
+  const totalItens = preview.length;
+  const semAlvo = preview.filter((p) => p.targets.length === 0).length;
+  const totalUnresolved = preview.reduce((acc, p) => acc + p.unresolved.length, 0);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col backdrop-blur-sm">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <FileSpreadsheet className="h-4 w-4 text-primary" />
+            Importar planilha em massa
+          </DialogTitle>
+          <DialogDescription className="text-xs">
+            Envie um arquivo <code>.xlsx</code>, <code>.csv</code> ou <code>.ods</code> ou baixe o modelo pronto.
+            Use a coluna <span className="font-semibold">Acabamentos</span> com códigos separados por <code>;</code>
+            para direcionar cada item aos seus acabamentos.
+          </DialogDescription>
+        </DialogHeader>
+
+        {importedItems.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center gap-4 py-10 border-2 border-dashed rounded-lg bg-muted/30">
+            <FileUp className="h-10 w-10 text-muted-foreground" />
+            <div className="text-center space-y-1">
+              <div className="text-sm font-medium">Nenhum arquivo selecionado</div>
+              <div className="text-xs text-muted-foreground">Escolha uma planilha ou baixe o modelo para começar.</div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button onClick={onPickFile} className="gap-2">
+                <Upload className="h-4 w-4" /> Selecionar planilha
+              </Button>
+              <Button variant="outline" onClick={downloadTemplate} className="gap-2">
+                <Download className="h-4 w-4" /> Baixar modelo
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex-1 flex flex-col min-h-0 gap-3">
+            <div className="flex items-center justify-between gap-2 rounded-md border bg-muted/40 p-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <FileSpreadsheet className="h-4 w-4 text-primary shrink-0" />
+                <div className="min-w-0">
+                  <div className="text-xs font-semibold truncate">{importFileName}</div>
+                  <div className="text-[10px] text-muted-foreground">
+                    {totalItens} item(ns) · {semAlvo} sem acabamento{totalUnresolved > 0 ? ` · ${totalUnresolved} código(s) não reconhecido(s)` : ''}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                <Button size="sm" variant="ghost" onClick={onPickFile} className="h-8 text-[11px] gap-1">
+                  <Upload className="h-3.5 w-3.5" /> Trocar
+                </Button>
+                <Button size="sm" variant="ghost" onClick={onClear} className="h-8 text-[11px] gap-1 text-destructive">
+                  <X className="h-3.5 w-3.5" /> Remover
+                </Button>
+              </div>
+            </div>
+
+            {semAlvo > 0 && fallbackSelecionados.length === 0 && (
+              <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/5 p-2 text-[11px]">
+                <AlertTriangle className="h-3.5 w-3.5 text-destructive shrink-0 mt-0.5" />
+                <div>
+                  <strong>{semAlvo}</strong> item(ns) sem coluna "Acabamentos" e nenhum acabamento marcado manualmente.
+                  Estes itens serão ignorados na execução.
+                </div>
+              </div>
+            )}
+
+            <ScrollArea className="flex-1 rounded border">
+              <table className="w-full text-xs">
+                <thead className="bg-muted sticky top-0 z-10">
+                  <tr className="text-left">
+                    <th className="p-2 w-10">#</th>
+                    <th className="p-2">Código / Descrição</th>
+                    <th className="p-2">Acabamentos destino</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {preview.map((p, i) => (
+                    <tr key={i} className="border-t align-top">
+                      <td className="p-2 text-muted-foreground font-mono text-[10px]">{i + 1}</td>
+                      <td className="p-2">
+                        <div className="font-mono font-semibold">{p.it.cdItemAcabamento}</div>
+                        <div className="text-[10px] text-muted-foreground truncate max-w-[280px]">{p.it.dsItemAcabamento}</div>
+                      </td>
+                      <td className="p-2">
+                        {p.targets.length === 0 ? (
+                          <span className="text-[10px] text-destructive">Nenhum — item será ignorado</span>
+                        ) : (
+                          <div className="flex flex-wrap gap-1">
+                            {p.usouFallback && (
+                              <Badge variant="outline" className="text-[9px] h-4">seleção manual</Badge>
+                            )}
+                            {p.targets.slice(0, 6).map((a) => (
+                              <Badge key={a.cd_acabamento} variant="secondary" className="text-[9px] h-4 font-mono">
+                                {a.chave_acabamento ?? a.cd_acabamento}
+                              </Badge>
+                            ))}
+                            {p.targets.length > 6 && (
+                              <Badge variant="outline" className="text-[9px] h-4">+{p.targets.length - 6}</Badge>
+                            )}
+                          </div>
+                        )}
+                        {p.unresolved.length > 0 && (
+                          <div className="text-[10px] text-destructive mt-1">
+                            Não encontrado: <span className="font-mono">{p.unresolved.join(', ')}</span>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </ScrollArea>
+          </div>
+        )}
+
+        <DialogFooter className="gap-2 sm:justify-between">
+          <Button variant="outline" onClick={downloadTemplate} className="gap-2">
+            <Download className="h-4 w-4" /> Baixar modelo
+          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" onClick={() => onOpenChange(false)}>
+              {importedItems.length > 0 ? 'Concluir' : 'Fechar'}
+            </Button>
+          </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
