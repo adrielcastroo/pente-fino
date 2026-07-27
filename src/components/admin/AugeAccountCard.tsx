@@ -127,17 +127,6 @@ export default function AugeAccountCard() {
         ) : (
           <>
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="grid gap-1.5 sm:col-span-2">
-                <Label htmlFor="auge-url" className="text-xs">Base URL</Label>
-                <Input
-                  id="auge-url"
-                  value={baseUrl}
-                  onChange={(e) => setBaseUrl(e.target.value)}
-                  placeholder="https://unilux.auge.app"
-                  className="h-10 font-mono text-sm"
-                />
-                <p className="text-[11px] text-muted-foreground">Deixe em branco para usar o padrão configurado no backend.</p>
-              </div>
               <div className="grid gap-1.5">
                 <Label htmlFor="auge-user" className="text-xs">Usuário (e-mail) *</Label>
                 <Input
