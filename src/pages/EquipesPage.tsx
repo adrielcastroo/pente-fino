@@ -262,7 +262,7 @@ export default function EquipesPage() {
             Equipes
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Crie equipes e libere páginas por membro. Se qualquer equipe libera uma página, o usuário acessa (união).
+            Crie equipes e libere páginas por membro. {isAdmin ? 'Como admin, você concede acesso em qualquer módulo.' : `Você só concede páginas dos módulos que possui: ${grantableModules.map((m) => MODULE_LABEL[m as PageModule] ?? m).join(', ')}.`}
           </p>
         </div>
         <Button onClick={openNewTeam} className="gap-2">
