@@ -4191,7 +4191,7 @@ Deno.serve(async (req) => {
       let abreviacao: any = null;
       if ((acao === 'atualizar' || acao === 'adicionar') && novaData) {
         try {
-          const dsAtual = `Ent_Ap_${novaData}`;
+          const dsAtual = `(Ent_Ap_${novaData})`;
           const dsAbreviada = shortToken(novaData);
           const { data: existente } = await admin
             .from('auge_abreviacoes')
