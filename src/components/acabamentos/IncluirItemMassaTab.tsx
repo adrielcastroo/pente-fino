@@ -556,7 +556,7 @@ export default function IncluirItemMassaTab() {
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => importInputRef.current?.click()}
+                onClick={() => setImportDialogOpen(true)}
                 className="h-8 text-[11px] gap-1.5"
               >
                 <Upload className="h-3.5 w-3.5" /> Importar planilha
@@ -564,56 +564,48 @@ export default function IncluirItemMassaTab() {
             </div>
 
             {importedItems.length > 0 && (
-              <div className="rounded-md border border-primary/40 bg-primary/5 p-2 space-y-1.5">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <FileSpreadsheet className="h-3.5 w-3.5 text-primary shrink-0" />
-                    <div className="min-w-0">
-                      <div className="text-[11px] font-semibold truncate">{importFileName || 'Planilha carregada'}</div>
-                      <div className="text-[10px] text-muted-foreground">
-                        {importedItems.length} item(ns) — serão incluídos em cada acabamento selecionado
-                      </div>
+              <div className="rounded-md border border-primary/40 bg-primary/5 p-2 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <FileSpreadsheet className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <div className="min-w-0">
+                    <div className="text-[11px] font-semibold truncate">{importFileName || 'Planilha carregada'}</div>
+                    <div className="text-[10px] text-muted-foreground">
+                      {importedItems.length} item(ns) prontos para inclusão
                     </div>
                   </div>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <Button size="sm" variant="ghost" className="h-7 text-[11px] gap-1" onClick={() => setImportDialogOpen(true)}>
+                    Ver preview
+                  </Button>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6 shrink-0"
+                    className="h-6 w-6"
                     onClick={() => { setImportedItems([]); setImportFileName(''); }}
                     disabled={enviando}
+                    aria-label="Limpar planilha"
                   >
                     <X className="h-3 w-3" />
                   </Button>
                 </div>
-                <div className="max-h-32 overflow-y-auto rounded bg-background/60 divide-y divide-border/40">
-                  {importedItems.slice(0, 50).map((it, i) => (
-                    <div key={i} className="px-2 py-1 text-[10px] font-mono flex items-center gap-2">
-                      <span className="text-muted-foreground w-6 text-right">{i + 1}</span>
-                      <span className="font-semibold">{it.cdItemAcabamento}</span>
-                      <span className="text-muted-foreground truncate">{it.dsItemAcabamento}</span>
-                    </div>
-                  ))}
-                  {importedItems.length > 50 && (
-                    <div className="px-2 py-1 text-[10px] text-center text-muted-foreground">
-                      … +{importedItems.length - 50} outros
-                    </div>
-                  )}
+              </div>
+            )}
+
+            {batchProgress && (
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="text-muted-foreground">Processando {batchProgress.current}/{batchProgress.total}</span>
+                  <span className="font-mono truncate">{batchProgress.label}</span>
                 </div>
-                {batchProgress && (
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between text-[10px]">
-                      <span className="text-muted-foreground">Processando {batchProgress.current}/{batchProgress.total}</span>
-                      <span className="font-mono truncate">{batchProgress.label}</span>
-                    </div>
-                    <Progress value={(batchProgress.current / batchProgress.total) * 100} className="h-1.5" />
-                  </div>
-                )}
+                <Progress value={(batchProgress.current / batchProgress.total) * 100} className="h-1.5" />
               </div>
             )}
 
             <div className="text-[10px] text-muted-foreground -mt-1">
-              Colunas aceitas (nesta ordem): <span className="font-mono">Código do Tecido/Kit · Descrição · Reduzida · Original · Kit Complementar 01–05</span>. Formatos: <code>.xlsx</code>, <code>.csv</code>, <code>.ods</code>.
+              Colunas aceitas: <span className="font-mono">Código · Descrição · Reduzida · Original · Kit 01–05 · Acabamentos</span> (códigos separados por <code>;</code>). Formatos: <code>.xlsx</code>, <code>.csv</code>, <code>.ods</code>.
             </div>
+
 
             <div className="space-y-2">
               <label className="text-[11px] font-medium">Código do Tecido/Kit {importedItems.length === 0 && '*'}</label>
