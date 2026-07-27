@@ -3810,13 +3810,14 @@ Deno.serve(async (req) => {
             // refresh local do acabamento afetado
             try {
               const itens = await fetchItensAcabamento(auth, cd);
-              if (itens.length) {
-                const rows = itens.map((r) => mapAcabamentoItemRow(cd, r));
-                for (let i = 0; i < rows.length; i += 500) {
-                  await admin.from('auge_acabamento_itens').upsert(rows.slice(i, i + 500), { onConflict: 'cd_acabamento_item' });
-                }
+              const rows = itens.map((r) => mapAcabamentoItemRow(cd, r));
+              for (let i = 0; i < rows.length; i += 500) {
+                await admin.from('auge_acabamento_itens').upsert(rows.slice(i, i + 500), { onConflict: 'cd_acabamento_item' });
               }
-            } catch (_) { /* ignore refresh error */ }
+            } catch (e: any) {
+              const idx = results.length - 1;
+              if (idx >= 0) results[idx].refreshError = getErrorMessage(e);
+            }
           } catch (e: any) {
             results.push({ cd, ok: false, erro: getErrorMessage(e) });
           }
