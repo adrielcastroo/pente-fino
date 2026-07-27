@@ -559,21 +559,28 @@ function MemberPermissionsDialog({ member, team, grantableModules, onClose, onSa
   const save = async () => {
     setSaving(true);
     try {
-      // Estratégia: apagar tudo desse (team,user) e reinserir apenas allowed=true.
-      const { error: delErr } = await (supabase.from('team_page_permissions' as any)
-        .delete()
-        .eq('team_id', team.id)
-        .eq('user_id', member.user_id) as any);
-      if (delErr) throw delErr;
-      if (allowedInTeam.size > 0) {
-        const rows = Array.from(allowedInTeam).map((page_key) => ({
+      // Só mexe nas páginas dos módulos visíveis ao gestor — preserva o que outros gestores
+      // já concederam em módulos fora do escopo dele.
+      const visiblePageKeys = Object.values(grouped).flat().map((p) => p.key);
+      if (visiblePageKeys.length > 0) {
+        const { error: delErr } = await (supabase.from('team_page_permissions' as any)
+          .delete()
+          .eq('team_id', team.id)
+          .eq('user_id', member.user_id)
+          .in('page_key', visiblePageKeys) as any);
+        if (delErr) throw delErr;
+      }
+      const rowsToInsert = Array.from(allowedInTeam)
+        .filter((k) => visiblePageKeys.includes(k))
+        .map((page_key) => ({
           team_id: team.id,
           user_id: member.user_id,
           page_key,
           allowed: true,
           updated_by: user?.id,
         }));
-        const { error: insErr } = await (supabase.from('team_page_permissions' as any).insert(rows) as any);
+      if (rowsToInsert.length > 0) {
+        const { error: insErr } = await (supabase.from('team_page_permissions' as any).insert(rowsToInsert) as any);
         if (insErr) throw insErr;
       }
       toast.success('Permissões salvas.');
