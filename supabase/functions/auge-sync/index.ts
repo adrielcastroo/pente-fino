@@ -3595,13 +3595,18 @@ Deno.serve(async (req) => {
       if (payload?.cdAcabamento) {
         try {
           const itens = await fetchItensAcabamento(auth, String(payload.cdAcabamento));
-          if (itens.length) {
-            const rows = itens.map((r) => mapAcabamentoItemRow(String(payload.cdAcabamento), r));
-            for (let i = 0; i < rows.length; i += 500) {
-              await admin.from('auge_acabamento_itens').upsert(rows.slice(i, i + 500), { onConflict: 'cd_acabamento_item' });
-            }
+          const rows = itens.map((r) => mapAcabamentoItemRow(String(payload.cdAcabamento), r));
+          for (let i = 0; i < rows.length; i += 500) {
+            await admin.from('auge_acabamento_itens').upsert(rows.slice(i, i + 500), { onConflict: 'cd_acabamento_item' });
           }
-        } catch (_) { /* ignore refresh error */ }
+        } catch (e) {
+          await admin.from('auge_sync_runs').insert({
+            entidade: 'acabamento_item_refresh',
+            status: 'error',
+            error_message: getErrorMessage(e),
+            detalhes: { cdAcabamento: String(payload.cdAcabamento), context: 'update_acabamento_item' },
+          }).then(() => {}, () => {});
+        }
       }
       return new Response(JSON.stringify({ ok: true, auge: resp }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
