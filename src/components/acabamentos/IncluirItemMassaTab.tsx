@@ -321,6 +321,15 @@ export default function IncluirItemMassaTab() {
             if (p.new?.status === 'success') toast.success(`${verb} em ${ok} acabamentos${fail ? ` (${fail} falharam)` : ''}.`);
             else toast.error(p.new?.error_message ?? `Falhou: ${fail} erro(s).`);
             if (mode === 'excluir') refetchVinculos();
+            // Invalida caches de itens para refletir mudanças na aba Consulta
+            qc.invalidateQueries({ queryKey: ['acabamento-itens'] });
+            qc.invalidateQueries({ queryKey: ['acabamentos-list'] });
+            // Loga refresh errors reportados pelo edge (se houver)
+            const refreshErrs = (dets?.results ?? []).filter((r: any) => r?.refreshError);
+            if (refreshErrs.length) {
+              console.warn('[massa] refresh errors:', refreshErrs);
+              toast.warning(`${refreshErrs.length} acabamento(s) inseridos mas falharam ao atualizar localmente. Clique em "Sincronizar" na aba Consulta.`);
+            }
           }
         }
       )
