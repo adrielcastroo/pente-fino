@@ -333,6 +333,55 @@ export default function GerarTagTab() {
             </div>
           )}
 
+          {/* Recomendações de TAGs Custom por configuração */}
+          {gruposCustom.length > 0 && (
+            <div className="rounded border bg-primary/5 p-3 space-y-2">
+              <div className="text-[10px] uppercase text-muted-foreground flex items-center gap-1">
+                <TagIcon className="h-3 w-3" /> TAGs Custom sugeridas por configuração
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                Baseado nos termos identificados na descrição, para cada configuração relacionada.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {gruposCustom.map((g) => (
+                  <div key={g.cd_configuracao} className="rounded border bg-background p-2 space-y-1.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="font-medium text-[11px] truncate">{g.configuracao}</div>
+                      <Badge variant="outline" className="text-[9px] shrink-0 font-mono">#{g.cd_configuracao}</Badge>
+                    </div>
+                    <div className="space-y-1">
+                      {g.items.map((r, idx) => {
+                        const tagText = r.tag.ds_tag_customizada ?? r.tag.nm_tag_customizada ?? r.tag.ds_tag_texto ?? r.tag.ds_tag_calculada ?? '—';
+                        return (
+                          <button
+                            key={`${r.tag.cd_configuracao}-${idx}`}
+                            onClick={() => { setTagGerada(normalizeTagFormatC(tagText)); toast.success('TAG custom aplicada.'); }}
+                            className="w-full text-left rounded border border-transparent hover:border-primary/40 hover:bg-primary/5 p-1.5 transition"
+                            title="Aplicar esta TAG"
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="min-w-0 flex-1">
+                                <div className="font-mono text-[11px] text-primary truncate">{tagText}</div>
+                                {r.matched.length > 0 && (
+                                  <div className="flex flex-wrap gap-1 mt-0.5">
+                                    {r.matched.slice(0, 5).map((m) => (
+                                      <span key={m} className="inline-block px-1 rounded bg-primary/10 text-primary text-[9px] font-mono">{m}</span>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                              <Badge variant="secondary" className="text-[9px] shrink-0">{r.score}</Badge>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {selecionado && componentesClasses.length > 0 && (
             <div className="rounded border bg-muted/30 p-2 space-y-1">
               <div className="text-[10px] uppercase text-muted-foreground">Composição (classes do Auge)</div>
