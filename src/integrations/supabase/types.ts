@@ -1009,6 +1009,30 @@ export type Database = {
         }
         Relationships: []
       }
+      auge_user_credentials: {
+        Row: {
+          base_url: string | null
+          password: string
+          updated_at: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          base_url?: string | null
+          password: string
+          updated_at?: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          base_url?: string | null
+          password?: string
+          updated_at?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
       auth_audit_logs: {
         Row: {
           created_at: string
@@ -3827,6 +3851,7 @@ export type Database = {
         Returns: boolean
       }
       i_am_in_any_team: { Args: never; Returns: boolean }
+      i_have_auge_credentials: { Args: never; Returns: boolean }
       is_at_least: {
         Args: { _min: Database["public"]["Enums"]["app_role"] }
         Returns: boolean
