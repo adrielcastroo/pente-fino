@@ -218,6 +218,11 @@ export default function SettingsPage() {
   const [prefDisableBrowserPrint, setPrefDisableBrowserPrint] = useState(localStorage.getItem('pref_disable_browser_print') === 'true');
   const [prefSilentBrowserPrint, setPrefSilentBrowserPrint] = useState(localStorage.getItem('pref_silent_browser_print') === 'true');
 
+  // Auge credentials state
+  const [augeCredentialsOpen, setAugeCredentialsOpen] = useState(false);
+  const [augeCredentialsConfigured, setAugeCredentialsConfigured] = useState<boolean | null>(null);
+  const [augeCredentialsLoading, setAugeCredentialsLoading] = useState(false);
+
   // MFA state
   const [mfaFactors, setMfaFactors] = useState<any[]>([]);
   const [mfaLoading, setMfaLoading] = useState(false);
