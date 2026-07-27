@@ -65,18 +65,25 @@ interface Member {
   display_name: string;
   avatar_url: string | null;
   role: Role;
+  modules: string[];
 }
 
 interface ProfileLite {
   id: string;
   display_name: string | null;
   avatar_url: string | null;
+  modules: string[];
 }
 
 export default function EquipesPage() {
-  const { role, user } = useAuth();
+  const { role, user, isAdmin, modules: myModules } = useAuth();
   const pageAccess = usePageAccess();
   const canManage = atLeast(role, 'supervisor');
+  // Módulos que o gestor pode conceder (admin concede tudo).
+  const grantableModules = useMemo<string[]>(
+    () => (isAdmin ? ['estoque', 'expedicao', 'compras'] : myModules),
+    [isAdmin, myModules],
+  );
 
   const [teams, setTeams] = useState<Team[]>([]);
   const [membersByTeam, setMembersByTeam] = useState<Record<string, Member[]>>({});
