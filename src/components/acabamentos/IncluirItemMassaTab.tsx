@@ -383,9 +383,9 @@ export default function IncluirItemMassaTab() {
     }
   };
 
-  const invokeIncluirRun = async (payload: ItemPayload): Promise<string | null> => {
+  const invokeIncluirRun = async (payload: ItemPayload, cdAcabamentos: string[]): Promise<string | null> => {
     const { data, error } = await supabase.functions.invoke('auge-sync?action=incluir_item_massa', {
-      body: { item: payload, cdAcabamentos: Array.from(selecionados) },
+      body: { item: payload, cdAcabamentos },
     });
     if (error) throw error;
     if (data?.ok === false) throw new Error(data?.error ?? 'Falha ao iniciar');
@@ -408,20 +408,35 @@ export default function IncluirItemMassaTab() {
   };
 
   const enviarIncluir = async () => {
-    if (selecionados.size === 0) return toast.error('Selecione ao menos 1 acabamento.');
-
     // Modo em lote (planilha importada)
     if (importedItems.length > 0) {
+      // Cada linha resolve seus próprios acabamentos (coluna "Acabamentos");
+      // fallback para os selecionados manualmente se a linha vier vazia.
+      const fallback = Array.from(selecionados);
+      const plano = importedItems.map((it) => {
+        const { resolved } = resolveTokens(it.acabamentosCodes);
+        const cds = resolved.length ? resolved.map((a) => a.cd_acabamento) : fallback;
+        return { it, cds };
+      });
+      const semAlvo = plano.filter((p) => p.cds.length === 0);
+      if (semAlvo.length === plano.length) {
+        return toast.error('Nenhum item possui acabamento válido. Preencha a coluna "Acabamentos" ou selecione acabamentos na lista.');
+      }
+      if (semAlvo.length > 0) {
+        if (!confirm(`${semAlvo.length} item(ns) sem acabamento válido serão ignorados. Continuar?`)) return;
+      }
       setEnviando(true);
       setRun(null);
       let sucesso = 0;
       let falha = 0;
+      let ignorados = semAlvo.length;
       try {
-        for (let i = 0; i < importedItems.length; i++) {
-          const it = importedItems[i];
-          setBatchProgress({ current: i + 1, total: importedItems.length, label: it.cdItemAcabamento });
+        for (let i = 0; i < plano.length; i++) {
+          const { it, cds } = plano[i];
+          if (cds.length === 0) continue;
+          setBatchProgress({ current: i + 1, total: plano.length, label: `${it.cdItemAcabamento} → ${cds.length} acab.` });
           try {
-            const runId = await invokeIncluirRun(it);
+            const runId = await invokeIncluirRun(it, cds);
             if (runId) {
               subscribeRun(runId);
               const final = await waitRunTerminal(runId);
@@ -435,7 +450,7 @@ export default function IncluirItemMassaTab() {
             toast.error(`${it.cdItemAcabamento}: ${e?.message ?? e}`);
           }
         }
-        toast.success(`Lote concluído — ${sucesso} sucesso · ${falha} falha(s).`);
+        toast.success(`Lote concluído — ${sucesso} ok · ${falha} falha(s)${ignorados ? ` · ${ignorados} ignorado(s)` : ''}.`);
       } finally {
         setBatchProgress(null);
         setEnviando(false);
@@ -443,13 +458,15 @@ export default function IncluirItemMassaTab() {
       return;
     }
 
+    if (selecionados.size === 0) return toast.error('Selecione ao menos 1 acabamento.');
+
     // Modo item único (formulário)
     if (!item.cdItemAcabamento.trim()) return toast.error('Informe o Código do Tecido/Kit ou importe uma planilha.');
 
     setEnviando(true);
     setRun(null);
     try {
-      const runId = await invokeIncluirRun(item);
+      const runId = await invokeIncluirRun(item, Array.from(selecionados));
       if (runId) {
         const { data: initial } = await (supabase as any)
           .from('auge_sync_runs').select('*').eq('id', runId).maybeSingle();
