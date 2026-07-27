@@ -254,6 +254,28 @@ export default function SettingsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeCategory, isGuest, user]);
 
+  const loadAugeCredentialsStatus = async () => {
+    if (isGuest || !user) return;
+    setAugeCredentialsLoading(true);
+    try {
+      const { data, error } = await (supabase.rpc as any)('i_have_auge_credentials');
+      if (error) throw error;
+      setAugeCredentialsConfigured(!!data);
+    } catch (e: any) {
+      console.error('Erro ao verificar credenciais do Auge:', e);
+      setAugeCredentialsConfigured(false);
+    } finally {
+      setAugeCredentialsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeCategory === 'auge-account' && !isGuest && user) {
+      loadAugeCredentialsStatus();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeCategory, isGuest, user]);
+
   const startMfaEnroll = async () => {
     setMfaEnrolling(true);
     try {
