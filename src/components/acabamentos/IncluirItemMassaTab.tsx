@@ -257,6 +257,35 @@ export default function IncluirItemMassaTab() {
     return m;
   }, [acabamentos]);
 
+  // Índice de resolução por chave/código para reconhecimento na planilha.
+  const acabByToken = useMemo(() => {
+    const m = new Map<string, Acabamento>();
+    const norm = (s: string) => (s || '').toString().trim().toUpperCase();
+    acabamentos.forEach((a) => {
+      if (a.cd_acabamento) m.set(norm(a.cd_acabamento), a);
+      if (a.chave_acabamento) m.set(norm(a.chave_acabamento), a);
+    });
+    return m;
+  }, [acabamentos]);
+
+  const resolveTokens = (tokens: string[]): { resolved: Acabamento[]; unresolved: string[] } => {
+    const resolved: Acabamento[] = [];
+    const unresolved: string[] = [];
+    const seen = new Set<string>();
+    tokens.forEach((t) => {
+      const key = t.trim().toUpperCase();
+      if (!key) return;
+      const a = acabByToken.get(key);
+      if (a && !seen.has(a.cd_acabamento)) {
+        seen.add(a.cd_acabamento);
+        resolved.push(a);
+      } else if (!a) {
+        unresolved.push(t);
+      }
+    });
+    return { resolved, unresolved };
+  };
+
   const vinculosGrouped = useMemo(() => {
     // group by cd_acabamento; keep list of item vinculos per acabamento
     const map = new Map<string, ItemVinculo[]>();
