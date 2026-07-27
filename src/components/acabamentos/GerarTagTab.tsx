@@ -23,6 +23,68 @@ interface Acabamento {
   nm_combinacao3: string | null;
 }
 
+interface CustomTag {
+  cd_configuracao: string;
+  nm_configuracao: string | null;
+  nm_tag_customizada: string | null;
+  ds_tag_customizada: string | null;
+  ds_tag_calculada: string | null;
+  ds_tag_texto: string | null;
+}
+
+interface RankedCustom {
+  tag: CustomTag;
+  score: number;
+  matched: string[];
+}
+
+interface CustomGroup {
+  configuracao: string;
+  cd_configuracao: string;
+  items: RankedCustom[];
+}
+
+function rankCustomTags(input: string, tags: CustomTag[]): CustomGroup[] {
+  const inTokens = uniqTokens(tokenize(input));
+  if (inTokens.length === 0) return [];
+
+  const groups = new Map<string, RankedCustom[]>();
+  for (const tag of tags) {
+    const hayFields = [
+      tag.nm_tag_customizada ?? '',
+      tag.ds_tag_customizada ?? '',
+      tag.ds_tag_texto ?? '',
+      tag.ds_tag_calculada ?? '',
+    ].join(' ');
+    if (!hayFields.trim()) continue;
+    const hayTokens = new Set(tokenize(hayFields));
+    const hayLower = hayFields.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+    let score = 0;
+    const matched: string[] = [];
+    for (const t of inTokens) {
+      if (hayTokens.has(t)) { score += 3; matched.push(t); }
+      else if (t.length >= 3 && hayLower.includes(t)) { score += 1; matched.push(t); }
+    }
+    if (score < 3) continue;
+
+    const key = `${tag.cd_configuracao}::${tag.nm_configuracao ?? ''}`;
+    const arr = groups.get(key) ?? [];
+    arr.push({ tag, score, matched });
+    groups.set(key, arr);
+  }
+
+  const out: CustomGroup[] = [];
+  for (const [key, arr] of groups) {
+    arr.sort((a, b) => b.score - a.score);
+    const [cd, nm] = key.split('::');
+    out.push({ cd_configuracao: cd, configuracao: nm || cd, items: arr.slice(0, 3) });
+  }
+  // ordena grupos pelo melhor score interno
+  out.sort((a, b) => (b.items[0]?.score ?? 0) - (a.items[0]?.score ?? 0));
+  return out.slice(0, 8);
+}
+
 // Tokeniza descrição para comparação — mantém alfanuméricos, remove separadores comuns.
 function tokenize(input: string): string[] {
   if (!input) return [];
