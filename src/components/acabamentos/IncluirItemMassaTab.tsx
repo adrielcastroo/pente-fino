@@ -58,6 +58,11 @@ type ItemPayload = {
   cdKitComplementar5: string;
 };
 
+type ImportedItem = ItemPayload & {
+  acabamentosRaw: string;
+  acabamentosCodes: string[]; // tokens brutos digitados
+};
+
 const emptyItem: ItemPayload = {
   cdItemAcabamento: '',
   dsItemAcabamento: '',
@@ -70,7 +75,7 @@ const emptyItem: ItemPayload = {
   cdKitComplementar5: '',
 };
 
-const IMPORT_HEADER_ALIASES: Array<{ key: keyof ItemPayload; aliases: string[] }> = [
+const IMPORT_HEADER_ALIASES: Array<{ key: keyof ItemPayload | 'acabamentos'; aliases: string[] }> = [
   { key: 'cdItemAcabamento', aliases: ['codigo do tecido kit', 'codigo do tecido/kit', 'codigo tecido kit', 'codigo', 'cod', 'codigo tecido', 'codigo kit', 'sku', 'item'] },
   { key: 'dsItemAcabamento', aliases: ['descricao do tecido kit', 'descricao do tecido/kit', 'descricao tecido kit', 'descricao', 'descricao completa'] },
   { key: 'dsItemAcabamentoReduzida', aliases: ['descricao reduzida', 'desc reduzida', 'reduzida'] },
@@ -80,9 +85,10 @@ const IMPORT_HEADER_ALIASES: Array<{ key: keyof ItemPayload; aliases: string[] }
   { key: 'cdKitComplementar3', aliases: ['kit complementar 03', 'kit complementar 3', 'kit 03', 'kit 3', 'complementar 03', 'complementar 3'] },
   { key: 'cdKitComplementar4', aliases: ['kit complementar 04', 'kit complementar 4', 'kit 04', 'kit 4', 'complementar 04', 'complementar 4'] },
   { key: 'cdKitComplementar5', aliases: ['kit complementar 05', 'kit complementar 5', 'kit 05', 'kit 5', 'complementar 05', 'complementar 5'] },
+  { key: 'acabamentos', aliases: ['acabamentos', 'acabamento', 'codigo acabamento', 'codigos acabamento', 'codigos dos acabamentos', 'chave acabamento', 'chaves acabamento', 'chaves dos acabamentos'] },
 ];
 
-const POSITIONAL_ORDER: Array<keyof ItemPayload> = [
+const POSITIONAL_ORDER: Array<keyof ItemPayload | 'acabamentos'> = [
   'cdItemAcabamento',
   'dsItemAcabamento',
   'dsItemAcabamentoReduzida',
@@ -92,6 +98,7 @@ const POSITIONAL_ORDER: Array<keyof ItemPayload> = [
   'cdKitComplementar3',
   'cdKitComplementar4',
   'cdKitComplementar5',
+  'acabamentos',
 ];
 
 const normHeader = (s: string) =>
@@ -104,7 +111,13 @@ const normHeader = (s: string) =>
     .replace(/\s+/g, ' ')
     .trim();
 
-function parseImportedSheet(buf: ArrayBuffer): ItemPayload[] {
+const splitAcabamentos = (raw: string): string[] =>
+  (raw || '')
+    .split(/[;,|\n]/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+function parseImportedSheet(buf: ArrayBuffer): ImportedItem[] {
   const wb = XLSX.read(buf, { type: 'array' });
   const ws = wb.Sheets[wb.SheetNames[0]];
   if (!ws) return [];
@@ -113,7 +126,7 @@ function parseImportedSheet(buf: ArrayBuffer): ItemPayload[] {
 
   // Detect header row
   const firstRow = rows[0].map((c) => normHeader(String(c ?? '')));
-  const headerMap: Partial<Record<keyof ItemPayload, number>> = {};
+  const headerMap: Partial<Record<keyof ItemPayload | 'acabamentos', number>> = {};
   let hasHeader = false;
   IMPORT_HEADER_ALIASES.forEach(({ key, aliases }) => {
     const wanted = new Set(aliases.map(normHeader));
@@ -125,25 +138,59 @@ function parseImportedSheet(buf: ArrayBuffer): ItemPayload[] {
   });
 
   const dataRows = hasHeader ? rows.slice(1) : rows;
-  const out: ItemPayload[] = [];
+  const out: ImportedItem[] = [];
   for (const r of dataRows) {
-    const item: ItemPayload = { ...emptyItem };
+    const base: ItemPayload = { ...emptyItem };
+    let acabamentosRaw = '';
     if (hasHeader) {
-      (Object.keys(headerMap) as (keyof ItemPayload)[]).forEach((k) => {
+      (Object.keys(headerMap) as Array<keyof ItemPayload | 'acabamentos'>).forEach((k) => {
         const idx = headerMap[k];
-        if (idx != null) item[k] = String(r[idx] ?? '').trim();
+        if (idx == null) return;
+        const val = String(r[idx] ?? '').trim();
+        if (k === 'acabamentos') acabamentosRaw = val;
+        else (base as any)[k] = val;
       });
     } else {
       POSITIONAL_ORDER.forEach((k, i) => {
-        item[k] = String(r[i] ?? '').trim();
+        const val = String(r[i] ?? '').trim();
+        if (k === 'acabamentos') acabamentosRaw = val;
+        else (base as any)[k] = val;
       });
     }
-    if (item.cdItemAcabamento) {
-      item.cdItemAcabamento = item.cdItemAcabamento.toUpperCase();
-      out.push(item);
+    if (base.cdItemAcabamento) {
+      base.cdItemAcabamento = base.cdItemAcabamento.toUpperCase();
+      out.push({
+        ...base,
+        acabamentosRaw,
+        acabamentosCodes: splitAcabamentos(acabamentosRaw),
+      });
     }
   }
   return out;
+}
+
+function downloadTemplate() {
+  const headers = [
+    'Código do Tecido/Kit',
+    'Descrição do Tecido/Kit',
+    'Descrição Reduzida',
+    'Descrição Original',
+    'Kit Complementar 01',
+    'Kit Complementar 02',
+    'Kit Complementar 03',
+    'Kit Complementar 04',
+    'Kit Complementar 05',
+    'Acabamentos',
+  ];
+  const example = [
+    ['TEC001234', 'Tecido Exemplo 1,40m', 'TEC EX 140', 'Tecido Exemplo original 1,40m', '', '', '', '', '', '1001;1002;1003'],
+    ['TEC009876', 'Tecido Exemplo 2,80m', 'TEC EX 280', 'Tecido Exemplo original 2,80m', '', '', '', '', '', '1005'],
+  ];
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...example]);
+  ws['!cols'] = headers.map((h) => ({ wch: Math.max(14, h.length + 2) }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Modelo');
+  XLSX.writeFile(wb, 'modelo-incluir-em-massa.xlsx');
 }
 
 export default function IncluirItemMassaTab() {
