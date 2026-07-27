@@ -194,6 +194,7 @@ function downloadTemplate() {
 }
 
 export default function IncluirItemMassaTab() {
+  const qc = useQueryClient();
   const [mode, setMode] = useState<Mode>('incluir');
   const [item, setItem] = useState({ ...emptyItem });
   const [busca, setBusca] = useState('');
