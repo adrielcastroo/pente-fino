@@ -244,8 +244,14 @@ export default function EquipesPage() {
   const availableToAdd = useMemo(() => {
     if (!selectedTeam) return [] as ProfileLite[];
     const memberIds = new Set(selectedMembers.map((m) => m.user_id));
-    return Object.values(profiles).filter((p) => !memberIds.has(p.id));
-  }, [profiles, selectedMembers, selectedTeam]);
+    const grantSet = new Set(grantableModules);
+    return Object.values(profiles).filter((p) => {
+      if (memberIds.has(p.id)) return false;
+      if (isAdmin) return true;
+      // Gestor só pode adicionar quem compartilha ao menos um módulo com ele.
+      return (p.modules ?? []).some((m) => grantSet.has(m));
+    });
+  }, [profiles, selectedMembers, selectedTeam, grantableModules, isAdmin]);
 
   return (
     <div className="p-4 sm:p-6 max-w-[1400px] mx-auto space-y-6">
