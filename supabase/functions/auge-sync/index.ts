@@ -14,22 +14,50 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
 };
 
-let AUGE_BASE_URL = (Deno.env.get('AUGE_BASE_URL') ?? 'https://unilux.auge.app').replace(/\/$/, '');
-let AUGE_USERNAME = Deno.env.get('AUGE_USERNAME') ?? '';
-let AUGE_PASSWORD = Deno.env.get('AUGE_PASSWORD') ?? '';
+const DEFAULT_AUGE_BASE_URL = (Deno.env.get('AUGE_BASE_URL') ?? 'https://unilux.auge.app').replace(/\/$/, '');
+const FALLBACK_AUGE_USERNAME = Deno.env.get('AUGE_USERNAME') ?? '';
+const FALLBACK_AUGE_PASSWORD = Deno.env.get('AUGE_PASSWORD') ?? '';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-async function loadAugeCredentials(admin: ReturnType<typeof createClient>) {
-  try {
-    const { data } = await admin.from('auge_credentials').select('base_url,username,password').eq('id', true).maybeSingle();
-    if (data) {
-      if (data.base_url && String(data.base_url).trim()) AUGE_BASE_URL = String(data.base_url).trim().replace(/\/$/, '');
-      if (data.username && String(data.username).trim()) AUGE_USERNAME = String(data.username).trim();
-      if (data.password && String(data.password).length) AUGE_PASSWORD = String(data.password);
+// Per-invocation credentials (replace previous module-level mutables)
+let AUGE_BASE_URL = DEFAULT_AUGE_BASE_URL;
+let AUGE_USERNAME = '';
+let AUGE_PASSWORD = '';
+
+/**
+ * Load Auge credentials.
+ * - If userId is provided: try `auge_user_credentials` for that user.
+ *   If not found, throw AUGE_CREDENTIALS_MISSING (never fall back to another user's or the admin's credentials).
+ * - If userId is null (cron/system): fall back to env `AUGE_USERNAME`/`AUGE_PASSWORD` (system automations).
+ */
+async function loadAugeCredentials(admin: ReturnType<typeof createClient>, userId: string | null) {
+  AUGE_BASE_URL = DEFAULT_AUGE_BASE_URL;
+  AUGE_USERNAME = '';
+  AUGE_PASSWORD = '';
+
+  if (userId) {
+    const { data } = await admin
+      .from('auge_user_credentials')
+      .select('base_url,username,password')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (!data || !data.username || !data.password) {
+      const err: any = new Error('AUGE_CREDENTIALS_MISSING');
+      err.code = 'AUGE_CREDENTIALS_MISSING';
+      throw err;
     }
-  } catch (_) { /* fallback para env */ }
+    if (data.base_url && String(data.base_url).trim()) AUGE_BASE_URL = String(data.base_url).trim().replace(/\/$/, '');
+    AUGE_USERNAME = String(data.username).trim();
+    AUGE_PASSWORD = String(data.password);
+    return;
+  }
+
+  // System/cron path: use env fallback only
+  AUGE_USERNAME = FALLBACK_AUGE_USERNAME;
+  AUGE_PASSWORD = FALLBACK_AUGE_PASSWORD;
 }
+
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
 const TRANSFERENCIA_BACKFILL_BATCH = 8;
@@ -3343,7 +3371,6 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
-  await loadAugeCredentials(admin);
   const url = new URL(req.url);
   const action = url.searchParams.get('action');
   const entityParam = url.searchParams.get('entity');
@@ -3364,9 +3391,23 @@ Deno.serve(async (req) => {
   }
 
   try {
-    if (!AUGE_USERNAME || !AUGE_PASSWORD) {
-      throw new Error('Credenciais AUGE_USERNAME / AUGE_PASSWORD não configuradas.');
+    try {
+      await loadAugeCredentials(admin, triggeredBy);
+    } catch (err: any) {
+      if (err?.code === 'AUGE_CREDENTIALS_MISSING') {
+        return new Response(JSON.stringify({
+          ok: false,
+          code: 'AUGE_CREDENTIALS_MISSING',
+          error: 'Configure suas credenciais do Auge para executar ações. Acesse Configurações → Minha conta Auge.',
+        }), { status: 428, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      throw err;
     }
+
+    if (!AUGE_USERNAME || !AUGE_PASSWORD) {
+      throw new Error('Credenciais do Auge não configuradas para esta execução.');
+    }
+
 
     // Kill-switch: se a flag auge_sync_enabled estiver desligada, bloqueia tudo (exceto ping)
     if (action !== 'ping') {

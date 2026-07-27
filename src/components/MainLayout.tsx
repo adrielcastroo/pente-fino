@@ -15,6 +15,7 @@ import ResumeBanner from '@/components/ResumeBanner';
 import CommandPalette from '@/components/CommandPalette';
 import ShortcutsModal from '@/components/ShortcutsModal';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import AugeCredentialsGate from '@/components/auge/AugeCredentialsGate';
 import { SidebarProvider } from '@/components/ui/sidebar';
 
 const PageSkeleton = () => (
@@ -112,6 +113,7 @@ export default function MainLayout({
       {showUndo && <UndoBanner />}
       <CommandPalette />
       <ShortcutsModal open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
+      <AugeCredentialsGate />
     </SidebarProvider>
   );
 }
