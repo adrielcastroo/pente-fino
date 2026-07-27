@@ -646,7 +646,7 @@ export default function IncluirItemMassaTab() {
             <Button onClick={enviarIncluir} disabled={enviando || isActive} className="w-full h-10 gap-2">
               {enviando || isActive ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               {importedItems.length > 0
-                ? `Incluir ${importedItems.length} item(ns) em ${selecionados.size} acabamento(s)`
+                ? `Processar ${importedItems.length} item(ns) da planilha`
                 : `Incluir em ${selecionados.size} acabamento(s)`}
             </Button>
           </Card>
