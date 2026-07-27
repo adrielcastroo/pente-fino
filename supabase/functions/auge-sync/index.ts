@@ -4531,7 +4531,22 @@ Deno.serve(async (req) => {
         }
         if (!itensFinais.length) return { destino, tag, status: 'sem_itens', itens: 0, relatorio };
         try {
-          const observacao = `Necessidade automática (Pente Fino) — ${tag}`;
+          const nomeDestinoMap: Record<string, string> = {
+            '18': '18',
+            '20': '20',
+            'EMBALAGE': 'Embalagem',
+            'ESPE.1': 'Espe.01',
+            'ESPE.2': 'Espe.02',
+            'PH': 'PH',
+            'PVT': 'PVT',
+          };
+          const nomeDestino = nomeDestinoMap[destino.toUpperCase()] ?? destino;
+          // Data em BRT (UTC-3) no formato DD/MM/AA
+          const nowBrt = new Date(Date.now() - 3 * 60 * 60 * 1000);
+          const dd = String(nowBrt.getUTCDate()).padStart(2, '0');
+          const mm = String(nowBrt.getUTCMonth() + 1).padStart(2, '0');
+          const yy = String(nowBrt.getUTCFullYear()).slice(-2);
+          const observacao = `${nomeDestino} Nec ${dd}/${mm}/${yy}`;
           const cd = await criarTransferencia(auth, itensFinais, observacao);
           if (efetivar) await efetivarTransferencia(auth, cd);
           return { destino, tag, status: 'ok', cdMovimentacao: cd, itens: itensFinais.length, efetivado: efetivar };
