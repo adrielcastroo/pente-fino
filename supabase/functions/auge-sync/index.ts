@@ -3825,11 +3825,50 @@ Deno.serve(async (req) => {
       if (!item?.cdItemAcabamento) throw new Error('cdItemAcabamento é obrigatório.');
       if (!cdAcabamentos.length) throw new Error('Selecione ao menos 1 acabamento.');
 
+      // Fallback: se descrições vieram vazias, buscar em itens_cadastro / auge_produtos
+      // para não gravar itens sem descrição no Auge.
+      const codigo = String(item.cdItemAcabamento).trim().toUpperCase();
+      const dsAtual = String(item.dsItemAcabamento ?? '').trim();
+      const dsOrigAtual = String(item.dsItemAcabamentoOriginal ?? '').trim();
+      const dsRedAtual = String(item.dsItemAcabamentoReduzida ?? '').trim();
+      if (!dsAtual || !dsOrigAtual || !dsRedAtual) {
+        let descricao = '';
+        try {
+          const { data: ic } = await admin
+            .from('itens_cadastro')
+            .select('descricao')
+            .eq('codigo_interno', codigo)
+            .maybeSingle();
+          descricao = String(ic?.descricao ?? '').trim();
+        } catch { /* ignore */ }
+        if (!descricao) {
+          try {
+            const { data: ap } = await admin
+              .from('auge_produtos')
+              .select('descricao')
+              .eq('codigo', codigo)
+              .maybeSingle();
+            descricao = String(ap?.descricao ?? '').trim();
+          } catch { /* ignore */ }
+        }
+        if (descricao) {
+          if (!dsAtual) item.dsItemAcabamento = descricao;
+          if (!dsOrigAtual) item.dsItemAcabamentoOriginal = descricao;
+          if (!dsRedAtual) {
+            // Reduzida = concatena as 4 primeiras letras das 2 primeiras palavras (fallback aceitável).
+            const words = descricao.split(/\s+/).filter(Boolean);
+            const short = words.slice(0, 2).map(w => w.replace(/[^A-Za-z0-9]/g, '').slice(0, 4)).join('') || descricao.replace(/\s+/g, '').slice(0, 8);
+            item.dsItemAcabamentoReduzida = short;
+          }
+        }
+      }
+
       const runIns = await admin.from('auge_sync_runs').insert({
         entidade: 'incluir_item_massa', status: 'running', started_at: new Date().toISOString(),
         triggered_by: triggeredBy, detalhes: { phase: 'inserindo', current: 0, total: cdAcabamentos.length, item: item.cdItemAcabamento, results: [] },
       }).select('id').single();
       const runId = runIns.data?.id;
+
 
       const task = (async () => {
         const results: Array<{ cd: string; ok: boolean; erro?: string }> = [];
