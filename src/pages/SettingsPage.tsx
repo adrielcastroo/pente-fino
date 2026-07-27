@@ -90,6 +90,7 @@ const CATEGORY_GROUPS: { id: 'account' | 'system'; label: string; minRole?: Role
     label: 'Minha Conta',
     items: [
       { id: 'profile', name: 'Perfil / Conta', icon: User, description: 'Gerencie suas informações pessoais e de conta.' },
+      { id: 'auge-account', name: 'Minha conta Auge', icon: KeyRound, description: 'Configure suas credenciais do Auge para ações no ERP.' },
       { id: 'appearance', name: 'Aparência', icon: Palette, description: 'Personalize o visual e as cores.' },
       { id: 'preferences', name: 'Preferências', icon: Settings, description: 'Ajuste o comportamento do sistema.' },
     ],
