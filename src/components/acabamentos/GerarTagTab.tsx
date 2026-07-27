@@ -170,6 +170,17 @@ export default function GerarTagTab() {
     },
   });
 
+  const { data: customTags = [] } = useQuery({
+    queryKey: ['tag-custom-gerar-tag'],
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from('auge_tag_custom')
+        .select('cd_configuracao, nm_configuracao, nm_tag_customizada, ds_tag_customizada, ds_tag_calculada, ds_tag_texto')
+        .limit(10000);
+      return (data ?? []) as CustomTag[];
+    },
+  });
+
   const filtrados = useMemo(() => {
     const t = busca.trim().toLowerCase();
     if (!t) return acabamentos.slice(0, 200);
