@@ -47,7 +47,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { atLeast, ROLE_LABEL, type Role, normalizeRole } from '@/lib/permissions';
-import { MODULE_LABEL, PAGE_REGISTRY, pagesByModule, type PageEntry } from '@/lib/page-registry';
+import { MODULE_LABEL, PAGE_REGISTRY, pagesByModule, type PageEntry, type PageModule } from '@/lib/page-registry';
 import { Navigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { usePageAccess } from '@/hooks/use-page-access';
