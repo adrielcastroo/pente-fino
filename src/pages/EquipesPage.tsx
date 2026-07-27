@@ -636,6 +636,10 @@ function MemberPermissionsDialog({ member, team, grantableModules, onClose, onSa
         <div className="flex-1 overflow-y-auto space-y-4 pr-1">
           {loading ? (
             Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-md" />)
+          ) : visibleModules.length === 0 ? (
+            <div className="text-center py-10 border border-dashed border-border/40 rounded-md text-sm text-muted-foreground">
+              Vocês não compartilham nenhum módulo. Peça a um admin para liberar módulos em comum antes de conceder páginas.
+            </div>
           ) : (
             (Object.keys(grouped) as (keyof typeof grouped)[]).map((mod) => {
               const pages = grouped[mod].filter((p) => matches(p.label));
