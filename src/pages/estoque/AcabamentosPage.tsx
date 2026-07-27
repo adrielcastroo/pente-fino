@@ -234,7 +234,7 @@ export default function AcabamentosPage() {
         }
       />
 
-      <Tabs defaultValue="consulta" className="space-y-4">
+      <Tabs value={tab} onValueChange={setTab} className="space-y-4">
         <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full md:w-auto">
           <TabsTrigger value="consulta" className="text-xs">Consulta</TabsTrigger>
           <TabsTrigger value="massa" className="text-xs">Incluir em massa</TabsTrigger>
