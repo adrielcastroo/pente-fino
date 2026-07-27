@@ -13,7 +13,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { KeyRound, AlertTriangle, Loader2, ShieldCheck, QrCode, Copy, RefreshCw } from 'lucide-react';
+import { KeyRound, AlertTriangle, Loader2, ShieldCheck, QrCode, Copy, RefreshCw, Info } from 'lucide-react';
 import { 
   User, 
   Settings, 
