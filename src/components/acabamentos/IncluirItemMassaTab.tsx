@@ -9,7 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, Loader2, Send, CheckCircle2, AlertTriangle, X, Trash2, Plus, FileSpreadsheet, Upload } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Search, Loader2, Send, CheckCircle2, AlertTriangle, X, Trash2, Plus, FileSpreadsheet, Upload, Download, FileUp } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Acabamento {
@@ -57,6 +58,11 @@ type ItemPayload = {
   cdKitComplementar5: string;
 };
 
+type ImportedItem = ItemPayload & {
+  acabamentosRaw: string;
+  acabamentosCodes: string[]; // tokens brutos digitados
+};
+
 const emptyItem: ItemPayload = {
   cdItemAcabamento: '',
   dsItemAcabamento: '',
@@ -69,7 +75,7 @@ const emptyItem: ItemPayload = {
   cdKitComplementar5: '',
 };
 
-const IMPORT_HEADER_ALIASES: Array<{ key: keyof ItemPayload; aliases: string[] }> = [
+const IMPORT_HEADER_ALIASES: Array<{ key: keyof ItemPayload | 'acabamentos'; aliases: string[] }> = [
   { key: 'cdItemAcabamento', aliases: ['codigo do tecido kit', 'codigo do tecido/kit', 'codigo tecido kit', 'codigo', 'cod', 'codigo tecido', 'codigo kit', 'sku', 'item'] },
   { key: 'dsItemAcabamento', aliases: ['descricao do tecido kit', 'descricao do tecido/kit', 'descricao tecido kit', 'descricao', 'descricao completa'] },
   { key: 'dsItemAcabamentoReduzida', aliases: ['descricao reduzida', 'desc reduzida', 'reduzida'] },
@@ -79,9 +85,10 @@ const IMPORT_HEADER_ALIASES: Array<{ key: keyof ItemPayload; aliases: string[] }
   { key: 'cdKitComplementar3', aliases: ['kit complementar 03', 'kit complementar 3', 'kit 03', 'kit 3', 'complementar 03', 'complementar 3'] },
   { key: 'cdKitComplementar4', aliases: ['kit complementar 04', 'kit complementar 4', 'kit 04', 'kit 4', 'complementar 04', 'complementar 4'] },
   { key: 'cdKitComplementar5', aliases: ['kit complementar 05', 'kit complementar 5', 'kit 05', 'kit 5', 'complementar 05', 'complementar 5'] },
+  { key: 'acabamentos', aliases: ['acabamentos', 'acabamento', 'codigo acabamento', 'codigos acabamento', 'codigos dos acabamentos', 'chave acabamento', 'chaves acabamento', 'chaves dos acabamentos'] },
 ];
 
-const POSITIONAL_ORDER: Array<keyof ItemPayload> = [
+const POSITIONAL_ORDER: Array<keyof ItemPayload | 'acabamentos'> = [
   'cdItemAcabamento',
   'dsItemAcabamento',
   'dsItemAcabamentoReduzida',
@@ -91,6 +98,7 @@ const POSITIONAL_ORDER: Array<keyof ItemPayload> = [
   'cdKitComplementar3',
   'cdKitComplementar4',
   'cdKitComplementar5',
+  'acabamentos',
 ];
 
 const normHeader = (s: string) =>
@@ -103,7 +111,13 @@ const normHeader = (s: string) =>
     .replace(/\s+/g, ' ')
     .trim();
 
-function parseImportedSheet(buf: ArrayBuffer): ItemPayload[] {
+const splitAcabamentos = (raw: string): string[] =>
+  (raw || '')
+    .split(/[;,|\n]/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+function parseImportedSheet(buf: ArrayBuffer): ImportedItem[] {
   const wb = XLSX.read(buf, { type: 'array' });
   const ws = wb.Sheets[wb.SheetNames[0]];
   if (!ws) return [];
@@ -112,7 +126,7 @@ function parseImportedSheet(buf: ArrayBuffer): ItemPayload[] {
 
   // Detect header row
   const firstRow = rows[0].map((c) => normHeader(String(c ?? '')));
-  const headerMap: Partial<Record<keyof ItemPayload, number>> = {};
+  const headerMap: Partial<Record<keyof ItemPayload | 'acabamentos', number>> = {};
   let hasHeader = false;
   IMPORT_HEADER_ALIASES.forEach(({ key, aliases }) => {
     const wanted = new Set(aliases.map(normHeader));
@@ -124,25 +138,59 @@ function parseImportedSheet(buf: ArrayBuffer): ItemPayload[] {
   });
 
   const dataRows = hasHeader ? rows.slice(1) : rows;
-  const out: ItemPayload[] = [];
+  const out: ImportedItem[] = [];
   for (const r of dataRows) {
-    const item: ItemPayload = { ...emptyItem };
+    const base: ItemPayload = { ...emptyItem };
+    let acabamentosRaw = '';
     if (hasHeader) {
-      (Object.keys(headerMap) as (keyof ItemPayload)[]).forEach((k) => {
+      (Object.keys(headerMap) as Array<keyof ItemPayload | 'acabamentos'>).forEach((k) => {
         const idx = headerMap[k];
-        if (idx != null) item[k] = String(r[idx] ?? '').trim();
+        if (idx == null) return;
+        const val = String(r[idx] ?? '').trim();
+        if (k === 'acabamentos') acabamentosRaw = val;
+        else (base as any)[k] = val;
       });
     } else {
       POSITIONAL_ORDER.forEach((k, i) => {
-        item[k] = String(r[i] ?? '').trim();
+        const val = String(r[i] ?? '').trim();
+        if (k === 'acabamentos') acabamentosRaw = val;
+        else (base as any)[k] = val;
       });
     }
-    if (item.cdItemAcabamento) {
-      item.cdItemAcabamento = item.cdItemAcabamento.toUpperCase();
-      out.push(item);
+    if (base.cdItemAcabamento) {
+      base.cdItemAcabamento = base.cdItemAcabamento.toUpperCase();
+      out.push({
+        ...base,
+        acabamentosRaw,
+        acabamentosCodes: splitAcabamentos(acabamentosRaw),
+      });
     }
   }
   return out;
+}
+
+function downloadTemplate() {
+  const headers = [
+    'Código do Tecido/Kit',
+    'Descrição do Tecido/Kit',
+    'Descrição Reduzida',
+    'Descrição Original',
+    'Kit Complementar 01',
+    'Kit Complementar 02',
+    'Kit Complementar 03',
+    'Kit Complementar 04',
+    'Kit Complementar 05',
+    'Acabamentos',
+  ];
+  const example = [
+    ['TEC001234', 'Tecido Exemplo 1,40m', 'TEC EX 140', 'Tecido Exemplo original 1,40m', '', '', '', '', '', '1001;1002;1003'],
+    ['TEC009876', 'Tecido Exemplo 2,80m', 'TEC EX 280', 'Tecido Exemplo original 2,80m', '', '', '', '', '', '1005'],
+  ];
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...example]);
+  ws['!cols'] = headers.map((h) => ({ wch: Math.max(14, h.length + 2) }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Modelo');
+  XLSX.writeFile(wb, 'modelo-incluir-em-massa.xlsx');
 }
 
 export default function IncluirItemMassaTab() {
@@ -156,7 +204,8 @@ export default function IncluirItemMassaTab() {
   const importInputRef = useRef<HTMLInputElement>(null);
 
   // Importação de planilha (xlsx/csv/ods)
-  const [importedItems, setImportedItems] = useState<ItemPayload[]>([]);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [importedItems, setImportedItems] = useState<ImportedItem[]>([]);
   const [importFileName, setImportFileName] = useState('');
   const [batchProgress, setBatchProgress] = useState<{ current: number; total: number; label: string } | null>(null);
 
@@ -207,6 +256,35 @@ export default function IncluirItemMassaTab() {
     acabamentos.forEach((a) => m.set(a.cd_acabamento, a));
     return m;
   }, [acabamentos]);
+
+  // Índice de resolução por chave/código para reconhecimento na planilha.
+  const acabByToken = useMemo(() => {
+    const m = new Map<string, Acabamento>();
+    const norm = (s: string) => (s || '').toString().trim().toUpperCase();
+    acabamentos.forEach((a) => {
+      if (a.cd_acabamento) m.set(norm(a.cd_acabamento), a);
+      if (a.chave_acabamento) m.set(norm(a.chave_acabamento), a);
+    });
+    return m;
+  }, [acabamentos]);
+
+  const resolveTokens = (tokens: string[]): { resolved: Acabamento[]; unresolved: string[] } => {
+    const resolved: Acabamento[] = [];
+    const unresolved: string[] = [];
+    const seen = new Set<string>();
+    tokens.forEach((t) => {
+      const key = t.trim().toUpperCase();
+      if (!key) return;
+      const a = acabByToken.get(key);
+      if (a && !seen.has(a.cd_acabamento)) {
+        seen.add(a.cd_acabamento);
+        resolved.push(a);
+      } else if (!a) {
+        unresolved.push(t);
+      }
+    });
+    return { resolved, unresolved };
+  };
 
   const vinculosGrouped = useMemo(() => {
     // group by cd_acabamento; keep list of item vinculos per acabamento
@@ -305,9 +383,9 @@ export default function IncluirItemMassaTab() {
     }
   };
 
-  const invokeIncluirRun = async (payload: ItemPayload): Promise<string | null> => {
+  const invokeIncluirRun = async (payload: ItemPayload, cdAcabamentos: string[]): Promise<string | null> => {
     const { data, error } = await supabase.functions.invoke('auge-sync?action=incluir_item_massa', {
-      body: { item: payload, cdAcabamentos: Array.from(selecionados) },
+      body: { item: payload, cdAcabamentos },
     });
     if (error) throw error;
     if (data?.ok === false) throw new Error(data?.error ?? 'Falha ao iniciar');
@@ -330,20 +408,35 @@ export default function IncluirItemMassaTab() {
   };
 
   const enviarIncluir = async () => {
-    if (selecionados.size === 0) return toast.error('Selecione ao menos 1 acabamento.');
-
     // Modo em lote (planilha importada)
     if (importedItems.length > 0) {
+      // Cada linha resolve seus próprios acabamentos (coluna "Acabamentos");
+      // fallback para os selecionados manualmente se a linha vier vazia.
+      const fallback = Array.from(selecionados);
+      const plano = importedItems.map((it) => {
+        const { resolved } = resolveTokens(it.acabamentosCodes);
+        const cds = resolved.length ? resolved.map((a) => a.cd_acabamento) : fallback;
+        return { it, cds };
+      });
+      const semAlvo = plano.filter((p) => p.cds.length === 0);
+      if (semAlvo.length === plano.length) {
+        return toast.error('Nenhum item possui acabamento válido. Preencha a coluna "Acabamentos" ou selecione acabamentos na lista.');
+      }
+      if (semAlvo.length > 0) {
+        if (!confirm(`${semAlvo.length} item(ns) sem acabamento válido serão ignorados. Continuar?`)) return;
+      }
       setEnviando(true);
       setRun(null);
       let sucesso = 0;
       let falha = 0;
+      let ignorados = semAlvo.length;
       try {
-        for (let i = 0; i < importedItems.length; i++) {
-          const it = importedItems[i];
-          setBatchProgress({ current: i + 1, total: importedItems.length, label: it.cdItemAcabamento });
+        for (let i = 0; i < plano.length; i++) {
+          const { it, cds } = plano[i];
+          if (cds.length === 0) continue;
+          setBatchProgress({ current: i + 1, total: plano.length, label: `${it.cdItemAcabamento} → ${cds.length} acab.` });
           try {
-            const runId = await invokeIncluirRun(it);
+            const runId = await invokeIncluirRun(it, cds);
             if (runId) {
               subscribeRun(runId);
               const final = await waitRunTerminal(runId);
@@ -357,7 +450,7 @@ export default function IncluirItemMassaTab() {
             toast.error(`${it.cdItemAcabamento}: ${e?.message ?? e}`);
           }
         }
-        toast.success(`Lote concluído — ${sucesso} sucesso · ${falha} falha(s).`);
+        toast.success(`Lote concluído — ${sucesso} ok · ${falha} falha(s)${ignorados ? ` · ${ignorados} ignorado(s)` : ''}.`);
       } finally {
         setBatchProgress(null);
         setEnviando(false);
@@ -365,13 +458,15 @@ export default function IncluirItemMassaTab() {
       return;
     }
 
+    if (selecionados.size === 0) return toast.error('Selecione ao menos 1 acabamento.');
+
     // Modo item único (formulário)
     if (!item.cdItemAcabamento.trim()) return toast.error('Informe o Código do Tecido/Kit ou importe uma planilha.');
 
     setEnviando(true);
     setRun(null);
     try {
-      const runId = await invokeIncluirRun(item);
+      const runId = await invokeIncluirRun(item, Array.from(selecionados));
       if (runId) {
         const { data: initial } = await (supabase as any)
           .from('auge_sync_runs').select('*').eq('id', runId).maybeSingle();
@@ -461,7 +556,7 @@ export default function IncluirItemMassaTab() {
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => importInputRef.current?.click()}
+                onClick={() => setImportDialogOpen(true)}
                 className="h-8 text-[11px] gap-1.5"
               >
                 <Upload className="h-3.5 w-3.5" /> Importar planilha
@@ -469,56 +564,48 @@ export default function IncluirItemMassaTab() {
             </div>
 
             {importedItems.length > 0 && (
-              <div className="rounded-md border border-primary/40 bg-primary/5 p-2 space-y-1.5">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <FileSpreadsheet className="h-3.5 w-3.5 text-primary shrink-0" />
-                    <div className="min-w-0">
-                      <div className="text-[11px] font-semibold truncate">{importFileName || 'Planilha carregada'}</div>
-                      <div className="text-[10px] text-muted-foreground">
-                        {importedItems.length} item(ns) — serão incluídos em cada acabamento selecionado
-                      </div>
+              <div className="rounded-md border border-primary/40 bg-primary/5 p-2 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <FileSpreadsheet className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <div className="min-w-0">
+                    <div className="text-[11px] font-semibold truncate">{importFileName || 'Planilha carregada'}</div>
+                    <div className="text-[10px] text-muted-foreground">
+                      {importedItems.length} item(ns) prontos para inclusão
                     </div>
                   </div>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <Button size="sm" variant="ghost" className="h-7 text-[11px] gap-1" onClick={() => setImportDialogOpen(true)}>
+                    Ver preview
+                  </Button>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6 shrink-0"
+                    className="h-6 w-6"
                     onClick={() => { setImportedItems([]); setImportFileName(''); }}
                     disabled={enviando}
+                    aria-label="Limpar planilha"
                   >
                     <X className="h-3 w-3" />
                   </Button>
                 </div>
-                <div className="max-h-32 overflow-y-auto rounded bg-background/60 divide-y divide-border/40">
-                  {importedItems.slice(0, 50).map((it, i) => (
-                    <div key={i} className="px-2 py-1 text-[10px] font-mono flex items-center gap-2">
-                      <span className="text-muted-foreground w-6 text-right">{i + 1}</span>
-                      <span className="font-semibold">{it.cdItemAcabamento}</span>
-                      <span className="text-muted-foreground truncate">{it.dsItemAcabamento}</span>
-                    </div>
-                  ))}
-                  {importedItems.length > 50 && (
-                    <div className="px-2 py-1 text-[10px] text-center text-muted-foreground">
-                      … +{importedItems.length - 50} outros
-                    </div>
-                  )}
+              </div>
+            )}
+
+            {batchProgress && (
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="text-muted-foreground">Processando {batchProgress.current}/{batchProgress.total}</span>
+                  <span className="font-mono truncate">{batchProgress.label}</span>
                 </div>
-                {batchProgress && (
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between text-[10px]">
-                      <span className="text-muted-foreground">Processando {batchProgress.current}/{batchProgress.total}</span>
-                      <span className="font-mono truncate">{batchProgress.label}</span>
-                    </div>
-                    <Progress value={(batchProgress.current / batchProgress.total) * 100} className="h-1.5" />
-                  </div>
-                )}
+                <Progress value={(batchProgress.current / batchProgress.total) * 100} className="h-1.5" />
               </div>
             )}
 
             <div className="text-[10px] text-muted-foreground -mt-1">
-              Colunas aceitas (nesta ordem): <span className="font-mono">Código do Tecido/Kit · Descrição · Reduzida · Original · Kit Complementar 01–05</span>. Formatos: <code>.xlsx</code>, <code>.csv</code>, <code>.ods</code>.
+              Colunas aceitas: <span className="font-mono">Código · Descrição · Reduzida · Original · Kit 01–05 · Acabamentos</span> (códigos separados por <code>;</code>). Formatos: <code>.xlsx</code>, <code>.csv</code>, <code>.ods</code>.
             </div>
+
 
             <div className="space-y-2">
               <label className="text-[11px] font-medium">Código do Tecido/Kit {importedItems.length === 0 && '*'}</label>
@@ -559,7 +646,7 @@ export default function IncluirItemMassaTab() {
             <Button onClick={enviarIncluir} disabled={enviando || isActive} className="w-full h-10 gap-2">
               {enviando || isActive ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               {importedItems.length > 0
-                ? `Incluir ${importedItems.length} item(ns) em ${selecionados.size} acabamento(s)`
+                ? `Processar ${importedItems.length} item(ns) da planilha`
                 : `Incluir em ${selecionados.size} acabamento(s)`}
             </Button>
           </Card>
@@ -709,7 +796,169 @@ export default function IncluirItemMassaTab() {
           )}
         </div>
       )}
+
+      <ImportPlanilhaDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        onPickFile={() => importInputRef.current?.click()}
+        importedItems={importedItems}
+        importFileName={importFileName}
+        onClear={() => { setImportedItems([]); setImportFileName(''); }}
+        resolveTokens={resolveTokens}
+        fallbackSelecionados={acabamentos.filter((a) => selecionados.has(a.cd_acabamento))}
+      />
     </div>
+  );
+}
+
+function ImportPlanilhaDialog({
+  open, onOpenChange, onPickFile, importedItems, importFileName, onClear, resolveTokens, fallbackSelecionados,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  onPickFile: () => void;
+  importedItems: ImportedItem[];
+  importFileName: string;
+  onClear: () => void;
+  resolveTokens: (tokens: string[]) => { resolved: Acabamento[]; unresolved: string[] };
+  fallbackSelecionados: Acabamento[];
+}) {
+  const preview = useMemo(() => {
+    return importedItems.map((it) => {
+      const { resolved, unresolved } = resolveTokens(it.acabamentosCodes);
+      const targets = resolved.length ? resolved : fallbackSelecionados;
+      return { it, resolved, unresolved, targets, usouFallback: resolved.length === 0 && fallbackSelecionados.length > 0 };
+    });
+  }, [importedItems, resolveTokens, fallbackSelecionados]);
+
+  const totalItens = preview.length;
+  const semAlvo = preview.filter((p) => p.targets.length === 0).length;
+  const totalUnresolved = preview.reduce((acc, p) => acc + p.unresolved.length, 0);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col backdrop-blur-sm">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <FileSpreadsheet className="h-4 w-4 text-primary" />
+            Importar planilha em massa
+          </DialogTitle>
+          <DialogDescription className="text-xs">
+            Envie um arquivo <code>.xlsx</code>, <code>.csv</code> ou <code>.ods</code> ou baixe o modelo pronto.
+            Use a coluna <span className="font-semibold">Acabamentos</span> com códigos separados por <code>;</code>
+            para direcionar cada item aos seus acabamentos.
+          </DialogDescription>
+        </DialogHeader>
+
+        {importedItems.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center gap-4 py-10 border-2 border-dashed rounded-lg bg-muted/30">
+            <FileUp className="h-10 w-10 text-muted-foreground" />
+            <div className="text-center space-y-1">
+              <div className="text-sm font-medium">Nenhum arquivo selecionado</div>
+              <div className="text-xs text-muted-foreground">Escolha uma planilha ou baixe o modelo para começar.</div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button onClick={onPickFile} className="gap-2">
+                <Upload className="h-4 w-4" /> Selecionar planilha
+              </Button>
+              <Button variant="outline" onClick={downloadTemplate} className="gap-2">
+                <Download className="h-4 w-4" /> Baixar modelo
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex-1 flex flex-col min-h-0 gap-3">
+            <div className="flex items-center justify-between gap-2 rounded-md border bg-muted/40 p-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <FileSpreadsheet className="h-4 w-4 text-primary shrink-0" />
+                <div className="min-w-0">
+                  <div className="text-xs font-semibold truncate">{importFileName}</div>
+                  <div className="text-[10px] text-muted-foreground">
+                    {totalItens} item(ns) · {semAlvo} sem acabamento{totalUnresolved > 0 ? ` · ${totalUnresolved} código(s) não reconhecido(s)` : ''}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                <Button size="sm" variant="ghost" onClick={onPickFile} className="h-8 text-[11px] gap-1">
+                  <Upload className="h-3.5 w-3.5" /> Trocar
+                </Button>
+                <Button size="sm" variant="ghost" onClick={onClear} className="h-8 text-[11px] gap-1 text-destructive">
+                  <X className="h-3.5 w-3.5" /> Remover
+                </Button>
+              </div>
+            </div>
+
+            {semAlvo > 0 && fallbackSelecionados.length === 0 && (
+              <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/5 p-2 text-[11px]">
+                <AlertTriangle className="h-3.5 w-3.5 text-destructive shrink-0 mt-0.5" />
+                <div>
+                  <strong>{semAlvo}</strong> item(ns) sem coluna "Acabamentos" e nenhum acabamento marcado manualmente.
+                  Estes itens serão ignorados na execução.
+                </div>
+              </div>
+            )}
+
+            <ScrollArea className="flex-1 rounded border">
+              <table className="w-full text-xs">
+                <thead className="bg-muted sticky top-0 z-10">
+                  <tr className="text-left">
+                    <th className="p-2 w-10">#</th>
+                    <th className="p-2">Código / Descrição</th>
+                    <th className="p-2">Acabamentos destino</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {preview.map((p, i) => (
+                    <tr key={i} className="border-t align-top">
+                      <td className="p-2 text-muted-foreground font-mono text-[10px]">{i + 1}</td>
+                      <td className="p-2">
+                        <div className="font-mono font-semibold">{p.it.cdItemAcabamento}</div>
+                        <div className="text-[10px] text-muted-foreground truncate max-w-[280px]">{p.it.dsItemAcabamento}</div>
+                      </td>
+                      <td className="p-2">
+                        {p.targets.length === 0 ? (
+                          <span className="text-[10px] text-destructive">Nenhum — item será ignorado</span>
+                        ) : (
+                          <div className="flex flex-wrap gap-1">
+                            {p.usouFallback && (
+                              <Badge variant="outline" className="text-[9px] h-4">seleção manual</Badge>
+                            )}
+                            {p.targets.slice(0, 6).map((a) => (
+                              <Badge key={a.cd_acabamento} variant="secondary" className="text-[9px] h-4 font-mono">
+                                {a.chave_acabamento ?? a.cd_acabamento}
+                              </Badge>
+                            ))}
+                            {p.targets.length > 6 && (
+                              <Badge variant="outline" className="text-[9px] h-4">+{p.targets.length - 6}</Badge>
+                            )}
+                          </div>
+                        )}
+                        {p.unresolved.length > 0 && (
+                          <div className="text-[10px] text-destructive mt-1">
+                            Não encontrado: <span className="font-mono">{p.unresolved.join(', ')}</span>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </ScrollArea>
+          </div>
+        )}
+
+        <DialogFooter className="gap-2 sm:justify-between">
+          <Button variant="outline" onClick={downloadTemplate} className="gap-2">
+            <Download className="h-4 w-4" /> Baixar modelo
+          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" onClick={() => onOpenChange(false)}>
+              {importedItems.length > 0 ? 'Concluir' : 'Fechar'}
+            </Button>
+          </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
