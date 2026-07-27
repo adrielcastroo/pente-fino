@@ -1,14 +1,13 @@
-import { Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 
-const OPEN_TAG = "[[SUGGESTIONS]]";
-const CLOSE_TAG = "[[/SUGGESTIONS]]";
+// Tolerant to markdown/code-fence/whitespace/casing around the tags.
+const SUGGESTIONS_RE =
+  /(?:`{1,3}|\*{1,2}|_{1,2})?\s*\[\[\s*SUGGESTIONS\s*\]\]\s*(?:`{1,3})?\s*([\s\S]*?)\s*(?:`{1,3})?\s*\[\[\s*\/\s*SUGGESTIONS\s*\]\]\s*(?:`{1,3}|\*{1,2}|_{1,2})?/i;
 
 export function extractSuggestions(text: string): { items: string[]; cleaned: string } {
-  const i = text.indexOf(OPEN_TAG);
-  if (i === -1) return { items: [], cleaned: text };
-  const j = text.indexOf(CLOSE_TAG, i + OPEN_TAG.length);
-  if (j === -1) return { items: [], cleaned: text };
-  const raw = text.slice(i + OPEN_TAG.length, j).trim();
+  const match = SUGGESTIONS_RE.exec(text);
+  if (!match) return { items: [], cleaned: text };
+  const raw = match[1].trim().replace(/^`+|`+$/g, "").trim();
   try {
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return { items: [], cleaned: text };
@@ -17,10 +16,15 @@ export function extractSuggestions(text: string): { items: string[]; cleaned: st
       .map((s) => s.trim())
       .filter((s) => s.length > 0 && s.length <= 120)
       .slice(0, 4);
-    const cleaned = (text.slice(0, i) + text.slice(j + CLOSE_TAG.length)).trim();
+    const cleaned = (text.slice(0, match.index) + text.slice(match.index + match[0].length))
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
     return { items, cleaned };
   } catch {
-    return { items: [], cleaned: text };
+    // Fallback: strip the tags so we don't leak raw markup to the user,
+    // even if the JSON was malformed.
+    const cleaned = (text.slice(0, match.index) + text.slice(match.index + match[0].length)).trim();
+    return { items: [], cleaned };
   }
 }
 
@@ -35,19 +39,25 @@ export function Suggestions({
 }) {
   if (!items.length) return null;
   return (
-    <div className="mt-2 flex flex-wrap gap-1.5">
-      {items.map((s, i) => (
-        <button
-          key={i}
-          type="button"
-          disabled={disabled}
-          onClick={() => onPick(s)}
-          className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-xs text-foreground transition hover:bg-primary/10 hover:border-primary/60 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Sparkles className="h-3 w-3 text-primary" />
-          <span className="max-w-[240px] truncate text-left">{s}</span>
-        </button>
-      ))}
+    <div className="mt-3 space-y-1.5">
+      <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <Sparkles className="h-3 w-3 text-primary" />
+        Próximos passos
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {items.map((s, i) => (
+          <button
+            key={i}
+            type="button"
+            disabled={disabled}
+            onClick={() => onPick(s)}
+            className="group inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs font-medium text-foreground shadow-sm transition hover:-translate-y-0.5 hover:border-primary hover:bg-primary/10 hover:shadow disabled:pointer-events-none disabled:opacity-50"
+          >
+            <span className="max-w-[240px] truncate text-left">{s}</span>
+            <ArrowRight className="h-3 w-3 text-primary opacity-70 transition group-hover:translate-x-0.5 group-hover:opacity-100" />
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
