@@ -45,6 +45,11 @@ export default function AcabamentosPage() {
   const [showPanel, setShowPanel] = useState(false);
   const [sortBy, setSortBy] = useState<'nome' | 'codigo'>('nome');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const [tab, setTab] = useState<string>(() => {
+    if (typeof window === 'undefined') return 'consulta';
+    return localStorage.getItem('acabamentos:tab') || 'consulta';
+  });
+  useEffect(() => { try { localStorage.setItem('acabamentos:tab', tab); } catch {} }, [tab]);
   const channelRef = useRef<any>(null);
 
   // Recupera última execução de acabamentos ao montar
@@ -229,7 +234,7 @@ export default function AcabamentosPage() {
         }
       />
 
-      <Tabs defaultValue="consulta" className="space-y-4">
+      <Tabs value={tab} onValueChange={setTab} className="space-y-4">
         <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full md:w-auto">
           <TabsTrigger value="consulta" className="text-xs">Consulta</TabsTrigger>
           <TabsTrigger value="massa" className="text-xs">Incluir em massa</TabsTrigger>
