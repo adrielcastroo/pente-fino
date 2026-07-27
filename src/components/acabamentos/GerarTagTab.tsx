@@ -197,6 +197,11 @@ export default function GerarTagTab() {
     return rankAcabamentos(entradaManual, acabamentos);
   }, [entradaManual, acabamentos]);
 
+  const gruposCustom = useMemo(() => {
+    if (!entradaManual.trim() || customTags.length === 0) return [];
+    return rankCustomTags(entradaManual, customTags);
+  }, [entradaManual, customTags]);
+
   const melhor = recomendacoes[0] ?? null;
 
   const gerar = (input: string) => {
