@@ -750,6 +750,90 @@ export default function SettingsPage() {
                     </div>
                   )}
 
+                  {activeCategory === 'auge-account' && (
+                    <div className="space-y-6">
+                      {isGuest ? (
+                        <div className="py-12 text-center space-y-3">
+                          <div className="w-14 h-14 bg-muted rounded-md flex items-center justify-center mx-auto">
+                            <KeyRound className="w-7 h-7 text-muted-foreground" />
+                          </div>
+                          <h4 className="font-bold">Acesso Restrito</h4>
+                          <p className="text-sm text-muted-foreground">Faça login para configurar suas credenciais do Auge.</p>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="flex items-start justify-between gap-4 p-4 rounded-md bg-muted/30 border border-border/20">
+                            <div className="space-y-1">
+                              <h4 className="text-sm font-semibold flex items-center gap-2">
+                                <KeyRound className="w-4 h-4 text-primary" />
+                                Credenciais do Auge
+                              </h4>
+                              <p className="text-xs text-muted-foreground max-w-md">
+                                Para realizar transferências, entradas e outras ações no Auge pelo Pente Fino,
+                                você precisa informar suas próprias credenciais de acesso ao ERP.
+                              </p>
+                            </div>
+                            {augeCredentialsLoading ? (
+                              <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                            ) : augeCredentialsConfigured ? (
+                              <Badge variant="outline" className="text-success border-emerald-500/20 bg-emerald-500/5 shrink-0">
+                                Configuradas
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-amber-600 border-amber-500/20 bg-amber-500/5 shrink-0">
+                                Pendentes
+                              </Badge>
+                            )}
+                          </div>
+
+                          <div className="p-4 rounded-md border border-border/20 bg-muted/20 space-y-3">
+                            <div className="flex items-start gap-2 text-xs text-muted-foreground">
+                              <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                              <span>
+                                Suas credenciais ficam vinculadas apenas à sua conta e são usadas para autenticar
+                                você — e somente você — no Auge. Nenhum outro usuário tem acesso.
+                              </span>
+                            </div>
+                            <div className="flex items-start gap-2 text-xs text-muted-foreground">
+                              <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                              <span>
+                                Sem essas credenciais, as ações no Auge ficam bloqueadas para você.
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
+                            <Button
+                              onClick={() => setAugeCredentialsOpen(true)}
+                              className="h-11 gap-2"
+                            >
+                              <KeyRound className="w-4 h-4" />
+                              {augeCredentialsConfigured ? 'Atualizar credenciais' : 'Configurar credenciais'}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              onClick={loadAugeCredentialsStatus}
+                              disabled={augeCredentialsLoading}
+                              className="h-11 gap-2"
+                            >
+                              {augeCredentialsLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                              Verificar status
+                            </Button>
+                          </div>
+                        </>
+                      )}
+
+                      <AugeUserCredentialsDialog
+                        open={augeCredentialsOpen}
+                        onOpenChange={setAugeCredentialsOpen}
+                        onSaved={() => {
+                          setAugeCredentialsConfigured(true);
+                          toast.success('Credenciais do Auge atualizadas.');
+                        }}
+                      />
+                    </div>
+                  )}
+
                   {activeCategory === 'preferences' && (
                     <div className="space-y-4">
                       <div className="flex items-center justify-between p-4 rounded-md bg-muted/20 border border-border/10">
