@@ -68,6 +68,7 @@ import ExpedicaoPanel from '@/components/settings/ExpedicaoPanel';
 import { Truck } from 'lucide-react';
 import SettingsErrorBoundary from '@/components/SettingsErrorBoundary';
 import { setBipSoundEnabled, isBipSoundEnabled, bipSuccess } from '@/lib/bip-feedback';
+import AugeUserCredentialsDialog from '@/components/auge/AugeUserCredentialsDialog';
 
 type ModuleScope = 'estoque' | 'expedicao';
 type Category = {
