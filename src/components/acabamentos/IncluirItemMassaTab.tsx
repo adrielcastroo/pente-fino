@@ -204,7 +204,8 @@ export default function IncluirItemMassaTab() {
   const importInputRef = useRef<HTMLInputElement>(null);
 
   // Importação de planilha (xlsx/csv/ods)
-  const [importedItems, setImportedItems] = useState<ItemPayload[]>([]);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [importedItems, setImportedItems] = useState<ImportedItem[]>([]);
   const [importFileName, setImportFileName] = useState('');
   const [batchProgress, setBatchProgress] = useState<{ current: number; total: number; label: string } | null>(null);
 
