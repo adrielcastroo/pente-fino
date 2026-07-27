@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { Search, Loader2, Sparkles, Copy, Wand2, Target } from 'lucide-react';
+import { Search, Loader2, Sparkles, Copy, Wand2, Target, Tag as TagIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { normalizeTagFormatC } from '@/lib/tag-utils';
 
