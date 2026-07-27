@@ -108,7 +108,7 @@ export default function EquipesPage() {
       const [{ data: t }, { data: m }, { data: p }, { data: r }] = await Promise.all([
         (supabase.from('teams' as any).select('*').order('name') as any),
         (supabase.from('team_members' as any).select('team_id, user_id') as any),
-        supabase.from('profiles').select('id, display_name, avatar_url'),
+        supabase.from('profiles').select('id, display_name, avatar_url, modules'),
         (supabase.from('user_roles' as any).select('user_id, role') as any),
       ]);
       const teamsList = (t ?? []) as Team[];
@@ -116,7 +116,14 @@ export default function EquipesPage() {
       if (!selectedTeamId && teamsList.length) setSelectedTeamId(teamsList[0].id);
 
       const profMap: Record<string, ProfileLite> = {};
-      (p ?? []).forEach((row: any) => { profMap[row.id] = row; });
+      (p ?? []).forEach((row: any) => {
+        profMap[row.id] = {
+          id: row.id,
+          display_name: row.display_name,
+          avatar_url: row.avatar_url,
+          modules: Array.isArray(row.modules) && row.modules.length ? row.modules : ['estoque'],
+        };
+      });
       setProfiles(profMap);
 
       const roleMap: Record<string, Role> = {};
@@ -136,6 +143,7 @@ export default function EquipesPage() {
           display_name: prof?.display_name ?? 'Sem nome',
           avatar_url: prof?.avatar_url ?? null,
           role: roleMap[row.user_id] ?? 'operador',
+          modules: prof?.modules ?? ['estoque'],
         };
         (grouped[row.team_id] ??= []).push(member);
       });
