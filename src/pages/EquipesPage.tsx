@@ -47,7 +47,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { atLeast, ROLE_LABEL, type Role, normalizeRole } from '@/lib/permissions';
-import { MODULE_LABEL, PAGE_REGISTRY, pagesByModule, type PageEntry } from '@/lib/page-registry';
+import { MODULE_LABEL, PAGE_REGISTRY, pagesByModule, type PageEntry, type PageModule } from '@/lib/page-registry';
 import { Navigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { usePageAccess } from '@/hooks/use-page-access';
@@ -65,18 +65,25 @@ interface Member {
   display_name: string;
   avatar_url: string | null;
   role: Role;
+  modules: string[];
 }
 
 interface ProfileLite {
   id: string;
   display_name: string | null;
   avatar_url: string | null;
+  modules: string[];
 }
 
 export default function EquipesPage() {
-  const { role, user } = useAuth();
+  const { role, user, isAdmin, modules: myModules } = useAuth();
   const pageAccess = usePageAccess();
   const canManage = atLeast(role, 'supervisor');
+  // Módulos que o gestor pode conceder (admin concede tudo).
+  const grantableModules = useMemo<string[]>(
+    () => (isAdmin ? ['estoque', 'expedicao', 'compras'] : myModules),
+    [isAdmin, myModules],
+  );
 
   const [teams, setTeams] = useState<Team[]>([]);
   const [membersByTeam, setMembersByTeam] = useState<Record<string, Member[]>>({});
@@ -101,7 +108,7 @@ export default function EquipesPage() {
       const [{ data: t }, { data: m }, { data: p }, { data: r }] = await Promise.all([
         (supabase.from('teams' as any).select('*').order('name') as any),
         (supabase.from('team_members' as any).select('team_id, user_id') as any),
-        supabase.from('profiles').select('id, display_name, avatar_url'),
+        supabase.from('profiles').select('id, display_name, avatar_url, modules'),
         (supabase.from('user_roles' as any).select('user_id, role') as any),
       ]);
       const teamsList = (t ?? []) as Team[];
@@ -109,7 +116,14 @@ export default function EquipesPage() {
       if (!selectedTeamId && teamsList.length) setSelectedTeamId(teamsList[0].id);
 
       const profMap: Record<string, ProfileLite> = {};
-      (p ?? []).forEach((row: any) => { profMap[row.id] = row; });
+      (p ?? []).forEach((row: any) => {
+        profMap[row.id] = {
+          id: row.id,
+          display_name: row.display_name,
+          avatar_url: row.avatar_url,
+          modules: Array.isArray(row.modules) && row.modules.length ? row.modules : ['estoque'],
+        };
+      });
       setProfiles(profMap);
 
       const roleMap: Record<string, Role> = {};
@@ -129,6 +143,7 @@ export default function EquipesPage() {
           display_name: prof?.display_name ?? 'Sem nome',
           avatar_url: prof?.avatar_url ?? null,
           role: roleMap[row.user_id] ?? 'operador',
+          modules: prof?.modules ?? ['estoque'],
         };
         (grouped[row.team_id] ??= []).push(member);
       });
@@ -229,8 +244,14 @@ export default function EquipesPage() {
   const availableToAdd = useMemo(() => {
     if (!selectedTeam) return [] as ProfileLite[];
     const memberIds = new Set(selectedMembers.map((m) => m.user_id));
-    return Object.values(profiles).filter((p) => !memberIds.has(p.id));
-  }, [profiles, selectedMembers, selectedTeam]);
+    const grantSet = new Set(grantableModules);
+    return Object.values(profiles).filter((p) => {
+      if (memberIds.has(p.id)) return false;
+      if (isAdmin) return true;
+      // Gestor só pode adicionar quem compartilha ao menos um módulo com ele.
+      return (p.modules ?? []).some((m) => grantSet.has(m));
+    });
+  }, [profiles, selectedMembers, selectedTeam, grantableModules, isAdmin]);
 
   return (
     <div className="p-4 sm:p-6 max-w-[1400px] mx-auto space-y-6">
@@ -241,7 +262,7 @@ export default function EquipesPage() {
             Equipes
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Crie equipes e libere páginas por membro. Se qualquer equipe libera uma página, o usuário acessa (união).
+            Crie equipes e libere páginas por membro. {isAdmin ? 'Como admin, você concede acesso em qualquer módulo.' : `Você só concede páginas dos módulos que possui: ${grantableModules.map((m) => MODULE_LABEL[m as PageModule] ?? m).join(', ')}.`}
           </p>
         </div>
         <Button onClick={openNewTeam} className="gap-2">
@@ -444,6 +465,7 @@ export default function EquipesPage() {
         <MemberPermissionsDialog
           member={managingMember}
           team={selectedTeam}
+          grantableModules={grantableModules}
           onClose={() => setManagingMember(null)}
           onSaved={async () => { await pageAccess.refresh(); }}
         />
@@ -463,18 +485,33 @@ function priority(r: Role): number {
 interface MemberPermissionsDialogProps {
   member: Member;
   team: Team;
+  grantableModules: string[];
   onClose: () => void;
   onSaved: () => Promise<void> | void;
 }
 
-function MemberPermissionsDialog({ member, team, onClose, onSaved }: MemberPermissionsDialogProps) {
+function MemberPermissionsDialog({ member, team, grantableModules, onClose, onSaved }: MemberPermissionsDialogProps) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [allowedInTeam, setAllowedInTeam] = useState<Set<string>>(new Set());
   const [effectiveUnion, setEffectiveUnion] = useState<Set<string>>(new Set());
   const [filter, setFilter] = useState('');
-  const grouped = useMemo(() => pagesByModule(), []);
+  const allGrouped = useMemo(() => pagesByModule(), []);
+  // Interseção entre módulos do gestor e módulos do membro-alvo. Só esses aparecem.
+  const visibleModules = useMemo(() => {
+    const memberSet = new Set(member.modules ?? ['estoque']);
+    return grantableModules.filter((m) => memberSet.has(m));
+  }, [grantableModules, member.modules]);
+  const grouped = useMemo(() => {
+    const out: Partial<Record<PageModule, PageEntry[]>> = {};
+    visibleModules.forEach((m) => {
+      const key = m as PageModule;
+      if (allGrouped[key]) out[key] = allGrouped[key];
+    });
+    return out as Record<PageModule, PageEntry[]>;
+  }, [allGrouped, visibleModules]);
+
 
   useEffect(() => {
     let cancelled = false;
@@ -522,21 +559,28 @@ function MemberPermissionsDialog({ member, team, onClose, onSaved }: MemberPermi
   const save = async () => {
     setSaving(true);
     try {
-      // Estratégia: apagar tudo desse (team,user) e reinserir apenas allowed=true.
-      const { error: delErr } = await (supabase.from('team_page_permissions' as any)
-        .delete()
-        .eq('team_id', team.id)
-        .eq('user_id', member.user_id) as any);
-      if (delErr) throw delErr;
-      if (allowedInTeam.size > 0) {
-        const rows = Array.from(allowedInTeam).map((page_key) => ({
+      // Só mexe nas páginas dos módulos visíveis ao gestor — preserva o que outros gestores
+      // já concederam em módulos fora do escopo dele.
+      const visiblePageKeys = Object.values(grouped).flat().map((p) => p.key);
+      if (visiblePageKeys.length > 0) {
+        const { error: delErr } = await (supabase.from('team_page_permissions' as any)
+          .delete()
+          .eq('team_id', team.id)
+          .eq('user_id', member.user_id)
+          .in('page_key', visiblePageKeys) as any);
+        if (delErr) throw delErr;
+      }
+      const rowsToInsert = Array.from(allowedInTeam)
+        .filter((k) => visiblePageKeys.includes(k))
+        .map((page_key) => ({
           team_id: team.id,
           user_id: member.user_id,
           page_key,
           allowed: true,
           updated_by: user?.id,
         }));
-        const { error: insErr } = await (supabase.from('team_page_permissions' as any).insert(rows) as any);
+      if (rowsToInsert.length > 0) {
+        const { error: insErr } = await (supabase.from('team_page_permissions' as any).insert(rowsToInsert) as any);
         if (insErr) throw insErr;
       }
       toast.success('Permissões salvas.');
@@ -592,6 +636,10 @@ function MemberPermissionsDialog({ member, team, onClose, onSaved }: MemberPermi
         <div className="flex-1 overflow-y-auto space-y-4 pr-1">
           {loading ? (
             Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-md" />)
+          ) : visibleModules.length === 0 ? (
+            <div className="text-center py-10 border border-dashed border-border/40 rounded-md text-sm text-muted-foreground">
+              Vocês não compartilham nenhum módulo. Peça a um admin para liberar módulos em comum antes de conceder páginas.
+            </div>
           ) : (
             (Object.keys(grouped) as (keyof typeof grouped)[]).map((mod) => {
               const pages = grouped[mod].filter((p) => matches(p.label));
