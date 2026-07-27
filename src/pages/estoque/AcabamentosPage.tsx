@@ -99,6 +99,22 @@ export default function AcabamentosPage() {
     };
   }, []);
 
+  // Realtime: escuta mudanças em auge_acabamento_itens para o acabamento selecionado
+  useEffect(() => {
+    if (!acabSel) return;
+    const ch = supabase
+      .channel(`acab-itens-${acabSel}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'auge_acabamento_itens', filter: `cd_acabamento=eq.${acabSel}` },
+        () => {
+          qc.invalidateQueries({ queryKey: ['acabamento-itens', acabSel] });
+        },
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [acabSel, qc]);
+
   const { data: acabamentos = [], isLoading } = useQuery({
     queryKey: ['acabamentos-list'],
     queryFn: async () => {
