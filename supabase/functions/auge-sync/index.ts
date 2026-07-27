@@ -3371,7 +3371,6 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
-  await loadAugeCredentials(admin);
   const url = new URL(req.url);
   const action = url.searchParams.get('action');
   const entityParam = url.searchParams.get('entity');
@@ -3392,9 +3391,23 @@ Deno.serve(async (req) => {
   }
 
   try {
-    if (!AUGE_USERNAME || !AUGE_PASSWORD) {
-      throw new Error('Credenciais AUGE_USERNAME / AUGE_PASSWORD não configuradas.');
+    try {
+      await loadAugeCredentials(admin, triggeredBy);
+    } catch (err: any) {
+      if (err?.code === 'AUGE_CREDENTIALS_MISSING') {
+        return new Response(JSON.stringify({
+          ok: false,
+          code: 'AUGE_CREDENTIALS_MISSING',
+          error: 'Configure suas credenciais do Auge para executar ações. Acesse Configurações → Minha conta Auge.',
+        }), { status: 428, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      throw err;
     }
+
+    if (!AUGE_USERNAME || !AUGE_PASSWORD) {
+      throw new Error('Credenciais do Auge não configuradas para esta execução.');
+    }
+
 
     // Kill-switch: se a flag auge_sync_enabled estiver desligada, bloqueia tudo (exceto ping)
     if (action !== 'ping') {
