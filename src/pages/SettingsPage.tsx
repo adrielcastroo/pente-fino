@@ -13,7 +13,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { KeyRound, AlertTriangle, Loader2, ShieldCheck, QrCode, Copy, RefreshCw } from 'lucide-react';
+import { KeyRound, AlertTriangle, Loader2, ShieldCheck, QrCode, Copy, RefreshCw, Info } from 'lucide-react';
 import { 
   User, 
   Settings, 
@@ -68,6 +68,7 @@ import ExpedicaoPanel from '@/components/settings/ExpedicaoPanel';
 import { Truck } from 'lucide-react';
 import SettingsErrorBoundary from '@/components/SettingsErrorBoundary';
 import { setBipSoundEnabled, isBipSoundEnabled, bipSuccess } from '@/lib/bip-feedback';
+import AugeUserCredentialsDialog from '@/components/auge/AugeUserCredentialsDialog';
 
 type ModuleScope = 'estoque' | 'expedicao';
 type Category = {
@@ -90,6 +91,7 @@ const CATEGORY_GROUPS: { id: 'account' | 'system'; label: string; minRole?: Role
     label: 'Minha Conta',
     items: [
       { id: 'profile', name: 'Perfil / Conta', icon: User, description: 'Gerencie suas informações pessoais e de conta.' },
+      { id: 'auge-account', name: 'Minha conta Auge', icon: KeyRound, description: 'Configure suas credenciais do Auge para ações no ERP.' },
       { id: 'appearance', name: 'Aparência', icon: Palette, description: 'Personalize o visual e as cores.' },
       { id: 'preferences', name: 'Preferências', icon: Settings, description: 'Ajuste o comportamento do sistema.' },
     ],
@@ -216,6 +218,11 @@ export default function SettingsPage() {
   const [prefDisableBrowserPrint, setPrefDisableBrowserPrint] = useState(localStorage.getItem('pref_disable_browser_print') === 'true');
   const [prefSilentBrowserPrint, setPrefSilentBrowserPrint] = useState(localStorage.getItem('pref_silent_browser_print') === 'true');
 
+  // Auge credentials state
+  const [augeCredentialsOpen, setAugeCredentialsOpen] = useState(false);
+  const [augeCredentialsConfigured, setAugeCredentialsConfigured] = useState<boolean | null>(null);
+  const [augeCredentialsLoading, setAugeCredentialsLoading] = useState(false);
+
   // MFA state
   const [mfaFactors, setMfaFactors] = useState<any[]>([]);
   const [mfaLoading, setMfaLoading] = useState(false);
@@ -243,6 +250,28 @@ export default function SettingsPage() {
   useEffect(() => {
     if (activeCategory === 'security' && !isGuest && user) {
       loadMfaFactors();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeCategory, isGuest, user]);
+
+  const loadAugeCredentialsStatus = async () => {
+    if (isGuest || !user) return;
+    setAugeCredentialsLoading(true);
+    try {
+      const { data, error } = await (supabase.rpc as any)('i_have_auge_credentials');
+      if (error) throw error;
+      setAugeCredentialsConfigured(!!data);
+    } catch (e: any) {
+      console.error('Erro ao verificar credenciais do Auge:', e);
+      setAugeCredentialsConfigured(false);
+    } finally {
+      setAugeCredentialsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeCategory === 'auge-account' && !isGuest && user) {
+      loadAugeCredentialsStatus();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeCategory, isGuest, user]);
@@ -718,6 +747,90 @@ export default function SettingsPage() {
                           />
                         </div>
                       </div>
+                    </div>
+                  )}
+
+                  {activeCategory === 'auge-account' && (
+                    <div className="space-y-6">
+                      {isGuest ? (
+                        <div className="py-12 text-center space-y-3">
+                          <div className="w-14 h-14 bg-muted rounded-md flex items-center justify-center mx-auto">
+                            <KeyRound className="w-7 h-7 text-muted-foreground" />
+                          </div>
+                          <h4 className="font-bold">Acesso Restrito</h4>
+                          <p className="text-sm text-muted-foreground">Faça login para configurar suas credenciais do Auge.</p>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="flex items-start justify-between gap-4 p-4 rounded-md bg-muted/30 border border-border/20">
+                            <div className="space-y-1">
+                              <h4 className="text-sm font-semibold flex items-center gap-2">
+                                <KeyRound className="w-4 h-4 text-primary" />
+                                Credenciais do Auge
+                              </h4>
+                              <p className="text-xs text-muted-foreground max-w-md">
+                                Para realizar transferências, entradas e outras ações no Auge pelo Pente Fino,
+                                você precisa informar suas próprias credenciais de acesso ao ERP.
+                              </p>
+                            </div>
+                            {augeCredentialsLoading ? (
+                              <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                            ) : augeCredentialsConfigured ? (
+                              <Badge variant="outline" className="text-success border-emerald-500/20 bg-emerald-500/5 shrink-0">
+                                Configuradas
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-amber-600 border-amber-500/20 bg-amber-500/5 shrink-0">
+                                Pendentes
+                              </Badge>
+                            )}
+                          </div>
+
+                          <div className="p-4 rounded-md border border-border/20 bg-muted/20 space-y-3">
+                            <div className="flex items-start gap-2 text-xs text-muted-foreground">
+                              <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                              <span>
+                                Suas credenciais ficam vinculadas apenas à sua conta e são usadas para autenticar
+                                você — e somente você — no Auge. Nenhum outro usuário tem acesso.
+                              </span>
+                            </div>
+                            <div className="flex items-start gap-2 text-xs text-muted-foreground">
+                              <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                              <span>
+                                Sem essas credenciais, as ações no Auge ficam bloqueadas para você.
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
+                            <Button
+                              onClick={() => setAugeCredentialsOpen(true)}
+                              className="h-11 gap-2"
+                            >
+                              <KeyRound className="w-4 h-4" />
+                              {augeCredentialsConfigured ? 'Atualizar credenciais' : 'Configurar credenciais'}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              onClick={loadAugeCredentialsStatus}
+                              disabled={augeCredentialsLoading}
+                              className="h-11 gap-2"
+                            >
+                              {augeCredentialsLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                              Verificar status
+                            </Button>
+                          </div>
+                        </>
+                      )}
+
+                      <AugeUserCredentialsDialog
+                        open={augeCredentialsOpen}
+                        onOpenChange={setAugeCredentialsOpen}
+                        onSaved={() => {
+                          setAugeCredentialsConfigured(true);
+                          toast.success('Credenciais do Auge atualizadas.');
+                        }}
+                      />
                     </div>
                   )}
 
