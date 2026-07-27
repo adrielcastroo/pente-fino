@@ -465,6 +465,7 @@ export default function EquipesPage() {
         <MemberPermissionsDialog
           member={managingMember}
           team={selectedTeam}
+          grantableModules={grantableModules}
           onClose={() => setManagingMember(null)}
           onSaved={async () => { await pageAccess.refresh(); }}
         />
