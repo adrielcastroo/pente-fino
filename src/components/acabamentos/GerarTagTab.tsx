@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { Search, Loader2, Sparkles, Copy, Wand2, Target } from 'lucide-react';
+import { Search, Loader2, Sparkles, Copy, Wand2, Target, Tag as TagIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { normalizeTagFormatC } from '@/lib/tag-utils';
 
@@ -21,6 +21,68 @@ interface Acabamento {
   nm_combinacao2: string | null;
   nm_classe3: string | null;
   nm_combinacao3: string | null;
+}
+
+interface CustomTag {
+  cd_configuracao: string;
+  nm_configuracao: string | null;
+  nm_tag_customizada: string | null;
+  ds_tag_customizada: string | null;
+  ds_tag_calculada: string | null;
+  ds_tag_texto: string | null;
+}
+
+interface RankedCustom {
+  tag: CustomTag;
+  score: number;
+  matched: string[];
+}
+
+interface CustomGroup {
+  configuracao: string;
+  cd_configuracao: string;
+  items: RankedCustom[];
+}
+
+function rankCustomTags(input: string, tags: CustomTag[]): CustomGroup[] {
+  const inTokens = uniqTokens(tokenize(input));
+  if (inTokens.length === 0) return [];
+
+  const groups = new Map<string, RankedCustom[]>();
+  for (const tag of tags) {
+    const hayFields = [
+      tag.nm_tag_customizada ?? '',
+      tag.ds_tag_customizada ?? '',
+      tag.ds_tag_texto ?? '',
+      tag.ds_tag_calculada ?? '',
+    ].join(' ');
+    if (!hayFields.trim()) continue;
+    const hayTokens = new Set(tokenize(hayFields));
+    const hayLower = hayFields.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+    let score = 0;
+    const matched: string[] = [];
+    for (const t of inTokens) {
+      if (hayTokens.has(t)) { score += 3; matched.push(t); }
+      else if (t.length >= 3 && hayLower.includes(t)) { score += 1; matched.push(t); }
+    }
+    if (score < 3) continue;
+
+    const key = `${tag.cd_configuracao}::${tag.nm_configuracao ?? ''}`;
+    const arr = groups.get(key) ?? [];
+    arr.push({ tag, score, matched });
+    groups.set(key, arr);
+  }
+
+  const out: CustomGroup[] = [];
+  for (const [key, arr] of groups) {
+    arr.sort((a, b) => b.score - a.score);
+    const [cd, nm] = key.split('::');
+    out.push({ cd_configuracao: cd, configuracao: nm || cd, items: arr.slice(0, 3) });
+  }
+  // ordena grupos pelo melhor score interno
+  out.sort((a, b) => (b.items[0]?.score ?? 0) - (a.items[0]?.score ?? 0));
+  return out.slice(0, 8);
 }
 
 // Tokeniza descrição para comparação — mantém alfanuméricos, remove separadores comuns.
@@ -108,6 +170,17 @@ export default function GerarTagTab() {
     },
   });
 
+  const { data: customTags = [] } = useQuery({
+    queryKey: ['tag-custom-gerar-tag'],
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from('auge_tag_custom')
+        .select('cd_configuracao, nm_configuracao, nm_tag_customizada, ds_tag_customizada, ds_tag_calculada, ds_tag_texto')
+        .limit(10000);
+      return (data ?? []) as CustomTag[];
+    },
+  });
+
   const filtrados = useMemo(() => {
     const t = busca.trim().toLowerCase();
     if (!t) return acabamentos.slice(0, 200);
@@ -123,6 +196,11 @@ export default function GerarTagTab() {
     if (!entradaManual.trim() || acabamentos.length === 0) return [];
     return rankAcabamentos(entradaManual, acabamentos);
   }, [entradaManual, acabamentos]);
+
+  const gruposCustom = useMemo(() => {
+    if (!entradaManual.trim() || customTags.length === 0) return [];
+    return rankCustomTags(entradaManual, customTags);
+  }, [entradaManual, customTags]);
 
   const melhor = recomendacoes[0] ?? null;
 
@@ -251,6 +329,55 @@ export default function GerarTagTab() {
                     </button>
                   );
                 })}
+              </div>
+            </div>
+          )}
+
+          {/* Recomendações de TAGs Custom por configuração */}
+          {gruposCustom.length > 0 && (
+            <div className="rounded border bg-primary/5 p-3 space-y-2">
+              <div className="text-[10px] uppercase text-muted-foreground flex items-center gap-1">
+                <TagIcon className="h-3 w-3" /> TAGs Custom sugeridas por configuração
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                Baseado nos termos identificados na descrição, para cada configuração relacionada.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {gruposCustom.map((g) => (
+                  <div key={g.cd_configuracao} className="rounded border bg-background p-2 space-y-1.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="font-medium text-[11px] truncate">{g.configuracao}</div>
+                      <Badge variant="outline" className="text-[9px] shrink-0 font-mono">#{g.cd_configuracao}</Badge>
+                    </div>
+                    <div className="space-y-1">
+                      {g.items.map((r, idx) => {
+                        const tagText = r.tag.ds_tag_customizada ?? r.tag.nm_tag_customizada ?? r.tag.ds_tag_texto ?? r.tag.ds_tag_calculada ?? '—';
+                        return (
+                          <button
+                            key={`${r.tag.cd_configuracao}-${idx}`}
+                            onClick={() => { setTagGerada(normalizeTagFormatC(tagText)); toast.success('TAG custom aplicada.'); }}
+                            className="w-full text-left rounded border border-transparent hover:border-primary/40 hover:bg-primary/5 p-1.5 transition"
+                            title="Aplicar esta TAG"
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="min-w-0 flex-1">
+                                <div className="font-mono text-[11px] text-primary truncate">{tagText}</div>
+                                {r.matched.length > 0 && (
+                                  <div className="flex flex-wrap gap-1 mt-0.5">
+                                    {r.matched.slice(0, 5).map((m) => (
+                                      <span key={m} className="inline-block px-1 rounded bg-primary/10 text-primary text-[9px] font-mono">{m}</span>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                              <Badge variant="secondary" className="text-[9px] shrink-0">{r.score}</Badge>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
