@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { Search, Loader2, Sparkles, Copy, Wand2, Target, Tag as TagIcon } from 'lucide-react';
+import { Search, Loader2, Sparkles, Copy, Wand2, Target, Tag as TagIcon, Layers } from 'lucide-react';
 import { toast } from 'sonner';
 import { normalizeTagFormatC } from '@/lib/tag-utils';
 
@@ -23,6 +23,12 @@ interface Acabamento {
   nm_combinacao3: string | null;
 }
 
+interface ConfiguracaoLite {
+  cd_configuracao: string;
+  nm_configuracao: string;
+  qtd_tags: number;
+}
+
 interface CustomTag {
   cd_configuracao: string;
   nm_configuracao: string | null;
@@ -32,133 +38,160 @@ interface CustomTag {
   ds_tag_texto: string | null;
 }
 
-interface RankedCustom {
-  tag: CustomTag;
-  score: number;
-  matched: string[];
-}
+// ============================================================
+// Tokenização e ranking
+// ============================================================
 
-interface CustomGroup {
-  configuracao: string;
-  cd_configuracao: string;
-  items: RankedCustom[];
-}
-
-function rankCustomTags(input: string, tags: CustomTag[]): CustomGroup[] {
-  const inTokens = uniqTokens(tokenize(input));
-  if (inTokens.length === 0) return [];
-
-  const groups = new Map<string, RankedCustom[]>();
-  for (const tag of tags) {
-    const hayFields = [
-      tag.nm_tag_customizada ?? '',
-      tag.ds_tag_customizada ?? '',
-      tag.ds_tag_texto ?? '',
-      tag.ds_tag_calculada ?? '',
-    ].join(' ');
-    if (!hayFields.trim()) continue;
-    const hayTokens = new Set(tokenize(hayFields));
-    const hayLower = hayFields.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-
-    let score = 0;
-    const matched: string[] = [];
-    for (const t of inTokens) {
-      if (hayTokens.has(t)) { score += 3; matched.push(t); }
-      else if (t.length >= 3 && hayLower.includes(t)) { score += 1; matched.push(t); }
-    }
-    if (score < 3) continue;
-
-    const key = `${tag.cd_configuracao}::${tag.nm_configuracao ?? ''}`;
-    const arr = groups.get(key) ?? [];
-    arr.push({ tag, score, matched });
-    groups.set(key, arr);
-  }
-
-  const out: CustomGroup[] = [];
-  for (const [key, arr] of groups) {
-    arr.sort((a, b) => b.score - a.score);
-    const [cd, nm] = key.split('::');
-    out.push({ cd_configuracao: cd, configuracao: nm || cd, items: arr.slice(0, 3) });
-  }
-  // ordena grupos pelo melhor score interno
-  out.sort((a, b) => (b.items[0]?.score ?? 0) - (a.items[0]?.score ?? 0));
-  return out.slice(0, 8);
-}
-
-// Tokeniza descrição para comparação — mantém alfanuméricos, remove separadores comuns.
 function tokenize(input: string): string[] {
   if (!input) return [];
   return input
     .toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // remove acentos
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     .split(/[\s_\-/.,;:()\[\]]+/)
     .map((t) => t.trim())
     .filter((t) => t.length >= 2);
 }
 
-// Retorna tokens únicos (Set-like via Array)
 function uniqTokens(list: string[]): string[] {
   return Array.from(new Set(list));
 }
 
+// Termos estruturais que valem mais peso (tipo de cortina, tubo, motor, etc)
+const STRUCTURAL_PATTERNS: Array<{ re: RegExp; weight: number; label: string }> = [
+  { re: /^(rollo|shadow|diamond|romana|celular|wanza|b2h|rollo_light|shadow_light)$/i, weight: 8, label: 'tipo' },
+  { re: /^t\d{2,3}$/i, weight: 6, label: 'tubo' },
+  { re: /^(cm[-_]?\d+|st\d+|lsn\d+|alt\d+)$/i, weight: 5, label: 'motor' },
+  { re: /^(110v|220v|bateria)$/i, weight: 3, label: 'tensão' },
+  { re: /^(rf|auto|manual|monocontrole|basic)$/i, weight: 2, label: 'controle' },
+  { re: /^(abs2|abs20|absolute|basic|sky|day|night|semi|open|standard|nivelador|square|round|fascia)$/i, weight: 2, label: 'opção' },
+  { re: /^(branco|branca|preto|preta|bege|bronze|cinza|grafite|marrom|azul|verde)$/i, weight: 2, label: 'cor' },
+];
+
+interface WeightedToken {
+  token: string;
+  weight: number;
+  structural: boolean;
+}
+
+function weightTokens(tokens: string[]): WeightedToken[] {
+  return tokens.map((t) => {
+    // Normaliza abs2.0 → abs20
+    const norm = t.replace(/\./g, '');
+    for (const p of STRUCTURAL_PATTERNS) {
+      if (p.re.test(norm)) return { token: norm, weight: p.weight, structural: true };
+    }
+    return { token: norm, weight: 1, structural: false };
+  });
+}
+
+interface RankedConfig {
+  cfg: ConfiguracaoLite;
+  score: number;
+  matched: string[];
+  coverage: number;
+}
+
+function rankConfiguracoes(input: string, cfgs: ConfiguracaoLite[]): RankedConfig[] {
+  const raw = uniqTokens(tokenize(input));
+  if (raw.length === 0) return [];
+  const weighted = weightTokens(raw);
+  const strongCount = weighted.filter((w) => w.structural).length || 1;
+
+  const results: RankedConfig[] = [];
+  for (const cfg of cfgs) {
+    const nm = cfg.nm_configuracao ?? '';
+    if (!nm) continue;
+    const hayTokens = new Set(tokenize(nm).map((t) => t.replace(/\./g, '')));
+    const hayLower = nm.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+    let score = 0;
+    let strongHit = 0;
+    const matched: string[] = [];
+    for (const w of weighted) {
+      if (hayTokens.has(w.token)) {
+        score += w.weight * 2;
+        matched.push(w.token);
+        if (w.structural) strongHit++;
+      } else if (w.token.length >= 3 && hayLower.includes(w.token)) {
+        score += w.weight;
+        matched.push(w.token);
+        if (w.structural) strongHit++;
+      }
+    }
+    const coverage = strongHit / strongCount;
+    if (coverage < 0.5 || score < 6) continue;
+    score += Math.round(coverage * 5);
+    results.push({ cfg, score, matched, coverage });
+  }
+
+  results.sort((a, b) => b.score - a.score);
+  return results.slice(0, 30);
+}
+
+// ============================================================
+// Ranking de acabamentos (mantido)
+// ============================================================
 interface Ranked {
   acab: Acabamento;
   score: number;
   matched: string[];
 }
 
-// Ranking heurístico:
-// - +2 se o token bater exatamente com um token do nm_acabamento/chave/classes
-// - +1 se o token for substring de alguma classe/combinação
-// - Bonus se termos "âncora" (motor codes, dimensões T50 etc) baterem em posição
 function rankAcabamentos(input: string, acabs: Acabamento[]): Ranked[] {
   const inTokens = uniqTokens(tokenize(input));
   if (inTokens.length === 0) return [];
-
   const results: Ranked[] = [];
   for (const a of acabs) {
     const haystackFields = [
-      a.nm_acabamento,
-      a.chave_acabamento ?? '',
+      a.nm_acabamento, a.chave_acabamento ?? '',
       a.nm_classe1 ?? '', a.nm_combinacao1 ?? '',
       a.nm_classe2 ?? '', a.nm_combinacao2 ?? '',
       a.nm_classe3 ?? '', a.nm_combinacao3 ?? '',
     ].join(' ');
     const hayTokens = new Set(tokenize(haystackFields));
     const haystackLower = haystackFields.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-
     let score = 0;
     const matched: string[] = [];
     for (const t of inTokens) {
-      if (hayTokens.has(t)) {
-        score += 2;
-        matched.push(t);
-      } else if (t.length >= 3 && haystackLower.includes(t)) {
-        score += 1;
-        matched.push(t);
-      }
+      if (hayTokens.has(t)) { score += 2; matched.push(t); }
+      else if (t.length >= 3 && haystackLower.includes(t)) { score += 1; matched.push(t); }
     }
-    // penaliza descasamento severo (input com muitos tokens, poucos batidos)
     const coverage = matched.length / inTokens.length;
     if (coverage < 0.3) continue;
-    // bonifica quando a maioria dos tokens bate
     score += Math.round(coverage * 3);
-
     if (score > 0) results.push({ acab: a, score, matched });
   }
-
   results.sort((a, b) => b.score - a.score);
   return results.slice(0, 5);
 }
 
+// ============================================================
+// Normalização de código de TAG (T_BASE / T_base / t_tubo → T_BASE)
+// ============================================================
+function normalizeTagCode(raw: string | null | undefined): string {
+  if (!raw) return '';
+  return raw.replace(/&/g, '').trim().toUpperCase().replace(/\s+/g, '');
+}
+
+interface TagCategoria {
+  code: string;
+  items: Array<{ tag: CustomTag; cfgNome: string; score: number }>;
+}
+
+// ============================================================
+// Componente
+// ============================================================
 export default function GerarTagTab() {
   const [busca, setBusca] = useState('');
   const [selecionado, setSelecionado] = useState<Acabamento | null>(null);
   const [tagGerada, setTagGerada] = useState('');
   const [entradaManual, setEntradaManual] = useState('');
+  const entradaDeferida = useDeferredValue(entradaManual);
 
+  // ---------- Acabamentos (lista lateral) ----------
   const { data: acabamentos = [], isLoading } = useQuery({
     queryKey: ['acabamentos-gerar-tag'],
+    staleTime: 5 * 60 * 1000,
     queryFn: async () => {
       const { data } = await (supabase as any)
         .from('auge_acabamentos')
@@ -170,14 +203,17 @@ export default function GerarTagTab() {
     },
   });
 
-  const { data: customTags = [] } = useQuery({
-    queryKey: ['tag-custom-gerar-tag'],
+  // ---------- Configurações leves (todas) ----------
+  const { data: configuracoes = [], isLoading: loadingCfgs } = useQuery({
+    queryKey: ['auge-tag-custom-configuracoes'],
+    staleTime: 10 * 60 * 1000,
     queryFn: async () => {
-      const { data } = await (supabase as any)
-        .from('auge_tag_custom')
-        .select('cd_configuracao, nm_configuracao, nm_tag_customizada, ds_tag_customizada, ds_tag_calculada, ds_tag_texto')
-        .limit(10000);
-      return (data ?? []) as CustomTag[];
+      const { data, error } = await (supabase as any)
+        .from('auge_tag_custom_configuracoes')
+        .select('cd_configuracao, nm_configuracao, qtd_tags')
+        .limit(20000);
+      if (error) throw error;
+      return (data ?? []) as ConfiguracaoLite[];
     },
   });
 
@@ -191,22 +227,61 @@ export default function GerarTagTab() {
       .slice(0, 200);
   }, [acabamentos, busca]);
 
-  // Recomendações baseadas no que o usuário digita
   const recomendacoes = useMemo(() => {
-    if (!entradaManual.trim() || acabamentos.length === 0) return [];
-    return rankAcabamentos(entradaManual, acabamentos);
-  }, [entradaManual, acabamentos]);
+    if (!entradaDeferida.trim() || acabamentos.length === 0) return [];
+    return rankAcabamentos(entradaDeferida, acabamentos);
+  }, [entradaDeferida, acabamentos]);
 
-  const gruposCustom = useMemo(() => {
-    if (!entradaManual.trim() || customTags.length === 0) return [];
-    return rankCustomTags(entradaManual, customTags);
-  }, [entradaManual, customTags]);
+  // ---------- Configurações ranqueadas ----------
+  const configsRanqueadas = useMemo(() => {
+    if (!entradaDeferida.trim() || configuracoes.length === 0) return [];
+    return rankConfiguracoes(entradaDeferida, configuracoes);
+  }, [entradaDeferida, configuracoes]);
+
+  const topCfgCodes = useMemo(
+    () => configsRanqueadas.slice(0, 12).map((r) => r.cfg.cd_configuracao),
+    [configsRanqueadas],
+  );
+
+  // ---------- Fetch de TAGs somente para os top-N ----------
+  const { data: tagsTop = [], isFetching: loadingTags } = useQuery({
+    queryKey: ['auge-tag-custom-top', topCfgCodes.join(',')],
+    enabled: topCfgCodes.length > 0,
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from('auge_tag_custom')
+        .select('cd_configuracao, nm_configuracao, nm_tag_customizada, ds_tag_customizada, ds_tag_calculada, ds_tag_texto')
+        .in('cd_configuracao', topCfgCodes)
+        .limit(5000);
+      if (error) throw error;
+      return (data ?? []) as CustomTag[];
+    },
+  });
+
+  // ---------- Agrupamento por CATEGORIA de TAG (T_BASE, T_TUBO, ...) ----------
+  const categorias = useMemo<TagCategoria[]>(() => {
+    if (tagsTop.length === 0) return [];
+    const scoreByCfg = new Map(configsRanqueadas.map((r) => [r.cfg.cd_configuracao, r.score]));
+    const byCode = new Map<string, TagCategoria>();
+    for (const tag of tagsTop) {
+      const code = normalizeTagCode(tag.ds_tag_customizada ?? tag.nm_tag_customizada);
+      if (!code) continue;
+      const score = scoreByCfg.get(tag.cd_configuracao) ?? 0;
+      const cfgNome = tag.nm_configuracao ?? tag.cd_configuracao;
+      const cat = byCode.get(code) ?? { code, items: [] };
+      cat.items.push({ tag, cfgNome, score });
+      byCode.set(code, cat);
+    }
+    const arr = Array.from(byCode.values());
+    for (const c of arr) c.items.sort((a, b) => b.score - a.score);
+    arr.sort((a, b) => (b.items[0]?.score ?? 0) - (a.items[0]?.score ?? 0));
+    return arr;
+  }, [tagsTop, configsRanqueadas]);
 
   const melhor = recomendacoes[0] ?? null;
 
-  const gerar = (input: string) => {
-    setTagGerada(normalizeTagFormatC(input));
-  };
+  const gerar = (input: string) => setTagGerada(normalizeTagFormatC(input));
 
   const selecionar = (a: Acabamento) => {
     setSelecionado(a);
@@ -214,12 +289,9 @@ export default function GerarTagTab() {
     gerar(a.nm_acabamento);
   };
 
-  // Se o usuário está digitando livre e há uma recomendação forte, aplica sua TAG
-  // (mas não sobrescreve seleção manual explícita).
   useEffect(() => {
     if (!melhor) return;
     if (selecionado?.cd_acabamento === melhor.acab.cd_acabamento) return;
-    // score mínimo para autoaplicar tag recomendada
     if (melhor.score >= 6 && melhor.acab.ds_tag_calculada) {
       setTagGerada(melhor.acab.ds_tag_calculada);
     }
@@ -228,11 +300,8 @@ export default function GerarTagTab() {
 
   const aplicarRecomendacao = (r: Ranked) => {
     setSelecionado(r.acab);
-    if (r.acab.ds_tag_calculada) {
-      setTagGerada(r.acab.ds_tag_calculada);
-    } else {
-      gerar(r.acab.nm_acabamento);
-    }
+    if (r.acab.ds_tag_calculada) setTagGerada(r.acab.ds_tag_calculada);
+    else gerar(r.acab.nm_acabamento);
   };
 
   const componentesClasses = selecionado ? [
@@ -280,15 +349,21 @@ export default function GerarTagTab() {
             <Textarea
               value={entradaManual}
               onChange={(e) => { setEntradaManual(e.target.value); gerar(e.target.value); }}
-              placeholder="Ex: Cortina Motor CM_35 220v_RF Liso 5% Balance Barra_15cm Reto P_Preto"
+              placeholder="Ex: Rollo Abs2.0 M Motor LSN40 110v_RF T42 Standard P_Lat/Base_6.5_Parede Preto"
               className="text-xs min-h-[70px] font-mono"
             />
             <p className="text-[10px] text-muted-foreground">
-              Digite a descrição livre. O sistema reconhece os componentes (linha, motor, tecido, cor…) e recomenda a TAG do acabamento correspondente.
+              O app identifica tipo de cortina (Rollo/Shadow/Romana…), tubo (T35/T42/T65…), motor e cor,
+              busca a configuração compatível e agrupa as TAGs por categoria (T_BASE, T_TUBO, T_TEC_X…).
             </p>
+            {loadingCfgs && (
+              <div className="text-[10px] text-muted-foreground flex items-center gap-1">
+                <Loader2 className="h-3 w-3 animate-spin" /> Carregando catálogo de configurações…
+              </div>
+            )}
           </div>
 
-          {/* Recomendações automáticas */}
+          {/* Recomendações de acabamento */}
           {recomendacoes.length > 0 && (
             <div className="rounded border bg-accent/30 p-3 space-y-2">
               <div className="text-[10px] uppercase text-muted-foreground flex items-center gap-1">
@@ -316,13 +391,6 @@ export default function GerarTagTab() {
                               <> · TAG: <span className="text-primary">{r.acab.ds_tag_calculada}</span></>
                             )}
                           </div>
-                          {r.matched.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mt-1">
-                              {r.matched.slice(0, 6).map((m) => (
-                                <span key={m} className="inline-block px-1 py-0 rounded bg-primary/10 text-primary text-[9px] font-mono">{m}</span>
-                              ))}
-                            </div>
-                          )}
                         </div>
                         <Badge variant="outline" className="text-[9px] shrink-0">score {r.score}</Badge>
                       </div>
@@ -333,51 +401,88 @@ export default function GerarTagTab() {
             </div>
           )}
 
-          {/* Recomendações de TAGs Custom por configuração */}
-          {gruposCustom.length > 0 && (
-            <div className="rounded border bg-primary/5 p-3 space-y-2">
+          {/* Configurações compatíveis */}
+          {configsRanqueadas.length > 0 && (
+            <div className="rounded border bg-muted/30 p-3 space-y-2">
               <div className="text-[10px] uppercase text-muted-foreground flex items-center gap-1">
-                <TagIcon className="h-3 w-3" /> TAGs Custom sugeridas por configuração
+                <Layers className="h-3 w-3" /> Configurações compatíveis
+                <Badge variant="outline" className="text-[9px]">{configsRanqueadas.length}</Badge>
               </div>
-              <p className="text-[10px] text-muted-foreground">
-                Baseado nos termos identificados na descrição, para cada configuração relacionada.
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {gruposCustom.map((g) => (
-                  <div key={g.cd_configuracao} className="rounded border bg-background p-2 space-y-1.5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5 max-h-64 overflow-auto">
+                {configsRanqueadas.slice(0, 12).map((r) => (
+                  <div key={r.cfg.cd_configuracao} className="rounded border bg-background p-1.5 text-[11px]">
                     <div className="flex items-center justify-between gap-2">
-                      <div className="font-medium text-[11px] truncate">{g.configuracao}</div>
-                      <Badge variant="outline" className="text-[9px] shrink-0 font-mono">#{g.cd_configuracao}</Badge>
+                      <span className="truncate font-medium">{r.cfg.nm_configuracao}</span>
+                      <Badge variant="secondary" className="text-[9px] shrink-0">{r.score}</Badge>
                     </div>
-                    <div className="space-y-1">
-                      {g.items.map((r, idx) => {
-                        const tagText = r.tag.ds_tag_customizada ?? r.tag.nm_tag_customizada ?? r.tag.ds_tag_texto ?? r.tag.ds_tag_calculada ?? '—';
-                        return (
-                          <button
-                            key={`${r.tag.cd_configuracao}-${idx}`}
-                            onClick={() => { setTagGerada(normalizeTagFormatC(tagText)); toast.success('TAG custom aplicada.'); }}
-                            className="w-full text-left rounded border border-transparent hover:border-primary/40 hover:bg-primary/5 p-1.5 transition"
-                            title="Aplicar esta TAG"
-                          >
-                            <div className="flex items-center justify-between gap-2">
-                              <div className="min-w-0 flex-1">
-                                <div className="font-mono text-[11px] text-primary truncate">{tagText}</div>
-                                {r.matched.length > 0 && (
-                                  <div className="flex flex-wrap gap-1 mt-0.5">
-                                    {r.matched.slice(0, 5).map((m) => (
-                                      <span key={m} className="inline-block px-1 rounded bg-primary/10 text-primary text-[9px] font-mono">{m}</span>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                              <Badge variant="secondary" className="text-[9px] shrink-0">{r.score}</Badge>
-                            </div>
-                          </button>
-                        );
-                      })}
+                    <div className="font-mono text-[9px] text-muted-foreground">
+                      #{r.cfg.cd_configuracao} · {r.cfg.qtd_tags} tags · cobertura {(r.coverage * 100).toFixed(0)}%
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Categorias de TAGs (T_BASE, T_TUBO, T_TEC_X, ...) */}
+          {(loadingTags && categorias.length === 0) && (
+            <div className="rounded border p-3 text-[10px] text-muted-foreground flex items-center gap-2">
+              <Loader2 className="h-3 w-3 animate-spin" /> Buscando TAGs das configurações compatíveis…
+            </div>
+          )}
+          {categorias.length > 0 && (
+            <div className="rounded border border-primary/40 bg-primary/5 p-3 space-y-2">
+              <div className="text-[10px] uppercase text-muted-foreground flex items-center gap-1">
+                <TagIcon className="h-3 w-3" /> TAGs recomendadas por categoria
+                <Badge variant="outline" className="text-[9px]">{categorias.length}</Badge>
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                Cada categoria representa um tipo de desperdício/componente (base, tubo, tecido, motor…).
+                A primeira sugestão de cada é a melhor casada com a configuração descrita.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {categorias.map((cat) => {
+                  const best = cat.items[0];
+                  const bestValor = best?.tag.ds_tag_customizada ?? best?.tag.nm_tag_customizada ?? best?.tag.ds_tag_texto ?? best?.tag.ds_tag_calculada ?? '—';
+                  return (
+                    <div key={cat.code} className="rounded border bg-background p-2 space-y-1.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="font-mono font-semibold text-[11px] text-primary truncate">{cat.code}</div>
+                        <Badge variant="outline" className="text-[9px] shrink-0">{cat.items.length}</Badge>
+                      </div>
+                      <button
+                        onClick={() => { setTagGerada(normalizeTagFormatC(bestValor)); toast.success(`TAG ${cat.code} aplicada.`); }}
+                        className="w-full text-left rounded border border-primary/30 hover:bg-primary/10 p-1.5 transition"
+                        title="Aplicar esta TAG"
+                      >
+                        <div className="font-mono text-[11px] text-primary break-all">{bestValor}</div>
+                        <div className="text-[9px] text-muted-foreground truncate mt-0.5">{best?.cfgNome}</div>
+                      </button>
+                      {cat.items.length > 1 && (
+                        <details className="text-[10px]">
+                          <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                            + {cat.items.length - 1} variação(ões)
+                          </summary>
+                          <div className="space-y-1 mt-1">
+                            {cat.items.slice(1, 6).map((it, i) => {
+                              const v = it.tag.ds_tag_customizada ?? it.tag.nm_tag_customizada ?? it.tag.ds_tag_texto ?? it.tag.ds_tag_calculada ?? '—';
+                              return (
+                                <button
+                                  key={i}
+                                  onClick={() => { setTagGerada(normalizeTagFormatC(v)); toast.success(`TAG ${cat.code} aplicada.`); }}
+                                  className="w-full text-left rounded border-transparent hover:border hover:bg-muted p-1 transition"
+                                >
+                                  <div className="font-mono text-[10px] break-all">{v}</div>
+                                  <div className="text-[9px] text-muted-foreground truncate">{it.cfgNome} · score {it.score}</div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </details>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
