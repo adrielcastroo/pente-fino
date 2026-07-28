@@ -3791,6 +3791,14 @@ export type Database = {
         }
         Relationships: []
       }
+      auge_tag_custom_configuracoes: {
+        Row: {
+          cd_configuracao: string | null
+          nm_configuracao: string | null
+          qtd_tags: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       aplicar_descricao_cadastro: {
