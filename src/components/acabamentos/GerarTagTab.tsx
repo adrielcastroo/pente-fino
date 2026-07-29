@@ -292,6 +292,96 @@ function TagCalculadaCell({
 }
 
 // ============================================================
+// Busca de Configuração (equivale ao campo "Configuração" do Auge)
+// ============================================================
+
+function ConfiguracaoSelect({
+  valor,
+  onChange,
+}: {
+  valor: { cd: string; nm: string } | null;
+  onChange: (v: { cd: string; nm: string } | null) => void;
+}) {
+  const [busca, setBusca] = useState('');
+  const [termo, setTermo] = useState('');
+  const [aberto, setAberto] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setTermo(busca.trim()), 300);
+    return () => clearTimeout(t);
+  }, [busca]);
+
+  const padrao = useMemo(() => toIlikePattern(termo), [termo]);
+
+  const { data: opcoes = [], isFetching } = useQuery({
+    queryKey: ['tag-custom-configuracao-busca', padrao],
+    enabled: aberto && padrao.length >= 3,
+    staleTime: 60 * 1000,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from('auge_tag_custom_configuracoes')
+        .select('cd_configuracao, nm_configuracao, qtd_tags')
+        .ilike('nm_configuracao', padrao)
+        .limit(50);
+      if (error) throw error;
+      return (data ?? []) as ConfiguracaoLite[];
+    },
+  });
+
+  if (valor && !aberto) {
+    return (
+      <div className="flex items-center gap-2 rounded border px-2 py-2">
+        <Layers className="h-3.5 w-3.5 text-primary shrink-0" />
+        <span className="text-[11px] font-medium break-all flex-1">{valor.nm}</span>
+        <Button size="sm" variant="ghost" className="h-6 px-2 text-[10px]" onClick={() => { setAberto(true); setBusca(valor.nm); }}>
+          Trocar
+        </Button>
+        <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => onChange(null)} aria-label="Limpar configuração">
+          <X className="h-3 w-3" />
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-1">
+      <div className="relative">
+        <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+        <Input
+          value={busca}
+          onFocus={() => setAberto(true)}
+          onChange={(e) => { setBusca(e.target.value); setAberto(true); }}
+          placeholder="Digite para procurar a configuração (use * como curinga)"
+          className="h-10 pl-7 text-[11px]"
+        />
+      </div>
+      {aberto && padrao.length >= 3 && (
+        <div className="rounded border bg-background max-h-48 overflow-auto">
+          {isFetching && (
+            <div className="p-2 text-[10px] text-muted-foreground flex items-center gap-1">
+              <Loader2 className="h-3 w-3 animate-spin" /> Buscando…
+            </div>
+          )}
+          {!isFetching && opcoes.length === 0 && (
+            <div className="p-2 text-[10px] text-muted-foreground">Nenhuma configuração encontrada.</div>
+          )}
+          {opcoes.map((o) => (
+            <button
+              key={o.cd_configuracao}
+              onClick={() => { onChange({ cd: o.cd_configuracao, nm: o.nm_configuracao }); setAberto(false); }}
+              className="w-full text-left px-2 py-1 hover:bg-muted/60 transition"
+            >
+              <div className="text-[11px] break-all">{o.nm_configuracao}</div>
+              <div className="text-[9px] text-muted-foreground">{o.qtd_tags} TAG(s)</div>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 // Componente principal
 // ============================================================
 export default function GerarTagTab() {
