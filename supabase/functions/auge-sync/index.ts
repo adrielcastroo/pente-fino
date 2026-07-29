@@ -556,12 +556,47 @@ function parseTagGridResponse(text: string): TagCalculadaRow[] {
     const cols = tds.filter((c) => c.length > 0 && !c.startsWith('{'));
     if (cols.length >= 2) {
       const [nome, descricao, formula] = cols;
-      if (nome && !/^nome$/i.test(nome)) {
+      // Ignora rótulos de formulário ("Nome:", "Tag:", "Operador:") e cabeçalhos.
+      const isLabel = (v: string) => /:$/.test(v.trim());
+      if (nome && !/^nome$/i.test(nome) && !isLabel(nome) && !isLabel(descricao ?? '')) {
         out.push({ cd_tag: nome, nome, descricao: descricao || null, formula: formula || null });
       }
     }
   }
   return out;
+}
+
+// Descobre os endpoints ajax realmente usados pela página tag.php, lendo o HTML
+// da própria página (mais confiável do que adivinhar nomes de arquivo).
+async function discoverTagGridPaths(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+): Promise<{ paths: string[]; pageHtml: string }> {
+  const headers: Record<string, string> = {
+    'Cookie': auth.jar.header(),
+    'User-Agent': UA,
+    'Accept': 'text/html,application/xhtml+xml,*/*;q=0.8',
+    'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
+    'Referer': `${AUGE_BASE_URL}/l.unilux/modInventario/`,
+  };
+  if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
+  try {
+    const res = await fetch(`${AUGE_BASE_URL}/l.unilux/modInventario/tag/tag.php`, { headers });
+    auth.jar.ingest(res);
+    const html = await res.text();
+    const found = new Set<string>();
+    for (const m of html.matchAll(/['"]([^'"]*ajax\/[A-Za-z0-9_.-]+\.php)['"]/gi)) {
+      let p = m[1];
+      if (p.startsWith('http')) {
+        try { p = new URL(p).pathname; } catch { continue; }
+      } else if (!p.startsWith('/')) {
+        p = `/l.unilux/modInventario/tag/${p.replace(/^\.\//, '')}`;
+      }
+      found.add(p);
+    }
+    return { paths: [...found], pageHtml: html };
+  } catch {
+    return { paths: [], pageHtml: '' };
+  }
 }
 
 async function fetchTagsCalculadasGrid(
@@ -580,11 +615,28 @@ async function fetchTagsCalculadasGrid(
   };
   if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
 
-  const candidates = TAG_GRID_PATH_OK ? [TAG_GRID_PATH_OK, ...TAG_GRID_PATHS] : TAG_GRID_PATHS;
+  const { paths: discovered, pageHtml } = await discoverTagGridPaths(auth);
+
+  // A própria página já pode vir com a grade renderizada (só aceitamos se vier
+  // um volume compatível com a grade real, evitando rótulos do formulário).
+  if (pageHtml) {
+    const inline = parseTagGridResponse(pageHtml);
+    if (inline.length >= 20) return inline;
+  }
+
+  const candidates = [
+    ...(TAG_GRID_PATH_OK ? [TAG_GRID_PATH_OK] : []),
+    // endpoints descobertos com "tag"/"lista" no nome primeiro
+    ...discovered.filter((p) => /(lista|list|get|grid|consulta).*tag|tag.*(lista|list|grid)/i.test(p)),
+    ...discovered,
+    ...TAG_GRID_PATHS,
+  ];
   const tried = new Set<string>();
   for (const path of candidates) {
     if (tried.has(path)) continue;
     tried.add(path);
+    // Endpoints de select2 não servem (devolvem "FORMULA\NOME" sem colunas).
+    if (/select/i.test(path)) continue;
     try {
       const body = new URLSearchParams({
         nrPagina: '1',
