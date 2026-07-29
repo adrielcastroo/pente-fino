@@ -8,6 +8,3 @@ verify_jwt = false
 
 [functions.posthog-analytics]
 verify_jwt = false
-
-[functions.migrate-helper]
-verify_jwt = false
