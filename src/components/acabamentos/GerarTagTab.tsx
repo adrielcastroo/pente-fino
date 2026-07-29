@@ -942,8 +942,12 @@ export default function GerarTagTab() {
             onSearchStateChange={setCfgSearch}
           />
           <p className="text-[10px] text-muted-foreground">
-            Busca a TAG Custom já existente no sistema. Deixe vazio para criar uma nova.
+            Digite aqui (ex.: <code className="font-mono">Rollo Pro</code>) — o app analisa todas as TAGs
+            Custom com esse texto e exige as TAGs Configuradas que são padrão nelas.
+            <span className="font-semibold text-foreground"> Curinga:</span> <code className="font-mono">*</code> como
+            no SAP B1 (mín. 3 caracteres).
           </p>
+
         </div>
 
         {/* Tag: nome livre */}
