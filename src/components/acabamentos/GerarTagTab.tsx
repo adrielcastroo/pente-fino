@@ -142,6 +142,22 @@ function toIlikePattern(raw: string): string {
   return `%${escaped}%`;
 }
 
+/**
+ * Quebra o termo em tokens para busca AND (cada token precisa existir na
+ * configuração, em qualquer ordem). Evita falhas quando o usuário digita a
+ * descrição com espaçamento/ordem levemente diferente do cadastro no Auge.
+ */
+function toIlikeTokens(raw: string): string[] {
+  const clean = sanitizeTerm(raw).replace(/%/g, ' ');
+  return clean
+    .split(/\s+/)
+    .map((t) => t.trim())
+    .filter((t) => t.length >= 2)
+    .slice(0, 12)
+    .map((t) => (t.includes('*') ? t.replace(/\*/g, '%') : `%${t}%`));
+}
+
+
 interface TagCategoria {
   code: string;
   items: Array<{ tag: CustomTag; cfgNome: string; score: number }>;
