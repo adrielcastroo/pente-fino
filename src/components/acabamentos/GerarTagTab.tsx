@@ -193,8 +193,9 @@ function sanitizeTerm(raw: string): string {
 function toIlikePattern(raw: string): string {
   const clean = sanitizeTerm(raw);
   if (!clean) return '';
-  // `%` e `_` digitados viram espaço: evita curinga oculto no ILIKE do PostgREST.
-  const escaped = clean.replace(/[%_]/g, ' ').replace(/\s+/g, ' ').trim();
+  // `%` digitado vira espaço para não virar curinga oculto. `_` é mantido:
+  // como curinga de 1 caractere ele também casa com o próprio underscore.
+  const escaped = clean.replace(/%/g, ' ').replace(/\s+/g, ' ').trim();
   if (escaped.includes('*')) return escaped.replace(/\*/g, '%');
   return `%${escaped}%`;
 }
