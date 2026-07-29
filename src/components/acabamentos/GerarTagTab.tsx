@@ -229,22 +229,42 @@ function TagCalculadaCell({
       const seen = new Set<string>();
       const out: Array<{ valor: string; cfg: string }> = [];
 
-      // 1) Busca ao vivo no Auge (fonte oficial do lookup "Tag Calculada").
-      try {
-        const { data: fn } = await supabase.functions.invoke('auge-sync?action=tag_calculada_select', {
-          body: { term: termo.replace(/\*/g, '') },
-        });
-
-        const rows = (fn as any)?.rows ?? [];
-        for (const r of rows as Array<{ id: string; text: string }>) {
-          const v = String(r?.text ?? '').trim();
+      // 1) Espelho local da página tag.php (fonte oficial das TAGs calculadas).
+      if (padrao) {
+        const { data } = await (supabase as any)
+          .from('auge_tags_calculadas')
+          .select('cd_tag, nm_tag')
+          .ilike('nm_tag', padrao)
+          .order('nm_tag', { ascending: true })
+          .limit(200);
+        for (const r of (data ?? []) as any[]) {
+          const v = String(r.nm_tag ?? '').trim();
           if (!v || seen.has(v)) continue;
           seen.add(v);
           out.push({ valor: v, cfg: '' });
         }
-      } catch { /* segue para o fallback local */ }
+      }
 
-      // 2) Fallback: o que já está sincronizado localmente (acabamentos).
+      // 2) Busca ao vivo no Auge (caso o espelho ainda não esteja sincronizado).
+      if (out.length === 0) {
+        try {
+          const { data: fn } = await supabase.functions.invoke('auge-sync?action=tag_calculada_select', {
+            body: { term: termo.replace(/\*/g, '') },
+          });
+
+          const alvo = termo.replace(/\*/g, '').toLowerCase();
+          const rows = (fn as any)?.rows ?? [];
+          for (const r of rows as Array<{ id: string; text: string }>) {
+            const v = String(r?.text ?? '').trim();
+            if (!v || seen.has(v)) continue;
+            if (alvo && !v.toLowerCase().includes(alvo)) continue;
+            seen.add(v);
+            out.push({ valor: v, cfg: '' });
+          }
+        } catch { /* segue para o fallback local */ }
+      }
+
+      // 3) Fallback: o que já está sincronizado localmente (acabamentos).
       if (out.length === 0 && padrao) {
         const { data } = await (supabase as any)
           .from('auge_acabamentos')
@@ -259,6 +279,7 @@ function TagCalculadaCell({
           out.push({ valor: v, cfg: r.nm_acabamento ?? '' });
         }
       }
+
 
       // 3) Fallback: TAGs calculadas já vinculadas em TAG Custom.
       if (out.length === 0 && padrao) {

@@ -928,6 +928,24 @@ export type Database = {
         }
         Relationships: []
       }
+      auge_tags_calculadas: {
+        Row: {
+          cd_tag: string
+          nm_tag: string
+          synced_at: string
+        }
+        Insert: {
+          cd_tag: string
+          nm_tag: string
+          synced_at?: string
+        }
+        Update: {
+          cd_tag?: string
+          nm_tag?: string
+          synced_at?: string
+        }
+        Relationships: []
+      }
       auge_transferencias: {
         Row: {
           codigo_produto: string | null

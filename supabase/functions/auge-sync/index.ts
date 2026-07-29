@@ -382,6 +382,9 @@ async function fetchSelectConfiguracoes(
 // primeiro que responder com dados.
 // ---------------------------------------------------------------------------
 const TAG_CALCULADA_PATHS = [
+  // Fonte oficial: página /modInventario/tag/tag.php usa este select com a
+  // lista COMPLETA de TAGs calculadas ([{value, text}]).
+  '/l.unilux/modInventario/tag/ajax/tagSelectTag.php',
   '/l.unilux/modInventario/tag/ajax/tagSelectListaTagsCalculadas.php',
   '/l.unilux/modInventario/tag/ajax/tagSelectListaTagCalculada.php',
   '/l.unilux/modInventario/tag/ajax/selectListaTagsCalculadas.php',
@@ -399,8 +402,8 @@ function parseSelectRows(text: string): Array<{ id: string; text: string }> {
       const arr = Array.isArray(j) ? j : (Array.isArray(j?.results) ? j.results : (Array.isArray(j?.data) ? j.data : []));
       return arr
         .map((r: any) => ({
-          id: String(r?.id ?? r?.cdTagCalculada ?? r?.dsTagCalculada ?? '').trim(),
-          text: String(r?.text ?? r?.dsTagCalculada ?? r?.nmTagCalculada ?? r?.id ?? '').trim(),
+          id: String(r?.id ?? r?.value ?? r?.cdTag ?? r?.cdTagCalculada ?? r?.dsTagCalculada ?? '').trim(),
+          text: String(r?.text ?? r?.nmTag ?? r?.dsTagCalculada ?? r?.nmTagCalculada ?? r?.id ?? '').trim(),
         }))
         .filter((r: { id: string; text: string }) => r.text.length > 0);
     } catch { /* cai para HTML */ }
@@ -3893,69 +3896,48 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Sonda a página /modInventario/tag/tag.php para descobrir o endpoint ajax
-    // que lista as TAGs (calculadas). Usado para diagnóstico da integração.
-    if (action === 'tag_page_probe') {
-      const pagePath = '/l.unilux/modInventario/tag/tag.php';
-      const headers: Record<string, string> = {
-        'Cookie': auth.jar.header(),
-        'User-Agent': UA,
-        'Accept': 'text/html,application/xhtml+xml,*/*;q=0.8',
-        'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
-        'Referer': `${AUGE_BASE_URL}/l.unilux/`,
-      };
-      if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
-      const res = await fetch(`${AUGE_BASE_URL}${pagePath}`, { headers });
-      auth.jar.ingest(res);
-      const html = await res.text();
-      const ajax = Array.from(new Set(
-        [...html.matchAll(/["'`]([^"'`\s]*\.php)["'`]/g)].map((m) => m[1]),
-      )).slice(0, 80);
-      const ids = Array.from(new Set(
-        [...html.matchAll(/id=["']([A-Za-z0-9_\-]+)["']/g)].map((m) => m[1]),
-      )).slice(0, 80);
-      return new Response(JSON.stringify({
-        ok: true, status: res.status, length: html.length, ajax, ids,
-        head: html.slice(0, 1500),
-      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
+    // Sincroniza TODAS as TAGs calculadas listadas em /modInventario/tag/tag.php
+    // (select tagSelectTag.php devolve a lista completa: [{value, text}]).
+    if (action === 'sync_tags_calculadas') {
+      const rows = await fetchSelectTagsCalculadas(auth, '', 1, 100000);
+      const mapped = Array.from(
+        rows
+          .filter((r) => r.text && r.id)
+          .reduce((acc, r) => {
+            acc.set(String(r.id), {
+              cd_tag: String(r.id),
+              nm_tag: r.text,
+              synced_at: new Date().toISOString(),
+            });
+            return acc;
+          }, new Map<string, { cd_tag: string; nm_tag: string; synced_at: string }>())
+          .values(),
+      );
 
-    // Sonda os endpoints candidatos de listagem de TAGs (tag.php).
-    if (action === 'tag_list_probe') {
-      let payload: any = {};
-      try { payload = await req.json(); } catch { /* ignore */ }
-      const term = String(payload?.term ?? '').trim();
-      const headers: Record<string, string> = {
-        'Cookie': auth.jar.header(),
-        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-        'X-Requested-With': 'XMLHttpRequest',
-        'X-CSRF-TOKEN': auth.csrf,
-        'Origin': AUGE_BASE_URL,
-        'Referer': `${AUGE_BASE_URL}/l.unilux/modInventario/tag/tag.php`,
-        'User-Agent': UA,
-        'Accept': 'application/json, text/javascript, text/html, */*; q=0.01',
-      };
-      if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
-      const attempts: any[] = [];
-      const cands: Array<{ path: string; body: Record<string, string> }> = [
-        { path: '/l.unilux/modInventario/tag/ajax/tagSelectTag.php', body: { term, q: term, nmTag: term, dsTag: term, nrPagina: '1', qtdItens: '200' } },
-        { path: '/l.unilux/modInventario/tag/controle/ctlTag.php', body: { acao: 'listar', nmTag: term, dsTag: term } },
-        { path: '/l.unilux/modInventario/tag/controle/ctlTag.php', body: { operacao: 'pesquisar', nmTag: term, dsTag: term } },
-      ];
-      for (const c of cands) {
-        try {
-          const res = await fetch(`${AUGE_BASE_URL}${c.path}`, { method: 'POST', headers, body: new URLSearchParams(c.body) });
-          auth.jar.ingest(res);
-          const text = await res.text();
-          attempts.push({ path: c.path, body: c.body, status: res.status, length: text.length, sample: text.slice(0, 1200) });
-        } catch (e) {
-          attempts.push({ path: c.path, body: c.body, error: getErrorMessage(e) });
-        }
+      let salvos = 0;
+      for (let i = 0; i < mapped.length; i += 500) {
+        const chunk = mapped.slice(i, i + 500);
+        const { error } = await admin
+          .from('auge_tags_calculadas')
+          .upsert(chunk, { onConflict: 'cd_tag' });
+        if (error) throw new Error(`Falha ao salvar TAGs calculadas: ${error.message}`);
+        salvos += chunk.length;
       }
-      return new Response(JSON.stringify({ ok: true, attempts }), {
+
+      await admin.from('auge_sync_runs').insert({
+        entidade: 'tags_calculadas',
+        status: 'success',
+        started_at: new Date().toISOString(),
+        finished_at: new Date().toISOString(),
+        triggered_by: triggeredBy,
+        detalhes: { total: mapped.length, salvos },
+      }).then(() => {}, () => {});
+
+      return new Response(JSON.stringify({ ok: true, total: mapped.length, salvos }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
 
     // Lookup ao vivo das TAGs Calculadas (select2 do formulário do Auge).
     if (action === 'tag_calculada_select') {

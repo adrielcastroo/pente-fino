@@ -198,6 +198,16 @@ export default function AugeAdminPanel() {
         results.push('TAGs custom: varredura incremental iniciada');
       } catch (e: any) { errors.push(`TAGs custom: ${e.message}`); }
 
+      // 5. TAGs calculadas (lista completa de /modInventario/tag/tag.php)
+      try {
+        const { data, error } = await supabase.functions.invoke('auge-sync?action=sync_tags_calculadas', { body: {} });
+        if (error) throw error;
+        if ((data as any)?.ok === false) throw new Error((data as any).error);
+        results.push(`TAGs calculadas: ${(data as any)?.salvos ?? 0} sincronizadas`);
+      } catch (e: any) { errors.push(`TAGs calculadas: ${e.message}`); }
+
+
+
       if (errors.length === 0) {
         toast.success(`Sincronização completa iniciada. ${results.length} rotinas disparadas.`, { id: t, duration: 6000 });
       } else if (results.length > 0) {
