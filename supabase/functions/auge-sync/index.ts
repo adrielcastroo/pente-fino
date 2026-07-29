@@ -3893,6 +3893,33 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Sonda a página /modInventario/tag/tag.php para descobrir o endpoint ajax
+    // que lista as TAGs (calculadas). Usado para diagnóstico da integração.
+    if (action === 'tag_page_probe') {
+      const pagePath = '/l.unilux/modInventario/tag/tag.php';
+      const headers: Record<string, string> = {
+        'Cookie': auth.jar.header(),
+        'User-Agent': UA,
+        'Accept': 'text/html,application/xhtml+xml,*/*;q=0.8',
+        'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
+        'Referer': `${AUGE_BASE_URL}/l.unilux/`,
+      };
+      if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
+      const res = await fetch(`${AUGE_BASE_URL}${pagePath}`, { headers });
+      auth.jar.ingest(res);
+      const html = await res.text();
+      const ajax = Array.from(new Set(
+        [...html.matchAll(/["'`]([^"'`\s]*\.php)["'`]/g)].map((m) => m[1]),
+      )).slice(0, 80);
+      const ids = Array.from(new Set(
+        [...html.matchAll(/id=["']([A-Za-z0-9_\-]+)["']/g)].map((m) => m[1]),
+      )).slice(0, 80);
+      return new Response(JSON.stringify({
+        ok: true, status: res.status, length: html.length, ajax, ids,
+        head: html.slice(0, 1500),
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     // Lookup ao vivo das TAGs Calculadas (select2 do formulário do Auge).
     if (action === 'tag_calculada_select') {
       let payload: any = {};
