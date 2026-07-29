@@ -1130,10 +1130,14 @@ export async function printLabelsBatch(
   if (items.length === 0) return { ok: 0, total: 0, failed: [] };
   const cfg: LabelSettings & PrintConfig = { ...labelSettings, autoPrint: true };
 
-  const browserDisabled = typeof localStorage !== 'undefined'
-    && localStorage.getItem('pref_disable_browser_print') === 'true';
+  if (isDirectPrintDisabled()) {
+    toast.warning('Impressão direta está desabilitada nas configurações');
+    return { ok: 0, total: items.length, failed: items.map((_, i) => i) };
+  }
+  const browserDisabled = isBrowserPrintDisabled();
   const resolvedWebhook = resolveWebhookUrl();
-  const hasWebhook = !!resolvedWebhook;
+  const hasWebhook = !!resolvedWebhook && !isWebhookPrintDisabled();
+
   // Regra anti-redundância: navegador ligado → só navegador; navegador
   // desligado → n8n (se configurado). O caller ainda pode forçar via cfg.printMethod.
   const method: PrintMethod = cfg.printMethod
