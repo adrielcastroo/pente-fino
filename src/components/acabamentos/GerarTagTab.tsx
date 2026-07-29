@@ -244,7 +244,7 @@ function TagCalculadaCell({
         }
       } catch { /* segue para o fallback local */ }
 
-      // 2) Fallback: o que já está sincronizado localmente.
+      // 2) Fallback: o que já está sincronizado localmente (acabamentos).
       if (out.length === 0 && padrao) {
         const { data } = await (supabase as any)
           .from('auge_acabamentos')
@@ -259,6 +259,22 @@ function TagCalculadaCell({
           out.push({ valor: v, cfg: r.nm_acabamento ?? '' });
         }
       }
+
+      // 3) Fallback: TAGs calculadas já vinculadas em TAG Custom.
+      if (out.length === 0 && padrao) {
+        const { data } = await (supabase as any)
+          .from('auge_tag_custom')
+          .select('ds_tag_calculada, cd_tag_calculada, nm_configuracao')
+          .or(`ds_tag_calculada.ilike.${padrao},cd_tag_calculada.ilike.${padrao}`)
+          .limit(200);
+        for (const r of (data ?? []) as any[]) {
+          const v = String(r.ds_tag_calculada ?? r.cd_tag_calculada ?? '').trim();
+          if (!v || seen.has(v)) continue;
+          seen.add(v);
+          out.push({ valor: v, cfg: r.nm_configuracao ?? '' });
+        }
+      }
+
       return out.slice(0, 50);
     },
   });
