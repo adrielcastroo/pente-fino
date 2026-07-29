@@ -4130,7 +4130,7 @@ Deno.serve(async (req) => {
         pageLen: pageHtml.length,
         trCount: [...pageHtml.matchAll(/<tr[^>]*>/gi)].length,
         tables: [...pageHtml.matchAll(/<table[\s\S]{0,300}?>/gi)].map((m) => m[0].slice(0, 160)),
-        trSamples: [...pageHtml.matchAll(/<tr[^>]*>[\s\S]*?<\/tr>/gi)].slice(0, 6).map((m) => m[0].replace(/\s+/g, ' ').slice(0, 300)),
+        tabTag: (() => { const i = pageHtml.indexOf('tabTag'); return i < 0 ? '' : pageHtml.slice(i, i + 2500).replace(/\s+/g, ' '); })(),
         forms: [...pageHtml.matchAll(/<form[\s\S]{0,200}?>/gi)].map((m) => m[0].replace(/\s+/g, ' ').slice(0, 200)),
         paths,
         probes,
