@@ -140,14 +140,6 @@ export default function AugeSaidasTab() {
             <SelectItem value="8">Pendentes (erro)</SelectItem>
           </SelectContent>
         </Select>
-        <Button
-          onClick={sync}
-          disabled={syncing}
-          className="h-11 px-5 rounded-md font-semibold bg-primary hover:bg-primary/90 gap-2"
-        >
-          {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-          Sincronizar Auge
-        </Button>
       </div>
 
       {/* Stats */}

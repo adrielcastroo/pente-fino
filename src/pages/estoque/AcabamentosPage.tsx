@@ -226,10 +226,6 @@ export default function AcabamentosPage() {
                 Ver progresso
               </Button>
             )}
-            <Button size="sm" onClick={() => runSync()} disabled={syncing || runIsActive} className="gap-2">
-              {(syncing || runIsActive) ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-              {runIsActive ? 'Sincronizando…' : 'Sincronizar todos'}
-            </Button>
           </div>
         }
       />
@@ -383,11 +379,8 @@ export default function AcabamentosPage() {
                   <div className="font-semibold text-sm truncate">{acabSelObj?.nm_acabamento}</div>
                   <div className="font-mono text-[10px] text-muted-foreground">{acabSelObj?.chave_acabamento ?? `#${acabSel}`} · {itens.length} itens</div>
                 </div>
-                <Button size="sm" variant="outline" onClick={() => runSync(acabSel)} disabled={syncing} className="gap-2 h-8">
-                  {syncing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
-                  Sincronizar
-                </Button>
               </div>
+
               <div className="max-h-[75vh] overflow-auto">
                 <table className="w-full text-xs">
                   <thead className="bg-muted sticky top-0"><tr className="text-left">

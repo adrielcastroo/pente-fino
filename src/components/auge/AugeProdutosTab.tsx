@@ -162,10 +162,6 @@ export default function AugeProdutosTab() {
             <SelectItem value="inativos">Inativos</SelectItem>
           </SelectContent>
         </Select>
-        <Button onClick={sync} disabled={syncing} className="h-11 px-5 gap-2">
-          {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-          Sincronizar Auge
-        </Button>
       </div>
 
       {/* Stats */}

@@ -107,10 +107,6 @@ export default function DepositosAdminPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={sync} disabled={syncing} className="h-10 gap-2">
-            {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-            Sincronizar
-          </Button>
           <Button onClick={() => setEditing({ ...EMPTY })} className="h-10 gap-2">
             <Plus className="w-4 h-4" />Novo depósito
           </Button>

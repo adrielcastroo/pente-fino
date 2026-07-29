@@ -45,10 +45,6 @@ export default function AugeDepositosTab() {
         <p className="text-xs text-muted-foreground">
           {rows.length} depósito(s). Endpoint experimental — se falhar, envie o HAR.
         </p>
-        <Button onClick={sync} disabled={syncing} className="h-10 gap-2">
-          {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-          Sincronizar
-        </Button>
       </div>
 
       {loading ? (

@@ -354,29 +354,6 @@ export default function TagsTab() {
               </Button>
             ))}
           </div>
-          <Button
-            size="sm"
-            onClick={() => varrerAuge(false)}
-            disabled={syncing || isActive}
-            className="h-9 gap-2 text-[11px]"
-            title="Retoma varredura pulando configurações já escaneadas"
-          >
-            {syncing || isActive ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
-            Varrer Auge
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              if (confirm('Isso apaga todas as configurações e TAGs escaneadas e recomeça do zero. Continuar?')) varrerAuge(true);
-            }}
-            disabled={syncing || isActive}
-            className="h-9 gap-2 text-[11px]"
-            title="Limpa tudo e re-escaneia do zero"
-          >
-            <RefreshCw className="h-3.5 w-3.5" />
-            Limpar e re-varrer
-          </Button>
 
           <Button size="sm" variant="outline" onClick={() => refetch()} disabled={isFetching} className="h-9 gap-2 text-[11px]">
             {isFetching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}

@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import {
   RefreshCw, Loader2, CheckCircle2, XCircle, Clock, Wifi, WifiOff,
-  Database, Activity, AlertTriangle, PlayCircle, Power, MapPin,
+  Database, Activity, AlertTriangle, PlayCircle, Power, MapPin, Zap,
 } from 'lucide-react';
 
 import { formatDateBR } from '@/lib/app-utils';
@@ -160,6 +160,64 @@ export default function AugeAdminPanel() {
     } finally { setSyncingEntity(null); }
   };
 
+  const syncEverything = async () => {
+    setSyncingEntity('everything');
+    const t = toast.loading('Sincronização completa iniciada — entidades, mapa, acabamentos e TAGs...');
+    const results: string[] = [];
+    const errors: string[] = [];
+    try {
+      // 1. Todas as entidades (produtos, saldo, movimentacoes, entradas, transferencias)
+      try {
+        const { data, error } = await supabase.functions.invoke('auge-sync');
+        if (error) throw error;
+        if (data?.ok === false) throw new Error(data.error);
+        results.push(`Entidades: ${data?.upserted ?? 0} registros`);
+      } catch (e: any) { errors.push(`Entidades: ${e.message}`); }
+
+      // 2. Mapa de tecidos (background)
+      try {
+        const { data, error } = await supabase.functions.invoke('auge-sync?action=sync_tecidos_map', { method: 'POST' });
+        if (error) throw error;
+        if ((data as any)?.ok === false) throw new Error((data as any).error);
+        results.push('Mapa de tecidos: iniciado em background');
+      } catch (e: any) { errors.push(`Mapa tecidos: ${e.message}`); }
+
+      // 3. Acabamentos (background)
+      try {
+        const { data, error } = await supabase.functions.invoke('auge-sync?action=sync_acabamentos', { body: {} });
+        if (error) throw error;
+        if (data?.ok === false) throw new Error(data.error);
+        results.push('Acabamentos: iniciado em background');
+      } catch (e: any) { errors.push(`Acabamentos: ${e.message}`); }
+
+      // 4. Varredura de TAGs customizadas (incremental, background)
+      try {
+        const { data, error } = await supabase.functions.invoke('auge-sync?action=sync_tag_custom', { body: { full: false } });
+        if (error) throw error;
+        if (data?.ok === false) throw new Error(data.error);
+        results.push('TAGs custom: varredura incremental iniciada');
+      } catch (e: any) { errors.push(`TAGs custom: ${e.message}`); }
+
+      if (errors.length === 0) {
+        toast.success(`Sincronização completa iniciada. ${results.length} rotinas disparadas.`, { id: t, duration: 6000 });
+      } else if (results.length > 0) {
+        toast.warning(`Parcial: ${results.length} OK, ${errors.length} com erro. Veja o histórico.`, { id: t, duration: 8000 });
+        errors.forEach(msg => toast.error(msg));
+      } else {
+        toast.error(`Falha total. Primeiro erro: ${errors[0]}`, { id: t });
+      }
+      await Promise.all([loadRuns(), loadCounts()]);
+      // acompanhamento periódico
+      let tries = 0;
+      const iv = setInterval(async () => {
+        tries++;
+        await Promise.all([loadRuns(), loadCounts()]);
+        if (tries >= 30) clearInterval(iv);
+      }, 8000);
+    } finally { setSyncingEntity(null); }
+  };
+
+
 
 
   useEffect(() => {
@@ -249,10 +307,21 @@ export default function AugeAdminPanel() {
               {syncingEntity === 'tecidos_map' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MapPin className="w-3.5 h-3.5" />}
               Sincronizar mapa tecidos
             </Button>
-            <Button size="sm" onClick={syncAll} disabled={syncingEntity !== null || !syncEnabled} title={!syncEnabled ? 'Sincronização desligada' : undefined} className="gap-1.5 h-9">
+            <Button size="sm" variant="outline" onClick={syncAll} disabled={syncingEntity !== null || !syncEnabled} title={!syncEnabled ? 'Sincronização desligada' : 'Apenas entidades (produtos, saldo, movimentações, entradas, transferências)'} className="gap-1.5 h-9">
               {syncingEntity === 'all' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <PlayCircle className="w-3.5 h-3.5" />}
-              Sincronizar tudo
+              Sincronizar entidades
             </Button>
+            <Button
+              size="sm"
+              onClick={syncEverything}
+              disabled={syncingEntity !== null || !syncEnabled}
+              title={!syncEnabled ? 'Sincronização desligada' : 'Roda TUDO: entidades + mapa tecidos + acabamentos + TAGs custom'}
+              className="gap-1.5 h-9 bg-primary hover:bg-primary/90"
+            >
+              {syncingEntity === 'everything' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
+              SINCRONIZAR TUDO
+            </Button>
+
 
           </div>
         </div>

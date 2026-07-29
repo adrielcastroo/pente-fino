@@ -331,10 +331,6 @@ export default function AugeTransferenciasTab({
           <Plus className="w-4 h-4" />
           <span className="hidden sm:inline">Nova</span>
         </Button>
-        <Button onClick={sync} disabled={syncing} variant="outline" className="h-11 px-4 sm:px-5 gap-2 shrink-0">
-          {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-          <span className="hidden sm:inline">Sincronizar</span>
-        </Button>
       </div>
 
 
