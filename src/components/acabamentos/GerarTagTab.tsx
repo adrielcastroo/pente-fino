@@ -229,21 +229,24 @@ function TagCalculadaCell({
       const seen = new Set<string>();
       const out: Array<{ valor: string; cfg: string }> = [];
 
-      // 1) Espelho local da página tag.php (fonte oficial das TAGs calculadas).
+      // 1) NOMES das TAGs calculadas (ex.: CONS_CORT_WAVE_IRREG_SLIM).
+      //    A busca é pelo nome da TAG, não pela descrição.
       if (padrao) {
         const { data } = await (supabase as any)
-          .from('auge_tags_calculadas')
-          .select('cd_tag, nm_tag')
-          .ilike('nm_tag', padrao)
-          .order('nm_tag', { ascending: true })
+          .from('auge_acabamentos')
+          .select('ds_tag_calculada, nm_acabamento')
+          .not('ds_tag_calculada', 'is', null)
+          .ilike('ds_tag_calculada', padrao)
+          .order('ds_tag_calculada', { ascending: true })
           .limit(200);
         for (const r of (data ?? []) as any[]) {
-          const v = String(r.nm_tag ?? '').trim();
+          const v = String(r.ds_tag_calculada ?? '').trim();
           if (!v || seen.has(v)) continue;
           seen.add(v);
-          out.push({ valor: v, cfg: '' });
+          out.push({ valor: v, cfg: r.nm_acabamento ?? '' });
         }
       }
+
 
       // 2) Busca ao vivo no Auge (caso o espelho ainda não esteja sincronizado).
       if (out.length === 0) {
