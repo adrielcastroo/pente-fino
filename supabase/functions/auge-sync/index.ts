@@ -474,6 +474,8 @@ async function fetchSelectTagsCalculadas(
 // memorizamos o primeiro que responder com linhas.
 // ---------------------------------------------------------------------------
 const TAG_GRID_PATHS = [
+  // Endpoint real usado pelo DataTable da página tag.php.
+  '/l.unilux/modInventario/tag/ajax/getListaTag.php',
   '/l.unilux/modInventario/tag/ajax/listaTags.php',
   '/l.unilux/modInventario/tag/ajax/listaTag.php',
   '/l.unilux/modInventario/tag/ajax/getTags.php',
@@ -498,10 +500,11 @@ function pickStr(obj: Record<string, unknown>, keys: string[]): string {
 }
 
 function normalizeTagGridObject(obj: Record<string, unknown>): TagCalculadaRow | null {
-  const cd = pickStr(obj, ['cdTag', 'cdTagCalculada', 'idTag', 'id']);
-  const nome = pickStr(obj, ['nmTag', 'nmTagCalculada', 'dsNomeTag', 'nome', 'nmTagCalc']);
+  const cd = pickStr(obj, ['cdTag', 'cdTagCalculada', 'cdSeqTagCalculada', 'idTag', 'id']);
+  // Na grade do Auge: nmtag = Nome interno, dsTag = Descrição, formulaTag = Fórmula.
+  const nome = pickStr(obj, ['nmtag', 'nmTag', 'nmTagCalculada', 'dsNomeTag', 'nome', 'nmTagCalc']);
   const descricao = pickStr(obj, ['dsTag', 'dsTagCalculada', 'descricao', 'dsDescricao']);
-  const formula = pickStr(obj, ['dsFormula', 'formula', 'dsExpressao', 'dsCalculo']);
+  const formula = pickStr(obj, ['formulaTag', 'dsFormula', 'formula', 'dsExpressao', 'dsCalculo']);
   if (!nome && !descricao) return null;
   return {
     cd_tag: cd || nome || descricao,
@@ -584,7 +587,8 @@ async function discoverTagGridPaths(
     auth.jar.ingest(res);
     const html = await res.text();
     const found = new Set<string>();
-    for (const m of html.matchAll(/['"]([^'"]*ajax\/[A-Za-z0-9_.-]+\.php)['"]/gi)) {
+    // Aceita tanto "ajax/x.php" quanto "ajax/x.php?" (concatenado com querystring).
+    for (const m of html.matchAll(/['"]([^'"]*ajax\/[A-Za-z0-9_.-]+\.php)[^'"]*['"]/gi)) {
       let p = m[1];
       if (p.startsWith('http')) {
         try { p = new URL(p).pathname; } catch { continue; }
