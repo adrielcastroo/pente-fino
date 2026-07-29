@@ -948,26 +948,6 @@ export default function GerarTagTab() {
           </p>
         </div>
 
-        {customsEncontradas.length > 0 && !customAberta && (
-          <div className="space-y-1.5">
-            <div className="text-[10px] uppercase text-muted-foreground flex items-center gap-1">
-              <Layers className="h-3 w-3" /> Configurações relacionadas ao texto
-              <Badge variant="outline" className="text-[9px]">{customsEncontradas.length}</Badge>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {customsEncontradas.map((c) => (
-                <button
-                  key={c.cd}
-                  onClick={() => setCustomAberta({ cd: c.cd, nm: c.nm })}
-                  className="rounded border px-2 py-1 text-[10px] transition hover:bg-muted/50"
-                >
-                  <span className="font-medium">{c.nm}</span>
-                  <span className="ml-1.5 text-muted-foreground">({c.qtd})</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
 
         {ehTagCustomNova && (
           <div className="rounded border border-amber-500/40 bg-amber-500/10 p-2.5 flex items-start gap-2">
