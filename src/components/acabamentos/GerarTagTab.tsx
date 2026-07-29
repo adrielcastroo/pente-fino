@@ -826,6 +826,26 @@ export default function GerarTagTab() {
     setLinhas((prev) => prev.map((l) => (l.id === id ? { ...l, calculada } : l)));
   };
 
+  /** Insere de uma vez todas as TAGs Configuradas obrigatórias que faltam. */
+  const adicionarObrigatoriasFaltando = () => {
+    if (obrigatoriasFaltando.length === 0) return;
+    setResultado(null);
+    setLinhas((prev) => {
+      const existentes = new Set(prev.map((l) => l.code));
+      const novas = obrigatoriasFaltando
+        .filter((o) => !existentes.has(o.code))
+        .map((o) => ({
+          id: `obrig|${o.code}|${o.valor}`,
+          code: o.code,
+          valor: o.valor,
+          cfgNome: customAberta?.nm ?? '',
+          calculada: o.calculada,
+        }));
+      return [...prev, ...novas];
+    });
+    toast.success(`${obrigatoriasFaltando.length} TAG(s) obrigatória(s) adicionada(s).`);
+  };
+
   const descricaoInvalida = tentouEnviar && descricao.trim().length === 0;
 
   const adicionarTagCustom = async () => {
@@ -838,6 +858,13 @@ export default function GerarTagTab() {
       toast.error('Adicione ao menos uma TAG customizada na tabela.');
       return;
     }
+    if (obrigatoriasFaltando.length > 0) {
+      toast.error(
+        `Faltam TAGs obrigatórias do padrão: ${obrigatoriasFaltando.map((o) => o.code).join(', ')}.`,
+      );
+      return;
+    }
+
     setEnviando(true);
     setResultado(null);
     try {
