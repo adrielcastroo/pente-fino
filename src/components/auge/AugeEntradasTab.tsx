@@ -141,14 +141,6 @@ export default function AugeEntradasTab() {
             <SelectItem value="8">Pendentes (erro)</SelectItem>
           </SelectContent>
         </Select>
-        <Button
-          onClick={sync}
-          disabled={syncing}
-          className="h-11 px-5 rounded-md font-semibold bg-emerald-600 hover:bg-emerald-600/90 gap-2 text-white"
-        >
-          {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-          Sincronizar Entradas
-        </Button>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
