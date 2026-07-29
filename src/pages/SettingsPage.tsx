@@ -154,6 +154,16 @@ export default function SettingsPage() {
       setPrefDisableBrowserPrint(remotePref);
       localStorage.setItem('pref_disable_browser_print', String(remotePref));
     }
+    const remoteDirect = (profile as any)?.preferences?.disable_direct_print;
+    if (typeof remoteDirect === 'boolean') {
+      setPrefDisableDirectPrint(remoteDirect);
+      localStorage.setItem('pref_disable_direct_print', String(remoteDirect));
+    }
+    const remoteN8n = (profile as any)?.preferences?.disable_n8n_print;
+    if (typeof remoteN8n === 'boolean') {
+      setPrefDisableN8nPrint(remoteN8n);
+      localStorage.setItem('pref_disable_n8n_print', String(remoteN8n));
+    }
   }, [profile]);
 
   const handleAvatarUpload = async (file: File) => {
