@@ -307,10 +307,21 @@ export default function AugeAdminPanel() {
               {syncingEntity === 'tecidos_map' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MapPin className="w-3.5 h-3.5" />}
               Sincronizar mapa tecidos
             </Button>
-            <Button size="sm" onClick={syncAll} disabled={syncingEntity !== null || !syncEnabled} title={!syncEnabled ? 'Sincronização desligada' : undefined} className="gap-1.5 h-9">
+            <Button size="sm" variant="outline" onClick={syncAll} disabled={syncingEntity !== null || !syncEnabled} title={!syncEnabled ? 'Sincronização desligada' : 'Apenas entidades (produtos, saldo, movimentações, entradas, transferências)'} className="gap-1.5 h-9">
               {syncingEntity === 'all' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <PlayCircle className="w-3.5 h-3.5" />}
-              Sincronizar tudo
+              Sincronizar entidades
             </Button>
+            <Button
+              size="sm"
+              onClick={syncEverything}
+              disabled={syncingEntity !== null || !syncEnabled}
+              title={!syncEnabled ? 'Sincronização desligada' : 'Roda TUDO: entidades + mapa tecidos + acabamentos + TAGs custom'}
+              className="gap-1.5 h-9 bg-primary hover:bg-primary/90"
+            >
+              {syncingEntity === 'everything' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
+              SINCRONIZAR TUDO
+            </Button>
+
 
           </div>
         </div>
