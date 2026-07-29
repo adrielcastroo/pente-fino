@@ -3040,6 +3040,44 @@ async function deleteAcabamentoItem(auth: any, cdAcabamento: string, cdAcabament
   return j;
 }
 
+/**
+ * Grava (inclui/altera) uma linha de TAG Customizada no Auge.
+ * Espelha o formulário de /modInventario/tag/manterTagCustomizada.php.
+ * idAcao: 1 = incluir, 2 = alterar.
+ */
+async function saveTagCustomizada(
+  auth: any,
+  row: {
+    cdConfiguracao?: string;
+    cdTagCustomizada?: string;
+    dsTagCustomizada: string;
+    dsTagCalculada?: string;
+    dsTagTexto?: string;
+  },
+): Promise<any> {
+  const body = new URLSearchParams({
+    idAcao: row.cdTagCustomizada ? '2' : '1',
+    cdConfiguracao: row.cdConfiguracao ?? '',
+    cdTagCustomizada: row.cdTagCustomizada ?? '',
+    dsTagCustomizada: row.dsTagCustomizada ?? '',
+    dsTagCalculada: row.dsTagCalculada ?? '',
+    dsTagTexto: row.dsTagTexto ?? '',
+  });
+  const txt = await postAugePhp(
+    auth,
+    '/l.unilux/modInventario/Controle/ctlTagCustomizada.php',
+    body,
+    '/l.unilux/modInventario/tag/manterTagCustomizada.php',
+  );
+  let j: any = { message: txt };
+  try { j = JSON.parse(txt); } catch { /* mantém texto cru */ }
+  const msg = typeof j?.message === 'string' ? j.message : '';
+  if (msg && !/sucesso/i.test(msg)) throw new Error(msg);
+  return j;
+}
+
+
+
 function mapAcabamentoRow(r: any) {
   return {
     cd_acabamento: String(r.cdAcabamento),
