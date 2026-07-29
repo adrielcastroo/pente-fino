@@ -465,6 +465,149 @@ async function fetchSelectTagsCalculadas(
   return [];
 }
 
+// ---------------------------------------------------------------------------
+// Grade da página /modInventario/tag/tag.php — fonte CORRETA das TAGs
+// calculadas, pois traz Nome, Descrição e Fórmula em colunas separadas.
+// O select2 (tagSelectTag.php) devolve apenas o rótulo "FORMULA\NOME", que em
+// vários casos NÃO corresponde ao Nome real cadastrado no Auge.
+// O caminho do ajax pode variar entre versões: tentamos candidatos e
+// memorizamos o primeiro que responder com linhas.
+// ---------------------------------------------------------------------------
+const TAG_GRID_PATHS = [
+  '/l.unilux/modInventario/tag/ajax/listaTags.php',
+  '/l.unilux/modInventario/tag/ajax/listaTag.php',
+  '/l.unilux/modInventario/tag/ajax/getTags.php',
+  '/l.unilux/modInventario/tag/ajax/getTag.php',
+  '/l.unilux/modInventario/tag/ajax/tagLista.php',
+];
+let TAG_GRID_PATH_OK: string | null = null;
+
+export type TagCalculadaRow = {
+  cd_tag: string;
+  nome: string;
+  descricao: string | null;
+  formula: string | null;
+};
+
+function pickStr(obj: Record<string, unknown>, keys: string[]): string {
+  for (const k of keys) {
+    const v = obj?.[k];
+    if (v !== undefined && v !== null && String(v).trim() !== '') return String(v).trim();
+  }
+  return '';
+}
+
+function normalizeTagGridObject(obj: Record<string, unknown>): TagCalculadaRow | null {
+  const cd = pickStr(obj, ['cdTag', 'cdTagCalculada', 'idTag', 'id']);
+  const nome = pickStr(obj, ['nmTag', 'nmTagCalculada', 'dsNomeTag', 'nome', 'nmTagCalc']);
+  const descricao = pickStr(obj, ['dsTag', 'dsTagCalculada', 'descricao', 'dsDescricao']);
+  const formula = pickStr(obj, ['dsFormula', 'formula', 'dsExpressao', 'dsCalculo']);
+  if (!nome && !descricao) return null;
+  return {
+    cd_tag: cd || nome || descricao,
+    nome: nome || descricao,
+    descricao: descricao || null,
+    formula: formula || null,
+  };
+}
+
+// Extrai linhas tanto de resposta JSON quanto de HTML (<tr> com JSON no último <td>).
+function parseTagGridResponse(text: string): TagCalculadaRow[] {
+  const trimmed = (text ?? '').trim();
+  if (!trimmed) return [];
+  const out: TagCalculadaRow[] = [];
+
+  if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+    try {
+      const j = JSON.parse(trimmed);
+      const arr = Array.isArray(j)
+        ? j
+        : (Array.isArray((j as any)?.data) ? (j as any).data
+          : (Array.isArray((j as any)?.rows) ? (j as any).rows
+            : (Array.isArray((j as any)?.results) ? (j as any).results : [])));
+      for (const r of arr) {
+        const row = normalizeTagGridObject(r ?? {});
+        if (row) out.push(row);
+      }
+      if (out.length) return out;
+    } catch { /* cai para HTML */ }
+  }
+
+  const trRe = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = trRe.exec(trimmed)) !== null) {
+    const tds = [...m[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)]
+      .map((t) => t[1]
+        .replace(/&quot;/g, '"').replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+        .replace(/<[^>]+>/g, '').trim());
+    if (!tds.length) continue;
+
+    // 1) JSON escondido no último <td>
+    const last = tds[tds.length - 1];
+    if (last.startsWith('{')) {
+      try {
+        const row = normalizeTagGridObject(JSON.parse(last));
+        if (row) { out.push(row); continue; }
+      } catch { /* segue para leitura por colunas */ }
+    }
+
+    // 2) Colunas visíveis: Nome | Descrição | (Fórmula)
+    const cols = tds.filter((c) => c.length > 0 && !c.startsWith('{'));
+    if (cols.length >= 2) {
+      const [nome, descricao, formula] = cols;
+      if (nome && !/^nome$/i.test(nome)) {
+        out.push({ cd_tag: nome, nome, descricao: descricao || null, formula: formula || null });
+      }
+    }
+  }
+  return out;
+}
+
+async function fetchTagsCalculadasGrid(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+): Promise<TagCalculadaRow[]> {
+  const headers: Record<string, string> = {
+    'Cookie': auth.jar.header(),
+    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+    'X-Requested-With': 'XMLHttpRequest',
+    'X-CSRF-TOKEN': auth.csrf,
+    'Origin': AUGE_BASE_URL,
+    'Referer': `${AUGE_BASE_URL}/l.unilux/modInventario/tag/tag.php`,
+    'User-Agent': UA,
+    'Accept': 'application/json, text/html, */*; q=0.01',
+    'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
+  };
+  if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
+
+  const candidates = TAG_GRID_PATH_OK ? [TAG_GRID_PATH_OK, ...TAG_GRID_PATHS] : TAG_GRID_PATHS;
+  const tried = new Set<string>();
+  for (const path of candidates) {
+    if (tried.has(path)) continue;
+    tried.add(path);
+    try {
+      const body = new URLSearchParams({
+        nrPagina: '1',
+        qtdItens: '100000',
+        idAtivo: 'Y',
+        dsPesquisaGeral: '',
+      });
+      const res = await fetch(`${AUGE_BASE_URL}${path}`, { method: 'POST', headers, body });
+      auth.jar.ingest(res);
+      const text = await res.text();
+      if (!res.ok) continue;
+      const rows = parseTagGridResponse(text);
+      if (rows.length > 0) {
+        TAG_GRID_PATH_OK = path;
+        return rows;
+      }
+    } catch { /* tenta o próximo candidato */ }
+  }
+  return [];
+}
+
+
+
 // Varre todas as configurações do Auge iterando termos de 1-2 caracteres
 // alfanuméricos (Select2 exige minimumInputLength). Dedupa por id.
 async function scanAllConfiguracoes(
