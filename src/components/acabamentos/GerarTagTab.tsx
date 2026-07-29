@@ -217,6 +217,15 @@ interface TagCategoria {
   items: Array<{ tag: CustomTag; cfgNome: string; score: number }>;
 }
 
+/** TAG escolhida pelo usuário para compor a TAG Custom final. */
+interface TagSelecionada {
+  id: string;
+  code: string;
+  valor: string;
+  cfgNome: string;
+}
+
+
 
 // ============================================================
 // Componente
