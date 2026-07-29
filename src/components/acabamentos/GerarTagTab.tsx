@@ -363,66 +363,6 @@ export default function GerarTagTab() {
             )}
           </div>
 
-          {/* Recomendações de acabamento */}
-          {recomendacoes.length > 0 && (
-            <div className="rounded border bg-accent/30 p-3 space-y-2">
-              <div className="text-[10px] uppercase text-muted-foreground flex items-center gap-1">
-                <Target className="h-3 w-3" /> Recomendações de acabamento
-              </div>
-              <div className="space-y-1.5">
-                {recomendacoes.map((r) => {
-                  const isSel = selecionado?.cd_acabamento === r.acab.cd_acabamento;
-                  const isBest = r === melhor;
-                  return (
-                    <button
-                      key={r.acab.cd_acabamento}
-                      onClick={() => aplicarRecomendacao(r)}
-                      className={`w-full text-left rounded border p-2 text-xs transition ${isSel ? 'bg-primary/10 border-primary' : 'hover:bg-background border-transparent'}`}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            {isBest && <Badge variant="default" className="text-[9px] h-4">melhor</Badge>}
-                            <span className="font-medium truncate">{r.acab.nm_acabamento}</span>
-                          </div>
-                          <div className="font-mono text-[10px] text-muted-foreground mt-0.5">
-                            {r.acab.chave_acabamento ?? `#${r.acab.cd_acabamento}`}
-                            {r.acab.ds_tag_calculada && (
-                              <> · TAG: <span className="text-primary">{r.acab.ds_tag_calculada}</span></>
-                            )}
-                          </div>
-                        </div>
-                        <Badge variant="outline" className="text-[9px] shrink-0">score {r.score}</Badge>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Configurações compatíveis */}
-          {configsRanqueadas.length > 0 && (
-            <div className="rounded border bg-muted/30 p-3 space-y-2">
-              <div className="text-[10px] uppercase text-muted-foreground flex items-center gap-1">
-                <Layers className="h-3 w-3" /> Configurações compatíveis
-                <Badge variant="outline" className="text-[9px]">{configsRanqueadas.length}</Badge>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5 max-h-64 overflow-auto">
-                {configsRanqueadas.slice(0, 12).map((r) => (
-                  <div key={r.cfg.cd_configuracao} className="rounded border bg-background p-1.5 text-[11px]">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="truncate font-medium">{r.cfg.nm_configuracao}</span>
-                      <Badge variant="secondary" className="text-[9px] shrink-0">{r.score}</Badge>
-                    </div>
-                    <div className="font-mono text-[9px] text-muted-foreground">
-                      #{r.cfg.cd_configuracao} · {r.cfg.qtd_tags} tags · cobertura {(r.coverage * 100).toFixed(0)}%
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* Categorias de TAGs (T_BASE, T_TUBO, T_TEC_X, ...) */}
           {(loadingTags && categorias.length === 0) && (
@@ -502,22 +442,6 @@ export default function GerarTagTab() {
             </div>
           )}
 
-          <div className="rounded border border-primary/40 bg-primary/5 p-3 space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="text-[10px] uppercase text-muted-foreground flex items-center gap-1">
-                <Sparkles className="h-3 w-3" /> TAG recomendada
-              </div>
-              <Button size="sm" variant="ghost" onClick={copiar} disabled={!tagGerada} className="h-7 gap-1 text-[11px]">
-                <Copy className="h-3 w-3" /> Copiar
-              </Button>
-            </div>
-            <div className="font-mono text-sm break-all min-h-[24px]">{tagGerada || <span className="text-muted-foreground text-xs">—</span>}</div>
-            {selecionado?.ds_tag_calculada && (
-              <div className="text-[10px] text-muted-foreground">
-                TAG atual do acabamento no Auge: <span className="font-mono">{selecionado.ds_tag_calculada}</span>
-              </div>
-            )}
-          </div>
 
           <Button disabled className="w-full h-10 gap-2" title="Aguardando HAR do endpoint de gravação de TAG no Auge">
             <Sparkles className="h-4 w-4" />
