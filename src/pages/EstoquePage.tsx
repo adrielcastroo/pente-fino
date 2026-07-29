@@ -51,7 +51,7 @@ interface Posicao {
 }
 
 const TEC_CONFIG: Record<string, { cols: string[]; levels: number }> = {
-  TEC00: { cols: ['A', 'B'], levels: 9 },
+  TEC00: { cols: ['A', 'B'], levels: 10 },
   TEC01: { cols: ['A', 'B', 'C', 'D', 'E', 'F'], levels: 6 },
   TEC02: { cols: ['A', 'B'], levels: 4 },
   TEC03: { cols: ['A', 'B'], levels: 9 },
