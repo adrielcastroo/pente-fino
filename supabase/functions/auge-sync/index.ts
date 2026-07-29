@@ -498,10 +498,11 @@ function pickStr(obj: Record<string, unknown>, keys: string[]): string {
 }
 
 function normalizeTagGridObject(obj: Record<string, unknown>): TagCalculadaRow | null {
-  const cd = pickStr(obj, ['cdTag', 'cdTagCalculada', 'idTag', 'id']);
-  const nome = pickStr(obj, ['nmTag', 'nmTagCalculada', 'dsNomeTag', 'nome', 'nmTagCalc']);
+  const cd = pickStr(obj, ['cdTag', 'cdTagCalculada', 'cdSeqTagCalculada', 'idTag', 'id']);
+  // Na grade do Auge: nmtag = Nome interno, dsTag = Descrição, formulaTag = Fórmula.
+  const nome = pickStr(obj, ['nmtag', 'nmTag', 'nmTagCalculada', 'dsNomeTag', 'nome', 'nmTagCalc']);
   const descricao = pickStr(obj, ['dsTag', 'dsTagCalculada', 'descricao', 'dsDescricao']);
-  const formula = pickStr(obj, ['dsFormula', 'formula', 'dsExpressao', 'dsCalculo']);
+  const formula = pickStr(obj, ['formulaTag', 'dsFormula', 'formula', 'dsExpressao', 'dsCalculo']);
   if (!nome && !descricao) return null;
   return {
     cd_tag: cd || nome || descricao,
