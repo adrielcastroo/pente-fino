@@ -600,11 +600,14 @@ export default function GerarTagTab() {
                         <Badge variant="outline" className="text-[9px] shrink-0">{cat.items.length}</Badge>
                       </div>
                       <button
-                        onClick={() => { setTagGerada(normalizeTagFormatC(bestValor)); toast.success(`TAG ${cat.code} aplicada.`); }}
-                        className="w-full text-left rounded border border-primary/30 hover:bg-primary/10 p-1.5 transition"
-                        title="Aplicar esta TAG"
+                        onClick={() => toggleTag(cat.code, bestValor, best?.cfgNome ?? '')}
+                        className={`w-full text-left rounded border p-1.5 transition ${isSelecionada(cat.code, bestValor) ? 'border-primary bg-primary/15' : 'border-primary/30 hover:bg-primary/10'}`}
+                        title="Selecionar/remover esta TAG da composição"
                       >
-                        <div className="font-mono text-[11px] text-primary break-all">{bestValor}</div>
+                        <div className="flex items-center gap-1.5">
+                          {isSelecionada(cat.code, bestValor) && <CheckCircle2 className="h-3 w-3 text-primary shrink-0" />}
+                          <div className="font-mono text-[11px] text-primary break-all">{bestValor}</div>
+                        </div>
                         <div className="text-[9px] text-muted-foreground truncate mt-0.5">{best?.cfgNome}</div>
                       </button>
                       {cat.items.length > 1 && (
@@ -618,8 +621,8 @@ export default function GerarTagTab() {
                               return (
                                 <button
                                   key={i}
-                                  onClick={() => { setTagGerada(normalizeTagFormatC(v)); toast.success(`TAG ${cat.code} aplicada.`); }}
-                                  className="w-full text-left rounded border-transparent hover:border hover:bg-muted p-1 transition"
+                                  onClick={() => toggleTag(cat.code, v, it.cfgNome)}
+                                  className={`w-full text-left rounded p-1 transition border ${isSelecionada(cat.code, v) ? 'border-primary bg-primary/10' : 'border-transparent hover:bg-muted'}`}
                                 >
                                   <div className="font-mono text-[10px] break-all">{v}</div>
                                   <div className="text-[9px] text-muted-foreground truncate">{it.cfgNome} · score {it.score}</div>
@@ -628,6 +631,7 @@ export default function GerarTagTab() {
                             })}
                           </div>
                         </details>
+
                       )}
                     </div>
                   );
