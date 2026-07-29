@@ -15,6 +15,8 @@ import {
   AlertTriangle,
   Plus,
   Search,
+  Sparkles,
+
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { normalizeTagFormatC } from '@/lib/tag-utils';
