@@ -3953,57 +3953,34 @@ Deno.serve(async (req) => {
       if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
       const only = String(url.searchParams.get('probe') ?? '').trim();
 
-      const { data: runRow } = await admin.from('auge_sync_runs').insert({
-        entidade: 'tag_page_probe',
-        status: 'running',
-        started_at: new Date().toISOString(),
-        triggered_by: triggeredBy,
-        detalhes: {},
-      }).select('id').maybeSingle();
-      const probeRunId = runRow?.id ?? null;
+      if (only) {
+        const full = only.startsWith('http') ? only
+          : only.startsWith('/') ? `${AUGE_BASE_URL}${only}`
+          : `${AUGE_BASE_URL}/l.unilux/modInventario/tag/${only}`;
+        const r = await fetch(full, {
+          method: 'POST',
+          headers: { ...headers, 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+          body: new URLSearchParams({ nrPagina: '1', qtdItens: '5', term: '', q: '' }),
+        });
+        const body = (await r.text()).slice(0, 4000);
+        return new Response(JSON.stringify({ ok: true, path: only, status: r.status, body }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
 
-      const work = (async () => {
-        const detalhes: Record<string, unknown> = {};
-        try {
-          if (only) {
-            const full = only.startsWith('http') ? only
-              : only.startsWith('/') ? `${AUGE_BASE_URL}${only}`
-              : `${AUGE_BASE_URL}/l.unilux/modInventario/tag/${only}`;
-            const r = await fetch(full, {
-              method: 'POST',
-              headers: { ...headers, 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
-              body: new URLSearchParams({ nrPagina: '1', qtdItens: '5', term: '', q: '' }),
-            });
-            detalhes.sample_path = only;
-            detalhes.sample = (await r.text()).slice(0, 4000);
-          } else {
-            const pageRes = await fetch(`${AUGE_BASE_URL}/l.unilux/modInventario/tag/tag.php`, { headers });
-            auth.jar.ingest(pageRes);
-            const html = await pageRes.text();
-            detalhes.status = pageRes.status;
-            detalhes.ajax = Array.from(new Set(
-              (html.match(/["'][^"']*\.php[^"']*["']/gi) ?? [])
-                .map((s) => s.slice(1, -1))
-                .filter((s) => s.length < 200),
-            )).slice(0, 80);
-          }
-          await admin.from('auge_sync_runs').update({
-            status: 'success', finished_at: new Date().toISOString(), detalhes,
-          }).eq('id', probeRunId);
-        } catch (e) {
-          await admin.from('auge_sync_runs').update({
-            status: 'error', finished_at: new Date().toISOString(),
-            error_message: (e as Error).message,
-          }).eq('id', probeRunId);
-        }
-      })();
-      // @ts-ignore EdgeRuntime global
-      if (typeof EdgeRuntime !== 'undefined') EdgeRuntime.waitUntil(work);
+      const pageRes = await fetch(`${AUGE_BASE_URL}/l.unilux/modInventario/tag/tag.php`, { headers });
+      auth.jar.ingest(pageRes);
+      const html = (await pageRes.text()).slice(0, 400000);
+      const found = new Set<string>();
+      const re = /[a-zA-Z0-9_\/.-]+\.php/g;
+      let m: RegExpExecArray | null;
+      while ((m = re.exec(html)) !== null && found.size < 120) found.add(m[0]);
 
-      return new Response(JSON.stringify({ ok: true, run_id: probeRunId }), {
+      return new Response(JSON.stringify({ ok: true, status: pageRes.status, ajax: [...found] }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
 
 
 
