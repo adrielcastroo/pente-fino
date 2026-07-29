@@ -3705,6 +3705,55 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Cria/atualiza uma TAG Custom (conjunto de linhas de TAG Customizada) no Auge
+    // e devolve o status de cada linha + como a configuração ficou no Auge.
+    if (action === 'criar_tag_custom') {
+      let payload: any = {};
+      try { payload = await req.json(); } catch { /* ignore */ }
+      const cdConfiguracao = String(payload?.cdConfiguracao ?? '').trim();
+      const descricao = String(payload?.descricao ?? '').trim();
+      const itens: any[] = Array.isArray(payload?.itens) ? payload.itens : [];
+      if (!descricao) throw new Error('Descrição da TAG Custom é obrigatória.');
+      if (!itens.length) throw new Error('Inclua ao menos 1 TAG customizada.');
+
+      const results: Array<{ tag: string; calculada: string; ok: boolean; erro?: string; auge?: any }> = [];
+      for (const it of itens) {
+        const dsTagCustomizada = String(it?.dsTagCustomizada ?? '').trim();
+        const dsTagCalculada = String(it?.dsTagCalculada ?? '').trim();
+        if (!dsTagCustomizada) continue;
+        try {
+          const auge = await saveTagCustomizada(auth, {
+            cdConfiguracao,
+            cdTagCustomizada: String(it?.cdTagCustomizada ?? '').trim(),
+            dsTagCustomizada,
+            dsTagCalculada,
+            dsTagTexto: String(it?.dsTagTexto ?? descricao).trim(),
+          });
+          results.push({ tag: dsTagCustomizada, calculada: dsTagCalculada, ok: true, auge });
+        } catch (e) {
+          results.push({ tag: dsTagCustomizada, calculada: dsTagCalculada, ok: false, erro: getErrorMessage(e) });
+        }
+      }
+
+      // Estado final no Auge (o que o usuário vê na tela manterTagCustomizada).
+      let augeRows: any[] = [];
+      try {
+        augeRows = await fetchListaTagsCustomizadas(auth, cdConfiguracao, cdConfiguracao ? '' : descricao);
+      } catch { /* consulta de conferência é best-effort */ }
+
+      const okCount = results.filter((r) => r.ok).length;
+      return new Response(JSON.stringify({
+        ok: okCount > 0,
+        descricao,
+        cdConfiguracao,
+        total: results.length,
+        gravadas: okCount,
+        falhas: results.length - okCount,
+        results,
+        augeRows,
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     if (action === 'tag_config_select') {
       let payload: any = {};
       try { payload = await req.json(); } catch { /* ignore */ }
