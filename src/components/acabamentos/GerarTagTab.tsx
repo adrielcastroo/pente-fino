@@ -627,7 +627,7 @@ export default function GerarTagTab() {
 
   return (
     <div className="space-y-4">
-      {/* Descrição obrigatória da TAG Custom */}
+      
       {/* Espelha o diálogo "Manter Tag Customizada" do Auge */}
       <Card className="p-4 space-y-4">
         <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
