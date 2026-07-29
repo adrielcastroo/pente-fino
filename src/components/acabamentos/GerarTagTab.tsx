@@ -546,7 +546,6 @@ function ConfiguracaoSelect({
 // ============================================================
 export default function GerarTagTab() {
   const [descricao, setDescricao] = useState(rascunho.descricao);
-  const descricaoDeferida = useDeferredValue(descricao);
   const [linhas, setLinhas] = useState<LinhaTag[]>(rascunho.linhas);
   const [customAberta, setCustomAberta] = useState<{ cd: string; nm: string } | null>(rascunho.customAberta);
   const [enviando, setEnviando] = useState(false);
@@ -557,19 +556,20 @@ export default function GerarTagTab() {
   useEffect(() => { rascunho.linhas = linhas; }, [linhas]);
   useEffect(() => { rascunho.customAberta = customAberta; }, [customAberta]);
 
-  // Termo com debounce para busca server-side em tempo real.
-  const [termoBusca, setTermoBusca] = useState('');
-  useEffect(() => {
-    const t = setTimeout(() => setTermoBusca(descricao.trim()), 300);
-    return () => clearTimeout(t);
-  }, [descricao]);
-
   // Estado da busca no campo Configuração (para indicar "Nova TAG Custom").
   const [cfgSearch, setCfgSearch] = useState<{ termo: string; hasResults: boolean; isSearching: boolean }>({
     termo: '',
     hasResults: false,
     isSearching: false,
   });
+
+  // O texto da CONFIGURAÇÃO (não o nome da Tag) é o único driver das análises:
+  // recomendações e detecção do padrão obrigatório.
+  const termoBusca = useMemo(
+    () => (customAberta?.nm ?? cfgSearch.termo ?? '').trim(),
+    [customAberta, cfgSearch.termo],
+  );
+  const termoDeferido = useDeferredValue(termoBusca);
 
   // ---------- Configurações (catálogo leve) ----------
   const { data: configuracoes = [], isLoading: loadingCfgs } = useQuery({
@@ -586,9 +586,10 @@ export default function GerarTagTab() {
   });
 
   const configsRanqueadas = useMemo(() => {
-    if (!descricaoDeferida.trim() || configuracoes.length === 0) return [];
-    return rankConfiguracoes(descricaoDeferida, configuracoes);
-  }, [descricaoDeferida, configuracoes]);
+    if (!termoDeferido.trim() || configuracoes.length === 0) return [];
+    return rankConfiguracoes(termoDeferido, configuracoes);
+  }, [termoDeferido, configuracoes]);
+
 
   const topCfgCodes = useMemo(
     () => configsRanqueadas.slice(0, 12).map((r) => r.cfg.cd_configuracao),
@@ -942,8 +943,12 @@ export default function GerarTagTab() {
             onSearchStateChange={setCfgSearch}
           />
           <p className="text-[10px] text-muted-foreground">
-            Busca a TAG Custom já existente no sistema. Deixe vazio para criar uma nova.
+            Digite aqui (ex.: <code className="font-mono">Rollo Pro</code>) — o app analisa todas as TAGs
+            Custom com esse texto e exige as TAGs Configuradas que são padrão nelas.
+            <span className="font-semibold text-foreground"> Curinga:</span> <code className="font-mono">*</code> como
+            no SAP B1 (mín. 3 caracteres).
           </p>
+
         </div>
 
         {/* Tag: nome livre */}
@@ -970,11 +975,9 @@ export default function GerarTagTab() {
             </p>
           )}
           <p className="text-[10px] text-muted-foreground">
-            O texto também alimenta as recomendações ao lado.
-            <span className="font-semibold text-foreground"> Curinga:</span> use <code className="font-mono">*</code> como
-            no SAP B1 — <code className="font-mono">T42*</code> começa com, <code className="font-mono">*motor</code> termina
-            com, <code className="font-mono">T*42</code> contém no meio (mín. 3 caracteres).
+            Apenas o nome da TAG que será criada. Este campo não é usado em nenhuma busca.
           </p>
+
         </div>
 
 
@@ -1014,9 +1017,10 @@ export default function GerarTagTab() {
                   </Badge>
                 </div>
                 <p className="text-[10px] text-muted-foreground">
-                  Padrão detectado nos modelos existentes com a mesma descrição. A gravação fica
-                  bloqueada enquanto faltar alguma.
+                  Padrão detectado em {obrigatorias[0]?.total ?? 0} TAG(s) Custom existentes com “{termoBusca}”
+                  na configuração. A gravação fica bloqueada enquanto faltar alguma.
                 </p>
+
               </div>
               {obrigatoriasFaltando.length > 0 && (
                 <Button size="sm" variant="outline" className="h-7 px-2 text-[10px] shrink-0" onClick={adicionarObrigatoriasFaltando}>
@@ -1067,9 +1071,11 @@ export default function GerarTagTab() {
           )}
           {!carregandoRecs && recomendadas.length === 0 && (
             <div className="text-[10px] text-muted-foreground">
-              Digite a descrição acima para receber recomendações.
+              Digite no campo <span className="font-medium text-foreground">Configuração</span> acima
+              para o app analisar as TAGs Custom semelhantes.
             </div>
           )}
+
 
           <div className="space-y-1.5 max-h-[65vh] overflow-auto">
             {recomendadas.map((r) => {
