@@ -278,15 +278,6 @@ export default function GerarTagTab() {
     },
   });
 
-  const filtrados = useMemo(() => {
-    const t = busca.trim();
-    if (!t) return acabamentos.slice(0, 200);
-    return acabamentos
-      .filter((a) => matchesWildcard(a.nm_acabamento, t) || matchesWildcard(a.chave_acabamento, t))
-      .slice(0, 200);
-  }, [acabamentos, busca]);
-
-
   const recomendacoes = useMemo(() => {
     if (!entradaDeferida.trim() || acabamentos.length === 0) return [];
     return rankAcabamentos(entradaDeferida, acabamentos);
