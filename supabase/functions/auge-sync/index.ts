@@ -3920,6 +3920,43 @@ Deno.serve(async (req) => {
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
+    // Sonda os endpoints candidatos de listagem de TAGs (tag.php).
+    if (action === 'tag_list_probe') {
+      let payload: any = {};
+      try { payload = await req.json(); } catch { /* ignore */ }
+      const term = String(payload?.term ?? '').trim();
+      const headers: Record<string, string> = {
+        'Cookie': auth.jar.header(),
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRF-TOKEN': auth.csrf,
+        'Origin': AUGE_BASE_URL,
+        'Referer': `${AUGE_BASE_URL}/l.unilux/modInventario/tag/tag.php`,
+        'User-Agent': UA,
+        'Accept': 'application/json, text/javascript, text/html, */*; q=0.01',
+      };
+      if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
+      const attempts: any[] = [];
+      const cands: Array<{ path: string; body: Record<string, string> }> = [
+        { path: '/l.unilux/modInventario/tag/ajax/tagSelectTag.php', body: { term, q: term, nmTag: term, dsTag: term, nrPagina: '1', qtdItens: '200' } },
+        { path: '/l.unilux/modInventario/tag/controle/ctlTag.php', body: { acao: 'listar', nmTag: term, dsTag: term } },
+        { path: '/l.unilux/modInventario/tag/controle/ctlTag.php', body: { operacao: 'pesquisar', nmTag: term, dsTag: term } },
+      ];
+      for (const c of cands) {
+        try {
+          const res = await fetch(`${AUGE_BASE_URL}${c.path}`, { method: 'POST', headers, body: new URLSearchParams(c.body) });
+          auth.jar.ingest(res);
+          const text = await res.text();
+          attempts.push({ path: c.path, body: c.body, status: res.status, length: text.length, sample: text.slice(0, 1200) });
+        } catch (e) {
+          attempts.push({ path: c.path, body: c.body, error: getErrorMessage(e) });
+        }
+      }
+      return new Response(JSON.stringify({ ok: true, attempts }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // Lookup ao vivo das TAGs Calculadas (select2 do formulário do Auge).
     if (action === 'tag_calculada_select') {
       let payload: any = {};
