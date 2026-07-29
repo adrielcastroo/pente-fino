@@ -414,14 +414,22 @@ export default function GerarTagTab() {
     [selecionadas],
   );
 
+  // A descrição da TAG Custom é exatamente o texto usado para gerar as recomendações.
+  const descricaoCustom = entradaManual.trim();
+
   const confirmarTagCustom = () => {
     if (selecionadas.length === 0) return;
     const final = normalizeTagFormatC(composicao);
     setTagCustomConfirmada(final);
     setTagGerada(final);
     navigator.clipboard?.writeText(final).catch(() => undefined);
-    toast.success(`TAG Custom criada com ${selecionadas.length} TAG(s) e copiada.`);
+    toast.success(
+      customAberta
+        ? `TAG Custom "${customAberta.nm}" atualizada com ${selecionadas.length} TAG(s) e copiada.`
+        : `TAG Custom criada com ${selecionadas.length} TAG(s) e copiada.`,
+    );
   };
+
 
 
   return (
