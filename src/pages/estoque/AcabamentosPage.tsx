@@ -226,10 +226,6 @@ export default function AcabamentosPage() {
                 Ver progresso
               </Button>
             )}
-            <Button size="sm" onClick={() => runSync()} disabled={syncing || runIsActive} className="gap-2">
-              {(syncing || runIsActive) ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-              {runIsActive ? 'Sincronizando…' : 'Sincronizar todos'}
-            </Button>
           </div>
         }
       />
