@@ -374,6 +374,94 @@ async function fetchSelectConfiguracoes(
   }
 }
 
+// ---------------------------------------------------------------------------
+// Lookup "Tag Calculada" (select2 do formulário manterTagCustomizada.php).
+// O Auge não devolve `dsTagCalculada` na listagem, então a lista de TAGs
+// calculadas precisa ser consultada ao vivo. Como o caminho exato do ajax pode
+// variar entre versões do Auge, tentamos alguns candidatos e memorizamos o
+// primeiro que responder com dados.
+// ---------------------------------------------------------------------------
+const TAG_CALCULADA_PATHS = [
+  '/l.unilux/modInventario/tag/ajax/tagSelectListaTagsCalculadas.php',
+  '/l.unilux/modInventario/tag/ajax/tagSelectListaTagCalculada.php',
+  '/l.unilux/modInventario/tag/ajax/selectListaTagsCalculadas.php',
+  '/l.unilux/modInventario/tag/ajax/listaTagsCalculadas.php',
+];
+let TAG_CALCULADA_PATH_OK: string | null = null;
+
+function parseSelectRows(text: string): Array<{ id: string; text: string }> {
+  const trimmed = (text ?? '').trim();
+  if (!trimmed) return [];
+  // 1) JSON (select2)
+  if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+    try {
+      const j = JSON.parse(trimmed);
+      const arr = Array.isArray(j) ? j : (Array.isArray(j?.results) ? j.results : (Array.isArray(j?.data) ? j.data : []));
+      return arr
+        .map((r: any) => ({
+          id: String(r?.id ?? r?.cdTagCalculada ?? r?.dsTagCalculada ?? '').trim(),
+          text: String(r?.text ?? r?.dsTagCalculada ?? r?.nmTagCalculada ?? r?.id ?? '').trim(),
+        }))
+        .filter((r: { id: string; text: string }) => r.text.length > 0);
+    } catch { /* cai para HTML */ }
+  }
+  // 2) HTML com <option value="..">texto</option>
+  const out: Array<{ id: string; text: string }> = [];
+  const re = /<option[^>]*value=["']([^"']*)["'][^>]*>([\s\S]*?)<\/option>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(trimmed)) !== null) {
+    const label = m[2].replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').trim();
+    if (label) out.push({ id: m[1].trim() || label, text: label });
+  }
+  return out;
+}
+
+async function fetchSelectTagsCalculadas(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+  term: string,
+  nrPagina = 1,
+  qtdItens = 500,
+): Promise<Array<{ id: string; text: string }>> {
+  const headers: Record<string, string> = {
+    'Cookie': auth.jar.header(),
+    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+    'X-Requested-With': 'XMLHttpRequest',
+    'X-CSRF-TOKEN': auth.csrf,
+    'Origin': AUGE_BASE_URL,
+    'Referer': `${AUGE_BASE_URL}/l.unilux/modInventario/tag/manterTagCustomizada.php`,
+    'User-Agent': UA,
+    'Accept': 'application/json, text/javascript, text/html, */*; q=0.01',
+    'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
+  };
+  if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
+
+  const candidates = TAG_CALCULADA_PATH_OK ? [TAG_CALCULADA_PATH_OK, ...TAG_CALCULADA_PATHS] : TAG_CALCULADA_PATHS;
+  const tried = new Set<string>();
+  for (const path of candidates) {
+    if (tried.has(path)) continue;
+    tried.add(path);
+    try {
+      const body = new URLSearchParams({
+        term,
+        q: term,
+        dsTagCalculada: term,
+        nrPagina: String(nrPagina),
+        qtdItens: String(qtdItens),
+      });
+      const res = await fetch(`${AUGE_BASE_URL}${path}`, { method: 'POST', headers, body });
+      auth.jar.ingest(res);
+      const text = await res.text();
+      if (!res.ok) continue;
+      const rows = parseSelectRows(text);
+      if (rows.length > 0) {
+        TAG_CALCULADA_PATH_OK = path;
+        return rows;
+      }
+    } catch { /* tenta o próximo candidato */ }
+  }
+  return [];
+}
+
 // Varre todas as configurações do Auge iterando termos de 1-2 caracteres
 // alfanuméricos (Select2 exige minimumInputLength). Dedupa por id.
 async function scanAllConfiguracoes(
@@ -3766,6 +3854,21 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
+    // Lookup ao vivo das TAGs Calculadas (select2 do formulário do Auge).
+    if (action === 'tag_calculada_select') {
+      let payload: any = {};
+      try { payload = await req.json(); } catch { /* ignore */ }
+      const term = String(payload?.term ?? '').trim();
+      const page = Number(payload?.nrPagina ?? 1);
+      const size = Number(payload?.qtdItens ?? 500);
+      const rows = await fetchSelectTagsCalculadas(auth, term, page, size);
+      return new Response(JSON.stringify({ ok: true, term, rows }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+
 
     if (action === 'sync_tag_custom_chunk') {
       const runId = url.searchParams.get('run_id') ?? '';
