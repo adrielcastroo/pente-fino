@@ -4100,54 +4100,6 @@ Deno.serve(async (req) => {
 
     // Sincroniza TODAS as TAGs calculadas listadas em /modInventario/tag/tag.php
     // (select tagSelectTag.php devolve a lista completa: [{value, text}]).
-    // Diagnóstico: mostra os endpoints ajax descobertos na página tag.php e
-    // uma amostra da resposta de cada um (para mapear a grade real).
-    if (action === 'debug_tag_grid') {
-      const { paths, pageHtml } = await discoverTagGridPaths(auth);
-      const headers: Record<string, string> = {
-        'Cookie': auth.jar.header(),
-        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-        'X-Requested-With': 'XMLHttpRequest',
-        'X-CSRF-TOKEN': auth.csrf,
-        'Origin': AUGE_BASE_URL,
-        'Referer': `${AUGE_BASE_URL}/l.unilux/modInventario/tag/tag.php`,
-        'User-Agent': UA,
-        'Accept': 'application/json, text/html, */*; q=0.01',
-      };
-      if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
-      const probes: any[] = [];
-      const ctl = '/l.unilux/modInventario/tag/controle/ctlTag.php';
-      for (const attempt of [
-        { m: 'GET', q: '?idAcao=2' },
-        { m: 'GET', q: '?idAcao=1' },
-        { m: 'GET', q: '' },
-        { m: 'POST', q: '', body: 'idAcao=2' },
-      ]) {
-        try {
-          const res = await fetch(`${AUGE_BASE_URL}${ctl}${attempt.q}`, {
-            method: attempt.m,
-            headers,
-            body: attempt.m === 'POST' ? attempt.body : undefined,
-          });
-          const t = await res.text();
-          probes.push({ path: ctl + attempt.q, method: attempt.m, status: res.status, len: t.length, sample: t.slice(0, 600) });
-        } catch (e) {
-          probes.push({ path: ctl + attempt.q, erro: getErrorMessage(e) });
-        }
-      }
-      return new Response(JSON.stringify({
-        ok: true,
-        pageLen: pageHtml.length,
-        trCount: [...pageHtml.matchAll(/<tr[^>]*>/gi)].length,
-        tables: [...pageHtml.matchAll(/<table[\s\S]{0,300}?>/gi)].map((m) => m[0].slice(0, 160)),
-        ajaxRefs: [...pageHtml.matchAll(/(ajax\s*:|url\s*:|\.php)[^\n]{0,160}/gi)].map((m) => m[0].replace(/\s+/g, ' ')).filter((s) => /\.php/.test(s)).slice(0, 60),
-        serializeCtx: (() => { const i = pageHtml.indexOf("form-filter').serialize()"); return i < 0 ? '' : pageHtml.slice(Math.max(0, i - 900), i + 900).replace(/\s+/g, ' '); })(),
-        forms: [...pageHtml.matchAll(/<form[\s\S]{0,200}?>/gi)].map((m) => m[0].replace(/\s+/g, ' ').slice(0, 200)),
-        paths,
-        probes,
-      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
-
     if (action === 'sync_tags_calculadas') {
       const nowIso = new Date().toISOString();
       const byKey = new Map<string, Record<string, unknown>>();
