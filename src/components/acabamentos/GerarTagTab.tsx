@@ -935,13 +935,20 @@ export default function GerarTagTab() {
     try {
       const { data, error } = await supabase.functions.invoke('auge-sync?action=criar_tag_custom', {
         body: {
+          // Configuração (Pente Fino) -> Configuração (Auge)
           cdConfiguracao: customAberta?.cd ?? '',
           descricao: descricao.trim(),
-          itens: linhas.map((l) => ({
-            dsTagCustomizada: l.valor,
-            dsTagCalculada: l.calculada,
-            dsTagTexto: descricao.trim(),
-          })),
+          itens: linhas.map((l) => {
+            const calculada = (l.calculada ?? '').trim();
+            return {
+              // TAG (Pente Fino) -> Tag (Auge)
+              dsTagCustomizada: l.valor,
+              // TAG Calculada (Pente Fino) -> Tag Calculada (Auge)
+              dsTagCalculada: calculada,
+              // "Texto Livre" só é usado quando não há Tag Calculada (são mutuamente exclusivos no Auge)
+              dsTagTexto: calculada ? '' : l.valor,
+            };
+          }),
         },
       });
       if (error) throw error;
