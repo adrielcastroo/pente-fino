@@ -4112,17 +4112,23 @@ Deno.serve(async (req) => {
       };
       if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
       const probes: any[] = [];
-      for (const p of paths.slice(0, 12)) {
+      const ctl = '/l.unilux/modInventario/tag/controle/ctlTag.php';
+      for (const attempt of [
+        { m: 'GET', q: '?idAcao=2' },
+        { m: 'GET', q: '?idAcao=1' },
+        { m: 'GET', q: '' },
+        { m: 'POST', q: '', body: 'idAcao=2' },
+      ]) {
         try {
-          const res = await fetch(`${AUGE_BASE_URL}${p}`, {
-            method: 'POST',
+          const res = await fetch(`${AUGE_BASE_URL}${ctl}${attempt.q}`, {
+            method: attempt.m,
             headers,
-            body: new URLSearchParams({ nrPagina: '1', qtdItens: '50', idAtivo: 'Y', dsPesquisaGeral: '' }),
+            body: attempt.m === 'POST' ? attempt.body : undefined,
           });
           const t = await res.text();
-          probes.push({ path: p, status: res.status, len: t.length, sample: t.slice(0, 400), parsed: parseTagGridResponse(t).length });
+          probes.push({ path: ctl + attempt.q, method: attempt.m, status: res.status, len: t.length, sample: t.slice(0, 600) });
         } catch (e) {
-          probes.push({ path: p, erro: getErrorMessage(e) });
+          probes.push({ path: ctl + attempt.q, erro: getErrorMessage(e) });
         }
       }
       return new Response(JSON.stringify({
