@@ -2,30 +2,16 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-// Use a safer way to access environment variables
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || '';
-
-if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-  // eslint-disable-next-line no-console
-  console.warn(
-    'Supabase environment variables are missing! ' +
-    'The app will not function correctly. Please set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY.'
-  );
-}
+const SUPABASE_URL = "https://ymqrfgqdmgjbwpikcwnk.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InltcXJmZ3FkbWdqYndwaWtjd25rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNzkzODYsImV4cCI6MjEwMDg1NTM4Nn0.i_4qu4OZLBqJ2VUOINuw99hacMG35pyofeUswiWoydA";
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-// Providing empty strings as fallbacks prevents createClient from throwing during module initialization
-export const supabase = createClient<Database>(
-  SUPABASE_URL || 'https://placeholder.supabase.co', 
-  SUPABASE_PUBLISHABLE_KEY || 'placeholder-key', 
-  {
-    auth: {
-      storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-      persistSession: true,
-      autoRefreshToken: true,
-    }
+export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  auth: {
+    storage: typeof window !== 'undefined' ? localStorage : undefined,
+    persistSession: true,
+    autoRefreshToken: true,
   }
-);
+});
