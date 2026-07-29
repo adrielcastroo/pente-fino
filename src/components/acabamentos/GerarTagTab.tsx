@@ -522,6 +522,82 @@ export default function GerarTagTab() {
             )}
           </div>
 
+          {/* TAGs Custom já existentes que casam com a pesquisa */}
+          {customsEncontradas.length > 0 && (
+            <div className="rounded border p-3 space-y-2">
+              <div className="text-[10px] uppercase text-muted-foreground flex items-center gap-1">
+                <Layers className="h-3 w-3" /> TAGs Custom existentes
+                <Badge variant="outline" className="text-[9px]">{customsEncontradas.length}</Badge>
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                Clique em uma TAG Custom para ver e editar as TAGs configuradas dentro dela.
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {customsEncontradas.map((c) => (
+                  <button
+                    key={c.cd}
+                    onClick={() => setCustomAberta(customAberta?.cd === c.cd ? null : { cd: c.cd, nm: c.nm })}
+                    className={`rounded border px-2 py-1 text-[10px] transition ${customAberta?.cd === c.cd ? 'border-primary bg-primary/15' : 'hover:bg-muted/50'}`}
+                  >
+                    <span className="font-medium">{c.nm}</span>
+                    <span className="ml-1.5 text-muted-foreground">({c.qtd})</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Conteúdo da TAG Custom aberta: TAGs configuradas dentro dela */}
+          {customAberta && (
+            <div className="rounded border border-primary/40 bg-primary/5 p-3 space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <div className="text-[10px] uppercase text-muted-foreground flex items-center gap-1">
+                  <TagIcon className="h-3 w-3" /> TAGs configuradas em
+                  <span className="font-semibold text-foreground normal-case">{customAberta.nm}</span>
+                  <Badge variant="outline" className="text-[9px]">{itensDaCustom.length}</Badge>
+                </div>
+                <Button size="sm" variant="ghost" className="h-6 px-2 text-[10px]" onClick={() => setCustomAberta(null)}>
+                  Fechar
+                </Button>
+              </div>
+
+              {loadingCustom && (
+                <div className="text-[10px] text-muted-foreground flex items-center gap-1">
+                  <Loader2 className="h-3 w-3 animate-spin" /> Carregando TAGs configuradas…
+                </div>
+              )}
+
+              {!loadingCustom && itensDaCustom.length === 0 && (
+                <div className="text-[10px] text-muted-foreground">
+                  Esta TAG Custom não possui TAGs configuradas.
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
+                {itensDaCustom.map((i) => {
+                  const dentro = isSelecionada(i.code, i.valor);
+                  return (
+                    <button
+                      key={i.id}
+                      onClick={() => toggleTag(i.code, i.valor, i.cfgNome)}
+                      title={dentro ? 'Remover desta TAG Custom' : 'Adicionar a esta TAG Custom'}
+                      className={`flex items-start gap-2 rounded border p-1.5 text-left transition ${dentro ? 'border-primary bg-primary/15' : 'border-border hover:bg-muted/50'}`}
+                    >
+                      {dentro
+                        ? <CheckCircle2 className="h-3 w-3 mt-0.5 text-primary shrink-0" />
+                        : <X className="h-3 w-3 mt-0.5 text-muted-foreground shrink-0" />}
+                      <div className="min-w-0">
+                        <div className="font-mono font-semibold text-[10px] text-primary">{i.code}</div>
+                        <div className="font-mono text-[10px] break-all">{i.valor}</div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+
           {/* Categorias de TAGs (T_BASE, T_TUBO, T_TEC_X, ...) */}
           {((loadingTags || loadingBusca) && categorias.length === 0) && (
             <div className="rounded border p-3 text-[10px] text-muted-foreground flex items-center gap-2">
