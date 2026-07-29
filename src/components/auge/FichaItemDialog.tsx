@@ -50,7 +50,7 @@ export default function FichaItemDialog({ codigo, open, onOpenChange }: Props) {
       const { data } = await supabase
         .from('auge_produtos_saldo')
         .select('deposito, quantidade, unidade, synced_at')
-        .eq('codigo', cod!)
+        .eq('codigo', cod as unknown as number)
         .order('deposito');
       return data ?? [];
     },
