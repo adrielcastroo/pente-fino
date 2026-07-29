@@ -15,6 +15,8 @@ import {
   AlertTriangle,
   Plus,
   Search,
+  Sparkles,
+
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { normalizeTagFormatC } from '@/lib/tag-utils';
@@ -716,8 +718,76 @@ export default function GerarTagTab() {
     return out;
   }, [categorias]);
 
+  // ---------- Padrão obrigatório de TAGs ----------
+  /**
+   * Agrupa as configurações (TAG Customs) já existentes que casam com o texto
+   * digitado. Cada configuração vira um "modelo" com o conjunto de TAGs
+   * Configuradas que ela possui.
+   */
+  const modelosExistentes = useMemo(() => {
+    const map = new Map<string, { nm: string; codes: Map<string, { valor: string; calculada: string }> }>();
+    for (const t of [...tagsBusca, ...tagsTop]) {
+      const code = normalizeTagCode(t.ds_tag_customizada ?? t.nm_tag_customizada);
+      if (!code) continue;
+      const valor = normalizeTagFormatC(t.ds_tag_customizada ?? t.nm_tag_customizada ?? t.ds_tag_texto ?? '');
+      if (!valor) continue;
+      const cur = map.get(t.cd_configuracao) ?? {
+        nm: t.nm_configuracao ?? t.cd_configuracao,
+        codes: new Map<string, { valor: string; calculada: string }>(),
+      };
+      if (!cur.codes.has(code)) {
+        cur.codes.set(code, { valor, calculada: normalizeTagFormatC(t.ds_tag_calculada ?? '') });
+      }
+      map.set(t.cd_configuracao, cur);
+    }
+    return map;
+  }, [tagsBusca, tagsTop]);
+
+  /**
+   * TAGs Configuradas que são padrão (presentes em praticamente todos os
+   * modelos com a mesma descrição). São obrigatórias na nova TAG Custom.
+   */
+  const obrigatorias = useMemo(() => {
+    const totalModelos = modelosExistentes.size;
+    if (totalModelos < 2) return [] as Array<{ code: string; valor: string; calculada: string; freq: number; total: number }>;
+    const acc = new Map<string, { n: number; valor: string; calculadas: Map<string, number> }>();
+    for (const modelo of modelosExistentes.values()) {
+      for (const [code, info] of modelo.codes) {
+        const cur = acc.get(code) ?? { n: 0, valor: info.valor, calculadas: new Map<string, number>() };
+        cur.n += 1;
+        if (info.calculada) cur.calculadas.set(info.calculada, (cur.calculadas.get(info.calculada) ?? 0) + 1);
+        acc.set(code, cur);
+      }
+    }
+    const minimo = Math.max(2, Math.ceil(totalModelos * 0.9));
+    const out: Array<{ code: string; valor: string; calculada: string; freq: number; total: number }> = [];
+    for (const [code, info] of acc) {
+      if (info.n < minimo) continue;
+      const calculada = Array.from(info.calculadas.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] ?? '';
+      out.push({ code, valor: info.valor, calculada, freq: info.n, total: totalModelos });
+    }
+    return out.sort((a, b) => b.freq - a.freq || a.code.localeCompare(b.code));
+  }, [modelosExistentes]);
+
+  const codigosNaTabela = useMemo(() => new Set(linhas.map((l) => l.code)), [linhas]);
+  const obrigatoriasFaltando = useMemo(
+    () => obrigatorias.filter((o) => !codigosNaTabela.has(o.code)),
+    [obrigatorias, codigosNaTabela],
+  );
+
+  /** Nenhuma configuração existente casou com o texto → TAG Custom nova. */
+  const ehTagCustomNova = useMemo(
+    () =>
+      !customAberta &&
+      termoBusca.trim().length >= 3 &&
+      !loadingBusca &&
+      customsEncontradas.length === 0,
+    [customAberta, termoBusca, loadingBusca, customsEncontradas.length],
+  );
+
   // ---------- Manipulação das linhas da tabela ----------
   const jaNaTabela = (id: string) => linhas.some((l) => l.id === id);
+
 
   const adicionarLinha = (r: { id: string; code: string; valor: string; cfgNome: string; calculada: string }) => {
     setResultado(null);
@@ -758,6 +828,26 @@ export default function GerarTagTab() {
     setLinhas((prev) => prev.map((l) => (l.id === id ? { ...l, calculada } : l)));
   };
 
+  /** Insere de uma vez todas as TAGs Configuradas obrigatórias que faltam. */
+  const adicionarObrigatoriasFaltando = () => {
+    if (obrigatoriasFaltando.length === 0) return;
+    setResultado(null);
+    setLinhas((prev) => {
+      const existentes = new Set(prev.map((l) => l.code));
+      const novas = obrigatoriasFaltando
+        .filter((o) => !existentes.has(o.code))
+        .map((o) => ({
+          id: `obrig|${o.code}|${o.valor}`,
+          code: o.code,
+          valor: o.valor,
+          cfgNome: customAberta?.nm ?? '',
+          calculada: o.calculada,
+        }));
+      return [...prev, ...novas];
+    });
+    toast.success(`${obrigatoriasFaltando.length} TAG(s) obrigatória(s) adicionada(s).`);
+  };
+
   const descricaoInvalida = tentouEnviar && descricao.trim().length === 0;
 
   const adicionarTagCustom = async () => {
@@ -770,6 +860,13 @@ export default function GerarTagTab() {
       toast.error('Adicione ao menos uma TAG customizada na tabela.');
       return;
     }
+    if (obrigatoriasFaltando.length > 0) {
+      toast.error(
+        `Faltam TAGs obrigatórias do padrão: ${obrigatoriasFaltando.map((o) => o.code).join(', ')}.`,
+      );
+      return;
+    }
+
     setEnviando(true);
     setResultado(null);
     try {
@@ -871,7 +968,76 @@ export default function GerarTagTab() {
             </div>
           </div>
         )}
+
+        {ehTagCustomNova && (
+          <div className="rounded border border-amber-500/40 bg-amber-500/10 p-2.5 flex items-start gap-2">
+            <Sparkles className="h-3.5 w-3.5 text-amber-600 mt-0.5 shrink-0" />
+            <div className="min-w-0">
+              <div className="text-[11px] font-semibold flex items-center gap-1.5">
+                Nova TAG Custom
+                <Badge className="bg-amber-500 text-amber-950 hover:bg-amber-500 text-[9px]">será criada</Badge>
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                Nenhuma configuração existente casou com “{termoBusca.trim()}”. Ao gravar, o Auge
+                criará uma TAG Custom nova com as TAGs Configuradas da tabela ao lado.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {obrigatorias.length > 0 && (
+          <div
+            className={`rounded border p-2.5 space-y-2 ${
+              obrigatoriasFaltando.length > 0
+                ? 'border-destructive/50 bg-destructive/5'
+                : 'border-emerald-500/40 bg-emerald-500/5'
+            }`}
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <div className="text-[11px] font-semibold flex items-center gap-1.5">
+                  {obrigatoriasFaltando.length > 0
+                    ? <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
+                    : <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />}
+                  TAGs Configuradas obrigatórias
+                  <Badge variant="outline" className="text-[9px]">
+                    {obrigatorias.length - obrigatoriasFaltando.length}/{obrigatorias.length}
+                  </Badge>
+                </div>
+                <p className="text-[10px] text-muted-foreground">
+                  Padrão detectado nos modelos existentes com a mesma descrição. A gravação fica
+                  bloqueada enquanto faltar alguma.
+                </p>
+              </div>
+              {obrigatoriasFaltando.length > 0 && (
+                <Button size="sm" variant="outline" className="h-7 px-2 text-[10px] shrink-0" onClick={adicionarObrigatoriasFaltando}>
+                  <Plus className="h-3 w-3 mr-1" /> Adicionar faltantes
+                </Button>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {obrigatorias.map((o) => {
+                const ok = codigosNaTabela.has(o.code);
+                return (
+                  <span
+                    key={o.code}
+                    title={`${o.valor} · presente em ${o.freq}/${o.total} modelos`}
+                    className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 font-mono text-[10px] ${
+                      ok
+                        ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+                        : 'border-destructive/50 bg-destructive/10 text-destructive'
+                    }`}
+                  >
+                    {ok ? <CheckCircle2 className="h-3 w-3" /> : <AlertTriangle className="h-3 w-3" />}
+                    {o.code}
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </Card>
+
 
 
       <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-4 items-start">
@@ -986,15 +1152,22 @@ export default function GerarTagTab() {
             </table>
           </div>
 
-          <div className="p-3 border-t">
+          <div className="p-3 border-t space-y-1.5">
             <Button
               onClick={adicionarTagCustom}
-              disabled={enviando}
+              disabled={enviando || obrigatoriasFaltando.length > 0}
               className="w-full h-10 gap-2 text-xs"
             >
               {enviando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
               {enviando ? 'Gravando no Auge…' : `Adicionar TAG Custom (${linhas.length})`}
             </Button>
+            {obrigatoriasFaltando.length > 0 && (
+              <p className="text-[10px] text-destructive flex items-start gap-1">
+                <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
+                Obrigatório incluir: {obrigatoriasFaltando.map((o) => o.code).join(', ')}.
+              </p>
+            )}
+
           </div>
 
           {/* Retorno do Auge */}
