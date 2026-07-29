@@ -465,7 +465,9 @@ export default function SettingsPage() {
         localStorage.setItem('pref_sound_feedback', String(prefSoundFeedback));
         localStorage.setItem('pref_auto_archive', String(prefAutoArchive));
         localStorage.setItem('pref_compact_tables', String(prefCompactTables));
+        localStorage.setItem('pref_disable_direct_print', String(prefDisableDirectPrint));
         localStorage.setItem('pref_disable_browser_print', String(prefDisableBrowserPrint));
+        localStorage.setItem('pref_disable_n8n_print', String(prefDisableN8nPrint));
         localStorage.setItem('pref_silent_browser_print', String(prefSilentBrowserPrint));
         if (!isGuest && user) {
           const currentPrefs = ((profile as any)?.preferences && typeof (profile as any).preferences === 'object')
@@ -474,7 +476,12 @@ export default function SettingsPage() {
           const { error } = await supabase
             .from('profiles')
             .update({
-              preferences: { ...currentPrefs, disable_browser_print: prefDisableBrowserPrint },
+              preferences: {
+                ...currentPrefs,
+                disable_direct_print: prefDisableDirectPrint,
+                disable_browser_print: prefDisableBrowserPrint,
+                disable_n8n_print: prefDisableN8nPrint,
+              },
               updated_at: new Date().toISOString(),
             } as any)
             .eq('id', user.id);
