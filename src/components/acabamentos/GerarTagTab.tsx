@@ -407,7 +407,7 @@ export default function GerarTagTab() {
       <Card className="p-3 space-y-3 h-fit">
         <div className="relative">
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-          <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar configuração..." className="h-9 pl-7 text-xs" />
+          <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar configuração (use * como curinga)" className="h-9 pl-7 text-xs" />
         </div>
         <div className="text-[10px] text-muted-foreground">Mostrando {filtrados.length} de {acabamentos.length}</div>
         <div className="max-h-[60vh] overflow-auto space-y-1">
