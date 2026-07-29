@@ -1152,15 +1152,22 @@ export default function GerarTagTab() {
             </table>
           </div>
 
-          <div className="p-3 border-t">
+          <div className="p-3 border-t space-y-1.5">
             <Button
               onClick={adicionarTagCustom}
-              disabled={enviando}
+              disabled={enviando || obrigatoriasFaltando.length > 0}
               className="w-full h-10 gap-2 text-xs"
             >
               {enviando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
               {enviando ? 'Gravando no Auge…' : `Adicionar TAG Custom (${linhas.length})`}
             </Button>
+            {obrigatoriasFaltando.length > 0 && (
+              <p className="text-[10px] text-destructive flex items-start gap-1">
+                <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
+                Obrigatório incluir: {obrigatoriasFaltando.map((o) => o.code).join(', ')}.
+              </p>
+            )}
+
           </div>
 
           {/* Retorno do Auge */}
