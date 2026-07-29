@@ -587,9 +587,30 @@ export default function GerarTagTab() {
         .eq('cd_configuracao', customAberta!.cd)
         .limit(2000);
       if (error) throw error;
-      return (data ?? []) as CustomTag[];
+      const locais = (data ?? []) as CustomTag[];
+      if (locais.length > 0) return locais;
+
+      // Sem linhas locais: consulta ao vivo no Auge (a edge function também
+      // grava o resultado, então na próxima vez já vem do banco).
+      try {
+        const { data: fn } = await supabase.functions.invoke('auge-sync?action=tag_custom_por_config', {
+          body: { cdConfiguracao: customAberta!.cd, nmConfiguracao: customAberta!.nm },
+        });
+        const rows = ((fn as any)?.rows ?? []) as any[];
+        return rows.map((r) => ({
+          cd_configuracao: String(r.cdConfiguracao ?? customAberta!.cd),
+          nm_configuracao: r.nmConfiguracao ?? customAberta!.nm ?? null,
+          nm_tag_customizada: r.nmTagCustomizada ?? null,
+          ds_tag_customizada: r.dsTagCustomizada ?? null,
+          ds_tag_calculada: r.dsTagCalculada ?? null,
+          ds_tag_texto: r.dsTagTexto ?? null,
+        })) as CustomTag[];
+      } catch {
+        return locais;
+      }
     },
   });
+
 
   // União: TAGs das configurações ranqueadas + busca direta + TAG Custom aberta.
   const tagsUnificadas = useMemo<CustomTag[]>(() => {
