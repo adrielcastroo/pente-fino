@@ -173,10 +173,48 @@ function normalizeTagCode(raw: string | null | undefined): string {
   return raw.replace(/&/g, '').trim().toUpperCase().replace(/\s+/g, '');
 }
 
+// ============================================================
+// Curinga estilo SAP B1: "*" = qualquer sequência de caracteres
+// ============================================================
+
+/** Remove caracteres que quebrariam o parser de filtros do PostgREST. */
+function sanitizeTerm(raw: string): string {
+  return raw.replace(/[,()"'\\]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * Converte um termo com curinga `*` em padrão ILIKE.
+ * - "TUB*"    → "TUB%"       (começa com)
+ * - "*MOTOR"  → "%MOTOR"     (termina com)
+ * - "T*42"    → "T%42"       (contém no meio)
+ * - "MOTOR"   → "%MOTOR%"    (contém — comportamento padrão)
+ * Escapa `%` e `_` digitados literalmente para não virarem curingas ocultos.
+ */
+function toIlikePattern(raw: string): string {
+  const clean = sanitizeTerm(raw);
+  if (!clean) return '';
+  const escaped = clean.replace(/[%_]/g, (m) => `\\${m}`);
+  if (escaped.includes('*')) return escaped.replace(/\*/g, '%');
+  return `%${escaped}%`;
+}
+
+/** Versão local (em memória) do mesmo curinga, para filtrar listas já carregadas. */
+function matchesWildcard(value: string | null | undefined, raw: string): boolean {
+  const hay = (value ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const term = raw.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  if (!term) return true;
+  if (!term.includes('*')) return hay.includes(term);
+  const re = new RegExp(
+    '^' + term.split('*').map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('.*') + '$',
+  );
+  return re.test(hay);
+}
+
 interface TagCategoria {
   code: string;
   items: Array<{ tag: CustomTag; cfgNome: string; score: number }>;
 }
+
 
 // ============================================================
 // Componente
