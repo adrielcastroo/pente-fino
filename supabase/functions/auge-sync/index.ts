@@ -3938,6 +3938,49 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Sonda a página /modInventario/tag/tag.php para descobrir o endpoint do
+    // grid que traz o NOME da TAG calculada (ex.: T_50_GD_NIV) além da descrição.
+    if (action === 'tag_page_probe') {
+      const headers: Record<string, string> = {
+        'Cookie': auth.jar.header(),
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRF-TOKEN': auth.csrf,
+        'Origin': AUGE_BASE_URL,
+        'Referer': `${AUGE_BASE_URL}/l.unilux/modInventario/tag/tag.php`,
+        'User-Agent': UA,
+        'Accept': 'text/html, */*; q=0.01',
+      };
+      if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
+
+      const pageRes = await fetch(`${AUGE_BASE_URL}/l.unilux/modInventario/tag/tag.php`, { headers });
+      auth.jar.ingest(pageRes);
+      const html = await pageRes.text();
+      const ajax = Array.from(new Set(
+        (html.match(/["'][^"']*(?:ajax|\.php)[^"']*["']/gi) ?? [])
+          .map((s) => s.slice(1, -1))
+          .filter((s) => /ajax|tag/i.test(s) && s.length < 200),
+      )).slice(0, 80);
+
+      const samples: Record<string, string> = {};
+      for (const p of ajax.filter((a) => /ajax/i.test(a)).slice(0, 12)) {
+        const full = p.startsWith('http') ? p
+          : p.startsWith('/') ? `${AUGE_BASE_URL}${p}`
+          : `${AUGE_BASE_URL}/l.unilux/modInventario/tag/${p}`;
+        try {
+          const r = await fetch(full, {
+            method: 'POST',
+            headers: { ...headers, 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+            body: new URLSearchParams({ nrPagina: '1', qtdItens: '5', term: '', q: '' }),
+          });
+          samples[p] = (await r.text()).slice(0, 1200);
+        } catch (e) { samples[p] = `ERRO: ${(e as Error).message}`; }
+      }
+
+      return new Response(JSON.stringify({ ok: true, status: pageRes.status, ajax, samples }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
 
     // Lookup ao vivo das TAGs Calculadas (select2 do formulário do Auge).
     if (action === 'tag_calculada_select') {
