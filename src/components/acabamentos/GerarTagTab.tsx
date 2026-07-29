@@ -142,6 +142,22 @@ function toIlikePattern(raw: string): string {
   return `%${escaped}%`;
 }
 
+/**
+ * Quebra o termo em tokens para busca AND (cada token precisa existir na
+ * configuração, em qualquer ordem). Evita falhas quando o usuário digita a
+ * descrição com espaçamento/ordem levemente diferente do cadastro no Auge.
+ */
+function toIlikeTokens(raw: string): string[] {
+  const clean = sanitizeTerm(raw).replace(/%/g, ' ');
+  return clean
+    .split(/\s+/)
+    .map((t) => t.trim())
+    .filter((t) => t.length >= 2)
+    .slice(0, 12)
+    .map((t) => (t.includes('*') ? t.replace(/\*/g, '%') : `%${t}%`));
+}
+
+
 interface TagCategoria {
   code: string;
   items: Array<{ tag: CustomTag; cfgNome: string; score: number }>;
@@ -341,21 +357,35 @@ function ConfiguracaoSelect({
   }, [busca]);
 
   const padrao = useMemo(() => toIlikePattern(termo), [termo]);
+  const tokens = useMemo(() => toIlikeTokens(termo), [termo]);
 
   const { data: opcoes = [], isFetching } = useQuery({
-    queryKey: ['tag-custom-configuracao-busca', padrao],
+    queryKey: ['tag-custom-configuracao-busca', padrao, tokens.join('|')],
     enabled: aberto && padrao.length >= 3,
     staleTime: 60 * 1000,
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
+      // 1) tentativa exata (substring contínua)
+      const exata = await (supabase as any)
         .from('auge_tag_custom_configuracoes')
         .select('cd_configuracao, nm_configuracao, qtd_tags')
         .ilike('nm_configuracao', padrao)
         .limit(50);
+      if (exata.error) throw exata.error;
+      if ((exata.data ?? []).length > 0) return exata.data as ConfiguracaoLite[];
+
+      // 2) fallback por tokens (AND, ordem livre) — resolve diferenças de
+      //    espaçamento/ordem entre a descrição digitada e o cadastro no Auge.
+      if (tokens.length === 0) return [] as ConfiguracaoLite[];
+      let q = (supabase as any)
+        .from('auge_tag_custom_configuracoes')
+        .select('cd_configuracao, nm_configuracao, qtd_tags');
+      for (const t of tokens) q = q.ilike('nm_configuracao', t);
+      const { data, error } = await q.limit(50);
       if (error) throw error;
       return (data ?? []) as ConfiguracaoLite[];
     },
   });
+
 
   if (valor && !aberto) {
     return (
