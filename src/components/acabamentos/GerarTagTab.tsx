@@ -277,7 +277,8 @@ function TagCalculadaCell({
           className="h-8 pl-7 text-[11px] font-mono"
         />
       </div>
-      {aberto && padrao.length >= 3 && (
+      {aberto && termo.length >= 2 && (
+
         <div className="rounded border bg-background max-h-40 overflow-auto">
           {isFetching && (
             <div className="p-2 text-[10px] text-muted-foreground flex items-center gap-1">
