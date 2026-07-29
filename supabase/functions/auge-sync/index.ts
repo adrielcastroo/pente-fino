@@ -585,7 +585,8 @@ async function discoverTagGridPaths(
     auth.jar.ingest(res);
     const html = await res.text();
     const found = new Set<string>();
-    for (const m of html.matchAll(/['"]([^'"]*ajax\/[A-Za-z0-9_.-]+\.php)['"]/gi)) {
+    // Aceita tanto "ajax/x.php" quanto "ajax/x.php?" (concatenado com querystring).
+    for (const m of html.matchAll(/['"]([^'"]*ajax\/[A-Za-z0-9_.-]+\.php)[^'"]*['"]/gi)) {
       let p = m[1];
       if (p.startsWith('http')) {
         try { p = new URL(p).pathname; } catch { continue; }
