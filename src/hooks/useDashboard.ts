@@ -48,7 +48,11 @@ export function useDashboard() {
         const estrutura = String(p.estrutura ?? '').trim().toUpperCase();
         const isTec = /^TEC/i.test(estrutura);
         const isChao = estrutura === 'CHÃO' || estrutura === 'CHAO';
-        const occupied = p.status === 'ocupado' || (p.item && String(p.item).trim() !== '');
+        // Mesma regra do mapa 2D: posições com status 'saida' NÃO contam como
+        // ocupadas mesmo que ainda tenham o item preenchido.
+        const occupied = p.status === 'ocupado'
+          || (p.status !== 'saida' && p.status !== 'livre' && p.status !== 'reservado'
+              && p.status !== 'bloqueado' && !!p.item && String(p.item).trim() !== '');
         if (isChao) {
           if (occupied) stats.chao.used++;
           return;
