@@ -3040,6 +3040,44 @@ async function deleteAcabamentoItem(auth: any, cdAcabamento: string, cdAcabament
   return j;
 }
 
+/**
+ * Grava (inclui/altera) uma linha de TAG Customizada no Auge.
+ * Espelha o formulário de /modInventario/tag/manterTagCustomizada.php.
+ * idAcao: 1 = incluir, 2 = alterar.
+ */
+async function saveTagCustomizada(
+  auth: any,
+  row: {
+    cdConfiguracao?: string;
+    cdTagCustomizada?: string;
+    dsTagCustomizada: string;
+    dsTagCalculada?: string;
+    dsTagTexto?: string;
+  },
+): Promise<any> {
+  const body = new URLSearchParams({
+    idAcao: row.cdTagCustomizada ? '2' : '1',
+    cdConfiguracao: row.cdConfiguracao ?? '',
+    cdTagCustomizada: row.cdTagCustomizada ?? '',
+    dsTagCustomizada: row.dsTagCustomizada ?? '',
+    dsTagCalculada: row.dsTagCalculada ?? '',
+    dsTagTexto: row.dsTagTexto ?? '',
+  });
+  const txt = await postAugePhp(
+    auth,
+    '/l.unilux/modInventario/Controle/ctlTagCustomizada.php',
+    body,
+    '/l.unilux/modInventario/tag/manterTagCustomizada.php',
+  );
+  let j: any = { message: txt };
+  try { j = JSON.parse(txt); } catch { /* mantém texto cru */ }
+  const msg = typeof j?.message === 'string' ? j.message : '';
+  if (msg && !/sucesso/i.test(msg)) throw new Error(msg);
+  return j;
+}
+
+
+
 function mapAcabamentoRow(r: any) {
   return {
     cd_acabamento: String(r.cdAcabamento),
@@ -3665,6 +3703,55 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ ok: true, rows }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
+    }
+
+    // Cria/atualiza uma TAG Custom (conjunto de linhas de TAG Customizada) no Auge
+    // e devolve o status de cada linha + como a configuração ficou no Auge.
+    if (action === 'criar_tag_custom') {
+      let payload: any = {};
+      try { payload = await req.json(); } catch { /* ignore */ }
+      const cdConfiguracao = String(payload?.cdConfiguracao ?? '').trim();
+      const descricao = String(payload?.descricao ?? '').trim();
+      const itens: any[] = Array.isArray(payload?.itens) ? payload.itens : [];
+      if (!descricao) throw new Error('Descrição da TAG Custom é obrigatória.');
+      if (!itens.length) throw new Error('Inclua ao menos 1 TAG customizada.');
+
+      const results: Array<{ tag: string; calculada: string; ok: boolean; erro?: string; auge?: any }> = [];
+      for (const it of itens) {
+        const dsTagCustomizada = String(it?.dsTagCustomizada ?? '').trim();
+        const dsTagCalculada = String(it?.dsTagCalculada ?? '').trim();
+        if (!dsTagCustomizada) continue;
+        try {
+          const auge = await saveTagCustomizada(auth, {
+            cdConfiguracao,
+            cdTagCustomizada: String(it?.cdTagCustomizada ?? '').trim(),
+            dsTagCustomizada,
+            dsTagCalculada,
+            dsTagTexto: String(it?.dsTagTexto ?? descricao).trim(),
+          });
+          results.push({ tag: dsTagCustomizada, calculada: dsTagCalculada, ok: true, auge });
+        } catch (e) {
+          results.push({ tag: dsTagCustomizada, calculada: dsTagCalculada, ok: false, erro: getErrorMessage(e) });
+        }
+      }
+
+      // Estado final no Auge (o que o usuário vê na tela manterTagCustomizada).
+      let augeRows: any[] = [];
+      try {
+        augeRows = await fetchListaTagsCustomizadas(auth, cdConfiguracao, cdConfiguracao ? '' : descricao);
+      } catch { /* consulta de conferência é best-effort */ }
+
+      const okCount = results.filter((r) => r.ok).length;
+      return new Response(JSON.stringify({
+        ok: okCount > 0,
+        descricao,
+        cdConfiguracao,
+        total: results.length,
+        gravadas: okCount,
+        falhas: results.length - okCount,
+        results,
+        augeRows,
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     if (action === 'tag_config_select') {
