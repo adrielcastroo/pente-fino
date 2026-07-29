@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { Search, Loader2, Copy, Wand2, Target, Tag as TagIcon, Layers, X, CheckCircle2 } from 'lucide-react';
+import { Loader2, Copy, Wand2, Tag as TagIcon, Layers, X, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { normalizeTagFormatC } from '@/lib/tag-utils';
 
@@ -200,18 +200,6 @@ function toIlikePattern(raw: string): string {
   return `%${escaped}%`;
 }
 
-/** Versão local (em memória) do mesmo curinga, para filtrar listas já carregadas. */
-function matchesWildcard(value: string | null | undefined, raw: string): boolean {
-  const hay = (value ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  const term = raw.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  if (!term) return true;
-  if (!term.includes('*')) return hay.includes(term);
-  const re = new RegExp(
-    '^' + term.split('*').map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('.*') + '$',
-  );
-  return re.test(hay);
-}
-
 interface TagCategoria {
   code: string;
   items: Array<{ tag: CustomTag; cfgNome: string; score: number }>;
@@ -231,7 +219,6 @@ interface TagSelecionada {
 // Componente
 // ============================================================
 export default function GerarTagTab() {
-  const [busca, setBusca] = useState('');
   const [selecionado, setSelecionado] = useState<Acabamento | null>(null);
   const [tagGerada, setTagGerada] = useState('');
   const [entradaManual, setEntradaManual] = useState('');
@@ -250,8 +237,8 @@ export default function GerarTagTab() {
   }, [entradaManual]);
 
 
-  // ---------- Acabamentos (lista lateral) ----------
-  const { data: acabamentos = [], isLoading } = useQuery({
+  // ---------- Acabamentos (catálogo para recomendações) ----------
+  const { data: acabamentos = [] } = useQuery({
     queryKey: ['acabamentos-gerar-tag'],
     staleTime: 5 * 60 * 1000,
     queryFn: async () => {
@@ -278,15 +265,6 @@ export default function GerarTagTab() {
       return (data ?? []) as ConfiguracaoLite[];
     },
   });
-
-  const filtrados = useMemo(() => {
-    const t = busca.trim();
-    if (!t) return acabamentos.slice(0, 200);
-    return acabamentos
-      .filter((a) => matchesWildcard(a.nm_acabamento, t) || matchesWildcard(a.chave_acabamento, t))
-      .slice(0, 200);
-  }, [acabamentos, busca]);
-
 
   const recomendacoes = useMemo(() => {
     if (!entradaDeferida.trim() || acabamentos.length === 0) return [];
@@ -385,12 +363,6 @@ export default function GerarTagTab() {
 
   const gerar = (input: string) => setTagGerada(normalizeTagFormatC(input));
 
-  const selecionar = (a: Acabamento) => {
-    setSelecionado(a);
-    setEntradaManual(a.nm_acabamento);
-    gerar(a.nm_acabamento);
-  };
-
   useEffect(() => {
     if (!melhor) return;
     if (selecionado?.cd_acabamento === melhor.acab.cd_acabamento) return;
@@ -453,28 +425,7 @@ export default function GerarTagTab() {
 
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-4">
-      <Card className="p-3 space-y-3 h-fit">
-        <div className="relative">
-          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-          <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar configuração (use * como curinga)" className="h-9 pl-7 text-xs" />
-        </div>
-        <div className="text-[10px] text-muted-foreground">Mostrando {filtrados.length} de {acabamentos.length}</div>
-        <div className="max-h-[60vh] overflow-auto space-y-1">
-          {isLoading && <div className="p-4 text-center"><Loader2 className="h-4 w-4 animate-spin inline" /></div>}
-          {filtrados.map((a) => (
-            <button
-              key={a.cd_acabamento}
-              onClick={() => selecionar(a)}
-              className={`w-full text-left rounded border p-2 text-xs transition ${selecionado?.cd_acabamento === a.cd_acabamento ? 'bg-primary/10 border-primary' : 'hover:bg-muted'}`}
-            >
-              <div className="font-medium truncate">{a.nm_acabamento}</div>
-              <div className="font-mono text-[10px] text-muted-foreground">{a.chave_acabamento ?? `#${a.cd_acabamento}`}</div>
-            </button>
-          ))}
-        </div>
-      </Card>
-
+    <div className="grid grid-cols-1 gap-4">
       <div className="space-y-3">
         <Card className="p-4 space-y-3">
           <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
