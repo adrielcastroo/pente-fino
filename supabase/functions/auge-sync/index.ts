@@ -4108,15 +4108,16 @@ Deno.serve(async (req) => {
       await admin.from('auge_sync_runs').insert({
         entidade: 'tags_calculadas',
         status: 'success',
-        started_at: new Date().toISOString(),
+        started_at: nowIso,
         finished_at: new Date().toISOString(),
         triggered_by: triggeredBy,
-        detalhes: { total: mapped.length, salvos },
+        detalhes: { total: mapped.length, salvos, fonte, grid: gridRows.length, select: selectRows.length },
       }).then(() => {}, () => {});
 
-      return new Response(JSON.stringify({ ok: true, total: mapped.length, salvos }), {
+      return new Response(JSON.stringify({ ok: true, total: mapped.length, salvos, fonte, grid: gridRows.length, select: selectRows.length }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
+
     }
 
 
