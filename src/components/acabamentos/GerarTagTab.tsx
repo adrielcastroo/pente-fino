@@ -325,6 +325,64 @@ export default function GerarTagTab() {
     },
   });
 
+  // ---------- TAGs Custom já existentes que casam com o termo pesquisado ----------
+  // Cada "TAG Custom" é uma configuração do Auge; suas TAGs configuradas são as linhas
+  // de auge_tag_custom com o mesmo cd_configuracao.
+  const customsEncontradas = useMemo(() => {
+    const byCfg = new Map<string, { cd: string; nm: string; qtd: number }>();
+    for (const t of tagsBusca) {
+      const cd = t.cd_configuracao;
+      const cur = byCfg.get(cd) ?? { cd, nm: t.nm_configuracao ?? cd, qtd: 0 };
+      cur.qtd += 1;
+      byCfg.set(cd, cur);
+    }
+    return Array.from(byCfg.values()).sort((a, b) => a.nm.localeCompare(b.nm)).slice(0, 40);
+  }, [tagsBusca]);
+
+  // TAG Custom aberta para edição (adicionar/remover TAGs configuradas).
+  const [customAberta, setCustomAberta] = useState<{ cd: string; nm: string } | null>(null);
+
+  const { data: tagsDaCustom = [], isFetching: loadingCustom } = useQuery({
+    queryKey: ['auge-tag-custom-detalhe', customAberta?.cd ?? ''],
+    enabled: !!customAberta?.cd,
+    staleTime: 60 * 1000,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from('auge_tag_custom')
+        .select('cd_configuracao, nm_configuracao, nm_tag_customizada, ds_tag_customizada, ds_tag_calculada, ds_tag_texto')
+        .eq('cd_configuracao', customAberta!.cd)
+        .limit(2000);
+      if (error) throw error;
+      return (data ?? []) as CustomTag[];
+    },
+  });
+
+  /** TAGs configuradas dentro da TAG Custom aberta, normalizadas para exibição. */
+  const itensDaCustom = useMemo(() => {
+    const seen = new Set<string>();
+    const out: Array<{ id: string; code: string; valor: string; cfgNome: string }> = [];
+    for (const t of tagsDaCustom) {
+      const code = normalizeTagCode(t.ds_tag_customizada ?? t.nm_tag_customizada);
+      const valorBruto = t.ds_tag_texto ?? t.ds_tag_calculada ?? t.ds_tag_customizada ?? t.nm_tag_customizada ?? '';
+      const valor = normalizeTagFormatC(valorBruto);
+      if (!code || !valor || valor === '—') continue;
+      const id = `${code}|${valor}`;
+      if (seen.has(id)) continue;
+      seen.add(id);
+      out.push({ id, code, valor, cfgNome: t.nm_configuracao ?? t.cd_configuracao });
+    }
+    return out.sort((a, b) => a.code.localeCompare(b.code));
+  }, [tagsDaCustom]);
+
+  // Ao abrir uma TAG Custom existente, a composição parte das TAGs já configuradas nela.
+  useEffect(() => {
+    if (!customAberta || itensDaCustom.length === 0) return;
+    setSelecionadas(itensDaCustom.map((i) => ({ id: i.id, code: i.code, valor: i.valor, cfgNome: i.cfgNome })));
+    setTagCustomConfirmada('');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customAberta?.cd, itensDaCustom]);
+
+
   // União: TAGs das configurações ranqueadas + TAGs encontradas na busca direta.
   const tagsUnificadas = useMemo<CustomTag[]>(() => {
     const seen = new Set<string>();
