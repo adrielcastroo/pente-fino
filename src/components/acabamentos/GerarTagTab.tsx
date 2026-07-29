@@ -200,18 +200,6 @@ function toIlikePattern(raw: string): string {
   return `%${escaped}%`;
 }
 
-/** Versão local (em memória) do mesmo curinga, para filtrar listas já carregadas. */
-function matchesWildcard(value: string | null | undefined, raw: string): boolean {
-  const hay = (value ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  const term = raw.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  if (!term) return true;
-  if (!term.includes('*')) return hay.includes(term);
-  const re = new RegExp(
-    '^' + term.split('*').map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('.*') + '$',
-  );
-  return re.test(hay);
-}
-
 interface TagCategoria {
   code: string;
   items: Array<{ tag: CustomTag; cfgNome: string; score: number }>;
