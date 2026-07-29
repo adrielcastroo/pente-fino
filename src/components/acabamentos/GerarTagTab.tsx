@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { Search, Loader2, Sparkles, Copy, Wand2, Target, Tag as TagIcon, Layers } from 'lucide-react';
+import { Search, Loader2, Sparkles, Copy, Wand2, Target, Tag as TagIcon, Layers, X, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { normalizeTagFormatC } from '@/lib/tag-utils';
 
@@ -217,6 +217,15 @@ interface TagCategoria {
   items: Array<{ tag: CustomTag; cfgNome: string; score: number }>;
 }
 
+/** TAG escolhida pelo usuário para compor a TAG Custom final. */
+interface TagSelecionada {
+  id: string;
+  code: string;
+  valor: string;
+  cfgNome: string;
+}
+
+
 
 // ============================================================
 // Componente
@@ -227,6 +236,11 @@ export default function GerarTagTab() {
   const [tagGerada, setTagGerada] = useState('');
   const [entradaManual, setEntradaManual] = useState('');
   const entradaDeferida = useDeferredValue(entradaManual);
+
+  // TAGs escolhidas que compõem a TAG Custom final (acumuladas sob a descrição).
+  const [selecionadas, setSelecionadas] = useState<TagSelecionada[]>([]);
+  const [tagCustomConfirmada, setTagCustomConfirmada] = useState('');
+
 
   // Termo com debounce usado na busca server-side de TAGs (tempo real).
   const [termoBusca, setTermoBusca] = useState('');
@@ -404,6 +418,40 @@ export default function GerarTagTab() {
     toast.success('TAG copiada.');
   };
 
+  // ---------- Seleção acumulada de TAGs ----------
+  const toggleTag = (code: string, valorBruto: string, cfgNome: string) => {
+    const valor = normalizeTagFormatC(valorBruto);
+    if (!valor || valor === '—') return;
+    const id = `${code}|${valor}`;
+    setSelecionadas((prev) => {
+      if (prev.some((s) => s.id === id)) {
+        toast.info(`TAG ${code} removida da composição.`);
+        return prev.filter((s) => s.id !== id);
+      }
+      toast.success(`TAG ${code} adicionada à composição.`);
+      return [...prev, { id, code, valor, cfgNome }];
+    });
+    setTagCustomConfirmada('');
+  };
+
+  const isSelecionada = (code: string, valorBruto: string) =>
+    selecionadas.some((s) => s.id === `${code}|${normalizeTagFormatC(valorBruto)}`);
+
+  const composicao = useMemo(
+    () => selecionadas.map((s) => s.valor).join(' '),
+    [selecionadas],
+  );
+
+  const confirmarTagCustom = () => {
+    if (selecionadas.length === 0) return;
+    const final = normalizeTagFormatC(composicao);
+    setTagCustomConfirmada(final);
+    setTagGerada(final);
+    navigator.clipboard?.writeText(final).catch(() => undefined);
+    toast.success(`TAG Custom criada com ${selecionadas.length} TAG(s) e copiada.`);
+  };
+
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-4">
       <Card className="p-3 space-y-3 h-fit">
@@ -457,6 +505,67 @@ export default function GerarTagTab() {
             )}
           </div>
 
+          {/* TAGs acumuladas sob a descrição */}
+          {selecionadas.length > 0 && (
+            <div className="rounded border border-primary/40 bg-primary/5 p-3 space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <div className="text-[10px] uppercase text-muted-foreground flex items-center gap-1">
+                  <Layers className="h-3 w-3" /> TAGs selecionadas
+                  <Badge variant="outline" className="text-[9px]">{selecionadas.length}</Badge>
+                </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-6 px-2 text-[10px]"
+                  onClick={() => { setSelecionadas([]); setTagCustomConfirmada(''); }}
+                >
+                  Limpar
+                </Button>
+              </div>
+
+              <div className="flex flex-wrap gap-1.5">
+                {selecionadas.map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => toggleTag(s.code, s.valor, s.cfgNome)}
+                    title={`${s.cfgNome} — clique para remover`}
+                    className="group flex items-center gap-1.5 rounded border border-primary/40 bg-background px-2 py-1 text-[10px] hover:border-destructive/60 transition"
+                  >
+                    <span className="font-mono font-semibold text-primary">{s.code}</span>
+                    <span className="font-mono break-all">{s.valor}</span>
+                    <X className="h-3 w-3 text-muted-foreground group-hover:text-destructive" />
+                  </button>
+                ))}
+              </div>
+
+              <div className="rounded border bg-background p-2">
+                <div className="text-[9px] uppercase text-muted-foreground">Prévia da TAG Custom</div>
+                <div className="font-mono text-[11px] break-all">{composicao}</div>
+              </div>
+
+              <Button onClick={confirmarTagCustom} className="w-full h-9 gap-2 text-xs">
+                <CheckCircle2 className="h-4 w-4" />
+                Confirmar criação da TAG Custom ({selecionadas.length})
+              </Button>
+
+              {tagCustomConfirmada && (
+                <div className="rounded border border-emerald-500/40 bg-emerald-500/5 p-2 space-y-1">
+                  <div className="text-[9px] uppercase text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                    <CheckCircle2 className="h-3 w-3" /> TAG Custom criada (copiada para a área de transferência)
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <div className="font-mono text-[11px] break-all flex-1">{tagCustomConfirmada}</div>
+                    <Button size="sm" variant="outline" className="h-6 px-2 text-[10px] gap-1 shrink-0" onClick={copiar}>
+                      <Copy className="h-3 w-3" /> Copiar
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+
+
 
           {/* Categorias de TAGs (T_BASE, T_TUBO, T_TEC_X, ...) */}
           {((loadingTags || loadingBusca) && categorias.length === 0) && (
@@ -491,11 +600,14 @@ export default function GerarTagTab() {
                         <Badge variant="outline" className="text-[9px] shrink-0">{cat.items.length}</Badge>
                       </div>
                       <button
-                        onClick={() => { setTagGerada(normalizeTagFormatC(bestValor)); toast.success(`TAG ${cat.code} aplicada.`); }}
-                        className="w-full text-left rounded border border-primary/30 hover:bg-primary/10 p-1.5 transition"
-                        title="Aplicar esta TAG"
+                        onClick={() => toggleTag(cat.code, bestValor, best?.cfgNome ?? '')}
+                        className={`w-full text-left rounded border p-1.5 transition ${isSelecionada(cat.code, bestValor) ? 'border-primary bg-primary/15' : 'border-primary/30 hover:bg-primary/10'}`}
+                        title="Selecionar/remover esta TAG da composição"
                       >
-                        <div className="font-mono text-[11px] text-primary break-all">{bestValor}</div>
+                        <div className="flex items-center gap-1.5">
+                          {isSelecionada(cat.code, bestValor) && <CheckCircle2 className="h-3 w-3 text-primary shrink-0" />}
+                          <div className="font-mono text-[11px] text-primary break-all">{bestValor}</div>
+                        </div>
                         <div className="text-[9px] text-muted-foreground truncate mt-0.5">{best?.cfgNome}</div>
                       </button>
                       {cat.items.length > 1 && (
@@ -509,8 +621,8 @@ export default function GerarTagTab() {
                               return (
                                 <button
                                   key={i}
-                                  onClick={() => { setTagGerada(normalizeTagFormatC(v)); toast.success(`TAG ${cat.code} aplicada.`); }}
-                                  className="w-full text-left rounded border-transparent hover:border hover:bg-muted p-1 transition"
+                                  onClick={() => toggleTag(cat.code, v, it.cfgNome)}
+                                  className={`w-full text-left rounded p-1 transition border ${isSelecionada(cat.code, v) ? 'border-primary bg-primary/10' : 'border-transparent hover:bg-muted'}`}
                                 >
                                   <div className="font-mono text-[10px] break-all">{v}</div>
                                   <div className="text-[9px] text-muted-foreground truncate">{it.cfgNome} · score {it.score}</div>
@@ -519,6 +631,7 @@ export default function GerarTagTab() {
                             })}
                           </div>
                         </details>
+
                       )}
                     </div>
                   );
