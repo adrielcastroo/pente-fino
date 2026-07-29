@@ -437,28 +437,7 @@ export default function GerarTagTab() {
 
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-4">
-      <Card className="p-3 space-y-3 h-fit">
-        <div className="relative">
-          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-          <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar configuração (use * como curinga)" className="h-9 pl-7 text-xs" />
-        </div>
-        <div className="text-[10px] text-muted-foreground">Mostrando {filtrados.length} de {acabamentos.length}</div>
-        <div className="max-h-[60vh] overflow-auto space-y-1">
-          {isLoading && <div className="p-4 text-center"><Loader2 className="h-4 w-4 animate-spin inline" /></div>}
-          {filtrados.map((a) => (
-            <button
-              key={a.cd_acabamento}
-              onClick={() => selecionar(a)}
-              className={`w-full text-left rounded border p-2 text-xs transition ${selecionado?.cd_acabamento === a.cd_acabamento ? 'bg-primary/10 border-primary' : 'hover:bg-muted'}`}
-            >
-              <div className="font-medium truncate">{a.nm_acabamento}</div>
-              <div className="font-mono text-[10px] text-muted-foreground">{a.chave_acabamento ?? `#${a.cd_acabamento}`}</div>
-            </button>
-          ))}
-        </div>
-      </Card>
-
+    <div className="grid grid-cols-1 gap-4">
       <div className="space-y-3">
         <Card className="p-4 space-y-3">
           <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
