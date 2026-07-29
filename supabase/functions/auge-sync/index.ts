@@ -3981,8 +3981,13 @@ Deno.serve(async (req) => {
       }
       try { await reader?.cancel(); } catch { /* ignore */ }
 
+      const found = new Set<string>();
+      const re = /[a-zA-Z0-9_\/.-]+\.php/g;
+      let m: RegExpExecArray | null;
+      while ((m = re.exec(html)) !== null && found.size < 120) found.add(m[0]);
 
       return new Response(JSON.stringify({ ok: true, status: pageRes.status, ajax: [...found] }), {
+
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
