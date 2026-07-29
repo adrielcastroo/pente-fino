@@ -1068,9 +1068,11 @@ export default function GerarTagTab() {
           )}
           {!carregandoRecs && recomendadas.length === 0 && (
             <div className="text-[10px] text-muted-foreground">
-              Digite a descrição acima para receber recomendações.
+              Digite no campo <span className="font-medium text-foreground">Configuração</span> acima
+              para o app analisar as TAGs Custom semelhantes.
             </div>
           )}
+
 
           <div className="space-y-1.5 max-h-[65vh] overflow-auto">
             {recomendadas.map((r) => {
