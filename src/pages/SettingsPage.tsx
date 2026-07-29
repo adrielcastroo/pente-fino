@@ -945,7 +945,7 @@ export default function SettingsPage() {
                             </div>
                             <Switch
                               checked={prefSilentBrowserPrint}
-                              disabled={prefDisableBrowserPrint}
+                              disabled={prefDisableDirectPrint || prefDisableBrowserPrint}
                               onCheckedChange={(v) => { setPrefSilentBrowserPrint(v); setHasUnsavedChanges(true); }}
                             />
                           </div>
