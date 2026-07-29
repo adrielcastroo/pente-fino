@@ -206,28 +206,47 @@ function TagCalculadaCell({
   const padrao = useMemo(() => toIlikePattern(termo), [termo]);
 
   const { data: opcoes = [], isFetching } = useQuery({
-    queryKey: ['tag-calculada-busca', padrao],
-    enabled: aberto && padrao.length >= 3,
+    queryKey: ['tag-calculada-busca', termo, padrao],
+    enabled: aberto && termo.length >= 2,
     staleTime: 60 * 1000,
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from('auge_tag_custom')
-        .select('ds_tag_calculada, nm_configuracao')
-        .not('ds_tag_calculada', 'is', null)
-        .ilike('ds_tag_calculada', padrao)
-        .limit(200);
-      if (error) throw error;
       const seen = new Set<string>();
       const out: Array<{ valor: string; cfg: string }> = [];
-      for (const r of (data ?? []) as any[]) {
-        const v = String(r.ds_tag_calculada ?? '').trim();
-        if (!v || seen.has(v)) continue;
-        seen.add(v);
-        out.push({ valor: v, cfg: r.nm_configuracao ?? '' });
+
+      // 1) Busca ao vivo no Auge (fonte oficial do lookup "Tag Calculada").
+      try {
+        const { data: fn } = await supabase.functions.invoke('auge-sync', {
+          body: { term: termo.replace(/\*/g, '') },
+          // deno-lint-ignore no-explicit-any
+        } as any);
+        const rows = (fn as any)?.rows ?? [];
+        for (const r of rows as Array<{ id: string; text: string }>) {
+          const v = String(r?.text ?? '').trim();
+          if (!v || seen.has(v)) continue;
+          seen.add(v);
+          out.push({ valor: v, cfg: '' });
+        }
+      } catch { /* segue para o fallback local */ }
+
+      // 2) Fallback: o que já está sincronizado localmente.
+      if (out.length === 0 && padrao) {
+        const { data } = await (supabase as any)
+          .from('auge_acabamentos')
+          .select('ds_tag_calculada, nm_acabamento')
+          .not('ds_tag_calculada', 'is', null)
+          .ilike('ds_tag_calculada', padrao)
+          .limit(200);
+        for (const r of (data ?? []) as any[]) {
+          const v = String(r.ds_tag_calculada ?? '').trim();
+          if (!v || seen.has(v)) continue;
+          seen.add(v);
+          out.push({ valor: v, cfg: r.nm_acabamento ?? '' });
+        }
       }
       return out.slice(0, 50);
     },
   });
+
 
   if (valor && !aberto) {
     return (
