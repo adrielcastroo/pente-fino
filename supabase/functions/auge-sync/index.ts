@@ -4128,7 +4128,10 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({
         ok: true,
         pageLen: pageHtml.length,
-        pageSample: pageHtml.slice(0, 1500),
+        trCount: [...pageHtml.matchAll(/<tr[^>]*>/gi)].length,
+        tables: [...pageHtml.matchAll(/<table[\s\S]{0,300}?>/gi)].map((m) => m[0].slice(0, 160)),
+        trSamples: [...pageHtml.matchAll(/<tr[^>]*>[\s\S]*?<\/tr>/gi)].slice(0, 6).map((m) => m[0].replace(/\s+/g, ' ').slice(0, 300)),
+        forms: [...pageHtml.matchAll(/<form[\s\S]{0,200}?>/gi)].map((m) => m[0].replace(/\s+/g, ' ').slice(0, 200)),
         paths,
         probes,
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
