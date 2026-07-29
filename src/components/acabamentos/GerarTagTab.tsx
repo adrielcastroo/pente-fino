@@ -213,7 +213,25 @@ interface TagSelecionada {
   cfgNome: string;
 }
 
+/**
+ * Rascunho em memória (escopo do módulo).
+ * Mantém o progresso ao navegar entre abas/páginas do SPA, mas é descartado
+ * quando a página é recarregada ou o navegador é fechado — exatamente o
+ * comportamento pedido (não usamos localStorage/sessionStorage de propósito).
+ */
+interface RascunhoGerarTag {
+  entradaManual: string;
+  selecionadas: TagSelecionada[];
+  tagCustomConfirmada: string;
+  customAberta: { cd: string; nm: string } | null;
+}
 
+const rascunho: RascunhoGerarTag = {
+  entradaManual: '',
+  selecionadas: [],
+  tagCustomConfirmada: '',
+  customAberta: null,
+};
 
 // ============================================================
 // Componente
@@ -221,12 +239,18 @@ interface TagSelecionada {
 export default function GerarTagTab() {
   const [selecionado, setSelecionado] = useState<Acabamento | null>(null);
   const [tagGerada, setTagGerada] = useState('');
-  const [entradaManual, setEntradaManual] = useState('');
+  const [entradaManual, setEntradaManual] = useState(rascunho.entradaManual);
   const entradaDeferida = useDeferredValue(entradaManual);
 
   // TAGs escolhidas que compõem a TAG Custom final (acumuladas sob a descrição).
-  const [selecionadas, setSelecionadas] = useState<TagSelecionada[]>([]);
-  const [tagCustomConfirmada, setTagCustomConfirmada] = useState('');
+  const [selecionadas, setSelecionadas] = useState<TagSelecionada[]>(rascunho.selecionadas);
+  const [tagCustomConfirmada, setTagCustomConfirmada] = useState(rascunho.tagCustomConfirmada);
+
+  // Espelha o estado no rascunho a cada mudança (sem efeitos colaterais externos).
+  useEffect(() => { rascunho.entradaManual = entradaManual; }, [entradaManual]);
+  useEffect(() => { rascunho.selecionadas = selecionadas; }, [selecionadas]);
+  useEffect(() => { rascunho.tagCustomConfirmada = tagCustomConfirmada; }, [tagCustomConfirmada]);
+
 
 
   // Termo com debounce usado na busca server-side de TAGs (tempo real).
