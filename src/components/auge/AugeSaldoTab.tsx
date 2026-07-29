@@ -102,10 +102,6 @@ export default function AugeSaldoTab() {
             {depositos.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
           </SelectContent>
         </Select>
-        <Button onClick={sync} disabled={syncing} className="h-11 px-5 gap-2">
-          {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-          Sincronizar
-        </Button>
       </div>
 
       <div className="grid grid-cols-3 gap-3">
