@@ -556,7 +556,9 @@ function parseTagGridResponse(text: string): TagCalculadaRow[] {
     const cols = tds.filter((c) => c.length > 0 && !c.startsWith('{'));
     if (cols.length >= 2) {
       const [nome, descricao, formula] = cols;
-      if (nome && !/^nome$/i.test(nome)) {
+      // Ignora rótulos de formulário ("Nome:", "Tag:", "Operador:") e cabeçalhos.
+      const isLabel = (v: string) => /:$/.test(v.trim());
+      if (nome && !/^nome$/i.test(nome) && !isLabel(nome) && !isLabel(descricao ?? '')) {
         out.push({ cd_tag: nome, nome, descricao: descricao || null, formula: formula || null });
       }
     }
