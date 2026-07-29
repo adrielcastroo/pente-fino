@@ -1057,9 +1057,11 @@ export default function GerarTagTab() {
                   </Badge>
                 </div>
                 <p className="text-[10px] text-muted-foreground">
-                  Padrão detectado em {obrigatorias[0]?.total ?? 0} TAG(s) Custom existentes com “{termoBusca}”
-                  na configuração. A gravação fica bloqueada enquanto faltar alguma.
+                  Padrão detectado em {obrigatorias[0]?.total ?? 0} TAG(s) Custom existentes que contêm
+                  “{escopoPadrao.termo || termoBusca}”. Quanto mais específico o texto, mais restrito o padrão
+                  exigido. A gravação fica bloqueada enquanto faltar alguma.
                 </p>
+
 
               </div>
               {obrigatoriasFaltando.length > 0 && (
