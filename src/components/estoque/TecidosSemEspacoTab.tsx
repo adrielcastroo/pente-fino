@@ -151,10 +151,6 @@ export default function TecidosSemEspacoTab() {
                 onChange={e => setSearch(e.target.value)}
               />
             </div>
-            <Button onClick={runSync} disabled={syncing} className="gap-2">
-              {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-              Sincronizar Auge
-            </Button>
           </div>
         </div>
       </CardHeader>
