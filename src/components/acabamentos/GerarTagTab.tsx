@@ -304,12 +304,53 @@ export default function GerarTagTab() {
     },
   });
 
+  // ---------- Busca direta (tempo real) no catálogo de TAGs ----------
+  // Independe do ranking local: consulta o banco a cada digitação (debounce 300ms),
+  // aceitando curinga `*` no estilo SAP B1.
+  const padraoBusca = useMemo(() => toIlikePattern(termoBusca), [termoBusca]);
+
+  const { data: tagsBusca = [], isFetching: loadingBusca } = useQuery({
+    queryKey: ['auge-tag-custom-busca', padraoBusca],
+    enabled: padraoBusca.length >= 3,
+    staleTime: 60 * 1000,
+    queryFn: async () => {
+      const cols = [
+        'nm_configuracao',
+        'ds_tag_customizada',
+        'nm_tag_customizada',
+        'ds_tag_texto',
+        'ds_tag_calculada',
+      ];
+      const { data, error } = await (supabase as any)
+        .from('auge_tag_custom')
+        .select('cd_configuracao, nm_configuracao, nm_tag_customizada, ds_tag_customizada, ds_tag_calculada, ds_tag_texto')
+        .or(cols.map((c) => `${c}.ilike.${padraoBusca}`).join(','))
+        .limit(300);
+      if (error) throw error;
+      return (data ?? []) as CustomTag[];
+    },
+  });
+
+  // União: TAGs das configurações ranqueadas + TAGs encontradas na busca direta.
+  const tagsUnificadas = useMemo<CustomTag[]>(() => {
+    const seen = new Set<string>();
+    const out: CustomTag[] = [];
+    for (const t of [...tagsTop, ...tagsBusca]) {
+      const k = `${t.cd_configuracao}|${t.ds_tag_customizada ?? t.nm_tag_customizada ?? ''}|${t.ds_tag_texto ?? ''}`;
+      if (seen.has(k)) continue;
+      seen.add(k);
+      out.push(t);
+    }
+    return out;
+  }, [tagsTop, tagsBusca]);
+
   // ---------- Agrupamento por CATEGORIA de TAG (T_BASE, T_TUBO, ...) ----------
   const categorias = useMemo<TagCategoria[]>(() => {
-    if (tagsTop.length === 0) return [];
+    if (tagsUnificadas.length === 0) return [];
     const scoreByCfg = new Map(configsRanqueadas.map((r) => [r.cfg.cd_configuracao, r.score]));
     const byCode = new Map<string, TagCategoria>();
-    for (const tag of tagsTop) {
+    for (const tag of tagsUnificadas) {
+
       const code = normalizeTagCode(tag.ds_tag_customizada ?? tag.nm_tag_customizada);
       if (!code) continue;
       const score = scoreByCfg.get(tag.cd_configuracao) ?? 0;
