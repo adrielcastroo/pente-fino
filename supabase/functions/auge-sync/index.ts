@@ -3786,12 +3786,50 @@ Deno.serve(async (req) => {
       try { payload = await req.json(); } catch { /* ignore */ }
       const cd = String(payload?.cdConfiguracao ?? '').trim();
       const ds = String(payload?.dsTagCustomizada ?? '').trim();
+      const nm = String(payload?.nmConfiguracao ?? '').trim();
       if (!cd && !ds) throw new Error('Informe cdConfiguracao ou dsTagCustomizada.');
       const rows = await fetchListaTagsCustomizadas(auth, cd, ds);
+
+      // Persiste o que veio ao vivo para que a próxima busca já encontre local.
+      try {
+        const mapped = rows.map((r: any) => ({
+          cd_configuracao: String(r.cdConfiguracao ?? cd ?? '').trim(),
+          nm_configuracao: r.nmConfiguracao ?? nm ?? null,
+          cd_tag_customizada: String(r.cdTagCustomizada ?? ''),
+          nm_tag_customizada: r.nmTagCustomizada ?? null,
+          ds_tag_customizada: r.dsTagCustomizada ?? null,
+          cd_tag_calculada: r.cdTagCalculada ?? null,
+          ds_tag_calculada: r.dsTagCalculada ?? null,
+          ds_tag_texto: r.dsTagTexto ?? null,
+          raw: r,
+          synced_at: new Date().toISOString(),
+        })).filter((r) => r.cd_configuracao && r.cd_tag_customizada);
+
+        const deduped = Array.from(
+          mapped.reduce((acc, row) => {
+            acc.set(`${row.cd_configuracao}::${row.cd_tag_customizada}`, row);
+            return acc;
+          }, new Map<string, any>()).values(),
+        );
+        if (deduped.length) {
+          await admin.from('auge_tag_custom').upsert(deduped, { onConflict: 'cd_configuracao,cd_tag_customizada' });
+        }
+        if (cd) {
+          await admin.from('auge_tag_custom_scan').upsert({
+            cd_configuracao: cd,
+            nm_configuracao: nm || (rows[0]?.nmConfiguracao ?? null),
+            qtd_tags: rows.length,
+            last_scanned_at: new Date().toISOString(),
+            erro: null,
+          }, { onConflict: 'cd_configuracao' });
+        }
+      } catch { /* persistência é best-effort */ }
+
       return new Response(JSON.stringify({ ok: true, rows }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
 
     // Cria/atualiza uma TAG Custom (conjunto de linhas de TAG Customizada) no Auge
     // e devolve o status de cada linha + como a configuração ficou no Auge.

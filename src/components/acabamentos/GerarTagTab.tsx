@@ -244,7 +244,7 @@ function TagCalculadaCell({
         }
       } catch { /* segue para o fallback local */ }
 
-      // 2) Fallback: o que já está sincronizado localmente.
+      // 2) Fallback: o que já está sincronizado localmente (acabamentos).
       if (out.length === 0 && padrao) {
         const { data } = await (supabase as any)
           .from('auge_acabamentos')
@@ -259,6 +259,22 @@ function TagCalculadaCell({
           out.push({ valor: v, cfg: r.nm_acabamento ?? '' });
         }
       }
+
+      // 3) Fallback: TAGs calculadas já vinculadas em TAG Custom.
+      if (out.length === 0 && padrao) {
+        const { data } = await (supabase as any)
+          .from('auge_tag_custom')
+          .select('ds_tag_calculada, cd_tag_calculada, nm_configuracao')
+          .or(`ds_tag_calculada.ilike.${padrao},cd_tag_calculada.ilike.${padrao}`)
+          .limit(200);
+        for (const r of (data ?? []) as any[]) {
+          const v = String(r.ds_tag_calculada ?? r.cd_tag_calculada ?? '').trim();
+          if (!v || seen.has(v)) continue;
+          seen.add(v);
+          out.push({ valor: v, cfg: r.nm_configuracao ?? '' });
+        }
+      }
+
       return out.slice(0, 50);
     },
   });
@@ -364,27 +380,71 @@ function ConfiguracaoSelect({
     enabled: aberto && padrao.length >= 3,
     staleTime: 60 * 1000,
     queryFn: async () => {
-      // 1) tentativa exata (substring contínua)
+      const dedupe = (rows: ConfiguracaoLite[]) => {
+        const seen = new Set<string>();
+        const out: ConfiguracaoLite[] = [];
+        for (const r of rows) {
+          const cd = String(r.cd_configuracao ?? '').trim();
+          if (!cd || seen.has(cd)) continue;
+          seen.add(cd);
+          out.push({ cd_configuracao: cd, nm_configuracao: r.nm_configuracao ?? cd, qtd_tags: r.qtd_tags ?? 0 });
+        }
+        return out;
+      };
+
+      // 1) View local (só lista configurações que já têm linhas de TAG gravadas).
       const exata = await (supabase as any)
         .from('auge_tag_custom_configuracoes')
         .select('cd_configuracao, nm_configuracao, qtd_tags')
         .ilike('nm_configuracao', padrao)
         .limit(50);
-      if (exata.error) throw exata.error;
-      if ((exata.data ?? []).length > 0) return exata.data as ConfiguracaoLite[];
+      if (!exata.error && (exata.data ?? []).length > 0) return dedupe(exata.data as ConfiguracaoLite[]);
 
-      // 2) fallback por tokens (AND, ordem livre) — resolve diferenças de
-      //    espaçamento/ordem entre a descrição digitada e o cadastro no Auge.
-      if (tokens.length === 0) return [] as ConfiguracaoLite[];
-      let q = (supabase as any)
-        .from('auge_tag_custom_configuracoes')
-        .select('cd_configuracao, nm_configuracao, qtd_tags');
-      for (const t of tokens) q = q.ilike('nm_configuracao', t);
-      const { data, error } = await q.limit(50);
-      if (error) throw error;
-      return (data ?? []) as ConfiguracaoLite[];
+      // 2) View local por tokens (AND, ordem livre).
+      if (tokens.length > 0) {
+        let q = (supabase as any)
+          .from('auge_tag_custom_configuracoes')
+          .select('cd_configuracao, nm_configuracao, qtd_tags');
+        for (const t of tokens) q = q.ilike('nm_configuracao', t);
+        const { data } = await q.limit(50);
+        if ((data ?? []).length > 0) return dedupe(data as ConfiguracaoLite[]);
+      }
+
+      // 3) Varredura (auge_tag_custom_scan): configurações conhecidas no Auge que
+      //    ainda não têm linhas de TAG gravadas localmente.
+      const scanExata = await (supabase as any)
+        .from('auge_tag_custom_scan')
+        .select('cd_configuracao, nm_configuracao, qtd_tags')
+        .ilike('nm_configuracao', padrao)
+        .limit(50);
+      if (!scanExata.error && (scanExata.data ?? []).length > 0) return dedupe(scanExata.data as ConfiguracaoLite[]);
+
+      if (tokens.length > 0) {
+        let qs = (supabase as any)
+          .from('auge_tag_custom_scan')
+          .select('cd_configuracao, nm_configuracao, qtd_tags');
+        for (const t of tokens) qs = qs.ilike('nm_configuracao', t);
+        const { data } = await qs.limit(50);
+        if ((data ?? []).length > 0) return dedupe(data as ConfiguracaoLite[]);
+      }
+
+      // 4) Último recurso: lookup ao vivo no Auge (fonte oficial).
+      try {
+        const { data: fn } = await supabase.functions.invoke('auge-sync?action=tag_config_select', {
+          body: { term: sanitizeTerm(termo).replace(/\*/g, ' ').trim(), qtdItens: 50 },
+        });
+        const rows = ((fn as any)?.rows ?? []) as Array<{ id: string; text: string }>;
+        return dedupe(rows.map((r) => ({
+          cd_configuracao: String(r.id ?? '').trim(),
+          nm_configuracao: String(r.text ?? '').trim(),
+          qtd_tags: 0,
+        })));
+      } catch {
+        return [] as ConfiguracaoLite[];
+      }
     },
   });
+
 
 
   if (valor && !aberto) {
@@ -503,9 +563,10 @@ export default function GerarTagTab() {
   });
 
   const padraoBusca = useMemo(() => toIlikePattern(termoBusca), [termoBusca]);
+  const tokensBusca = useMemo(() => toIlikeTokens(termoBusca), [termoBusca]);
 
   const { data: tagsBusca = [], isFetching: loadingBusca } = useQuery({
-    queryKey: ['auge-tag-custom-busca', padraoBusca],
+    queryKey: ['auge-tag-custom-busca', padraoBusca, tokensBusca.join('|')],
     enabled: padraoBusca.length >= 3,
     staleTime: 60 * 1000,
     queryFn: async () => {
@@ -516,8 +577,18 @@ export default function GerarTagTab() {
         .or(cols.map((c) => `${c}.ilike.${padraoBusca}`).join(','))
         .limit(300);
       if (error) throw error;
-      return (data ?? []) as CustomTag[];
+      if ((data ?? []).length > 0) return data as CustomTag[];
+
+      // Fallback por tokens na configuração (ordem/espaçamento diferentes).
+      if (tokensBusca.length === 0) return [] as CustomTag[];
+      let q = (supabase as any)
+        .from('auge_tag_custom')
+        .select('cd_configuracao, nm_configuracao, nm_tag_customizada, ds_tag_customizada, ds_tag_calculada, ds_tag_texto');
+      for (const t of tokensBusca) q = q.ilike('nm_configuracao', t);
+      const alt = await q.limit(300);
+      return (alt.data ?? []) as CustomTag[];
     },
+
   });
 
   // TAGs Custom existentes que casam com o termo pesquisado.
@@ -543,9 +614,30 @@ export default function GerarTagTab() {
         .eq('cd_configuracao', customAberta!.cd)
         .limit(2000);
       if (error) throw error;
-      return (data ?? []) as CustomTag[];
+      const locais = (data ?? []) as CustomTag[];
+      if (locais.length > 0) return locais;
+
+      // Sem linhas locais: consulta ao vivo no Auge (a edge function também
+      // grava o resultado, então na próxima vez já vem do banco).
+      try {
+        const { data: fn } = await supabase.functions.invoke('auge-sync?action=tag_custom_por_config', {
+          body: { cdConfiguracao: customAberta!.cd, nmConfiguracao: customAberta!.nm },
+        });
+        const rows = ((fn as any)?.rows ?? []) as any[];
+        return rows.map((r) => ({
+          cd_configuracao: String(r.cdConfiguracao ?? customAberta!.cd),
+          nm_configuracao: r.nmConfiguracao ?? customAberta!.nm ?? null,
+          nm_tag_customizada: r.nmTagCustomizada ?? null,
+          ds_tag_customizada: r.dsTagCustomizada ?? null,
+          ds_tag_calculada: r.dsTagCalculada ?? null,
+          ds_tag_texto: r.dsTagTexto ?? null,
+        })) as CustomTag[];
+      } catch {
+        return locais;
+      }
     },
   });
+
 
   // União: TAGs das configurações ranqueadas + busca direta + TAG Custom aberta.
   const tagsUnificadas = useMemo<CustomTag[]>(() => {
