@@ -237,8 +237,8 @@ export default function GerarTagTab() {
   }, [entradaManual]);
 
 
-  // ---------- Acabamentos (lista lateral) ----------
-  const { data: acabamentos = [], isLoading } = useQuery({
+  // ---------- Acabamentos (catálogo para recomendações) ----------
+  const { data: acabamentos = [] } = useQuery({
     queryKey: ['acabamentos-gerar-tag'],
     staleTime: 5 * 60 * 1000,
     queryFn: async () => {
