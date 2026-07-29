@@ -385,9 +385,11 @@ function TagCalculadaCell({
 function ConfiguracaoSelect({
   valor,
   onChange,
+  onSearchStateChange,
 }: {
   valor: { cd: string; nm: string } | null;
   onChange: (v: { cd: string; nm: string } | null) => void;
+  onSearchStateChange?: (state: { termo: string; hasResults: boolean; isSearching: boolean }) => void;
 }) {
   const [busca, setBusca] = useState('');
   const [termo, setTermo] = useState('');
@@ -471,7 +473,13 @@ function ConfiguracaoSelect({
     },
   });
 
-
+  useEffect(() => {
+    onSearchStateChange?.({
+      termo,
+      hasResults: opcoes.length > 0,
+      isSearching: isFetching,
+    });
+  }, [termo, opcoes.length, isFetching, onSearchStateChange]);
 
   if (valor && !aberto) {
     return (
@@ -488,6 +496,8 @@ function ConfiguracaoSelect({
     );
   }
 
+  const mostrarDropdown = aberto && padrao.length >= 3 && (isFetching || opcoes.length > 0);
+
   return (
     <div className="space-y-1">
       <div className="relative">
@@ -500,17 +510,14 @@ function ConfiguracaoSelect({
           className="h-10 pl-7 text-[11px]"
         />
       </div>
-      {aberto && padrao.length >= 3 && (
+      {mostrarDropdown && (
         <div className="rounded border bg-background max-h-48 overflow-auto">
           {isFetching && (
             <div className="p-2 text-[10px] text-muted-foreground flex items-center gap-1">
               <Loader2 className="h-3 w-3 animate-spin" /> Buscando…
             </div>
           )}
-          {!isFetching && opcoes.length === 0 && (
-            <div className="p-2 text-[10px] text-muted-foreground">Nenhuma configuração encontrada.</div>
-          )}
-          {opcoes.map((o) => (
+          {!isFetching && opcoes.map((o) => (
             <button
               key={o.cd_configuracao}
               onClick={() => { onChange({ cd: o.cd_configuracao, nm: o.nm_configuracao }); setAberto(false); }}
@@ -548,6 +555,13 @@ export default function GerarTagTab() {
     const t = setTimeout(() => setTermoBusca(descricao.trim()), 300);
     return () => clearTimeout(t);
   }, [descricao]);
+
+  // Estado da busca no campo Configuração (para indicar "Nova TAG Custom").
+  const [cfgSearch, setCfgSearch] = useState<{ termo: string; hasResults: boolean; isSearching: boolean }>({
+    termo: '',
+    hasResults: false,
+    isSearching: false,
+  });
 
   // ---------- Configurações (catálogo leve) ----------
   const { data: configuracoes = [], isLoading: loadingCfgs } = useQuery({
@@ -908,10 +922,17 @@ export default function GerarTagTab() {
 
         {/* Configuração: busca a TAG Custom (configuração) existente */}
         <div className="space-y-1">
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
             Configuração
+            {cfgSearch.termo.trim().length >= 3 && !customAberta && !cfgSearch.isSearching && !cfgSearch.hasResults && (
+              <Badge className="bg-amber-500 text-amber-950 hover:bg-amber-500 text-[9px]">Nova TAG Custom</Badge>
+            )}
           </div>
-          <ConfiguracaoSelect valor={customAberta} onChange={(v) => { setCustomAberta(v); setResultado(null); }} />
+          <ConfiguracaoSelect
+            valor={customAberta}
+            onChange={(v) => { setCustomAberta(v); setResultado(null); }}
+            onSearchStateChange={setCfgSearch}
+          />
           <p className="text-[10px] text-muted-foreground">
             Busca a TAG Custom já existente no sistema. Deixe vazio para criar uma nova.
           </p>
