@@ -215,10 +215,10 @@ function TagCalculadaCell({
 
       // 1) Busca ao vivo no Auge (fonte oficial do lookup "Tag Calculada").
       try {
-        const { data: fn } = await supabase.functions.invoke('auge-sync', {
+        const { data: fn } = await supabase.functions.invoke('auge-sync?action=tag_calculada_select', {
           body: { term: termo.replace(/\*/g, '') },
-          // deno-lint-ignore no-explicit-any
-        } as any);
+        });
+
         const rows = (fn as any)?.rows ?? [];
         for (const r of rows as Array<{ id: string; text: string }>) {
           const v = String(r?.text ?? '').trim();
