@@ -231,7 +231,6 @@ interface TagSelecionada {
 // Componente
 // ============================================================
 export default function GerarTagTab() {
-  const [busca, setBusca] = useState('');
   const [selecionado, setSelecionado] = useState<Acabamento | null>(null);
   const [tagGerada, setTagGerada] = useState('');
   const [entradaManual, setEntradaManual] = useState('');
