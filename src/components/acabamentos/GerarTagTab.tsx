@@ -264,14 +264,13 @@ export default function GerarTagTab() {
   });
 
   const filtrados = useMemo(() => {
-    const t = busca.trim().toLowerCase();
+    const t = busca.trim();
     if (!t) return acabamentos.slice(0, 200);
     return acabamentos
-      .filter((a) =>
-        (a.nm_acabamento ?? '').toLowerCase().includes(t) ||
-        (a.chave_acabamento ?? '').toLowerCase().includes(t))
+      .filter((a) => matchesWildcard(a.nm_acabamento, t) || matchesWildcard(a.chave_acabamento, t))
       .slice(0, 200);
   }, [acabamentos, busca]);
+
 
   const recomendacoes = useMemo(() => {
     if (!entradaDeferida.trim() || acabamentos.length === 0) return [];
