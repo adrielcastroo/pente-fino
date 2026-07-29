@@ -405,15 +405,15 @@ async function dispatchPrint(
     data: Record<string, any>;
   },
 ): Promise<void> {
-  const browserDisabled = typeof localStorage !== 'undefined'
-    && localStorage.getItem('pref_disable_browser_print') === 'true';
+  const browserDisabled = isBrowserPrintDisabled();
 
   // Webhook por tipo. Motor pode reaproveitar o webhook geral (n8n) como
   // fallback — o payload inclui `type`, `template` e `format` para que o
   // fluxo do n8n faça o roteamento correto e respeite as dimensões enviadas
   // (widthMm/heightMm) em vez de forçar o tamanho de tecido.
   const resolvedWebhook = resolveWebhookUrl();
-  const hasWebhook = !!resolvedWebhook;
+  const hasWebhook = !!resolvedWebhook && !isWebhookPrintDisabled();
+
   // Regra do usuário: quando a impressão pelo navegador está LIGADA, NÃO
   // enviar ao n8n (evita redundância — o navegador já cuida da impressão).
   // Só usa n8n quando o navegador está explicitamente desabilitado ou quando
