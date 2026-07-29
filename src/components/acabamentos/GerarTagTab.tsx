@@ -556,6 +556,13 @@ export default function GerarTagTab() {
     return () => clearTimeout(t);
   }, [descricao]);
 
+  // Estado da busca no campo Configuração (para indicar "Nova TAG Custom").
+  const [cfgSearch, setCfgSearch] = useState<{ termo: string; hasResults: boolean; isSearching: boolean }>({
+    termo: '',
+    hasResults: false,
+    isSearching: false,
+  });
+
   // ---------- Configurações (catálogo leve) ----------
   const { data: configuracoes = [], isLoading: loadingCfgs } = useQuery({
     queryKey: ['auge-tag-custom-configuracoes'],
