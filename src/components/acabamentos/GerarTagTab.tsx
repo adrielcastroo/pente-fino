@@ -375,12 +375,6 @@ export default function GerarTagTab() {
 
   const gerar = (input: string) => setTagGerada(normalizeTagFormatC(input));
 
-  const selecionar = (a: Acabamento) => {
-    setSelecionado(a);
-    setEntradaManual(a.nm_acabamento);
-    gerar(a.nm_acabamento);
-  };
-
   useEffect(() => {
     if (!melhor) return;
     if (selecionado?.cd_acabamento === melhor.acab.cd_acabamento) return;
