@@ -546,7 +546,6 @@ function ConfiguracaoSelect({
 // ============================================================
 export default function GerarTagTab() {
   const [descricao, setDescricao] = useState(rascunho.descricao);
-  const descricaoDeferida = useDeferredValue(descricao);
   const [linhas, setLinhas] = useState<LinhaTag[]>(rascunho.linhas);
   const [customAberta, setCustomAberta] = useState<{ cd: string; nm: string } | null>(rascunho.customAberta);
   const [enviando, setEnviando] = useState(false);
@@ -557,19 +556,20 @@ export default function GerarTagTab() {
   useEffect(() => { rascunho.linhas = linhas; }, [linhas]);
   useEffect(() => { rascunho.customAberta = customAberta; }, [customAberta]);
 
-  // Termo com debounce para busca server-side em tempo real.
-  const [termoBusca, setTermoBusca] = useState('');
-  useEffect(() => {
-    const t = setTimeout(() => setTermoBusca(descricao.trim()), 300);
-    return () => clearTimeout(t);
-  }, [descricao]);
-
   // Estado da busca no campo Configuração (para indicar "Nova TAG Custom").
   const [cfgSearch, setCfgSearch] = useState<{ termo: string; hasResults: boolean; isSearching: boolean }>({
     termo: '',
     hasResults: false,
     isSearching: false,
   });
+
+  // O texto da CONFIGURAÇÃO (não o nome da Tag) é o único driver das análises:
+  // recomendações e detecção do padrão obrigatório.
+  const termoBusca = useMemo(
+    () => (customAberta?.nm ?? cfgSearch.termo ?? '').trim(),
+    [customAberta, cfgSearch.termo],
+  );
+  const termoDeferido = useDeferredValue(termoBusca);
 
   // ---------- Configurações (catálogo leve) ----------
   const { data: configuracoes = [], isLoading: loadingCfgs } = useQuery({
@@ -586,9 +586,10 @@ export default function GerarTagTab() {
   });
 
   const configsRanqueadas = useMemo(() => {
-    if (!descricaoDeferida.trim() || configuracoes.length === 0) return [];
-    return rankConfiguracoes(descricaoDeferida, configuracoes);
-  }, [descricaoDeferida, configuracoes]);
+    if (!termoDeferido.trim() || configuracoes.length === 0) return [];
+    return rankConfiguracoes(termoDeferido, configuracoes);
+  }, [termoDeferido, configuracoes]);
+
 
   const topCfgCodes = useMemo(
     () => configsRanqueadas.slice(0, 12).map((r) => r.cfg.cd_configuracao),
