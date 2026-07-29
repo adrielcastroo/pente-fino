@@ -19,10 +19,22 @@ export function useDashboard() {
     // Run independently so one failure doesn't kill the other (was: codigo column
     // didn't exist and threw, leaving dbStats null → tecido.used = 0 → 0%).
     try {
-      const { data: posicoes, error: e1 } = await supabase
-        .from('estoque_posicoes')
-        .select('status, item, estrutura');
-      if (e1) throw e1;
+      // PostgREST limita a resposta a 1000 linhas por padrão. Sem paginação o
+      // dashboard contava apenas parte das posições (ex.: 907 ocupados em vez
+      // de 1447), divergindo do mapa em /estoque. Buscamos em páginas até o fim.
+      const PAGE = 1000;
+      const posicoes: { status: string | null; item: string | null; estrutura: string | null }[] = [];
+      for (let offset = 0; ; offset += PAGE) {
+        const { data, error: e1 } = await supabase
+          .from('estoque_posicoes')
+          .select('status, item, estrutura')
+          .range(offset, offset + PAGE - 1);
+        if (e1) throw e1;
+        if (!data || data.length === 0) break;
+        posicoes.push(...(data as any[]));
+        if (data.length < PAGE) break;
+      }
+
 
       const stats = {
         // Tecido = apenas estruturas do padrão TECxx (mapa 2D).
