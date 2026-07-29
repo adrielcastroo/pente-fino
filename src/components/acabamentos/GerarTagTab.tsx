@@ -556,6 +556,29 @@ export default function GerarTagTab() {
     });
   };
 
+  /** Adiciona a "Tag" (texto livre) digitada pelo usuário como linha da tabela. */
+  const adicionarTagTextoLivre = () => {
+    const valor = normalizeTagFormatC(descricao);
+    if (!valor) {
+      toast.error('Digite o nome da Tag antes de adicionar.');
+      return;
+    }
+    const id = `livre|${valor}`;
+    if (linhas.some((l) => l.id === id)) {
+      toast.info('Essa Tag já está na tabela.');
+      return;
+    }
+    setResultado(null);
+    setLinhas((prev) => [...prev, {
+      id,
+      code: normalizeTagCode(valor) || 'TAG',
+      valor,
+      cfgNome: customAberta?.nm ?? '',
+      calculada: '',
+    }]);
+    toast.success('Tag adicionada à coluna Tag Customizada.');
+  };
+
   const setCalculada = (id: string, calculada: string) => {
     setLinhas((prev) => prev.map((l) => (l.id === id ? { ...l, calculada } : l)));
   };
