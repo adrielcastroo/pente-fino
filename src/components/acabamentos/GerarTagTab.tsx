@@ -767,14 +767,53 @@ export default function GerarTagTab() {
   }, [tagsBusca, tagsTop]);
 
   /**
+   * Refinamento por eliminação: usa SEMPRE o conjunto mais específico de
+   * modelos que casa com o texto digitado. Ex.: "Rollo" usa todas as Rollo;
+   * ao digitar "Rollo Pro", apenas as Rollo Pro passam a valer — o padrão das
+   * "Rollo" genéricas deixa de ser exigido.
+   *
+   * Estratégia: tenta casar todos os tokens digitados; se não houver amostra
+   * suficiente (>= 2 modelos), remove o último token e tenta novamente.
+   */
+  const escopoPadrao = useMemo(() => {
+    const norm = (s: string) =>
+      (s ?? '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, ' ')
+        .trim();
+
+    const tokens = norm(termoDeferido).split(' ').filter(Boolean);
+    const modelos = Array.from(modelosExistentes.values());
+    if (tokens.length === 0 || modelos.length === 0) {
+      return { modelos: [] as typeof modelos, termo: '', tokens: [] as string[] };
+    }
+
+    for (let n = tokens.length; n >= 1; n--) {
+      const sub = tokens.slice(0, n);
+      const filtrados = modelos.filter((m) => {
+        const alvo = norm(m.nm);
+        return sub.every((tk) => alvo.includes(tk));
+      });
+      // Nível mais específico com amostra estatisticamente utilizável.
+      if (filtrados.length >= 2) {
+        return { modelos: filtrados, termo: sub.join(' '), tokens: sub };
+      }
+    }
+    return { modelos: [] as typeof modelos, termo: '', tokens: [] as string[] };
+  }, [modelosExistentes, termoDeferido]);
+
+  /**
    * TAGs Configuradas que são padrão (presentes em praticamente todos os
-   * modelos com a mesma descrição). São obrigatórias na nova TAG Custom.
+   * modelos do escopo mais específico). São obrigatórias na nova TAG Custom.
    */
   const obrigatorias = useMemo(() => {
-    const totalModelos = modelosExistentes.size;
+    const modelos = escopoPadrao.modelos;
+    const totalModelos = modelos.length;
     if (totalModelos < 2) return [] as Array<{ code: string; valor: string; calculada: string; freq: number; total: number }>;
     const acc = new Map<string, { n: number; valor: string; calculadas: Map<string, number> }>();
-    for (const modelo of modelosExistentes.values()) {
+    for (const modelo of modelos) {
       for (const [code, info] of modelo.codes) {
         const cur = acc.get(code) ?? { n: 0, valor: info.valor, calculadas: new Map<string, number>() };
         cur.n += 1;
@@ -790,7 +829,8 @@ export default function GerarTagTab() {
       out.push({ code, valor: info.valor, calculada, freq: info.n, total: totalModelos });
     }
     return out.sort((a, b) => b.freq - a.freq || a.code.localeCompare(b.code));
-  }, [modelosExistentes]);
+  }, [escopoPadrao]);
+
 
   const codigosNaTabela = useMemo(() => new Set(linhas.map((l) => l.code)), [linhas]);
   const obrigatoriasFaltando = useMemo(
