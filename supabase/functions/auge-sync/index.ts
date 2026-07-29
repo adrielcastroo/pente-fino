@@ -3970,11 +3970,17 @@ Deno.serve(async (req) => {
 
       const pageRes = await fetch(`${AUGE_BASE_URL}/l.unilux/modInventario/tag/tag.php`, { headers });
       auth.jar.ingest(pageRes);
-      const html = (await pageRes.text()).slice(0, 400000);
-      const found = new Set<string>();
-      const re = /[a-zA-Z0-9_\/.-]+\.php/g;
-      let m: RegExpExecArray | null;
-      while ((m = re.exec(html)) !== null && found.size < 120) found.add(m[0]);
+      // Lê apenas os primeiros ~120KB para não estourar memória do worker.
+      let html = '';
+      const reader = pageRes.body?.getReader();
+      const dec = new TextDecoder();
+      while (reader && html.length < 120000) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        html += dec.decode(value, { stream: true });
+      }
+      try { await reader?.cancel(); } catch { /* ignore */ }
+
 
       return new Response(JSON.stringify({ ok: true, status: pageRes.status, ajax: [...found] }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
