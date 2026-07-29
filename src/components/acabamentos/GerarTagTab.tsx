@@ -228,6 +228,11 @@ export default function GerarTagTab() {
   const [entradaManual, setEntradaManual] = useState('');
   const entradaDeferida = useDeferredValue(entradaManual);
 
+  // TAGs escolhidas que compõem a TAG Custom final (acumuladas sob a descrição).
+  const [selecionadas, setSelecionadas] = useState<TagSelecionada[]>([]);
+  const [tagCustomConfirmada, setTagCustomConfirmada] = useState('');
+
+
   // Termo com debounce usado na busca server-side de TAGs (tempo real).
   const [termoBusca, setTermoBusca] = useState('');
   useEffect(() => {
