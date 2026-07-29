@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.4"
+    PostgrestVersion: "14.15"
   }
   public: {
     Tables: {
@@ -726,84 +726,84 @@ export type Database = {
       }
       auge_produtos_saldo: {
         Row: {
-          codigo: string
-          created_at: string
-          deposito: string
+          codigo: number | null
+          created_at: string | null
+          deposito: string | null
           descricao: string | null
-          id: string
-          quantidade: number
+          id: string | null
+          quantidade: string | null
           raw: Json | null
-          synced_at: string
+          synced_at: string | null
           unidade: string | null
-          updated_at: string
+          updated_at: string | null
         }
         Insert: {
-          codigo: string
-          created_at?: string
-          deposito?: string
+          codigo?: number | null
+          created_at?: string | null
+          deposito?: string | null
           descricao?: string | null
-          id?: string
-          quantidade?: number
+          id?: string | null
+          quantidade?: string | null
           raw?: Json | null
-          synced_at?: string
+          synced_at?: string | null
           unidade?: string | null
-          updated_at?: string
+          updated_at?: string | null
         }
         Update: {
-          codigo?: string
-          created_at?: string
-          deposito?: string
+          codigo?: number | null
+          created_at?: string | null
+          deposito?: string | null
           descricao?: string | null
-          id?: string
-          quantidade?: number
+          id?: string | null
+          quantidade?: string | null
           raw?: Json | null
-          synced_at?: string
+          synced_at?: string | null
           unidade?: string | null
-          updated_at?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
       auge_sync_runs: {
         Row: {
-          created_at: string
-          detalhes: Json | null
+          created_at: string | null
+          detalhes: string | null
           entidade: string | null
           error_message: string | null
           finished_at: string | null
-          id: string
-          metadata: Json | null
-          rows_processed: number
-          rows_upserted: number
-          started_at: string
-          status: string
+          id: string | null
+          metadata: string | null
+          rows_processed: number | null
+          rows_upserted: number | null
+          started_at: string | null
+          status: string | null
           triggered_by: string | null
         }
         Insert: {
-          created_at?: string
-          detalhes?: Json | null
+          created_at?: string | null
+          detalhes?: string | null
           entidade?: string | null
           error_message?: string | null
           finished_at?: string | null
-          id?: string
-          metadata?: Json | null
-          rows_processed?: number
-          rows_upserted?: number
-          started_at?: string
-          status?: string
+          id?: string | null
+          metadata?: string | null
+          rows_processed?: number | null
+          rows_upserted?: number | null
+          started_at?: string | null
+          status?: string | null
           triggered_by?: string | null
         }
         Update: {
-          created_at?: string
-          detalhes?: Json | null
+          created_at?: string | null
+          detalhes?: string | null
           entidade?: string | null
           error_message?: string | null
           finished_at?: string | null
-          id?: string
-          metadata?: Json | null
-          rows_processed?: number
-          rows_upserted?: number
-          started_at?: string
-          status?: string
+          id?: string | null
+          metadata?: string | null
+          rows_processed?: number | null
+          rows_upserted?: number | null
+          started_at?: string | null
+          status?: string | null
           triggered_by?: string | null
         }
         Relationships: []
@@ -3817,10 +3817,6 @@ export type Database = {
         }
         Returns: boolean
       }
-      expedicao_has_at_least: {
-        Args: { _min: Database["public"]["Enums"]["app_role"] }
-        Returns: boolean
-      }
       get_my_auge_permissoes: {
         Args: never
         Returns: {
@@ -3847,10 +3843,7 @@ export type Database = {
           schedule: string
         }[]
       }
-      has_auge_action: { Args: { _action: string }; Returns: boolean }
-      has_auge_area: { Args: { _area: string }; Returns: boolean }
       has_module: { Args: { _module: string }; Returns: boolean }
-      has_page_access: { Args: { _page_key: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
