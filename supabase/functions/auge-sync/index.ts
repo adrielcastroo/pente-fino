@@ -4096,6 +4096,44 @@ Deno.serve(async (req) => {
 
     // Sincroniza TODAS as TAGs calculadas listadas em /modInventario/tag/tag.php
     // (select tagSelectTag.php devolve a lista completa: [{value, text}]).
+    // Diagnóstico: mostra os endpoints ajax descobertos na página tag.php e
+    // uma amostra da resposta de cada um (para mapear a grade real).
+    if (action === 'debug_tag_grid') {
+      const { paths, pageHtml } = await discoverTagGridPaths(auth);
+      const headers: Record<string, string> = {
+        'Cookie': auth.jar.header(),
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRF-TOKEN': auth.csrf,
+        'Origin': AUGE_BASE_URL,
+        'Referer': `${AUGE_BASE_URL}/l.unilux/modInventario/tag/tag.php`,
+        'User-Agent': UA,
+        'Accept': 'application/json, text/html, */*; q=0.01',
+      };
+      if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
+      const probes: any[] = [];
+      for (const p of paths.slice(0, 12)) {
+        try {
+          const res = await fetch(`${AUGE_BASE_URL}${p}`, {
+            method: 'POST',
+            headers,
+            body: new URLSearchParams({ nrPagina: '1', qtdItens: '50', idAtivo: 'Y', dsPesquisaGeral: '' }),
+          });
+          const t = await res.text();
+          probes.push({ path: p, status: res.status, len: t.length, sample: t.slice(0, 400), parsed: parseTagGridResponse(t).length });
+        } catch (e) {
+          probes.push({ path: p, erro: getErrorMessage(e) });
+        }
+      }
+      return new Response(JSON.stringify({
+        ok: true,
+        pageLen: pageHtml.length,
+        pageSample: pageHtml.slice(0, 1500),
+        paths,
+        probes,
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     if (action === 'sync_tags_calculadas') {
       const nowIso = new Date().toISOString();
       const byKey = new Map<string, Record<string, unknown>>();
