@@ -418,6 +418,40 @@ export default function GerarTagTab() {
     toast.success('TAG copiada.');
   };
 
+  // ---------- Seleção acumulada de TAGs ----------
+  const toggleTag = (code: string, valorBruto: string, cfgNome: string) => {
+    const valor = normalizeTagFormatC(valorBruto);
+    if (!valor || valor === '—') return;
+    const id = `${code}|${valor}`;
+    setSelecionadas((prev) => {
+      if (prev.some((s) => s.id === id)) {
+        toast.info(`TAG ${code} removida da composição.`);
+        return prev.filter((s) => s.id !== id);
+      }
+      toast.success(`TAG ${code} adicionada à composição.`);
+      return [...prev, { id, code, valor, cfgNome }];
+    });
+    setTagCustomConfirmada('');
+  };
+
+  const isSelecionada = (code: string, valorBruto: string) =>
+    selecionadas.some((s) => s.id === `${code}|${normalizeTagFormatC(valorBruto)}`);
+
+  const composicao = useMemo(
+    () => selecionadas.map((s) => s.valor).join(' '),
+    [selecionadas],
+  );
+
+  const confirmarTagCustom = () => {
+    if (selecionadas.length === 0) return;
+    const final = normalizeTagFormatC(composicao);
+    setTagCustomConfirmada(final);
+    setTagGerada(final);
+    navigator.clipboard?.writeText(final).catch(() => undefined);
+    toast.success(`TAG Custom criada com ${selecionadas.length} TAG(s) e copiada.`);
+  };
+
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-4">
       <Card className="p-3 space-y-3 h-fit">
