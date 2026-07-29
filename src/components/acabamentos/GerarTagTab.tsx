@@ -363,7 +363,7 @@ export default function GerarTagTab() {
     for (const c of arr) c.items.sort((a, b) => b.score - a.score);
     arr.sort((a, b) => (b.items[0]?.score ?? 0) - (a.items[0]?.score ?? 0));
     return arr;
-  }, [tagsTop, configsRanqueadas]);
+  }, [tagsUnificadas, configsRanqueadas]);
 
   const melhor = recomendacoes[0] ?? null;
 
