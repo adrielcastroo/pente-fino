@@ -656,13 +656,6 @@ export default function GerarTagTab() {
           )}
 
 
-          <Button disabled className="w-full h-10 gap-2" title="Aguardando HAR do endpoint de gravação de TAG no Auge">
-            <Sparkles className="h-4 w-4" />
-            Salvar TAG no Auge (aguardando endpoint)
-          </Button>
-          <p className="text-[10px] text-muted-foreground text-center">
-            A gravação será habilitada assim que os HARs de TAG forem enviados.
-          </p>
         </Card>
       </div>
     </div>
