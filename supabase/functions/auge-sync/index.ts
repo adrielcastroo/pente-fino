@@ -617,10 +617,11 @@ async function fetchTagsCalculadasGrid(
 
   const { paths: discovered, pageHtml } = await discoverTagGridPaths(auth);
 
-  // A própria página já pode vir com a grade renderizada.
+  // A própria página já pode vir com a grade renderizada (só aceitamos se vier
+  // um volume compatível com a grade real, evitando rótulos do formulário).
   if (pageHtml) {
     const inline = parseTagGridResponse(pageHtml);
-    if (inline.length > 0) return inline;
+    if (inline.length >= 20) return inline;
   }
 
   const candidates = [
