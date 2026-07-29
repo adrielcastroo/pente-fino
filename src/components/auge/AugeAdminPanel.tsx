@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import {
   RefreshCw, Loader2, CheckCircle2, XCircle, Clock, Wifi, WifiOff,
-  Database, Activity, AlertTriangle, PlayCircle, Power, MapPin,
+  Database, Activity, AlertTriangle, PlayCircle, Power, MapPin, Zap,
 } from 'lucide-react';
 
 import { formatDateBR } from '@/lib/app-utils';
