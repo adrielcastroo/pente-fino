@@ -382,6 +382,9 @@ async function fetchSelectConfiguracoes(
 // primeiro que responder com dados.
 // ---------------------------------------------------------------------------
 const TAG_CALCULADA_PATHS = [
+  // Fonte oficial: página /modInventario/tag/tag.php usa este select com a
+  // lista COMPLETA de TAGs calculadas ([{value, text}]).
+  '/l.unilux/modInventario/tag/ajax/tagSelectTag.php',
   '/l.unilux/modInventario/tag/ajax/tagSelectListaTagsCalculadas.php',
   '/l.unilux/modInventario/tag/ajax/tagSelectListaTagCalculada.php',
   '/l.unilux/modInventario/tag/ajax/selectListaTagsCalculadas.php',
