@@ -484,10 +484,7 @@ export default function GerarTagTab() {
                   const bestValor = best?.tag.ds_tag_customizada ?? best?.tag.nm_tag_customizada ?? best?.tag.ds_tag_texto ?? best?.tag.ds_tag_calculada ?? '—';
                   return (
                     <div key={cat.code} className="rounded border bg-background p-2 space-y-1.5">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="font-mono font-semibold text-[11px] text-primary truncate">{cat.code}</div>
-                        <Badge variant="outline" className="text-[9px] shrink-0">{cat.items.length}</Badge>
-                      </div>
+                      <div className="font-mono font-semibold text-[11px] text-primary truncate">{cat.code}</div>
                       <button
                         onClick={() => toggleTag(cat.code, bestValor, best?.cfgNome ?? '')}
                         className={`w-full text-left rounded border p-1.5 transition ${isSelecionada(cat.code, bestValor) ? 'border-primary bg-primary/15' : 'border-primary/30 hover:bg-primary/10'}`}
@@ -499,29 +496,6 @@ export default function GerarTagTab() {
                         </div>
                         <div className="text-[9px] text-muted-foreground truncate mt-0.5">{best?.cfgNome}</div>
                       </button>
-                      {cat.items.length > 1 && (
-                        <details className="text-[10px]">
-                          <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
-                            + {cat.items.length - 1} variação(ões)
-                          </summary>
-                          <div className="space-y-1 mt-1">
-                            {cat.items.slice(1, 6).map((it, i) => {
-                              const v = it.tag.ds_tag_customizada ?? it.tag.nm_tag_customizada ?? it.tag.ds_tag_texto ?? it.tag.ds_tag_calculada ?? '—';
-                              return (
-                                <button
-                                  key={i}
-                                  onClick={() => toggleTag(cat.code, v, it.cfgNome)}
-                                  className={`w-full text-left rounded p-1 transition border ${isSelecionada(cat.code, v) ? 'border-primary bg-primary/10' : 'border-transparent hover:bg-muted'}`}
-                                >
-                                  <div className="font-mono text-[10px] break-all">{v}</div>
-                                  <div className="text-[9px] text-muted-foreground truncate">{it.cfgNome} · score {it.score}</div>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </details>
-
-                      )}
                     </div>
                   );
                 })}
