@@ -292,6 +292,96 @@ function TagCalculadaCell({
 }
 
 // ============================================================
+// Busca de Configuração (equivale ao campo "Configuração" do Auge)
+// ============================================================
+
+function ConfiguracaoSelect({
+  valor,
+  onChange,
+}: {
+  valor: { cd: string; nm: string } | null;
+  onChange: (v: { cd: string; nm: string } | null) => void;
+}) {
+  const [busca, setBusca] = useState('');
+  const [termo, setTermo] = useState('');
+  const [aberto, setAberto] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setTermo(busca.trim()), 300);
+    return () => clearTimeout(t);
+  }, [busca]);
+
+  const padrao = useMemo(() => toIlikePattern(termo), [termo]);
+
+  const { data: opcoes = [], isFetching } = useQuery({
+    queryKey: ['tag-custom-configuracao-busca', padrao],
+    enabled: aberto && padrao.length >= 3,
+    staleTime: 60 * 1000,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from('auge_tag_custom_configuracoes')
+        .select('cd_configuracao, nm_configuracao, qtd_tags')
+        .ilike('nm_configuracao', padrao)
+        .limit(50);
+      if (error) throw error;
+      return (data ?? []) as ConfiguracaoLite[];
+    },
+  });
+
+  if (valor && !aberto) {
+    return (
+      <div className="flex items-center gap-2 rounded border px-2 py-2">
+        <Layers className="h-3.5 w-3.5 text-primary shrink-0" />
+        <span className="text-[11px] font-medium break-all flex-1">{valor.nm}</span>
+        <Button size="sm" variant="ghost" className="h-6 px-2 text-[10px]" onClick={() => { setAberto(true); setBusca(valor.nm); }}>
+          Trocar
+        </Button>
+        <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => onChange(null)} aria-label="Limpar configuração">
+          <X className="h-3 w-3" />
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-1">
+      <div className="relative">
+        <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+        <Input
+          value={busca}
+          onFocus={() => setAberto(true)}
+          onChange={(e) => { setBusca(e.target.value); setAberto(true); }}
+          placeholder="Digite para procurar a configuração (use * como curinga)"
+          className="h-10 pl-7 text-[11px]"
+        />
+      </div>
+      {aberto && padrao.length >= 3 && (
+        <div className="rounded border bg-background max-h-48 overflow-auto">
+          {isFetching && (
+            <div className="p-2 text-[10px] text-muted-foreground flex items-center gap-1">
+              <Loader2 className="h-3 w-3 animate-spin" /> Buscando…
+            </div>
+          )}
+          {!isFetching && opcoes.length === 0 && (
+            <div className="p-2 text-[10px] text-muted-foreground">Nenhuma configuração encontrada.</div>
+          )}
+          {opcoes.map((o) => (
+            <button
+              key={o.cd_configuracao}
+              onClick={() => { onChange({ cd: o.cd_configuracao, nm: o.nm_configuracao }); setAberto(false); }}
+              className="w-full text-left px-2 py-1 hover:bg-muted/60 transition"
+            >
+              <div className="text-[11px] break-all">{o.nm_configuracao}</div>
+              <div className="text-[9px] text-muted-foreground">{o.qtd_tags} TAG(s)</div>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
 // Componente principal
 // ============================================================
 export default function GerarTagTab() {
@@ -466,6 +556,29 @@ export default function GerarTagTab() {
     });
   };
 
+  /** Adiciona a "Tag" (texto livre) digitada pelo usuário como linha da tabela. */
+  const adicionarTagTextoLivre = () => {
+    const valor = normalizeTagFormatC(descricao);
+    if (!valor) {
+      toast.error('Digite o nome da Tag antes de adicionar.');
+      return;
+    }
+    const id = `livre|${valor}`;
+    if (linhas.some((l) => l.id === id)) {
+      toast.info('Essa Tag já está na tabela.');
+      return;
+    }
+    setResultado(null);
+    setLinhas((prev) => [...prev, {
+      id,
+      code: normalizeTagCode(valor) || 'TAG',
+      valor,
+      cfgNome: customAberta?.nm ?? '',
+      calculada: '',
+    }]);
+    toast.success('Tag adicionada à coluna Tag Customizada.');
+  };
+
   const setCalculada = (id: string, calculada: string) => {
     setLinhas((prev) => prev.map((l) => (l.id === id ? { ...l, calculada } : l)));
   };
@@ -514,42 +627,67 @@ export default function GerarTagTab() {
 
   return (
     <div className="space-y-4">
-      {/* Descrição obrigatória da TAG Custom */}
-      <Card className="p-4 space-y-2">
+      
+      {/* Espelha o diálogo "Manter Tag Customizada" do Auge */}
+      <Card className="p-4 space-y-4">
         <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-          <Wand2 className="h-3.5 w-3.5" /> Descrição da TAG Custom
-          <Badge variant="destructive" className="text-[9px]">obrigatório</Badge>
+          <Wand2 className="h-3.5 w-3.5" /> Manter Tag Customizada
         </div>
-        <Input
-          value={descricao}
-          onChange={(e) => { setDescricao(e.target.value); setResultado(null); }}
-          placeholder="Ex: Rollo Abs2.0 M Motor LSN40 110v_RF T42 Standard P_Lat/Base_6.5_Parede Preto"
-          className={`h-11 text-xs font-mono ${descricaoInvalida ? 'border-destructive focus-visible:ring-destructive' : ''}`}
-        />
-        {descricaoInvalida && (
-          <p className="text-[10px] text-destructive flex items-center gap-1">
-            <AlertTriangle className="h-3 w-3" /> A descrição é obrigatória para gerar a TAG Custom.
-          </p>
-        )}
-        <p className="text-[10px] text-muted-foreground">
-          A descrição também alimenta as recomendações ao lado.
-          <span className="font-semibold text-foreground"> Curinga:</span> use <code className="font-mono">*</code> como
-          no SAP B1 — <code className="font-mono">T42*</code> começa com, <code className="font-mono">*motor</code> termina
-          com, <code className="font-mono">T*42</code> contém no meio (mín. 3 caracteres).
-        </p>
 
-        {customsEncontradas.length > 0 && (
-          <div className="pt-1 space-y-1.5">
+        {/* Configuração: busca a TAG Custom (configuração) existente */}
+        <div className="space-y-1">
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Configuração
+          </div>
+          <ConfiguracaoSelect valor={customAberta} onChange={(v) => { setCustomAberta(v); setResultado(null); }} />
+          <p className="text-[10px] text-muted-foreground">
+            Busca a TAG Custom já existente no sistema. Deixe vazio para criar uma nova.
+          </p>
+        </div>
+
+        {/* Tag: nome livre */}
+        <div className="space-y-1">
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+            Tag
+            <Badge variant="destructive" className="text-[9px]">obrigatório</Badge>
+          </div>
+          <div className="flex gap-2">
+            <Input
+              value={descricao}
+              onChange={(e) => { setDescricao(e.target.value); setResultado(null); }}
+              onKeyDown={(e) => { if (e.key === 'Enter') adicionarTagTextoLivre(); }}
+              placeholder="Nome da Tag (texto livre). Ex: Rollo Abs2.0 T42 Standard Preto"
+              className={`h-11 text-xs font-mono flex-1 ${descricaoInvalida ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+            />
+            <Button variant="outline" className="h-11 px-3 gap-1 text-[11px] shrink-0" onClick={adicionarTagTextoLivre}>
+              <Plus className="h-3.5 w-3.5" /> Adicionar
+            </Button>
+          </div>
+          {descricaoInvalida && (
+            <p className="text-[10px] text-destructive flex items-center gap-1">
+              <AlertTriangle className="h-3 w-3" /> O nome da Tag é obrigatório.
+            </p>
+          )}
+          <p className="text-[10px] text-muted-foreground">
+            O texto também alimenta as recomendações ao lado.
+            <span className="font-semibold text-foreground"> Curinga:</span> use <code className="font-mono">*</code> como
+            no SAP B1 — <code className="font-mono">T42*</code> começa com, <code className="font-mono">*motor</code> termina
+            com, <code className="font-mono">T*42</code> contém no meio (mín. 3 caracteres).
+          </p>
+        </div>
+
+        {customsEncontradas.length > 0 && !customAberta && (
+          <div className="space-y-1.5">
             <div className="text-[10px] uppercase text-muted-foreground flex items-center gap-1">
-              <Layers className="h-3 w-3" /> TAGs Custom existentes
+              <Layers className="h-3 w-3" /> Configurações relacionadas ao texto
               <Badge variant="outline" className="text-[9px]">{customsEncontradas.length}</Badge>
             </div>
             <div className="flex flex-wrap gap-1.5">
               {customsEncontradas.map((c) => (
                 <button
                   key={c.cd}
-                  onClick={() => setCustomAberta(customAberta?.cd === c.cd ? null : { cd: c.cd, nm: c.nm })}
-                  className={`rounded border px-2 py-1 text-[10px] transition ${customAberta?.cd === c.cd ? 'border-primary bg-primary/15' : 'hover:bg-muted/50'}`}
+                  onClick={() => setCustomAberta({ cd: c.cd, nm: c.nm })}
+                  className="rounded border px-2 py-1 text-[10px] transition hover:bg-muted/50"
                 >
                   <span className="font-medium">{c.nm}</span>
                   <span className="ml-1.5 text-muted-foreground">({c.qtd})</span>
@@ -559,6 +697,7 @@ export default function GerarTagTab() {
           </div>
         )}
       </Card>
+
 
       <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-4 items-start">
         {/* Bloco esquerdo: TAGs recomendadas */}
