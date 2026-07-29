@@ -474,6 +474,8 @@ async function fetchSelectTagsCalculadas(
 // memorizamos o primeiro que responder com linhas.
 // ---------------------------------------------------------------------------
 const TAG_GRID_PATHS = [
+  // Endpoint real usado pelo DataTable da página tag.php.
+  '/l.unilux/modInventario/tag/ajax/getListaTag.php',
   '/l.unilux/modInventario/tag/ajax/listaTags.php',
   '/l.unilux/modInventario/tag/ajax/listaTag.php',
   '/l.unilux/modInventario/tag/ajax/getTags.php',
