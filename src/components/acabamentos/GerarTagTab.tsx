@@ -628,41 +628,66 @@ export default function GerarTagTab() {
   return (
     <div className="space-y-4">
       {/* Descrição obrigatória da TAG Custom */}
-      <Card className="p-4 space-y-2">
+      {/* Espelha o diálogo "Manter Tag Customizada" do Auge */}
+      <Card className="p-4 space-y-4">
         <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-          <Wand2 className="h-3.5 w-3.5" /> Descrição da TAG Custom
-          <Badge variant="destructive" className="text-[9px]">obrigatório</Badge>
+          <Wand2 className="h-3.5 w-3.5" /> Manter Tag Customizada
         </div>
-        <Input
-          value={descricao}
-          onChange={(e) => { setDescricao(e.target.value); setResultado(null); }}
-          placeholder="Ex: Rollo Abs2.0 M Motor LSN40 110v_RF T42 Standard P_Lat/Base_6.5_Parede Preto"
-          className={`h-11 text-xs font-mono ${descricaoInvalida ? 'border-destructive focus-visible:ring-destructive' : ''}`}
-        />
-        {descricaoInvalida && (
-          <p className="text-[10px] text-destructive flex items-center gap-1">
-            <AlertTriangle className="h-3 w-3" /> A descrição é obrigatória para gerar a TAG Custom.
-          </p>
-        )}
-        <p className="text-[10px] text-muted-foreground">
-          A descrição também alimenta as recomendações ao lado.
-          <span className="font-semibold text-foreground"> Curinga:</span> use <code className="font-mono">*</code> como
-          no SAP B1 — <code className="font-mono">T42*</code> começa com, <code className="font-mono">*motor</code> termina
-          com, <code className="font-mono">T*42</code> contém no meio (mín. 3 caracteres).
-        </p>
 
-        {customsEncontradas.length > 0 && (
-          <div className="pt-1 space-y-1.5">
+        {/* Configuração: busca a TAG Custom (configuração) existente */}
+        <div className="space-y-1">
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Configuração
+          </div>
+          <ConfiguracaoSelect valor={customAberta} onChange={(v) => { setCustomAberta(v); setResultado(null); }} />
+          <p className="text-[10px] text-muted-foreground">
+            Busca a TAG Custom já existente no sistema. Deixe vazio para criar uma nova.
+          </p>
+        </div>
+
+        {/* Tag: nome livre */}
+        <div className="space-y-1">
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+            Tag
+            <Badge variant="destructive" className="text-[9px]">obrigatório</Badge>
+          </div>
+          <div className="flex gap-2">
+            <Input
+              value={descricao}
+              onChange={(e) => { setDescricao(e.target.value); setResultado(null); }}
+              onKeyDown={(e) => { if (e.key === 'Enter') adicionarTagTextoLivre(); }}
+              placeholder="Nome da Tag (texto livre). Ex: Rollo Abs2.0 T42 Standard Preto"
+              className={`h-11 text-xs font-mono flex-1 ${descricaoInvalida ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+            />
+            <Button variant="outline" className="h-11 px-3 gap-1 text-[11px] shrink-0" onClick={adicionarTagTextoLivre}>
+              <Plus className="h-3.5 w-3.5" /> Adicionar
+            </Button>
+          </div>
+          {descricaoInvalida && (
+            <p className="text-[10px] text-destructive flex items-center gap-1">
+              <AlertTriangle className="h-3 w-3" /> O nome da Tag é obrigatório.
+            </p>
+          )}
+          <p className="text-[10px] text-muted-foreground">
+            O texto também alimenta as recomendações ao lado.
+            <span className="font-semibold text-foreground"> Curinga:</span> use <code className="font-mono">*</code> como
+            no SAP B1 — <code className="font-mono">T42*</code> começa com, <code className="font-mono">*motor</code> termina
+            com, <code className="font-mono">T*42</code> contém no meio (mín. 3 caracteres).
+          </p>
+        </div>
+
+        {customsEncontradas.length > 0 && !customAberta && (
+          <div className="space-y-1.5">
             <div className="text-[10px] uppercase text-muted-foreground flex items-center gap-1">
-              <Layers className="h-3 w-3" /> TAGs Custom existentes
+              <Layers className="h-3 w-3" /> Configurações relacionadas ao texto
               <Badge variant="outline" className="text-[9px]">{customsEncontradas.length}</Badge>
             </div>
             <div className="flex flex-wrap gap-1.5">
               {customsEncontradas.map((c) => (
                 <button
                   key={c.cd}
-                  onClick={() => setCustomAberta(customAberta?.cd === c.cd ? null : { cd: c.cd, nm: c.nm })}
-                  className={`rounded border px-2 py-1 text-[10px] transition ${customAberta?.cd === c.cd ? 'border-primary bg-primary/15' : 'hover:bg-muted/50'}`}
+                  onClick={() => setCustomAberta({ cd: c.cd, nm: c.nm })}
+                  className="rounded border px-2 py-1 text-[10px] transition hover:bg-muted/50"
                 >
                   <span className="font-medium">{c.nm}</span>
                   <span className="ml-1.5 text-muted-foreground">({c.qtd})</span>
@@ -672,6 +697,7 @@ export default function GerarTagTab() {
           </div>
         )}
       </Card>
+
 
       <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-4 items-start">
         {/* Bloco esquerdo: TAGs recomendadas */}
