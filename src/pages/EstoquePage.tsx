@@ -236,19 +236,30 @@ export default function EstoquePage() {
   const totalSlots = TOTAL_SLOTS;
 
   const stats = useMemo(() => {
-    let occupied = 0, blocked = 0, reserved = 0, exited = 0;
-    
+    let occupied = 0, blocked = 0, reserved = 0, exited = 0, chao = 0;
+
+    // `totalSlots` (TOTAL_SLOTS) representa apenas as posições do mapa 2D
+    // (estruturas TECxx). Posições em "CHÃO" são área livre e ilimitada — se
+    // entrarem na contagem, o ocupado fica maior que a capacidade real e as
+    // porcentagens divergem do gráfico do dashboard.
     for (let i = 0, len = allPosicoes.length; i < len; i++) {
-      const s = (allPosicoes[i] as any).status;
+      const p = allPosicoes[i] as any;
+      const estrutura = String(p.estrutura ?? '').trim().toUpperCase();
+      if (!estrutura.startsWith('TEC')) {
+        if (p.status === 'ocupado') chao++;
+        continue;
+      }
+      const s = p.status;
       if (s === 'ocupado') occupied++;
       else if (s === 'bloqueado') blocked++;
       else if (s === 'reservado') reserved++;
       else if (s === 'saida') exited++;
     }
-    
+
     const free = totalSlots - occupied - blocked - reserved; // Exited items are removed from DB, so they don't count against capacity
-    return { totalSlots, occupied, blocked, reserved, exited, free };
+    return { totalSlots, occupied, blocked, reserved, exited, chao, free };
   }, [allPosicoes, totalSlots]);
+
 
   const cellMap = useMemo(() => {
     const map: Record<string, Posicao[]> = {};
