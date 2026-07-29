@@ -442,6 +442,12 @@ export default function GerarTagTab() {
               O app identifica tipo de cortina (Rollo/Shadow/Romana…), tubo (T35/T42/T65…), motor e cor,
               busca a configuração compatível e agrupa as TAGs por categoria (T_BASE, T_TUBO, T_TEC_X…).
             </p>
+            <p className="text-[10px] text-muted-foreground">
+              <span className="font-semibold text-foreground">Curinga:</span> use <code className="font-mono">*</code> como
+              no SAP B1 — <code className="font-mono">T42*</code> começa com, <code className="font-mono">*motor</code> termina
+              com, <code className="font-mono">T*42</code> contém no meio. Sem <code className="font-mono">*</code>, a busca
+              é "contém". A consulta é feita direto no catálogo do Auge enquanto você digita (mín. 3 caracteres).
+            </p>
             {loadingCfgs && (
               <div className="text-[10px] text-muted-foreground flex items-center gap-1">
                 <Loader2 className="h-3 w-3 animate-spin" /> Carregando catálogo de configurações…
@@ -451,11 +457,17 @@ export default function GerarTagTab() {
 
 
           {/* Categorias de TAGs (T_BASE, T_TUBO, T_TEC_X, ...) */}
-          {(loadingTags && categorias.length === 0) && (
+          {((loadingTags || loadingBusca) && categorias.length === 0) && (
             <div className="rounded border p-3 text-[10px] text-muted-foreground flex items-center gap-2">
-              <Loader2 className="h-3 w-3 animate-spin" /> Buscando TAGs das configurações compatíveis…
+              <Loader2 className="h-3 w-3 animate-spin" /> Buscando TAGs no catálogo do Auge…
             </div>
           )}
+          {padraoBusca.length >= 3 && !loadingBusca && categorias.length === 0 && (
+            <div className="rounded border p-3 text-[10px] text-muted-foreground">
+              Nenhuma TAG encontrada para esse termo. Tente usar <code className="font-mono">*</code> (ex.: <code className="font-mono">*T42*</code>).
+            </div>
+          )}
+
           {categorias.length > 0 && (
             <div className="rounded border border-primary/40 bg-primary/5 p-3 space-y-2">
               <div className="text-[10px] uppercase text-muted-foreground flex items-center gap-1">
