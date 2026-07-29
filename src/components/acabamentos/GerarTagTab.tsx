@@ -1,4 +1,4 @@
-import { useDeferredValue, useEffect, useMemo, useState } from 'react';
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
@@ -213,7 +213,25 @@ interface TagSelecionada {
   cfgNome: string;
 }
 
+/**
+ * Rascunho em memória (escopo do módulo).
+ * Mantém o progresso ao navegar entre abas/páginas do SPA, mas é descartado
+ * quando a página é recarregada ou o navegador é fechado — exatamente o
+ * comportamento pedido (não usamos localStorage/sessionStorage de propósito).
+ */
+interface RascunhoGerarTag {
+  entradaManual: string;
+  selecionadas: TagSelecionada[];
+  tagCustomConfirmada: string;
+  customAberta: { cd: string; nm: string } | null;
+}
 
+const rascunho: RascunhoGerarTag = {
+  entradaManual: '',
+  selecionadas: [],
+  tagCustomConfirmada: '',
+  customAberta: null,
+};
 
 // ============================================================
 // Componente
@@ -221,12 +239,18 @@ interface TagSelecionada {
 export default function GerarTagTab() {
   const [selecionado, setSelecionado] = useState<Acabamento | null>(null);
   const [tagGerada, setTagGerada] = useState('');
-  const [entradaManual, setEntradaManual] = useState('');
+  const [entradaManual, setEntradaManual] = useState(rascunho.entradaManual);
   const entradaDeferida = useDeferredValue(entradaManual);
 
   // TAGs escolhidas que compõem a TAG Custom final (acumuladas sob a descrição).
-  const [selecionadas, setSelecionadas] = useState<TagSelecionada[]>([]);
-  const [tagCustomConfirmada, setTagCustomConfirmada] = useState('');
+  const [selecionadas, setSelecionadas] = useState<TagSelecionada[]>(rascunho.selecionadas);
+  const [tagCustomConfirmada, setTagCustomConfirmada] = useState(rascunho.tagCustomConfirmada);
+
+  // Espelha o estado no rascunho a cada mudança (sem efeitos colaterais externos).
+  useEffect(() => { rascunho.entradaManual = entradaManual; }, [entradaManual]);
+  useEffect(() => { rascunho.selecionadas = selecionadas; }, [selecionadas]);
+  useEffect(() => { rascunho.tagCustomConfirmada = tagCustomConfirmada; }, [tagCustomConfirmada]);
+
 
 
   // Termo com debounce usado na busca server-side de TAGs (tempo real).
@@ -340,7 +364,8 @@ export default function GerarTagTab() {
   }, [tagsBusca]);
 
   // TAG Custom aberta para edição (adicionar/remover TAGs configuradas).
-  const [customAberta, setCustomAberta] = useState<{ cd: string; nm: string } | null>(null);
+  const [customAberta, setCustomAberta] = useState<{ cd: string; nm: string } | null>(rascunho.customAberta);
+  useEffect(() => { rascunho.customAberta = customAberta; }, [customAberta]);
 
   const { data: tagsDaCustom = [], isFetching: loadingCustom } = useQuery({
     queryKey: ['auge-tag-custom-detalhe', customAberta?.cd ?? ''],
@@ -357,15 +382,23 @@ export default function GerarTagTab() {
     },
   });
 
-  /** TAGs configuradas dentro da TAG Custom aberta, normalizadas para exibição. */
+  /**
+   * TAGs configuradas dentro da TAG Custom aberta, normalizadas para exibição.
+   * Importante: muitas linhas do Auge têm `ds_tag_texto` vazio e `ds_tag_calculada`
+   * nula — nesses casos o próprio nome da TAG (`ds_tag_customizada`) é o valor.
+   * Antes essas linhas eram descartadas e a lista aparecia vazia.
+   */
   const itensDaCustom = useMemo(() => {
     const seen = new Set<string>();
     const out: Array<{ id: string; code: string; valor: string; cfgNome: string }> = [];
     for (const t of tagsDaCustom) {
-      const code = normalizeTagCode(t.ds_tag_customizada ?? t.nm_tag_customizada);
-      const valorBruto = t.ds_tag_texto ?? t.ds_tag_calculada ?? t.ds_tag_customizada ?? t.nm_tag_customizada ?? '';
-      const valor = normalizeTagFormatC(valorBruto);
-      if (!code || !valor || valor === '—') continue;
+      const nomeBruto = t.ds_tag_customizada ?? t.nm_tag_customizada ?? '';
+      const code = normalizeTagCode(nomeBruto);
+      if (!code) continue;
+      const candidatos = [t.ds_tag_texto, t.ds_tag_calculada, nomeBruto];
+      const valorBruto = candidatos.find((c) => (c ?? '').trim().length > 0 && (c ?? '').trim() !== '—') ?? nomeBruto;
+      const valor = normalizeTagFormatC(valorBruto) || normalizeTagFormatC(nomeBruto);
+      if (!valor) continue;
       const id = `${code}|${valor}`;
       if (seen.has(id)) continue;
       seen.add(id);
@@ -375,12 +408,18 @@ export default function GerarTagTab() {
   }, [tagsDaCustom]);
 
   // Ao abrir uma TAG Custom existente, a composição parte das TAGs já configuradas nela.
+  // Hidrata apenas uma vez por configuração, para não descartar edições do usuário
+  // ao voltar de outra aba/página.
+  const hidratadasRef = useRef<Set<string>>(new Set(rascunho.customAberta ? [rascunho.customAberta.cd] : []));
   useEffect(() => {
     if (!customAberta || itensDaCustom.length === 0) return;
+    if (hidratadasRef.current.has(customAberta.cd)) return;
+    hidratadasRef.current.add(customAberta.cd);
     setSelecionadas(itensDaCustom.map((i) => ({ id: i.id, code: i.code, valor: i.valor, cfgNome: i.cfgNome })));
     setTagCustomConfirmada('');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [customAberta?.cd, itensDaCustom]);
+
 
 
   // União: TAGs das configurações ranqueadas + TAGs encontradas na busca direta.
