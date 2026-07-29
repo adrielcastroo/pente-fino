@@ -931,17 +931,26 @@ export type Database = {
       auge_tags_calculadas: {
         Row: {
           cd_tag: string
+          descricao: string | null
+          formula: string | null
           nm_tag: string
+          nome: string | null
           synced_at: string
         }
         Insert: {
           cd_tag: string
+          descricao?: string | null
+          formula?: string | null
           nm_tag: string
+          nome?: string | null
           synced_at?: string
         }
         Update: {
           cd_tag?: string
+          descricao?: string | null
+          formula?: string | null
           nm_tag?: string
+          nome?: string | null
           synced_at?: string
         }
         Relationships: []

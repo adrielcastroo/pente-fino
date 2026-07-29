@@ -3900,17 +3900,34 @@ Deno.serve(async (req) => {
     // (select tagSelectTag.php devolve a lista completa: [{value, text}]).
     if (action === 'sync_tags_calculadas') {
       const rows = await fetchSelectTagsCalculadas(auth, '', 1, 100000);
+      // O texto do select costuma vir como "FORMULA\NOME" (ex.: "3*ALT + LARG\PHA25/16_Corda1").
+      // Guardamos nome/descrição/fórmula separados para que a busca priorize o NOME da TAG.
+      const parseTag = (text: string) => {
+        const raw = String(text ?? '').trim();
+        const idx = raw.lastIndexOf('\\');
+        if (idx >= 0) {
+          const formula = raw.slice(0, idx).trim();
+          const nome = raw.slice(idx + 1).trim();
+          return { nome: nome || raw, formula: formula || null };
+        }
+        return { nome: raw, formula: null as string | null };
+      };
+
       const mapped = Array.from(
         rows
           .filter((r) => r.text && r.id)
           .reduce((acc, r) => {
+            const { nome, formula } = parseTag(r.text);
             acc.set(String(r.id), {
               cd_tag: String(r.id),
               nm_tag: r.text,
+              nome,
+              descricao: r.text,
+              formula,
               synced_at: new Date().toISOString(),
             });
             return acc;
-          }, new Map<string, { cd_tag: string; nm_tag: string; synced_at: string }>())
+          }, new Map<string, Record<string, unknown>>())
           .values(),
       );
 

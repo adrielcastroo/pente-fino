@@ -230,10 +230,42 @@ function TagCalculadaCell({
     queryFn: async () => {
       const seen = new Set<string>();
       const out: Array<{ valor: string; cfg: string }> = [];
+      const push = (valor: string, cfg: string) => {
+        const v = String(valor ?? '').trim();
+        if (!v || seen.has(v)) return;
+        seen.add(v);
+        out.push({ valor: v, cfg });
+      };
 
-      // 1) NOMES das TAGs calculadas (ex.: CONS_CORT_WAVE_IRREG_SLIM).
-      //    A busca é pelo nome da TAG, não pela descrição.
+      // 1) PRIORIDADE: coluna "Nome" do espelho auge_tags_calculadas
+      //    (ex.: PHA25/16_Corda1_1). É a fonte oficial da TAG calculada.
       if (padrao) {
+        const { data } = await (supabase as any)
+          .from('auge_tags_calculadas')
+          .select('nome, descricao, formula, nm_tag')
+          .not('nome', 'is', null)
+          .ilike('nome', padrao)
+          .order('nome', { ascending: true })
+          .limit(200);
+        for (const r of (data ?? []) as any[]) {
+          push(r.nome, r.formula ?? '');
+        }
+      }
+
+      // 2) FALLBACK: descrição do espelho (texto completo "FORMULA\NOME").
+      if (out.length === 0 && padrao) {
+        const { data } = await (supabase as any)
+          .from('auge_tags_calculadas')
+          .select('nome, descricao, nm_tag')
+          .or(`descricao.ilike.${padrao},nm_tag.ilike.${padrao}`)
+          .limit(200);
+        for (const r of (data ?? []) as any[]) {
+          push(r.nome ?? r.descricao ?? r.nm_tag, r.descricao ?? r.nm_tag ?? '');
+        }
+      }
+
+      // 3) Fallback: nomes já sincronizados nos acabamentos.
+      if (out.length === 0 && padrao) {
         const { data } = await (supabase as any)
           .from('auge_acabamentos')
           .select('ds_tag_calculada, nm_acabamento')
@@ -241,16 +273,10 @@ function TagCalculadaCell({
           .ilike('ds_tag_calculada', padrao)
           .order('ds_tag_calculada', { ascending: true })
           .limit(200);
-        for (const r of (data ?? []) as any[]) {
-          const v = String(r.ds_tag_calculada ?? '').trim();
-          if (!v || seen.has(v)) continue;
-          seen.add(v);
-          out.push({ valor: v, cfg: r.nm_acabamento ?? '' });
-        }
+        for (const r of (data ?? []) as any[]) push(r.ds_tag_calculada, r.nm_acabamento ?? '');
       }
 
-
-      // 2) Busca ao vivo no Auge (caso o espelho ainda não esteja sincronizado).
+      // 4) Busca ao vivo no Auge (caso o espelho ainda não esteja sincronizado).
       if (out.length === 0) {
         try {
           const { data: fn } = await supabase.functions.invoke('auge-sync?action=tag_calculada_select', {
@@ -260,33 +286,18 @@ function TagCalculadaCell({
           const alvo = termo.replace(/\*/g, '').toLowerCase();
           const rows = (fn as any)?.rows ?? [];
           for (const r of rows as Array<{ id: string; text: string }>) {
-            const v = String(r?.text ?? '').trim();
-            if (!v || seen.has(v)) continue;
-            if (alvo && !v.toLowerCase().includes(alvo)) continue;
-            seen.add(v);
-            out.push({ valor: v, cfg: '' });
+            const raw = String(r?.text ?? '').trim();
+            if (!raw) continue;
+            const idx = raw.lastIndexOf('\\');
+            const nome = idx >= 0 ? raw.slice(idx + 1).trim() : raw;
+            const formula = idx >= 0 ? raw.slice(0, idx).trim() : '';
+            if (alvo && !nome.toLowerCase().includes(alvo) && !raw.toLowerCase().includes(alvo)) continue;
+            push(nome || raw, formula);
           }
         } catch { /* segue para o fallback local */ }
       }
 
-      // 3) Fallback: o que já está sincronizado localmente (acabamentos).
-      if (out.length === 0 && padrao) {
-        const { data } = await (supabase as any)
-          .from('auge_acabamentos')
-          .select('ds_tag_calculada, nm_acabamento')
-          .not('ds_tag_calculada', 'is', null)
-          .ilike('ds_tag_calculada', padrao)
-          .limit(200);
-        for (const r of (data ?? []) as any[]) {
-          const v = String(r.ds_tag_calculada ?? '').trim();
-          if (!v || seen.has(v)) continue;
-          seen.add(v);
-          out.push({ valor: v, cfg: r.nm_acabamento ?? '' });
-        }
-      }
-
-
-      // 3) Fallback: TAGs calculadas já vinculadas em TAG Custom.
+      // 5) Fallback: TAGs calculadas já vinculadas em TAG Custom.
       if (out.length === 0 && padrao) {
         const { data } = await (supabase as any)
           .from('auge_tag_custom')
@@ -294,10 +305,7 @@ function TagCalculadaCell({
           .or(`ds_tag_calculada.ilike.${padrao},cd_tag_calculada.ilike.${padrao}`)
           .limit(200);
         for (const r of (data ?? []) as any[]) {
-          const v = String(r.ds_tag_calculada ?? r.cd_tag_calculada ?? '').trim();
-          if (!v || seen.has(v)) continue;
-          seen.add(v);
-          out.push({ valor: v, cfg: r.nm_configuracao ?? '' });
+          push(r.ds_tag_calculada ?? r.cd_tag_calculada, r.nm_configuracao ?? '');
         }
       }
 
