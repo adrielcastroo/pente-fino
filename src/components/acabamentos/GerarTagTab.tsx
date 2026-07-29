@@ -226,6 +226,14 @@ export default function GerarTagTab() {
   const [entradaManual, setEntradaManual] = useState('');
   const entradaDeferida = useDeferredValue(entradaManual);
 
+  // Termo com debounce usado na busca server-side de TAGs (tempo real).
+  const [termoBusca, setTermoBusca] = useState('');
+  useEffect(() => {
+    const t = setTimeout(() => setTermoBusca(entradaManual.trim()), 300);
+    return () => clearTimeout(t);
+  }, [entradaManual]);
+
+
   // ---------- Acabamentos (lista lateral) ----------
   const { data: acabamentos = [], isLoading } = useQuery({
     queryKey: ['acabamentos-gerar-tag'],
