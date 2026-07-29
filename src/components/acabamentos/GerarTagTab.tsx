@@ -563,9 +563,10 @@ export default function GerarTagTab() {
   });
 
   const padraoBusca = useMemo(() => toIlikePattern(termoBusca), [termoBusca]);
+  const tokensBusca = useMemo(() => toIlikeTokens(termoBusca), [termoBusca]);
 
   const { data: tagsBusca = [], isFetching: loadingBusca } = useQuery({
-    queryKey: ['auge-tag-custom-busca', padraoBusca],
+    queryKey: ['auge-tag-custom-busca', padraoBusca, tokensBusca.join('|')],
     enabled: padraoBusca.length >= 3,
     staleTime: 60 * 1000,
     queryFn: async () => {
@@ -576,8 +577,18 @@ export default function GerarTagTab() {
         .or(cols.map((c) => `${c}.ilike.${padraoBusca}`).join(','))
         .limit(300);
       if (error) throw error;
-      return (data ?? []) as CustomTag[];
+      if ((data ?? []).length > 0) return data as CustomTag[];
+
+      // Fallback por tokens na configuração (ordem/espaçamento diferentes).
+      if (tokensBusca.length === 0) return [] as CustomTag[];
+      let q = (supabase as any)
+        .from('auge_tag_custom')
+        .select('cd_configuracao, nm_configuracao, nm_tag_customizada, ds_tag_customizada, ds_tag_calculada, ds_tag_texto');
+      for (const t of tokensBusca) q = q.ilike('nm_configuracao', t);
+      const alt = await q.limit(300);
+      return (alt.data ?? []) as CustomTag[];
     },
+
   });
 
   // TAGs Custom existentes que casam com o termo pesquisado.
