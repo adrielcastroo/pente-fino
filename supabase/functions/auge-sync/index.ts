@@ -3847,8 +3847,11 @@ Deno.serve(async (req) => {
 
       const results: Array<{ tag: string; calculada: string; ok: boolean; erro?: string; auge?: any }> = [];
       for (const it of itens) {
+        // Mapa de campos: Configuração -> cdConfiguracao | TAG -> dsTagCustomizada | TAG Calculada -> dsTagCalculada
         const dsTagCustomizada = String(it?.dsTagCustomizada ?? '').trim();
         const dsTagCalculada = String(it?.dsTagCalculada ?? '').trim();
+        // No Auge "Tag Calculada" e "Texto Livre" são mutuamente exclusivos.
+        const dsTagTexto = dsTagCalculada ? '' : String(it?.dsTagTexto ?? dsTagCustomizada).trim();
         if (!dsTagCustomizada) continue;
         try {
           const auge = await saveTagCustomizada(auth, {
@@ -3856,7 +3859,7 @@ Deno.serve(async (req) => {
             cdTagCustomizada: String(it?.cdTagCustomizada ?? '').trim(),
             dsTagCustomizada,
             dsTagCalculada,
-            dsTagTexto: String(it?.dsTagTexto ?? descricao).trim(),
+            dsTagTexto,
           });
           results.push({ tag: dsTagCustomizada, calculada: dsTagCalculada, ok: true, auge });
         } catch (e) {
