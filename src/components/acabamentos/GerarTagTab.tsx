@@ -970,11 +970,9 @@ export default function GerarTagTab() {
             </p>
           )}
           <p className="text-[10px] text-muted-foreground">
-            O texto também alimenta as recomendações ao lado.
-            <span className="font-semibold text-foreground"> Curinga:</span> use <code className="font-mono">*</code> como
-            no SAP B1 — <code className="font-mono">T42*</code> começa com, <code className="font-mono">*motor</code> termina
-            com, <code className="font-mono">T*42</code> contém no meio (mín. 3 caracteres).
+            Apenas o nome da TAG que será criada. Este campo não é usado em nenhuma busca.
           </p>
+
         </div>
 
 
