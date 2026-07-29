@@ -215,7 +215,9 @@ export default function SettingsPage() {
   });
   const [prefAutoArchive, setPrefAutoArchive] = useState(localStorage.getItem('pref_auto_archive') === 'true');
   const [prefCompactTables, setPrefCompactTables] = useState(localStorage.getItem('pref_compact_tables') === 'true');
+  const [prefDisableDirectPrint, setPrefDisableDirectPrint] = useState(localStorage.getItem('pref_disable_direct_print') === 'true');
   const [prefDisableBrowserPrint, setPrefDisableBrowserPrint] = useState(localStorage.getItem('pref_disable_browser_print') === 'true');
+  const [prefDisableN8nPrint, setPrefDisableN8nPrint] = useState(localStorage.getItem('pref_disable_n8n_print') === 'true');
   const [prefSilentBrowserPrint, setPrefSilentBrowserPrint] = useState(localStorage.getItem('pref_silent_browser_print') === 'true');
 
   // Auge credentials state
