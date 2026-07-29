@@ -4045,9 +4045,28 @@ Deno.serve(async (req) => {
     // Sincroniza TODAS as TAGs calculadas listadas em /modInventario/tag/tag.php
     // (select tagSelectTag.php devolve a lista completa: [{value, text}]).
     if (action === 'sync_tags_calculadas') {
-      const rows = await fetchSelectTagsCalculadas(auth, '', 1, 100000);
-      // O texto do select costuma vir como "FORMULA\NOME" (ex.: "3*ALT + LARG\PHA25/16_Corda1").
-      // Guardamos nome/descrição/fórmula separados para que a busca priorize o NOME da TAG.
+      const nowIso = new Date().toISOString();
+      const byKey = new Map<string, Record<string, unknown>>();
+      let fonte = 'grid';
+
+      // 1) Fonte preferencial: grade de /modInventario/tag/tag.php (Nome real).
+      const gridRows = await fetchTagsCalculadasGrid(auth);
+      for (const r of gridRows) {
+        if (!r.nome) continue;
+        byKey.set(r.cd_tag, {
+          cd_tag: r.cd_tag,
+          nm_tag: r.descricao || r.nome,
+          nome: r.nome,
+          descricao: r.descricao,
+          formula: r.formula,
+          synced_at: nowIso,
+        });
+      }
+
+      // 2) Fallback/complemento: select2 (rótulo "FORMULA\NOME").
+      //    Nunca sobrescreve um nome vindo da grade.
+      const selectRows = await fetchSelectTagsCalculadas(auth, '', 1, 100000);
+      if (!byKey.size) fonte = 'select';
       const parseTag = (text: string) => {
         const raw = String(text ?? '').trim();
         const idx = raw.lastIndexOf('\\');
@@ -4058,24 +4077,23 @@ Deno.serve(async (req) => {
         }
         return { nome: raw, formula: null as string | null };
       };
+      for (const r of selectRows) {
+        if (!r.text || !r.id) continue;
+        const key = String(r.id);
+        if (byKey.has(key)) continue;
+        const { nome, formula } = parseTag(r.text);
+        byKey.set(key, {
+          cd_tag: key,
+          nm_tag: r.text,
+          nome,
+          descricao: r.text,
+          formula,
+          synced_at: nowIso,
+        });
+      }
 
-      const mapped = Array.from(
-        rows
-          .filter((r) => r.text && r.id)
-          .reduce((acc, r) => {
-            const { nome, formula } = parseTag(r.text);
-            acc.set(String(r.id), {
-              cd_tag: String(r.id),
-              nm_tag: r.text,
-              nome,
-              descricao: r.text,
-              formula,
-              synced_at: new Date().toISOString(),
-            });
-            return acc;
-          }, new Map<string, Record<string, unknown>>())
-          .values(),
-      );
+      const mapped = Array.from(byKey.values());
+
 
       let salvos = 0;
       for (let i = 0; i < mapped.length; i += 500) {
