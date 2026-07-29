@@ -286,10 +286,19 @@ function TagCalculadaCell({
             </div>
           )}
           {!isFetching && opcoes.length === 0 && (
-            <div className="p-2 text-[10px] text-muted-foreground">
-              Nenhuma TAG calculada encontrada. Tente <code className="font-mono">*termo*</code>.
+            <div className="p-2 space-y-1">
+              <p className="text-[10px] text-muted-foreground">
+                Nenhuma TAG calculada encontrada. Tente <code className="font-mono">*termo*</code>.
+              </p>
+              <button
+                onClick={() => { onChange(termo.replace(/\*/g, '').trim()); setAberto(false); }}
+                className="text-[10px] text-primary hover:underline"
+              >
+                Usar “{termo.replace(/\*/g, '').trim()}” como texto livre
+              </button>
             </div>
           )}
+
           {opcoes.map((o) => (
             <button
               key={o.valor}
