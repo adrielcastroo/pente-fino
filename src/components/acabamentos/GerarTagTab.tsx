@@ -1014,9 +1014,10 @@ export default function GerarTagTab() {
                   </Badge>
                 </div>
                 <p className="text-[10px] text-muted-foreground">
-                  Padrão detectado nos modelos existentes com a mesma descrição. A gravação fica
-                  bloqueada enquanto faltar alguma.
+                  Padrão detectado em {obrigatorias[0]?.total ?? 0} TAG(s) Custom existentes com “{termoBusca}”
+                  na configuração. A gravação fica bloqueada enquanto faltar alguma.
                 </p>
+
               </div>
               {obrigatoriasFaltando.length > 0 && (
                 <Button size="sm" variant="outline" className="h-7 px-2 text-[10px] shrink-0" onClick={adicionarObrigatoriasFaltando}>
