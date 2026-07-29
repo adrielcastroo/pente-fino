@@ -385,9 +385,11 @@ function TagCalculadaCell({
 function ConfiguracaoSelect({
   valor,
   onChange,
+  onSearchStateChange,
 }: {
   valor: { cd: string; nm: string } | null;
   onChange: (v: { cd: string; nm: string } | null) => void;
+  onSearchStateChange?: (state: { termo: string; hasResults: boolean; isSearching: boolean }) => void;
 }) {
   const [busca, setBusca] = useState('');
   const [termo, setTermo] = useState('');
@@ -471,7 +473,13 @@ function ConfiguracaoSelect({
     },
   });
 
-
+  useEffect(() => {
+    onSearchStateChange?.({
+      termo,
+      hasResults: opcoes.length > 0,
+      isSearching: isFetching,
+    });
+  }, [termo, opcoes.length, isFetching, onSearchStateChange]);
 
   if (valor && !aberto) {
     return (
@@ -488,6 +496,8 @@ function ConfiguracaoSelect({
     );
   }
 
+  const mostrarDropdown = aberto && padrao.length >= 3 && (isFetching || opcoes.length > 0);
+
   return (
     <div className="space-y-1">
       <div className="relative">
@@ -500,17 +510,14 @@ function ConfiguracaoSelect({
           className="h-10 pl-7 text-[11px]"
         />
       </div>
-      {aberto && padrao.length >= 3 && (
+      {mostrarDropdown && (
         <div className="rounded border bg-background max-h-48 overflow-auto">
           {isFetching && (
             <div className="p-2 text-[10px] text-muted-foreground flex items-center gap-1">
               <Loader2 className="h-3 w-3 animate-spin" /> Buscando…
             </div>
           )}
-          {!isFetching && opcoes.length === 0 && (
-            <div className="p-2 text-[10px] text-muted-foreground">Nenhuma configuração encontrada.</div>
-          )}
-          {opcoes.map((o) => (
+          {!isFetching && opcoes.map((o) => (
             <button
               key={o.cd_configuracao}
               onClick={() => { onChange({ cd: o.cd_configuracao, nm: o.nm_configuracao }); setAberto(false); }}
