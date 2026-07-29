@@ -3962,7 +3962,9 @@ Deno.serve(async (req) => {
       )).slice(0, 80);
 
       const samples: Record<string, string> = {};
-      for (const p of ajax.filter((a) => /ajax/i.test(a)).slice(0, 12)) {
+      const only = String(url.searchParams.get('probe') ?? '').trim();
+      const alvos = only ? [only] : [];
+      for (const p of alvos) {
         const full = p.startsWith('http') ? p
           : p.startsWith('/') ? `${AUGE_BASE_URL}${p}`
           : `${AUGE_BASE_URL}/l.unilux/modInventario/tag/${p}`;
@@ -3972,9 +3974,10 @@ Deno.serve(async (req) => {
             headers: { ...headers, 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
             body: new URLSearchParams({ nrPagina: '1', qtdItens: '5', term: '', q: '' }),
           });
-          samples[p] = (await r.text()).slice(0, 1200);
+          samples[p] = (await r.text()).slice(0, 2000);
         } catch (e) { samples[p] = `ERRO: ${(e as Error).message}`; }
       }
+
 
       return new Response(JSON.stringify({ ok: true, status: pageRes.status, ajax, samples }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
