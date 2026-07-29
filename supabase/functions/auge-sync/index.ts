@@ -3938,59 +3938,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Sonda a página /modInventario/tag/tag.php para descobrir o endpoint do
-    // grid que traz o NOME da TAG calculada (ex.: T_50_GD_NIV) além da descrição.
-    if (action === 'tag_page_probe') {
-      const headers: Record<string, string> = {
-        'Cookie': auth.jar.header(),
-        'X-Requested-With': 'XMLHttpRequest',
-        'X-CSRF-TOKEN': auth.csrf,
-        'Origin': AUGE_BASE_URL,
-        'Referer': `${AUGE_BASE_URL}/l.unilux/modInventario/tag/tag.php`,
-        'User-Agent': UA,
-        'Accept': 'text/html, */*; q=0.01',
-      };
-      if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
-      const only = String(url.searchParams.get('probe') ?? '').trim();
 
-      if (only) {
-        const full = only.startsWith('http') ? only
-          : only.startsWith('/') ? `${AUGE_BASE_URL}${only}`
-          : `${AUGE_BASE_URL}/l.unilux/modInventario/tag/${only}`;
-        const r = await fetch(full, {
-          method: 'POST',
-          headers: { ...headers, 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
-          body: new URLSearchParams({ nrPagina: '1', qtdItens: '5', term: '', q: '' }),
-        });
-        const body = (await r.text()).slice(0, 4000);
-        return new Response(JSON.stringify({ ok: true, path: only, status: r.status, body }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
 
-      const pageRes = await fetch(`${AUGE_BASE_URL}/l.unilux/modInventario/tag/tag.php`, { headers });
-      auth.jar.ingest(pageRes);
-      // Lê apenas os primeiros ~120KB para não estourar memória do worker.
-      let html = '';
-      const reader = pageRes.body?.getReader();
-      const dec = new TextDecoder();
-      while (reader && html.length < 120000) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        html += dec.decode(value, { stream: true });
-      }
-      try { await reader?.cancel(); } catch { /* ignore */ }
-
-      const found = new Set<string>();
-      const re = /[a-zA-Z0-9_\/.-]+\.php/g;
-      let m: RegExpExecArray | null;
-      while ((m = re.exec(html)) !== null && found.size < 120) found.add(m[0]);
-
-      return new Response(JSON.stringify({ ok: true, status: pageRes.status, ajax: [...found] }), {
-
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
 
 
 
