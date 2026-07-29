@@ -402,8 +402,8 @@ function parseSelectRows(text: string): Array<{ id: string; text: string }> {
       const arr = Array.isArray(j) ? j : (Array.isArray(j?.results) ? j.results : (Array.isArray(j?.data) ? j.data : []));
       return arr
         .map((r: any) => ({
-          id: String(r?.id ?? r?.cdTagCalculada ?? r?.dsTagCalculada ?? '').trim(),
-          text: String(r?.text ?? r?.dsTagCalculada ?? r?.nmTagCalculada ?? r?.id ?? '').trim(),
+          id: String(r?.id ?? r?.value ?? r?.cdTag ?? r?.cdTagCalculada ?? r?.dsTagCalculada ?? '').trim(),
+          text: String(r?.text ?? r?.nmTag ?? r?.dsTagCalculada ?? r?.nmTagCalculada ?? r?.id ?? '').trim(),
         }))
         .filter((r: { id: string; text: string }) => r.text.length > 0);
     } catch { /* cai para HTML */ }
