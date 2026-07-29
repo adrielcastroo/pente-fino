@@ -716,8 +716,76 @@ export default function GerarTagTab() {
     return out;
   }, [categorias]);
 
+  // ---------- Padrão obrigatório de TAGs ----------
+  /**
+   * Agrupa as configurações (TAG Customs) já existentes que casam com o texto
+   * digitado. Cada configuração vira um "modelo" com o conjunto de TAGs
+   * Configuradas que ela possui.
+   */
+  const modelosExistentes = useMemo(() => {
+    const map = new Map<string, { nm: string; codes: Map<string, { valor: string; calculada: string }> }>();
+    for (const t of [...tagsBusca, ...tagsTop]) {
+      const code = normalizeTagCode(t.ds_tag_customizada ?? t.nm_tag_customizada);
+      if (!code) continue;
+      const valor = normalizeTagFormatC(t.ds_tag_customizada ?? t.nm_tag_customizada ?? t.ds_tag_texto ?? '');
+      if (!valor) continue;
+      const cur = map.get(t.cd_configuracao) ?? {
+        nm: t.nm_configuracao ?? t.cd_configuracao,
+        codes: new Map<string, { valor: string; calculada: string }>(),
+      };
+      if (!cur.codes.has(code)) {
+        cur.codes.set(code, { valor, calculada: normalizeTagFormatC(t.ds_tag_calculada ?? '') });
+      }
+      map.set(t.cd_configuracao, cur);
+    }
+    return map;
+  }, [tagsBusca, tagsTop]);
+
+  /**
+   * TAGs Configuradas que são padrão (presentes em praticamente todos os
+   * modelos com a mesma descrição). São obrigatórias na nova TAG Custom.
+   */
+  const obrigatorias = useMemo(() => {
+    const totalModelos = modelosExistentes.size;
+    if (totalModelos < 2) return [] as Array<{ code: string; valor: string; calculada: string; freq: number; total: number }>;
+    const acc = new Map<string, { n: number; valor: string; calculadas: Map<string, number> }>();
+    for (const modelo of modelosExistentes.values()) {
+      for (const [code, info] of modelo.codes) {
+        const cur = acc.get(code) ?? { n: 0, valor: info.valor, calculadas: new Map<string, number>() };
+        cur.n += 1;
+        if (info.calculada) cur.calculadas.set(info.calculada, (cur.calculadas.get(info.calculada) ?? 0) + 1);
+        acc.set(code, cur);
+      }
+    }
+    const minimo = Math.max(2, Math.ceil(totalModelos * 0.9));
+    const out: Array<{ code: string; valor: string; calculada: string; freq: number; total: number }> = [];
+    for (const [code, info] of acc) {
+      if (info.n < minimo) continue;
+      const calculada = Array.from(info.calculadas.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] ?? '';
+      out.push({ code, valor: info.valor, calculada, freq: info.n, total: totalModelos });
+    }
+    return out.sort((a, b) => b.freq - a.freq || a.code.localeCompare(b.code));
+  }, [modelosExistentes]);
+
+  const codigosNaTabela = useMemo(() => new Set(linhas.map((l) => l.code)), [linhas]);
+  const obrigatoriasFaltando = useMemo(
+    () => obrigatorias.filter((o) => !codigosNaTabela.has(o.code)),
+    [obrigatorias, codigosNaTabela],
+  );
+
+  /** Nenhuma configuração existente casou com o texto → TAG Custom nova. */
+  const ehTagCustomNova = useMemo(
+    () =>
+      !customAberta &&
+      termoBusca.trim().length >= 3 &&
+      !loadingBusca &&
+      customsEncontradas.length === 0,
+    [customAberta, termoBusca, loadingBusca, customsEncontradas.length],
+  );
+
   // ---------- Manipulação das linhas da tabela ----------
   const jaNaTabela = (id: string) => linhas.some((l) => l.id === id);
+
 
   const adicionarLinha = (r: { id: string; code: string; valor: string; cfgNome: string; calculada: string }) => {
     setResultado(null);
