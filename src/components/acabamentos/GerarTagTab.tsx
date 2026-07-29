@@ -325,6 +325,64 @@ export default function GerarTagTab() {
     },
   });
 
+  // ---------- TAGs Custom já existentes que casam com o termo pesquisado ----------
+  // Cada "TAG Custom" é uma configuração do Auge; suas TAGs configuradas são as linhas
+  // de auge_tag_custom com o mesmo cd_configuracao.
+  const customsEncontradas = useMemo(() => {
+    const byCfg = new Map<string, { cd: string; nm: string; qtd: number }>();
+    for (const t of tagsBusca) {
+      const cd = t.cd_configuracao;
+      const cur = byCfg.get(cd) ?? { cd, nm: t.nm_configuracao ?? cd, qtd: 0 };
+      cur.qtd += 1;
+      byCfg.set(cd, cur);
+    }
+    return Array.from(byCfg.values()).sort((a, b) => a.nm.localeCompare(b.nm)).slice(0, 40);
+  }, [tagsBusca]);
+
+  // TAG Custom aberta para edição (adicionar/remover TAGs configuradas).
+  const [customAberta, setCustomAberta] = useState<{ cd: string; nm: string } | null>(null);
+
+  const { data: tagsDaCustom = [], isFetching: loadingCustom } = useQuery({
+    queryKey: ['auge-tag-custom-detalhe', customAberta?.cd ?? ''],
+    enabled: !!customAberta?.cd,
+    staleTime: 60 * 1000,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from('auge_tag_custom')
+        .select('cd_configuracao, nm_configuracao, nm_tag_customizada, ds_tag_customizada, ds_tag_calculada, ds_tag_texto')
+        .eq('cd_configuracao', customAberta!.cd)
+        .limit(2000);
+      if (error) throw error;
+      return (data ?? []) as CustomTag[];
+    },
+  });
+
+  /** TAGs configuradas dentro da TAG Custom aberta, normalizadas para exibição. */
+  const itensDaCustom = useMemo(() => {
+    const seen = new Set<string>();
+    const out: Array<{ id: string; code: string; valor: string; cfgNome: string }> = [];
+    for (const t of tagsDaCustom) {
+      const code = normalizeTagCode(t.ds_tag_customizada ?? t.nm_tag_customizada);
+      const valorBruto = t.ds_tag_texto ?? t.ds_tag_calculada ?? t.ds_tag_customizada ?? t.nm_tag_customizada ?? '';
+      const valor = normalizeTagFormatC(valorBruto);
+      if (!code || !valor || valor === '—') continue;
+      const id = `${code}|${valor}`;
+      if (seen.has(id)) continue;
+      seen.add(id);
+      out.push({ id, code, valor, cfgNome: t.nm_configuracao ?? t.cd_configuracao });
+    }
+    return out.sort((a, b) => a.code.localeCompare(b.code));
+  }, [tagsDaCustom]);
+
+  // Ao abrir uma TAG Custom existente, a composição parte das TAGs já configuradas nela.
+  useEffect(() => {
+    if (!customAberta || itensDaCustom.length === 0) return;
+    setSelecionadas(itensDaCustom.map((i) => ({ id: i.id, code: i.code, valor: i.valor, cfgNome: i.cfgNome })));
+    setTagCustomConfirmada('');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customAberta?.cd, itensDaCustom]);
+
+
   // União: TAGs das configurações ranqueadas + TAGs encontradas na busca direta.
   const tagsUnificadas = useMemo<CustomTag[]>(() => {
     const seen = new Set<string>();
@@ -414,14 +472,22 @@ export default function GerarTagTab() {
     [selecionadas],
   );
 
+  // A descrição da TAG Custom é exatamente o texto usado para gerar as recomendações.
+  const descricaoCustom = entradaManual.trim();
+
   const confirmarTagCustom = () => {
     if (selecionadas.length === 0) return;
     const final = normalizeTagFormatC(composicao);
     setTagCustomConfirmada(final);
     setTagGerada(final);
     navigator.clipboard?.writeText(final).catch(() => undefined);
-    toast.success(`TAG Custom criada com ${selecionadas.length} TAG(s) e copiada.`);
+    toast.success(
+      customAberta
+        ? `TAG Custom "${customAberta.nm}" atualizada com ${selecionadas.length} TAG(s) e copiada.`
+        : `TAG Custom criada com ${selecionadas.length} TAG(s) e copiada.`,
+    );
   };
+
 
 
   return (
@@ -455,6 +521,82 @@ export default function GerarTagTab() {
               </div>
             )}
           </div>
+
+          {/* TAGs Custom já existentes que casam com a pesquisa */}
+          {customsEncontradas.length > 0 && (
+            <div className="rounded border p-3 space-y-2">
+              <div className="text-[10px] uppercase text-muted-foreground flex items-center gap-1">
+                <Layers className="h-3 w-3" /> TAGs Custom existentes
+                <Badge variant="outline" className="text-[9px]">{customsEncontradas.length}</Badge>
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                Clique em uma TAG Custom para ver e editar as TAGs configuradas dentro dela.
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {customsEncontradas.map((c) => (
+                  <button
+                    key={c.cd}
+                    onClick={() => setCustomAberta(customAberta?.cd === c.cd ? null : { cd: c.cd, nm: c.nm })}
+                    className={`rounded border px-2 py-1 text-[10px] transition ${customAberta?.cd === c.cd ? 'border-primary bg-primary/15' : 'hover:bg-muted/50'}`}
+                  >
+                    <span className="font-medium">{c.nm}</span>
+                    <span className="ml-1.5 text-muted-foreground">({c.qtd})</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Conteúdo da TAG Custom aberta: TAGs configuradas dentro dela */}
+          {customAberta && (
+            <div className="rounded border border-primary/40 bg-primary/5 p-3 space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <div className="text-[10px] uppercase text-muted-foreground flex items-center gap-1">
+                  <TagIcon className="h-3 w-3" /> TAGs configuradas em
+                  <span className="font-semibold text-foreground normal-case">{customAberta.nm}</span>
+                  <Badge variant="outline" className="text-[9px]">{itensDaCustom.length}</Badge>
+                </div>
+                <Button size="sm" variant="ghost" className="h-6 px-2 text-[10px]" onClick={() => setCustomAberta(null)}>
+                  Fechar
+                </Button>
+              </div>
+
+              {loadingCustom && (
+                <div className="text-[10px] text-muted-foreground flex items-center gap-1">
+                  <Loader2 className="h-3 w-3 animate-spin" /> Carregando TAGs configuradas…
+                </div>
+              )}
+
+              {!loadingCustom && itensDaCustom.length === 0 && (
+                <div className="text-[10px] text-muted-foreground">
+                  Esta TAG Custom não possui TAGs configuradas.
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
+                {itensDaCustom.map((i) => {
+                  const dentro = isSelecionada(i.code, i.valor);
+                  return (
+                    <button
+                      key={i.id}
+                      onClick={() => toggleTag(i.code, i.valor, i.cfgNome)}
+                      title={dentro ? 'Remover desta TAG Custom' : 'Adicionar a esta TAG Custom'}
+                      className={`flex items-start gap-2 rounded border p-1.5 text-left transition ${dentro ? 'border-primary bg-primary/15' : 'border-border hover:bg-muted/50'}`}
+                    >
+                      {dentro
+                        ? <CheckCircle2 className="h-3 w-3 mt-0.5 text-primary shrink-0" />
+                        : <X className="h-3 w-3 mt-0.5 text-muted-foreground shrink-0" />}
+                      <div className="min-w-0">
+                        <div className="font-mono font-semibold text-[10px] text-primary">{i.code}</div>
+                        <div className="font-mono text-[10px] break-all">{i.valor}</div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
 
           {/* Categorias de TAGs (T_BASE, T_TUBO, T_TEC_X, ...) */}
           {((loadingTags || loadingBusca) && categorias.length === 0) && (
@@ -537,14 +679,24 @@ export default function GerarTagTab() {
               </div>
 
               <div className="rounded border bg-background p-2">
+                <div className="text-[9px] uppercase text-muted-foreground">Descrição da TAG Custom</div>
+                <div className="font-mono text-[11px] break-all">
+                  {descricaoCustom || <span className="text-muted-foreground">Digite a descrição acima</span>}
+                </div>
+              </div>
+
+              <div className="rounded border bg-background p-2">
                 <div className="text-[9px] uppercase text-muted-foreground">Prévia da TAG Custom</div>
                 <div className="font-mono text-[11px] break-all">{composicao}</div>
               </div>
 
               <Button onClick={confirmarTagCustom} className="w-full h-9 gap-2 text-xs">
                 <CheckCircle2 className="h-4 w-4" />
-                Confirmar criação da TAG Custom ({selecionadas.length})
+                {customAberta
+                  ? `Confirmar alterações em ${customAberta.nm} (${selecionadas.length})`
+                  : `Confirmar criação da TAG Custom (${selecionadas.length})`}
               </Button>
+
 
               {tagCustomConfirmada && (
                 <div className="rounded border border-emerald-500/40 bg-emerald-500/5 p-2 space-y-1">
