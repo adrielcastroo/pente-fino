@@ -679,14 +679,24 @@ export default function GerarTagTab() {
               </div>
 
               <div className="rounded border bg-background p-2">
+                <div className="text-[9px] uppercase text-muted-foreground">Descrição da TAG Custom</div>
+                <div className="font-mono text-[11px] break-all">
+                  {descricaoCustom || <span className="text-muted-foreground">Digite a descrição acima</span>}
+                </div>
+              </div>
+
+              <div className="rounded border bg-background p-2">
                 <div className="text-[9px] uppercase text-muted-foreground">Prévia da TAG Custom</div>
                 <div className="font-mono text-[11px] break-all">{composicao}</div>
               </div>
 
               <Button onClick={confirmarTagCustom} className="w-full h-9 gap-2 text-xs">
                 <CheckCircle2 className="h-4 w-4" />
-                Confirmar criação da TAG Custom ({selecionadas.length})
+                {customAberta
+                  ? `Confirmar alterações em ${customAberta.nm} (${selecionadas.length})`
+                  : `Confirmar criação da TAG Custom (${selecionadas.length})`}
               </Button>
+
 
               {tagCustomConfirmada && (
                 <div className="rounded border border-emerald-500/40 bg-emerald-500/5 p-2 space-y-1">
