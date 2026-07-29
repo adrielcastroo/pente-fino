@@ -405,7 +405,12 @@ async function dispatchPrint(
     data: Record<string, any>;
   },
 ): Promise<void> {
+  if (isDirectPrintDisabled()) {
+    toast.warning('Impressão direta está desabilitada nas configurações');
+    return;
+  }
   const browserDisabled = isBrowserPrintDisabled();
+
 
   // Webhook por tipo. Motor pode reaproveitar o webhook geral (n8n) como
   // fallback — o payload inclui `type`, `template` e `format` para que o
