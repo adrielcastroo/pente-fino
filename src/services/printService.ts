@@ -361,12 +361,37 @@ async function sendToWebhook(
  * quando a etiqueta vai para o n8n/impressora térmica; no navegador eles
  * apenas deslocam o conteúdo e causam recorte.
  */
+/** Lê uma flag booleana do localStorage de forma segura (SSR/privacy mode). */
+function readFlag(key: string): boolean {
+  try {
+    return typeof localStorage !== 'undefined' && localStorage.getItem(key) === 'true';
+  } catch { return false; }
+}
+
+/**
+ * Impressão direta desabilitada por completo (chave mestre). Quando ligada,
+ * nem o navegador nem o webhook (n8n) são acionados.
+ */
+export function isDirectPrintDisabled(): boolean {
+  return readFlag('pref_disable_direct_print');
+}
+
+/** Impressão pelo navegador desabilitada (mestre OU sub-opção). */
+export function isBrowserPrintDisabled(): boolean {
+  return isDirectPrintDisabled() || readFlag('pref_disable_browser_print');
+}
+
+/** Impressão via n8n (webhook) desabilitada (mestre OU sub-opção). */
+export function isWebhookPrintDisabled(): boolean {
+  return isDirectPrintDisabled() || readFlag('pref_disable_n8n_print');
+}
+
 export function resolvePrintMethod(cfg: PrintConfig): PrintMethod {
-  const browserDisabled = typeof localStorage !== 'undefined'
-    && localStorage.getItem('pref_disable_browser_print') === 'true';
-  const hasWebhook = !!resolveWebhookUrl();
+  const browserDisabled = isBrowserPrintDisabled();
+  const hasWebhook = !!resolveWebhookUrl() && !isWebhookPrintDisabled();
   return cfg.printMethod || (!browserDisabled ? 'browser' : (hasWebhook ? 'webhook' : 'browser'));
 }
+
 
 
 async function dispatchPrint(
@@ -380,15 +405,20 @@ async function dispatchPrint(
     data: Record<string, any>;
   },
 ): Promise<void> {
-  const browserDisabled = typeof localStorage !== 'undefined'
-    && localStorage.getItem('pref_disable_browser_print') === 'true';
+  if (isDirectPrintDisabled()) {
+    toast.warning('Impressão direta está desabilitada nas configurações');
+    return;
+  }
+  const browserDisabled = isBrowserPrintDisabled();
+
 
   // Webhook por tipo. Motor pode reaproveitar o webhook geral (n8n) como
   // fallback — o payload inclui `type`, `template` e `format` para que o
   // fluxo do n8n faça o roteamento correto e respeite as dimensões enviadas
   // (widthMm/heightMm) em vez de forçar o tamanho de tecido.
   const resolvedWebhook = resolveWebhookUrl();
-  const hasWebhook = !!resolvedWebhook;
+  const hasWebhook = !!resolvedWebhook && !isWebhookPrintDisabled();
+
   // Regra do usuário: quando a impressão pelo navegador está LIGADA, NÃO
   // enviar ao n8n (evita redundância — o navegador já cuida da impressão).
   // Só usa n8n quando o navegador está explicitamente desabilitado ou quando
@@ -1100,10 +1130,14 @@ export async function printLabelsBatch(
   if (items.length === 0) return { ok: 0, total: 0, failed: [] };
   const cfg: LabelSettings & PrintConfig = { ...labelSettings, autoPrint: true };
 
-  const browserDisabled = typeof localStorage !== 'undefined'
-    && localStorage.getItem('pref_disable_browser_print') === 'true';
+  if (isDirectPrintDisabled()) {
+    toast.warning('Impressão direta está desabilitada nas configurações');
+    return { ok: 0, total: items.length, failed: items.map((_, i) => i) };
+  }
+  const browserDisabled = isBrowserPrintDisabled();
   const resolvedWebhook = resolveWebhookUrl();
-  const hasWebhook = !!resolvedWebhook;
+  const hasWebhook = !!resolvedWebhook && !isWebhookPrintDisabled();
+
   // Regra anti-redundância: navegador ligado → só navegador; navegador
   // desligado → n8n (se configurado). O caller ainda pode forçar via cfg.printMethod.
   const method: PrintMethod = cfg.printMethod

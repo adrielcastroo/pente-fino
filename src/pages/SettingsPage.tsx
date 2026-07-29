@@ -154,6 +154,16 @@ export default function SettingsPage() {
       setPrefDisableBrowserPrint(remotePref);
       localStorage.setItem('pref_disable_browser_print', String(remotePref));
     }
+    const remoteDirect = (profile as any)?.preferences?.disable_direct_print;
+    if (typeof remoteDirect === 'boolean') {
+      setPrefDisableDirectPrint(remoteDirect);
+      localStorage.setItem('pref_disable_direct_print', String(remoteDirect));
+    }
+    const remoteN8n = (profile as any)?.preferences?.disable_n8n_print;
+    if (typeof remoteN8n === 'boolean') {
+      setPrefDisableN8nPrint(remoteN8n);
+      localStorage.setItem('pref_disable_n8n_print', String(remoteN8n));
+    }
   }, [profile]);
 
   const handleAvatarUpload = async (file: File) => {
@@ -215,7 +225,9 @@ export default function SettingsPage() {
   });
   const [prefAutoArchive, setPrefAutoArchive] = useState(localStorage.getItem('pref_auto_archive') === 'true');
   const [prefCompactTables, setPrefCompactTables] = useState(localStorage.getItem('pref_compact_tables') === 'true');
+  const [prefDisableDirectPrint, setPrefDisableDirectPrint] = useState(localStorage.getItem('pref_disable_direct_print') === 'true');
   const [prefDisableBrowserPrint, setPrefDisableBrowserPrint] = useState(localStorage.getItem('pref_disable_browser_print') === 'true');
+  const [prefDisableN8nPrint, setPrefDisableN8nPrint] = useState(localStorage.getItem('pref_disable_n8n_print') === 'true');
   const [prefSilentBrowserPrint, setPrefSilentBrowserPrint] = useState(localStorage.getItem('pref_silent_browser_print') === 'true');
 
   // Auge credentials state
@@ -453,7 +465,9 @@ export default function SettingsPage() {
         localStorage.setItem('pref_sound_feedback', String(prefSoundFeedback));
         localStorage.setItem('pref_auto_archive', String(prefAutoArchive));
         localStorage.setItem('pref_compact_tables', String(prefCompactTables));
+        localStorage.setItem('pref_disable_direct_print', String(prefDisableDirectPrint));
         localStorage.setItem('pref_disable_browser_print', String(prefDisableBrowserPrint));
+        localStorage.setItem('pref_disable_n8n_print', String(prefDisableN8nPrint));
         localStorage.setItem('pref_silent_browser_print', String(prefSilentBrowserPrint));
         if (!isGuest && user) {
           const currentPrefs = ((profile as any)?.preferences && typeof (profile as any).preferences === 'object')
@@ -462,7 +476,12 @@ export default function SettingsPage() {
           const { error } = await supabase
             .from('profiles')
             .update({
-              preferences: { ...currentPrefs, disable_browser_print: prefDisableBrowserPrint },
+              preferences: {
+                ...currentPrefs,
+                disable_direct_print: prefDisableDirectPrint,
+                disable_browser_print: prefDisableBrowserPrint,
+                disable_n8n_print: prefDisableN8nPrint,
+              },
               updated_at: new Date().toISOString(),
             } as any)
             .eq('id', user.id);
@@ -878,16 +897,44 @@ export default function SettingsPage() {
                       </div>
 
                       <div className="p-4 rounded-md bg-muted/20 border border-border/10 space-y-3">
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between gap-4">
                           <div className="space-y-0.5">
-                            <Label className="text-sm font-bold">Desabilitar Impressão pelo Navegador</Label>
-                            <p className="text-xs text-muted-foreground">Bloqueia o diálogo de impressão do navegador. O disparo via n8n (webhook) continua funcionando normalmente.</p>
+                            <Label className="text-sm font-bold">Desabilitar Impressão Direta</Label>
+                            <p className="text-xs text-muted-foreground">Bloqueia toda a impressão direta do app (navegador e n8n). Use as sub-opções abaixo para desabilitar apenas um dos métodos.</p>
                           </div>
-                          <Switch checked={prefDisableBrowserPrint} onCheckedChange={(v) => { setPrefDisableBrowserPrint(v); setHasUnsavedChanges(true); }} />
+                          <Switch checked={prefDisableDirectPrint} onCheckedChange={(v) => { setPrefDisableDirectPrint(v); setHasUnsavedChanges(true); }} />
+                        </div>
+
+                        {/* Sub-opções por método (filhas da impressão direta) */}
+                        <div className={`ml-4 pl-4 border-l-2 border-border/30 pt-2 space-y-3 ${prefDisableDirectPrint ? 'opacity-50 pointer-events-none' : ''}`}>
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="space-y-0.5">
+                              <Label className="text-sm font-bold">Desabilitar Impressão pelo Navegador</Label>
+                              <p className="text-xs text-muted-foreground">Bloqueia o diálogo de impressão do navegador. O disparo via n8n (webhook) continua funcionando.</p>
+                            </div>
+                            <Switch
+                              checked={prefDisableBrowserPrint}
+                              disabled={prefDisableDirectPrint}
+                              onCheckedChange={(v) => { setPrefDisableBrowserPrint(v); setHasUnsavedChanges(true); }}
+                            />
+                          </div>
+
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="space-y-0.5">
+                              <Label className="text-sm font-bold">Desabilitar Impressão pelo n8n</Label>
+                              <p className="text-xs text-muted-foreground">Bloqueia o envio das etiquetas ao webhook do n8n. A impressão pelo navegador continua funcionando.</p>
+                            </div>
+                            <Switch
+                              checked={prefDisableN8nPrint}
+                              disabled={prefDisableDirectPrint}
+                              onCheckedChange={(v) => { setPrefDisableN8nPrint(v); setHasUnsavedChanges(true); }}
+                            />
+                          </div>
                         </div>
 
                         {/* Sub-opção: impressão silenciosa (filha da impressão pelo navegador) */}
-                        <div className={`ml-4 pl-4 border-l-2 border-border/30 pt-2 ${prefDisableBrowserPrint ? 'opacity-50 pointer-events-none' : ''}`}>
+                        <div className={`ml-4 pl-4 border-l-2 border-border/30 pt-2 ${prefDisableDirectPrint || prefDisableBrowserPrint ? 'opacity-50 pointer-events-none' : ''}`}>
+
                           <div className="flex items-center justify-between gap-4">
                             <div className="space-y-0.5">
                               <Label className="text-sm font-bold">Impressão Silenciosa (sem diálogo)</Label>
@@ -898,7 +945,7 @@ export default function SettingsPage() {
                             </div>
                             <Switch
                               checked={prefSilentBrowserPrint}
-                              disabled={prefDisableBrowserPrint}
+                              disabled={prefDisableDirectPrint || prefDisableBrowserPrint}
                               onCheckedChange={(v) => { setPrefSilentBrowserPrint(v); setHasUnsavedChanges(true); }}
                             />
                           </div>
