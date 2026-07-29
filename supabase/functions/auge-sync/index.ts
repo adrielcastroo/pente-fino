@@ -3855,6 +3855,21 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Lookup ao vivo das TAGs Calculadas (select2 do formulário do Auge).
+    if (action === 'tag_calculada_select') {
+      let payload: any = {};
+      try { payload = await req.json(); } catch { /* ignore */ }
+      const term = String(payload?.term ?? '').trim();
+      const page = Number(payload?.nrPagina ?? 1);
+      const size = Number(payload?.qtdItens ?? 500);
+      const rows = await fetchSelectTagsCalculadas(auth, term, page, size);
+      return new Response(JSON.stringify({ ok: true, term, rows }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+
+
     if (action === 'sync_tag_custom_chunk') {
       const runId = url.searchParams.get('run_id') ?? '';
       if (!runId) throw new Error('run_id obrigatório para continuar a varredura de TAGs.');
