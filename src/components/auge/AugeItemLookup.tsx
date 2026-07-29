@@ -69,7 +69,7 @@ export default function AugeItemLookup({ initialQuery, trigger }: Props) {
       const { data, error } = await supabase
         .from('auge_produtos_saldo')
         .select('deposito, quantidade, unidade, synced_at')
-        .eq('codigo', codigo!)
+        .eq('codigo', codigo as unknown as number)
         .order('deposito');
       if (error) throw error;
       return data ?? [];

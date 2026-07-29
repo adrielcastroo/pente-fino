@@ -173,10 +173,50 @@ function normalizeTagCode(raw: string | null | undefined): string {
   return raw.replace(/&/g, '').trim().toUpperCase().replace(/\s+/g, '');
 }
 
+// ============================================================
+// Curinga estilo SAP B1: "*" = qualquer sequência de caracteres
+// ============================================================
+
+/** Remove caracteres que quebrariam o parser de filtros do PostgREST. */
+function sanitizeTerm(raw: string): string {
+  return raw.replace(/[,()"'\\]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * Converte um termo com curinga `*` em padrão ILIKE.
+ * - "TUB*"    → "TUB%"       (começa com)
+ * - "*MOTOR"  → "%MOTOR"     (termina com)
+ * - "T*42"    → "T%42"       (contém no meio)
+ * - "MOTOR"   → "%MOTOR%"    (contém — comportamento padrão)
+ * Escapa `%` e `_` digitados literalmente para não virarem curingas ocultos.
+ */
+function toIlikePattern(raw: string): string {
+  const clean = sanitizeTerm(raw);
+  if (!clean) return '';
+  // `%` digitado vira espaço para não virar curinga oculto. `_` é mantido:
+  // como curinga de 1 caractere ele também casa com o próprio underscore.
+  const escaped = clean.replace(/%/g, ' ').replace(/\s+/g, ' ').trim();
+  if (escaped.includes('*')) return escaped.replace(/\*/g, '%');
+  return `%${escaped}%`;
+}
+
+/** Versão local (em memória) do mesmo curinga, para filtrar listas já carregadas. */
+function matchesWildcard(value: string | null | undefined, raw: string): boolean {
+  const hay = (value ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const term = raw.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  if (!term) return true;
+  if (!term.includes('*')) return hay.includes(term);
+  const re = new RegExp(
+    '^' + term.split('*').map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('.*') + '$',
+  );
+  return re.test(hay);
+}
+
 interface TagCategoria {
   code: string;
   items: Array<{ tag: CustomTag; cfgNome: string; score: number }>;
 }
+
 
 // ============================================================
 // Componente
@@ -187,6 +227,14 @@ export default function GerarTagTab() {
   const [tagGerada, setTagGerada] = useState('');
   const [entradaManual, setEntradaManual] = useState('');
   const entradaDeferida = useDeferredValue(entradaManual);
+
+  // Termo com debounce usado na busca server-side de TAGs (tempo real).
+  const [termoBusca, setTermoBusca] = useState('');
+  useEffect(() => {
+    const t = setTimeout(() => setTermoBusca(entradaManual.trim()), 300);
+    return () => clearTimeout(t);
+  }, [entradaManual]);
+
 
   // ---------- Acabamentos (lista lateral) ----------
   const { data: acabamentos = [], isLoading } = useQuery({
@@ -218,14 +266,13 @@ export default function GerarTagTab() {
   });
 
   const filtrados = useMemo(() => {
-    const t = busca.trim().toLowerCase();
+    const t = busca.trim();
     if (!t) return acabamentos.slice(0, 200);
     return acabamentos
-      .filter((a) =>
-        (a.nm_acabamento ?? '').toLowerCase().includes(t) ||
-        (a.chave_acabamento ?? '').toLowerCase().includes(t))
+      .filter((a) => matchesWildcard(a.nm_acabamento, t) || matchesWildcard(a.chave_acabamento, t))
       .slice(0, 200);
   }, [acabamentos, busca]);
+
 
   const recomendacoes = useMemo(() => {
     if (!entradaDeferida.trim() || acabamentos.length === 0) return [];
@@ -259,12 +306,53 @@ export default function GerarTagTab() {
     },
   });
 
+  // ---------- Busca direta (tempo real) no catálogo de TAGs ----------
+  // Independe do ranking local: consulta o banco a cada digitação (debounce 300ms),
+  // aceitando curinga `*` no estilo SAP B1.
+  const padraoBusca = useMemo(() => toIlikePattern(termoBusca), [termoBusca]);
+
+  const { data: tagsBusca = [], isFetching: loadingBusca } = useQuery({
+    queryKey: ['auge-tag-custom-busca', padraoBusca],
+    enabled: padraoBusca.length >= 3,
+    staleTime: 60 * 1000,
+    queryFn: async () => {
+      const cols = [
+        'nm_configuracao',
+        'ds_tag_customizada',
+        'nm_tag_customizada',
+        'ds_tag_texto',
+        'ds_tag_calculada',
+      ];
+      const { data, error } = await (supabase as any)
+        .from('auge_tag_custom')
+        .select('cd_configuracao, nm_configuracao, nm_tag_customizada, ds_tag_customizada, ds_tag_calculada, ds_tag_texto')
+        .or(cols.map((c) => `${c}.ilike.${padraoBusca}`).join(','))
+        .limit(300);
+      if (error) throw error;
+      return (data ?? []) as CustomTag[];
+    },
+  });
+
+  // União: TAGs das configurações ranqueadas + TAGs encontradas na busca direta.
+  const tagsUnificadas = useMemo<CustomTag[]>(() => {
+    const seen = new Set<string>();
+    const out: CustomTag[] = [];
+    for (const t of [...tagsTop, ...tagsBusca]) {
+      const k = `${t.cd_configuracao}|${t.ds_tag_customizada ?? t.nm_tag_customizada ?? ''}|${t.ds_tag_texto ?? ''}`;
+      if (seen.has(k)) continue;
+      seen.add(k);
+      out.push(t);
+    }
+    return out;
+  }, [tagsTop, tagsBusca]);
+
   // ---------- Agrupamento por CATEGORIA de TAG (T_BASE, T_TUBO, ...) ----------
   const categorias = useMemo<TagCategoria[]>(() => {
-    if (tagsTop.length === 0) return [];
+    if (tagsUnificadas.length === 0) return [];
     const scoreByCfg = new Map(configsRanqueadas.map((r) => [r.cfg.cd_configuracao, r.score]));
     const byCode = new Map<string, TagCategoria>();
-    for (const tag of tagsTop) {
+    for (const tag of tagsUnificadas) {
+
       const code = normalizeTagCode(tag.ds_tag_customizada ?? tag.nm_tag_customizada);
       if (!code) continue;
       const score = scoreByCfg.get(tag.cd_configuracao) ?? 0;
@@ -277,7 +365,7 @@ export default function GerarTagTab() {
     for (const c of arr) c.items.sort((a, b) => b.score - a.score);
     arr.sort((a, b) => (b.items[0]?.score ?? 0) - (a.items[0]?.score ?? 0));
     return arr;
-  }, [tagsTop, configsRanqueadas]);
+  }, [tagsUnificadas, configsRanqueadas]);
 
   const melhor = recomendacoes[0] ?? null;
 
@@ -321,7 +409,7 @@ export default function GerarTagTab() {
       <Card className="p-3 space-y-3 h-fit">
         <div className="relative">
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-          <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar configuração..." className="h-9 pl-7 text-xs" />
+          <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar configuração (use * como curinga)" className="h-9 pl-7 text-xs" />
         </div>
         <div className="text-[10px] text-muted-foreground">Mostrando {filtrados.length} de {acabamentos.length}</div>
         <div className="max-h-[60vh] overflow-auto space-y-1">
@@ -356,6 +444,12 @@ export default function GerarTagTab() {
               O app identifica tipo de cortina (Rollo/Shadow/Romana…), tubo (T35/T42/T65…), motor e cor,
               busca a configuração compatível e agrupa as TAGs por categoria (T_BASE, T_TUBO, T_TEC_X…).
             </p>
+            <p className="text-[10px] text-muted-foreground">
+              <span className="font-semibold text-foreground">Curinga:</span> use <code className="font-mono">*</code> como
+              no SAP B1 — <code className="font-mono">T42*</code> começa com, <code className="font-mono">*motor</code> termina
+              com, <code className="font-mono">T*42</code> contém no meio. Sem <code className="font-mono">*</code>, a busca
+              é "contém". A consulta é feita direto no catálogo do Auge enquanto você digita (mín. 3 caracteres).
+            </p>
             {loadingCfgs && (
               <div className="text-[10px] text-muted-foreground flex items-center gap-1">
                 <Loader2 className="h-3 w-3 animate-spin" /> Carregando catálogo de configurações…
@@ -365,11 +459,17 @@ export default function GerarTagTab() {
 
 
           {/* Categorias de TAGs (T_BASE, T_TUBO, T_TEC_X, ...) */}
-          {(loadingTags && categorias.length === 0) && (
+          {((loadingTags || loadingBusca) && categorias.length === 0) && (
             <div className="rounded border p-3 text-[10px] text-muted-foreground flex items-center gap-2">
-              <Loader2 className="h-3 w-3 animate-spin" /> Buscando TAGs das configurações compatíveis…
+              <Loader2 className="h-3 w-3 animate-spin" /> Buscando TAGs no catálogo do Auge…
             </div>
           )}
+          {padraoBusca.length >= 3 && !loadingBusca && categorias.length === 0 && (
+            <div className="rounded border p-3 text-[10px] text-muted-foreground">
+              Nenhuma TAG encontrada para esse termo. Tente usar <code className="font-mono">*</code> (ex.: <code className="font-mono">*T42*</code>).
+            </div>
+          )}
+
           {categorias.length > 0 && (
             <div className="rounded border border-primary/40 bg-primary/5 p-3 space-y-2">
               <div className="text-[10px] uppercase text-muted-foreground flex items-center gap-1">
