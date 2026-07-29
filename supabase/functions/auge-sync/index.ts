@@ -4137,7 +4137,7 @@ Deno.serve(async (req) => {
         trCount: [...pageHtml.matchAll(/<tr[^>]*>/gi)].length,
         tables: [...pageHtml.matchAll(/<table[\s\S]{0,300}?>/gi)].map((m) => m[0].slice(0, 160)),
         ajaxRefs: [...pageHtml.matchAll(/(ajax\s*:|url\s*:|\.php)[^\n]{0,160}/gi)].map((m) => m[0].replace(/\s+/g, ' ')).filter((s) => /\.php/.test(s)).slice(0, 60),
-        initTab: (() => { const i = pageHtml.search(/#tabTag'\)\.DataTable|tabTag = \$/); return i < 0 ? '' : pageHtml.slice(i, i + 2000).replace(/\s+/g, ' '); })(),
+        serializeCtx: (() => { const i = pageHtml.indexOf("form-filter').serialize()"); return i < 0 ? '' : pageHtml.slice(Math.max(0, i - 900), i + 900).replace(/\s+/g, ' '); })(),
         forms: [...pageHtml.matchAll(/<form[\s\S]{0,200}?>/gi)].map((m) => m[0].replace(/\s+/g, ' ').slice(0, 200)),
         paths,
         probes,
