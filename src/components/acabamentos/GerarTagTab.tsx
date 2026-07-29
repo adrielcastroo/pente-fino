@@ -381,7 +381,7 @@ function ConfiguracaoSelect({
   );
 }
 
-
+// ============================================================
 // Componente principal
 // ============================================================
 export default function GerarTagTab() {
