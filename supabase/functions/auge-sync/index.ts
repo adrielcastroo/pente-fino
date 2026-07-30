@@ -4439,11 +4439,18 @@ Deno.serve(async (req) => {
           });
         }
 
-        const formula = await fetchTagFormulaCompleta(auth, cdTag);
-        if (formula) {
-          await admin.from('auge_tags_calculadas').update({ formula }).eq('cd_tag', cdTag);
+        const modal = await fetchTagModal(auth, cdTag);
+        const formula = modal.formula;
+        // Auto-correção: além da fórmula, alinha nome/descrição com o Auge,
+        // evitando desalinhamento de colunas vindo da grade.
+        const patch: Record<string, string> = {};
+        if (formula) patch.formula = formula;
+        if (modal.nome) { patch.nome = modal.nome; patch.nm_tag = modal.nome; }
+        if (modal.descricao) patch.descricao = modal.descricao;
+        if (Object.keys(patch).length) {
+          await admin.from('auge_tags_calculadas').update(patch).eq('cd_tag', cdTag);
         }
-        return new Response(JSON.stringify({ ok: !!formula, cdTag, formula }), {
+        return new Response(JSON.stringify({ ok: !!formula, cdTag, ...modal }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       } catch (e) {
