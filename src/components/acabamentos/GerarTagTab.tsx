@@ -868,14 +868,14 @@ export default function GerarTagTab() {
   const tagsUnificadas = useMemo<CustomTag[]>(() => {
     const seen = new Set<string>();
     const out: CustomTag[] = [];
-    for (const t of [...tagsDaCustom, ...tagsTop, ...tagsBusca]) {
+    for (const t of [...tagsDaCustom, ...tagsTop, ...tagsBusca, ...tagsPalavras]) {
       const k = `${t.cd_configuracao}|${t.ds_tag_customizada ?? t.nm_tag_customizada ?? ''}|${t.ds_tag_texto ?? ''}`;
       if (seen.has(k)) continue;
       seen.add(k);
       out.push(t);
     }
     return out;
-  }, [tagsDaCustom, tagsTop, tagsBusca]);
+  }, [tagsDaCustom, tagsTop, tagsBusca, tagsPalavras]);
 
   // ---------- Agrupamento por categoria (T_BASE, T_TUBO, ...) ----------
   const categorias = useMemo<TagCategoria[]>(() => {
