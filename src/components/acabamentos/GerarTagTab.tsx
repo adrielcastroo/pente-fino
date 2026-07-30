@@ -281,8 +281,8 @@ function TagCalculadaCell({
     staleTime: 60 * 1000,
     queryFn: async () => {
       const seen = new Set<string>();
-      const out: Array<{ valor: string; formula: string; descricao: string }> = [];
-      const push = (valorRaw: unknown, formulaRaw: unknown, descricaoRaw: unknown) => {
+      const out: Array<{ valor: string; formula: string; descricao: string; cdTag?: string }> = [];
+      const push = (valorRaw: unknown, formulaRaw: unknown, descricaoRaw: unknown, cdTagRaw?: unknown) => {
         const v = String(valorRaw ?? '').trim();
         if (!v || seen.has(v)) return;
         seen.add(v);
@@ -290,6 +290,7 @@ function TagCalculadaCell({
           valor: v,
           formula: String(formulaRaw ?? '').trim(),
           descricao: String(descricaoRaw ?? '').trim(),
+          cdTag: String(cdTagRaw ?? '').trim() || undefined,
         });
       };
 
@@ -300,12 +301,12 @@ function TagCalculadaCell({
         const cols = ['nome', 'descricao', 'formula', 'nm_tag'];
         const { data } = await (supabase as any)
           .from('auge_tags_calculadas')
-          .select('nome, descricao, formula, nm_tag')
+          .select('cd_tag, nome, descricao, formula, nm_tag')
           .or(cols.map((c) => `${c}.ilike.${padrao}`).join(','))
           .order('nome', { ascending: true })
           .limit(200);
         for (const r of (data ?? []) as any[]) {
-          push(r.nome ?? r.nm_tag ?? r.descricao, r.formula, r.descricao);
+          push(r.nome ?? r.nm_tag ?? r.descricao, r.formula, r.descricao, r.cd_tag);
         }
       }
 
