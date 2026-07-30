@@ -161,6 +161,30 @@ function toIlikeTokens(raw: string): string[] {
     .map((t) => (t.includes('*') ? t.replace(/\*/g, '%') : `%${t}%`));
 }
 
+/** Normalização usada nas comparações por palavra-chave. */
+function normKey(s: string): string {
+  return (s ?? '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
+export interface Palavra { token: string; weight: number; structural: boolean }
+
+/**
+ * Palavras-chave da configuração digitada, ordenadas da mais relevante
+ * (tipo/tubo/motor) para a menos relevante. Usadas para descobrir quais TAGs
+ * Configuradas são obrigatórias.
+ */
+function extrairPalavras(input: string): Palavra[] {
+  const raw = uniqTokens(normKey(input).split(' ').filter((t) => t.length >= 2));
+  return weightTokens(raw).sort((a, b) => b.weight - a.weight || a.token.localeCompare(b.token));
+}
+
+
+
 
 interface TagCategoria {
   code: string;
