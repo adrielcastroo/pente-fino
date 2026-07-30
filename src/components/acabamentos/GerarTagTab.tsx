@@ -1144,34 +1144,29 @@ export default function GerarTagTab() {
         )}
 
         {obrigatorias.length > 0 && (
-          <div
-            className={`rounded border p-2.5 space-y-2 ${
-              obrigatoriasFaltando.length > 0
-                ? 'border-destructive/50 bg-destructive/5'
-                : 'border-emerald-500/40 bg-emerald-500/5'
-            }`}
-          >
+          <div className="rounded border border-blue-500/50 bg-blue-500/5 p-2.5 space-y-2">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <div className="text-[11px] font-semibold flex items-center gap-1.5">
+                <div className="text-[11px] font-semibold flex items-center gap-1.5 text-blue-700 dark:text-blue-400">
                   {obrigatoriasFaltando.length > 0
-                    ? <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
-                    : <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />}
+                    ? <AlertTriangle className="h-3.5 w-3.5" />
+                    : <CheckCircle2 className="h-3.5 w-3.5" />}
                   TAGs Configuradas obrigatórias
-                  <Badge variant="outline" className="text-[9px]">
+                  <Badge variant="outline" className="text-[9px] border-blue-500/50 text-blue-700 dark:text-blue-400">
                     {obrigatorias.length - obrigatoriasFaltando.length}/{obrigatorias.length}
                   </Badge>
                 </div>
                 <p className="text-[10px] text-muted-foreground">
                   Padrão detectado em {obrigatorias[0]?.total ?? 0} TAG(s) Custom existentes que contêm
                   “{escopoPadrao.termo || termoBusca}”. Quanto mais específico o texto, mais restrito o padrão
-                  exigido. A gravação fica bloqueada enquanto faltar alguma.
+                  exigido. As TAGs em <span className="text-blue-700 dark:text-blue-400 font-medium">azul</span> são
+                  obrigatórias — a gravação fica bloqueada enquanto faltar alguma.
                 </p>
 
 
               </div>
               {obrigatoriasFaltando.length > 0 && (
-                <Button size="sm" variant="outline" className="h-7 px-2 text-[10px] shrink-0" onClick={adicionarObrigatoriasFaltando}>
+                <Button size="sm" variant="outline" className="h-7 px-2 text-[10px] shrink-0 border-blue-500/50 text-blue-700 dark:text-blue-400" onClick={adicionarObrigatoriasFaltando}>
                   <Plus className="h-3 w-3 mr-1" /> Adicionar faltantes
                 </Button>
               )}
@@ -1182,11 +1177,11 @@ export default function GerarTagTab() {
                 return (
                   <span
                     key={o.code}
-                    title={`${o.valor} · presente em ${o.freq}/${o.total} modelos`}
-                    className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 font-mono text-[10px] ${
+                    title={`${o.valor} · obrigatória · presente em ${o.freq}/${o.total} modelos`}
+                    className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 font-mono text-[10px] text-blue-700 dark:text-blue-400 ${
                       ok
-                        ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
-                        : 'border-destructive/50 bg-destructive/10 text-destructive'
+                        ? 'border-blue-500/50 bg-blue-500/15'
+                        : 'border-blue-500/60 bg-blue-500/5 border-dashed'
                     }`}
                   >
                     {ok ? <CheckCircle2 className="h-3 w-3" /> : <AlertTriangle className="h-3 w-3" />}
@@ -1197,6 +1192,7 @@ export default function GerarTagTab() {
             </div>
           </div>
         )}
+
       </Card>
 
 
