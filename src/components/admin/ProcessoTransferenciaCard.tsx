@@ -511,6 +511,7 @@ export default function ProcessoTransferenciaCard() {
       if (error) throw error;
 
       // Replica no Auge as marcações indicadas na planilha (entregar → receber).
+      let houveFalhaAuge = false;
       if (sincAuge) {
         const retorno: ResultadoLogistica[] = [];
         const acoes: { ids: string[]; idLogistica: 1 | 2 }[] = [
@@ -537,6 +538,7 @@ export default function ProcessoTransferenciaCard() {
         setResultados(retorno);
         const confirmadas = retorno.filter((r) => r.ok).length;
         const falharam = retorno.length - confirmadas;
+        houveFalhaAuge = falharam > 0;
         if (falharam > 0) {
           toast.warning(`${confirmadas} ação(ões) confirmada(s); ${falharam} falharam.`);
         } else if (confirmadas > 0) {
@@ -545,7 +547,7 @@ export default function ProcessoTransferenciaCard() {
       }
 
 
-      if (!resultados.some((r) => !r.ok)) {
+      if (!houveFalhaAuge) {
         toast.success(`${payload.length} transferência(s) registrada(s).`);
       }
       limparPreview();
