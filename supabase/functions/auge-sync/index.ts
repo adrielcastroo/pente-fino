@@ -5141,6 +5141,62 @@ Deno.serve(async (req) => {
       });
     }
 
+    // -------------- LISTAR CONSULTAS DISPONÍVEIS (Gerador de Consultas) ------
+    // Estratégia defensiva: tenta endpoints ajax conhecidos e, se nenhum
+    // responder JSON utilizável, faz o scrape do <select>/<option> da página.
+    if (action === 'listar_consultas') {
+      const candidatos = [
+        '/l.unilux/modTI/Ajax/getListaConsulta.php',
+        '/l.unilux/modTI/Ajax/getConsultas.php',
+        '/l.unilux/modTI/Ajax/getListaConsultas.php',
+      ];
+      let itens: Array<{ id: string; nome: string; grupo?: string }> = [];
+      for (const path of candidatos) {
+        try {
+          const txt = await postAugePhp(auth, path, new URLSearchParams(), '/l.unilux/modTI/gerirConsulta.php');
+          const j = JSON.parse(txt);
+          const arr = Array.isArray(j) ? j : (Array.isArray(j?.data) ? j.data : []);
+          if (arr.length) {
+            itens = arr.map((r: any) => ({
+              id: String(r.idConsulta ?? r.id ?? r.cdConsulta ?? '').trim(),
+              nome: String(r.nmConsulta ?? r.nome ?? r.descricao ?? r.dsConsulta ?? '').trim(),
+              grupo: String(r.nmGrupo ?? r.grupo ?? r.modulo ?? '').trim() || undefined,
+            })).filter((r: any) => r.id && r.nome);
+            if (itens.length) break;
+          }
+        } catch { /* tenta o próximo */ }
+      }
+
+      if (!itens.length) {
+        // Fallback: scrape do HTML da página do gerador de consultas.
+        const headers: Record<string, string> = {
+          'Cookie': auth.jar.header(),
+          'User-Agent': UA,
+          'Accept': 'text/html,application/xhtml+xml',
+        };
+        if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
+        const res = await fetch(`${AUGE_BASE_URL}/l.unilux/modTI/gerirConsulta.php`, { headers });
+        auth.jar.ingest(res);
+        const html = await res.text();
+        const re = /<option[^>]*value=["'](\d+)["'][^>]*>([^<]+)<\/option>/gi;
+        const seen = new Set<string>();
+        let m: RegExpExecArray | null;
+        while ((m = re.exec(html)) !== null) {
+          const id = m[1];
+          const nome = m[2].replace(/&amp;/g, '&').trim();
+          if (!id || !nome || seen.has(id)) continue;
+          seen.add(id);
+          itens.push({ id, nome });
+        }
+      }
+
+      return new Response(JSON.stringify({ ok: true, total: itens.length, data: itens }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+
+
     // -------------- SALVAR / EXCLUIR ABREVIAÇÃO DIRETO NO AUGE --------------
     if (action === 'salvar_abreviacao' || action === 'excluir_abreviacao') {
       let payload: any = {};

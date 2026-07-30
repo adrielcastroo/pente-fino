@@ -47,6 +47,8 @@ export const PAGE_REGISTRY: PageEntry[] = [
   { key: 'compras.acompanhamentos', label: 'Acompanhamentos', module: 'compras', path: '/compras/acompanhamentos' },
   { key: 'compras.starcolor', label: 'Starcolor', module: 'compras', path: '/compras/acompanhamentos/starcolor' },
   { key: 'compras.starcolor.romaneios', label: 'Romaneios Starcolor', module: 'compras', path: '/compras/acompanhamentos/starcolor/romaneios' },
+  { key: 'compras.analise', label: 'Análise de Compra', module: 'compras', path: '/compras/analise-compra' },
+
 ];
 
 export const MODULE_LABEL: Record<PageModule, string> = {
