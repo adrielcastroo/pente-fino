@@ -2507,6 +2507,12 @@ async function logisticaFolhaTransferencia(
   idLogistica: 1 | 2,
 ): Promise<{ marcado: boolean; dtAtualizacao: string | null; usuario: string | null }> {
   if (!cdMovEstoqueERP) throw new Error('cdMovEstoqueERP é obrigatório.');
+  // O Auge só aceita o código numérico da transferência (cdTransferenciaEstoque /
+  // "Nº Portal"). Chaves compostas internas (ex. transf-php:180641:item:0:XX)
+  // retornam ok sem marcar nada — falhamos cedo para não mascarar o erro.
+  if (!/^\d+$/.test(cdMovEstoqueERP)) {
+    throw new Error(`cdMovEstoqueERP inválido: "${cdMovEstoqueERP}" — informe o Nº Portal numérico.`);
+  }
   const body = new URLSearchParams();
   body.set('idAcao', '5');
   body.set('cdMovivimentacao', ''); // typo intencional (bate com Auge)
@@ -3992,8 +3998,8 @@ Deno.serve(async (req) => {
       // Limites de segurança: cada id gera 1-2 requisições HTTP ao Auge.
       // Sem teto, lotes grandes estouram o CPU/wall time da Edge Function
       // (erro "CPU Time exceeded" → resposta vazia no cliente).
-      const MAX_POR_CHAMADA = 20;
-      const TEMPO_LIMITE_MS = 45_000;
+      const MAX_POR_CHAMADA = 8;
+      const TEMPO_LIMITE_MS = 30_000;
       const inicio = Date.now();
 
       const alvo = ids.slice(0, MAX_POR_CHAMADA);

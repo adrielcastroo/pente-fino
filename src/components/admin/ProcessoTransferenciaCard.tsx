@@ -323,16 +323,33 @@ export default function ProcessoTransferenciaCard() {
   const limparPreview = () => { setPreview([]); setFileName(''); };
 
   /**
+   * O Auge identifica a folha pelo código numérico da transferência
+   * (`cdTransferenciaEstoque`, exibido como "Nº Portal").
+   * Já `id_externo` no nosso banco é uma chave composta por item
+   * (`transf-php:180641:item:0:TC.000.050`) — enviá-la ao Auge não marca nada.
+   * Este helper extrai sempre o código numérico correto.
+   */
+  const codigoAuge = (r: { nr_portal?: string | null; id_externo?: string | null }): string | null => {
+    const portal = String(r.nr_portal ?? '').trim();
+    if (/^\d+$/.test(portal)) return portal;
+    const ext = String(r.id_externo ?? '').trim();
+    if (/^\d+$/.test(ext)) return ext;
+    const m = ext.match(/(?:^|:)(\d{4,})(?::|$)/);
+    return m ? m[1] : null;
+  };
+
+  /**
    * Replica marcações de logística no Auge em blocos pequenos.
    * Cada id gera 1-2 requisições HTTP na edge function; lotes grandes em uma
-   * única chamada estouravam o limite de CPU/tempo ("CPU Time exceeded"),
-   * derrubando a resposta e deixando a tela em branco.
+   * única chamada estouravam o limite de CPU/memória, derrubando a resposta.
    */
   const sincronizarLogistica = async (
-    ids: string[],
+    idsBrutos: string[],
     idLogistica: 1 | 2,
-  ): Promise<{ falhas: number; pendentes: number }> => {
-    const TAMANHO_BLOCO = 15;
+  ): Promise<{ falhas: number; pendentes: number; invalidos: number }> => {
+    const ids = Array.from(new Set(idsBrutos.filter((v) => /^\d+$/.test(v))));
+    const invalidos = new Set(idsBrutos).size - ids.length;
+    const TAMANHO_BLOCO = 8;
     let falhas = 0;
     let pendentes = 0;
     for (let i = 0; i < ids.length; i += TAMANHO_BLOCO) {
@@ -344,8 +361,9 @@ export default function ProcessoTransferenciaCard() {
       falhas += (data?.resultados ?? []).filter((r: { ok: boolean }) => !r.ok).length;
       pendentes += (data?.nao_processados ?? []).length;
     }
-    return { falhas, pendentes };
+    return { falhas, pendentes, invalidos };
   };
+
 
 
   /**
@@ -458,12 +476,15 @@ export default function ProcessoTransferenciaCard() {
       // Replica no Auge as marcações indicadas na planilha (entregar → receber).
       if (sincAuge) {
         const acoes: { ids: string[]; idLogistica: 1 | 2 }[] = [
-          { ids: validas.filter((r) => r.marcar_entregar).map((r) => r.id_externo), idLogistica: 1 },
-          { ids: validas.filter((r) => r.marcar_receber).map((r) => r.id_externo), idLogistica: 2 },
+          { ids: validas.filter((r) => r.marcar_entregar).map(codigoAuge).filter(Boolean) as string[], idLogistica: 1 },
+          { ids: validas.filter((r) => r.marcar_receber).map(codigoAuge).filter(Boolean) as string[], idLogistica: 2 },
         ];
         for (const acao of acoes) {
           if (!acao.ids.length) continue;
-          const { falhas, pendentes } = await sincronizarLogistica(acao.ids, acao.idLogistica);
+          const { falhas, pendentes, invalidos } = await sincronizarLogistica(acao.ids, acao.idLogistica);
+          if (invalidos) {
+            toast.warning(`${invalidos} linha(s) sem Nº Portal válido — não enviadas ao Auge.`);
+          }
           if (falhas) {
             toast.warning(
               `${falhas} folha(s) não puderam ser ${acao.idLogistica === 1 ? 'entregues' : 'recebidas'} no Auge.`,
@@ -500,11 +521,12 @@ export default function ProcessoTransferenciaCard() {
     setAplicando(etapa);
     try {
       if (sincAuge && (etapa === 'entregue_logistica' || etapa === 'recebido_logistica')) {
-        const externos = linhas.map((r) => r.id_externo).filter(Boolean);
-        const { falhas, pendentes } = await sincronizarLogistica(
+        const externos = linhas.map(codigoAuge).filter(Boolean) as string[];
+        const { falhas, pendentes, invalidos } = await sincronizarLogistica(
           externos,
           etapa === 'entregue_logistica' ? 1 : 2,
         );
+        if (invalidos) toast.warning(`${invalidos} linha(s) sem Nº Portal válido — não enviadas ao Auge.`);
         if (falhas) toast.warning(`${falhas} folha(s) não puderam ser marcadas no Auge.`);
         if (pendentes) toast.warning(`${pendentes} folha(s) não processadas — repita a ação para concluir.`);
       }
