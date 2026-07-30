@@ -5307,18 +5307,14 @@ Deno.serve(async (req) => {
       auth.jar.ingest(page);
       const html = await page.text();
       const scripts = Array.from(html.matchAll(/<script[^>]+src=["']([^"']+)["']/gi)).map((m) => m[1]);
-      const alvo = scripts.find((s) => /consulta/i.test(s));
-      let js = '';
-      if (alvo) {
-        const jsUrl = alvo.startsWith('http')
-          ? alvo
-          : `${AUGE_BASE_URL}/l.unilux/modTI/${alvo.replace(/^\.?\//, '')}`;
-        const r = await fetch(jsUrl, { headers: h });
-        auth.jar.ingest(r);
-        const txt = await r.text();
-        const i = txt.indexOf('Resultado');
-        js = `url=${jsUrl}\nlen=${txt.length}\n` + txt.slice(Math.max(0, i - 1500), i + 3500);
-      }
+      // O ajax de resultado fica no <script> inline da própria página.
+      const inline = Array.from(html.matchAll(/<script(?![^>]*src=)[^>]*>([\s\S]*?)<\/script>/gi))
+        .map((m) => m[1])
+        .filter((s) => /Resultado|ajax|\.php/i.test(s))
+        .join('\n/* --- */\n');
+      const i = inline.search(/Resultado/i);
+      const js = `inlineLen=${inline.length}\n` + inline.slice(Math.max(0, i - 2000), i + 4000);
+
       return new Response(JSON.stringify({ ok: true, scripts, js }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
