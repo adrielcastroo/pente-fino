@@ -1454,7 +1454,7 @@ export default function GerarTagTab() {
                 {linhas.length === 0 && (
                   <tr>
                     <td colSpan={4} className="p-6 text-center text-muted-foreground text-[11px]">
-                      Selecione TAGs necessárias à esquerda para montar a TAG Custom.
+                      Nenhuma TAG adicionada à composição.
                     </td>
                   </tr>
                 )}
