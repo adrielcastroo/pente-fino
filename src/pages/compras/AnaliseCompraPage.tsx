@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { Download, FileSpreadsheet, Loader2, RefreshCw } from 'lucide-react';
+import { AlertTriangle, Download, FileSpreadsheet, Loader2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { PageShell, PageHeader } from '@/components/compras/ui';
@@ -9,6 +9,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import AnaliseCompraTable from '@/components/compras/AnaliseCompraTable';
 import {
   ANALISE_COMPRA_PRESETS,
@@ -19,37 +26,73 @@ import {
   type NormalizedResult,
 } from '@/lib/compras/analiseCompra';
 
+interface ConsultaOption {
+  id: string;
+  nome: string;
+  grupo?: string;
+}
+
+const STORAGE_KEY = 'compras:analise-compra:idConsulta';
+
 /**
  * Relatório de itens com saldo baixo.
  *
- * O usuário não precisa escolher/consultar nada: o Edge Function resolve
- * sozinho a consulta "Análise de compra V5 - HANA" no Auge e o app aplica os
- * quatro conjuntos de filtros (Geral, Tecido, Siplan, Lâmina).
+ * O Edge Function resolve sozinho a consulta "Análise de compra V5 - HANA" no
+ * Auge. Quando ela não existe/não responde para as credenciais do usuário,
+ * exibimos a lista de consultas disponíveis para escolha manual (uma vez).
  */
 export default function AnaliseCompraPage() {
   const [resultado, setResultado] = useState<NormalizedResult>({ columns: [], rows: [] });
   const [origem, setOrigem] = useState<string | null>(null);
   const [preset, setPreset] = useState(ANALISE_COMPRA_PRESETS[0].key);
+  const [disponiveis, setDisponiveis] = useState<ConsultaOption[]>([]);
+  const [aviso, setAviso] = useState<string | null>(null);
+  const [idConsulta, setIdConsulta] = useState<string>(
+    () => localStorage.getItem(STORAGE_KEY) ?? '',
+  );
 
   const gerar = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (forcarId?: string) => {
+      const id = forcarId ?? idConsulta;
       const { data, error } = await supabase.functions.invoke('auge-sync', {
-        body: { action: 'analise_compra' },
+        body: { action: 'analise_compra', ...(id ? { idConsulta: id } : {}) },
       });
       if (error) throw error;
-      if (data?.ok === false) throw new Error(data?.error || 'Falha ao gerar o relatório.');
-      return { nome: data?.consulta?.nome as string | undefined, result: normalizeConsulta(data) };
+      return data as {
+        ok?: boolean;
+        error?: string;
+        needsSelection?: boolean;
+        disponiveis?: ConsultaOption[];
+        consulta?: { id: string; nome: string };
+      };
     },
-    onSuccess: ({ nome, result }) => {
+    onSuccess: (data) => {
+      if (data?.ok === false) {
+        setDisponiveis(data.disponiveis ?? []);
+        setAviso(data.error ?? 'Falha ao gerar o relatório.');
+        toast.error(data.error ?? 'Falha ao gerar o relatório.');
+        return;
+      }
+      const result = normalizeConsulta(data);
       setResultado(result);
-      setOrigem(nome ?? null);
+      setOrigem(data?.consulta?.nome ?? null);
+      setDisponiveis(data?.disponiveis ?? []);
+      setAviso(null);
       if (!result.rows.length) toast.warning('O relatório retornou sem linhas.');
       else toast.success(`${result.rows.length} linhas carregadas.`);
     },
     onError: (e: unknown) => {
-      toast.error(e instanceof Error ? e.message : 'Erro ao gerar o relatório.');
+      const msg = e instanceof Error ? e.message : 'Erro ao gerar o relatório.';
+      setAviso(msg);
+      toast.error(msg);
     },
   });
+
+  const escolherConsulta = (id: string) => {
+    setIdConsulta(id);
+    localStorage.setItem(STORAGE_KEY, id);
+    gerar.mutate(id);
+  };
 
   const blocos = useMemo(
     () =>
@@ -59,6 +102,7 @@ export default function AnaliseCompraPage() {
       })),
     [resultado.rows],
   );
+
 
   const exportar = () => {
     if (!resultado.columns.length) return;
