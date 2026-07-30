@@ -414,7 +414,16 @@ function TagCalculadaCell({
           {opcoes.map((o) => (
             <button
               key={o.valor}
-              onClick={() => { onChange({ valor: o.valor, formula: o.formula }); setAberto(false); }}
+              onClick={async () => {
+                const base: TagCalculadaSel = { valor: o.valor, formula: o.formula, cdTag: o.cdTag };
+                onChange(base);
+                setAberto(false);
+                // A grade do Auge trunca fórmulas longas; completamos no ERP.
+                if (formulaTruncada(o.formula) || !o.formula) {
+                  const completo = await completarFormula(base);
+                  if (completo.formula !== base.formula) onChange(completo);
+                }
+              }}
               className="w-full text-left px-2 py-1 hover:bg-muted/60 transition"
             >
               <div className="font-mono text-[11px] break-all">{o.valor}</div>
