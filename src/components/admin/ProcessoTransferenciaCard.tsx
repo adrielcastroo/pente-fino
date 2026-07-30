@@ -414,15 +414,30 @@ export default function ProcessoTransferenciaCard() {
    * cdMovEstoqueERP exigido pelo endpoint de toggle do Auge.
    */
   const processarLogisticaPorSap = async (rows: ImportRow[]): Promise<ResultadoLogistica[]> => {
-    const codigos = Array.from(new Set(
-      rows.map((r) => String(r.nr_entrada_sap ?? '').trim()).filter((v) => /^\d+$/.test(v)),
-    ));
+    // Uma folha por Nº Entrada SAP, com as ações pedidas na planilha.
+    // Sem marcação explícita, o padrão é executar as duas caixas.
+    const porSap = new Map<string, { nrEntradaSap: string; entregar: boolean; receber: boolean }>();
+    for (const r of rows) {
+      const sap = String(r.nr_entrada_sap ?? '').trim();
+      if (!/^\d+$/.test(sap)) continue;
+      const semMarcacao = !r.marcar_entregar && !r.marcar_receber;
+      const atual = porSap.get(sap) ?? { nrEntradaSap: sap, entregar: false, receber: false };
+      atual.entregar = atual.entregar || semMarcacao || Boolean(r.marcar_entregar);
+      atual.receber = atual.receber || semMarcacao || Boolean(r.marcar_receber);
+      porSap.set(sap, atual);
+    }
+    const itens = Array.from(porSap.values());
     const detalhes: ResultadoLogistica[] = [];
     const TAMANHO_BLOCO = 8;
-    for (let i = 0; i < codigos.length; i += TAMANHO_BLOCO) {
-      const bloco = codigos.slice(i, i + TAMANHO_BLOCO);
+    setProgresso({ feito: 0, total: itens.length, etapa: 'Sincronizando folhas no Auge' });
+    for (let i = 0; i < itens.length; i += TAMANHO_BLOCO) {
+      const bloco = itens.slice(i, i + TAMANHO_BLOCO);
       const { data, error } = await supabase.functions.invoke('auge-sync', {
-        body: { action: 'transferencia_logistica_processar', codigosSap: bloco },
+        body: {
+          action: 'transferencia_logistica_processar',
+          codigosSap: bloco.map((b) => b.nrEntradaSap),
+          itens: bloco,
+        },
       });
       if (error) throw error;
       const recebidos = Array.isArray(data?.resultados) ? data.resultados : [];
@@ -444,11 +459,16 @@ export default function ProcessoTransferenciaCard() {
           caixasMarcadas: caixas,
           mensagem: resultado.ok
             ? resultado.ignorado
-              ? 'As duas caixas já estavam marcadas; nenhuma alteração necessária.'
+              ? 'As caixas solicitadas já estavam marcadas; nenhuma alteração necessária.'
               : `Marcada(s): ${caixas.join(' e ')}. Código interno Auge: ${resultado.cdMovEstoqueERP ?? '—'}.`
-            : (resultado.erro || 'O Auge não confirmou as duas caixas.'),
+            : (resultado.erro || 'O Auge não confirmou as caixas solicitadas.'),
         });
       }
+      setProgresso({
+        feito: Math.min(i + TAMANHO_BLOCO, itens.length),
+        total: itens.length,
+        etapa: 'Sincronizando folhas no Auge',
+      });
     }
     return detalhes;
   };
