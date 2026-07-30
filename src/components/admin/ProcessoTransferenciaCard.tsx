@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import {
   CheckCircle2, Download, FileSpreadsheet, History, Loader2, PackageCheck,
@@ -51,6 +52,13 @@ interface ImportRow {
   marcar_receber?: boolean;
   /** false quando o Nº Entrada SAP não corresponde a nenhuma transferência. */
   resolvido?: boolean;
+}
+
+interface ResultadoLogistica {
+  id: string;
+  acao: 'Entregar' | 'Receber';
+  ok: boolean;
+  mensagem: string;
 }
 
 
@@ -256,6 +264,7 @@ export default function ProcessoTransferenciaCard() {
   const [fileName, setFileName] = useState('');
   const [parsing, setParsing] = useState(false);
   const [salvando, setSalvando] = useState(false);
+  const [resultados, setResultados] = useState<ResultadoLogistica[]>([]);
   /** Etapa sendo aplicada no momento (bloqueia os botões em lote). */
   const [aplicando, setAplicando] = useState<Etapa | null>(null);
   /** Replica a ação de entrega/recebimento diretamente no Auge. */
@@ -329,7 +338,14 @@ export default function ProcessoTransferenciaCard() {
    * (`transf-php:180641:item:0:TC.000.050`) — enviá-la ao Auge não marca nada.
    * Este helper extrai sempre o código numérico correto.
    */
-  const codigoAuge = (r: { nr_portal?: string | null; id_externo?: string | null }): string | null => {
+  const codigoAuge = (
+    r: { nr_portal?: string | null; nr_entrada_sap?: string | null; id_externo?: string | null },
+    idLogistica: 1 | 2,
+  ): string | null => {
+    // No endpoint legado, cada ícone usa uma chave diferente:
+    // entregar (roxo) = Nº Portal; receber (verde) = Nº Entrada SAP.
+    const entradaSap = String(r.nr_entrada_sap ?? '').trim();
+    if (idLogistica === 2 && /^\d+$/.test(entradaSap)) return entradaSap;
     const portal = String(r.nr_portal ?? '').trim();
     if (/^\d+$/.test(portal)) return portal;
     const ext = String(r.id_externo ?? '').trim();
@@ -346,22 +362,42 @@ export default function ProcessoTransferenciaCard() {
   const sincronizarLogistica = async (
     idsBrutos: string[],
     idLogistica: 1 | 2,
-  ): Promise<{ falhas: number; pendentes: number; invalidos: number }> => {
+  ): Promise<{ falhas: number; pendentes: number; invalidos: number; resultados: ResultadoLogistica[] }> => {
     const ids = Array.from(new Set(idsBrutos.filter((v) => /^\d+$/.test(v))));
     const invalidos = new Set(idsBrutos).size - ids.length;
     const TAMANHO_BLOCO = 8;
     let falhas = 0;
     let pendentes = 0;
+    const detalhes: ResultadoLogistica[] = [];
     for (let i = 0; i < ids.length; i += TAMANHO_BLOCO) {
       const bloco = ids.slice(i, i + TAMANHO_BLOCO);
       const { data, error } = await supabase.functions.invoke('auge-sync', {
         body: { action: 'transferencia_logistica', ids: bloco, idLogistica, desejado: true },
       });
       if (error) throw error;
-      falhas += (data?.resultados ?? []).filter((r: { ok: boolean }) => !r.ok).length;
-      pendentes += (data?.nao_processados ?? []).length;
+      if (data?.disabled || data?.error) throw new Error(data.error || 'Ação recusada pelo Auge.');
+      const recebidos = Array.isArray(data?.resultados) ? data.resultados : [];
+      for (const resultado of recebidos as Array<{ id: string; ok: boolean; marcado?: boolean; erro?: string }>) {
+        if (!resultado.ok) falhas += 1;
+        detalhes.push({
+          id: resultado.id,
+          acao: idLogistica === 1 ? 'Entregar' : 'Receber',
+          ok: resultado.ok && resultado.marcado === true,
+          mensagem: resultado.ok && resultado.marcado === true
+            ? 'Confirmado pelo Auge'
+            : (resultado.erro || 'O Auge não confirmou a marcação'),
+        });
+      }
+      const naoProcessados = Array.isArray(data?.nao_processados) ? data.nao_processados as string[] : [];
+      pendentes += naoProcessados.length;
+      detalhes.push(...naoProcessados.map((id) => ({
+        id,
+        acao: idLogistica === 1 ? 'Entregar' as const : 'Receber' as const,
+        ok: false,
+        mensagem: 'Não processado no limite desta execução',
+      })));
     }
-    return { falhas, pendentes, invalidos };
+    return { falhas, pendentes, invalidos, resultados: detalhes };
   };
 
 
@@ -438,6 +474,7 @@ export default function ProcessoTransferenciaCard() {
       return;
     }
     setSalvando(true);
+    setResultados([]);
     try {
       const { data: userRes } = await supabase.auth.getUser();
       const lote = crypto.randomUUID();
@@ -474,14 +511,18 @@ export default function ProcessoTransferenciaCard() {
       if (error) throw error;
 
       // Replica no Auge as marcações indicadas na planilha (entregar → receber).
+      let houveFalhaAuge = false;
       if (sincAuge) {
+        const retorno: ResultadoLogistica[] = [];
         const acoes: { ids: string[]; idLogistica: 1 | 2 }[] = [
-          { ids: validas.filter((r) => r.marcar_entregar).map(codigoAuge).filter(Boolean) as string[], idLogistica: 1 },
-          { ids: validas.filter((r) => r.marcar_receber).map(codigoAuge).filter(Boolean) as string[], idLogistica: 2 },
+          { ids: validas.filter((r) => r.marcar_entregar).map((r) => codigoAuge(r, 1)).filter(Boolean) as string[], idLogistica: 1 },
+          { ids: validas.filter((r) => r.marcar_receber).map((r) => codigoAuge(r, 2)).filter(Boolean) as string[], idLogistica: 2 },
         ];
         for (const acao of acoes) {
           if (!acao.ids.length) continue;
-          const { falhas, pendentes, invalidos } = await sincronizarLogistica(acao.ids, acao.idLogistica);
+          const sincronizado = await sincronizarLogistica(acao.ids, acao.idLogistica);
+          const { falhas, pendentes, invalidos } = sincronizado;
+          retorno.push(...sincronizado.resultados);
           if (invalidos) {
             toast.warning(`${invalidos} linha(s) sem Nº Portal válido — não enviadas ao Auge.`);
           }
@@ -494,10 +535,21 @@ export default function ProcessoTransferenciaCard() {
             toast.warning(`${pendentes} folha(s) não processadas — tente novamente para concluir.`);
           }
         }
+        setResultados(retorno);
+        const confirmadas = retorno.filter((r) => r.ok).length;
+        const falharam = retorno.length - confirmadas;
+        houveFalhaAuge = falharam > 0;
+        if (falharam > 0) {
+          toast.warning(`${confirmadas} ação(ões) confirmada(s); ${falharam} falharam.`);
+        } else if (confirmadas > 0) {
+          toast.success(`${confirmadas} ação(ões) confirmada(s) diretamente pelo Auge.`);
+        }
       }
 
 
-      toast.success(`${payload.length} transferência(s) processada(s).`);
+      if (!houveFalhaAuge) {
+        toast.success(`${payload.length} transferência(s) registrada(s).`);
+      }
       limparPreview();
       await carregar();
     } catch (e) {
@@ -521,10 +573,11 @@ export default function ProcessoTransferenciaCard() {
     setAplicando(etapa);
     try {
       if (sincAuge && (etapa === 'entregue_logistica' || etapa === 'recebido_logistica')) {
-        const externos = linhas.map(codigoAuge).filter(Boolean) as string[];
+        const idLogistica = etapa === 'entregue_logistica' ? 1 : 2;
+        const externos = linhas.map((r) => codigoAuge(r, idLogistica)).filter(Boolean) as string[];
         const { falhas, pendentes, invalidos } = await sincronizarLogistica(
           externos,
-          etapa === 'entregue_logistica' ? 1 : 2,
+          idLogistica,
         );
         if (invalidos) toast.warning(`${invalidos} linha(s) sem Nº Portal válido — não enviadas ao Auge.`);
         if (falhas) toast.warning(`${falhas} folha(s) não puderam ser marcadas no Auge.`);
@@ -585,7 +638,8 @@ export default function ProcessoTransferenciaCard() {
   const toggle = (id: string) =>
     setSel((s) => {
       const n = new Set(s);
-      n.has(id) ? n.delete(id) : n.add(id);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
       return n;
     });
 
@@ -727,6 +781,25 @@ export default function ProcessoTransferenciaCard() {
                 )}
               </div>
             </div>
+          )}
+
+          {resultados.length > 0 && (
+            <Alert variant={resultados.some((r) => !r.ok) ? 'destructive' : 'default'}>
+              {resultados.every((r) => r.ok) ? <CheckCircle2 className="h-4 w-4" /> : <X className="h-4 w-4" />}
+              <AlertTitle>
+                {resultados.filter((r) => r.ok).length} de {resultados.length} ações confirmadas pelo Auge
+              </AlertTitle>
+              <AlertDescription>
+                <div className="mt-2 max-h-40 space-y-1 overflow-y-auto font-mono text-xs">
+                  {resultados.map((r, i) => (
+                    <div key={`${r.id}-${r.acao}-${i}`} className="flex items-start justify-between gap-3">
+                      <span>{r.id} · {r.acao}</span>
+                      <span className={r.ok ? 'text-success' : 'text-destructive'}>{r.ok ? 'Confirmado' : r.mensagem}</span>
+                    </div>
+                  ))}
+                </div>
+              </AlertDescription>
+            </Alert>
           )}
 
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
