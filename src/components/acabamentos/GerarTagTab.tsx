@@ -563,41 +563,43 @@ function ConfiguracaoSelect({
         return out;
       };
 
-      // 1) View local (só lista configurações que já têm linhas de TAG gravadas).
-      const exata = await (supabase as any)
-        .from('auge_tag_custom_configuracoes')
-        .select('cd_configuracao, nm_configuracao, qtd_tags')
-        .ilike('nm_configuracao', padrao)
-        .limit(50);
-      if (!exata.error && (exata.data ?? []).length > 0) return dedupe(exata.data as ConfiguracaoLite[]);
+      // A busca NÃO pode ser curto-circuitada pelo padrão ordenado: com curinga
+      // ("Cortina*CM*35*Liso*10*") o usuário espera TODOS os itens que contêm
+      // essas informações, em qualquer ordem. Por isso unimos os resultados do
+      // padrão ordenado com os do AND por tokens, nas duas fontes locais.
+      const acumulado: ConfiguracaoLite[] = [];
 
-      // 2) View local por tokens (AND, ordem livre).
-      if (tokens.length > 0) {
-        let q = (supabase as any)
-          .from('auge_tag_custom_configuracoes')
-          .select('cd_configuracao, nm_configuracao, qtd_tags');
-        for (const t of tokens) q = q.ilike('nm_configuracao', t);
-        const { data } = await q.limit(50);
-        if ((data ?? []).length > 0) return dedupe(data as ConfiguracaoLite[]);
+      const buscarEm = async (tabela: string) => {
+        // a) padrão ordenado (comportamento SAP B1 clássico)
+        const exata = await (supabase as any)
+          .from(tabela)
+          .select('cd_configuracao, nm_configuracao, qtd_tags')
+          .ilike('nm_configuracao', padrao)
+          .limit(100);
+        if (!exata.error) acumulado.push(...((exata.data ?? []) as ConfiguracaoLite[]));
+
+        // b) AND por tokens (ordem livre) — cobre o caso do curinga
+        if (tokens.length > 0) {
+          let q = (supabase as any)
+            .from(tabela)
+            .select('cd_configuracao, nm_configuracao, qtd_tags');
+          for (const t of tokens) q = q.ilike('nm_configuracao', t);
+          const { data, error } = await q.limit(100);
+          if (!error) acumulado.push(...((data ?? []) as ConfiguracaoLite[]));
+        }
+      };
+
+      // 1) View local (configurações que já têm linhas de TAG gravadas).
+      await buscarEm('auge_tag_custom_configuracoes');
+      // 2) Varredura: configurações conhecidas no Auge ainda sem linhas locais.
+      if (acumulado.length === 0) await buscarEm('auge_tag_custom_scan');
+
+      if (acumulado.length > 0) {
+        return dedupe(acumulado).sort((a, b) =>
+          (a.nm_configuracao ?? '').localeCompare(b.nm_configuracao ?? '', 'pt-BR'),
+        );
       }
 
-      // 3) Varredura (auge_tag_custom_scan): configurações conhecidas no Auge que
-      //    ainda não têm linhas de TAG gravadas localmente.
-      const scanExata = await (supabase as any)
-        .from('auge_tag_custom_scan')
-        .select('cd_configuracao, nm_configuracao, qtd_tags')
-        .ilike('nm_configuracao', padrao)
-        .limit(50);
-      if (!scanExata.error && (scanExata.data ?? []).length > 0) return dedupe(scanExata.data as ConfiguracaoLite[]);
-
-      if (tokens.length > 0) {
-        let qs = (supabase as any)
-          .from('auge_tag_custom_scan')
-          .select('cd_configuracao, nm_configuracao, qtd_tags');
-        for (const t of tokens) qs = qs.ilike('nm_configuracao', t);
-        const { data } = await qs.limit(50);
-        if ((data ?? []).length > 0) return dedupe(data as ConfiguracaoLite[]);
-      }
 
       // 4) Último recurso: lookup ao vivo no Auge (fonte oficial).
       try {
