@@ -9,7 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import {
-  CheckCircle2, FileSpreadsheet, History, Loader2, PackageCheck,
+  CheckCircle2, Download, FileSpreadsheet, History, Loader2, PackageCheck,
   RefreshCw, Search, Truck, Upload, X,
 } from 'lucide-react';
 
