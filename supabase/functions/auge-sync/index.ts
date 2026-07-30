@@ -4014,11 +4014,9 @@ Deno.serve(async (req) => {
       for (const id of alvo) {
         if (Date.now() - inicio > TEMPO_LIMITE_MS) { naoProcessados.push(id); continue; }
         try {
-          let r = await logisticaFolhaTransferencia(auth, id, idLogistica as 1 | 2);
-          // A ação é um toggle: se o estado resultante não é o desejado, reverte.
-          if (r.marcado !== desejado) {
-            r = await logisticaFolhaTransferencia(auth, id, idLogistica as 1 | 2);
-          }
+          // O endpoint já executa o toggle em uma única chamada. Nunca repetir
+          // automaticamente: uma segunda chamada desfaz exatamente a primeira.
+          const r = await logisticaFolhaTransferencia(auth, id, idLogistica as 1 | 2);
           const confirmado = r.marcado === desejado;
           resultados.push({
             id,
