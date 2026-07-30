@@ -1872,6 +1872,75 @@ export default function GerarTagTab() {
           )}
 
         </Card>
+
+        {/* Últimos registros: as 10 últimas alterações feitas nesta aba */}
+        <Card className="overflow-hidden">
+          <div className="p-3 border-b flex items-center justify-between gap-2">
+            <div className="text-xs font-semibold flex items-center gap-1.5">
+              <History className="h-3.5 w-3.5 text-muted-foreground" />
+              Últimos registros
+              <span className="text-[10px] font-normal text-muted-foreground">
+                {historico.length}/{HISTORICO_MAX}
+              </span>
+            </div>
+            {historico.length > 0 && (
+              <Button size="sm" variant="ghost" className="h-7 px-2 text-[10px]" onClick={limparHistorico}>
+                Limpar histórico
+              </Button>
+            )}
+          </div>
+
+          {historico.length === 0 ? (
+            <div className="p-6 text-center text-[11px] text-muted-foreground">
+              Nenhum lançamento ainda. Ao gravar uma TAG Custom, ela aparece aqui para reedição.
+            </div>
+          ) : (
+            <div className="divide-y">
+              {historico.map((reg) => (
+                <div key={reg.id} className="p-3 flex items-start justify-between gap-3">
+                  <div className="min-w-0 space-y-1">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {reg.ok
+                        ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                        : <AlertTriangle className="h-3.5 w-3.5 text-destructive shrink-0" />}
+                      <span className="text-[11px] font-medium break-all">{reg.descricao || '—'}</span>
+                      <Badge variant="outline" className="text-[9px]">{reg.linhas.length} TAG(s)</Badge>
+                      <span className="text-[9px] text-muted-foreground">{formatarData(reg.em)}</span>
+                    </div>
+                    {reg.configuracao?.nm && (
+                      <div className="text-[9px] text-muted-foreground break-all">
+                        Configuração: {reg.configuracao.nm}
+                      </div>
+                    )}
+                    <div className="flex flex-wrap gap-1">
+                      {reg.linhas.slice(0, 8).map((l) => (
+                        <span
+                          key={l.id}
+                          title={l.calculada ? `${l.valor} = ${l.calculada}` : l.valor}
+                          className="rounded border bg-muted/50 px-1.5 py-0.5 font-mono text-[9px]"
+                        >
+                          {l.code}
+                        </span>
+                      ))}
+                      {reg.linhas.length > 8 && (
+                        <span className="text-[9px] text-muted-foreground">+{reg.linhas.length - 8}</span>
+                      )}
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 px-2 text-[10px] gap-1 shrink-0"
+                    onClick={() => relancarRegistro(reg)}
+                  >
+                    <Pencil className="h-3 w-3" /> Editar e relançar
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+
       </div>
     </div>
   );
