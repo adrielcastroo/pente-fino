@@ -96,6 +96,31 @@ const ALIASES: Record<keyof ImportRow, string[]> = {
   ],
 };
 
+/** Cabeçalhos e exemplos do modelo oferecido para download. */
+const MODELO_HEADERS = [
+  'Nº Transferência', 'Nº Portal', 'Observação', 'Situação',
+  'Qt. Item', 'Dt. Criação', 'Usuário Criação', 'Nº Entrada SAP',
+] as const;
+
+const MODELO_EXEMPLOS: (string | number)[][] = [
+  ['180829', '180829', 'Tecido PVT Nec 30/07', 'Em Edição', 1, '30/07/2026', 'Tainã Quadros', ''],
+  ['180830', '180830', 'Motor 24V Linha 3', 'Efetivado', 4, '30/07/2026', 'Adriel Avila', '183351'],
+];
+
+/** Gera e baixa um .xlsx modelo com as colunas aceitas pelo importador. */
+function baixarModelo() {
+  const ws = XLSX.utils.aoa_to_sheet([[...MODELO_HEADERS], ...MODELO_EXEMPLOS]);
+  ws['!cols'] = [
+    { wch: 18 }, { wch: 14 }, { wch: 34 }, { wch: 14 },
+    { wch: 10 }, { wch: 14 }, { wch: 22 }, { wch: 16 },
+  ];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Transferências');
+  XLSX.writeFile(wb, 'modelo-folhas-transferencia.xlsx');
+}
+
+
+
 function findKey(headers: string[], aliases: string[]): string | null {
   const wanted = new Set(aliases);
   for (const h of headers) if (wanted.has(norm(h))) return h;
