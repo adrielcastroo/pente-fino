@@ -3998,8 +3998,8 @@ Deno.serve(async (req) => {
       // Limites de segurança: cada id gera 1-2 requisições HTTP ao Auge.
       // Sem teto, lotes grandes estouram o CPU/wall time da Edge Function
       // (erro "CPU Time exceeded" → resposta vazia no cliente).
-      const MAX_POR_CHAMADA = 20;
-      const TEMPO_LIMITE_MS = 45_000;
+      const MAX_POR_CHAMADA = 8;
+      const TEMPO_LIMITE_MS = 30_000;
       const inicio = Date.now();
 
       const alvo = ids.slice(0, MAX_POR_CHAMADA);
