@@ -57,7 +57,22 @@ export default function AnaliseCompraPage() {
       const { data, error } = await supabase.functions.invoke('auge-sync', {
         body: { action: 'analise_compra', ...(id ? { idConsulta: id } : {}) },
       });
-      if (error) throw error;
+      if (error) {
+        // FunctionsHttpError guarda o corpo real da resposta em `context`.
+        const ctx = (error as unknown as { context?: Response }).context;
+        let detalhe = '';
+        try {
+          detalhe = ctx && typeof ctx.text === 'function' ? await ctx.text() : '';
+        } catch {
+          detalhe = '';
+        }
+        throw new Error(
+          detalhe
+            ? `${error.message} — ${detalhe.slice(0, 300)}`
+            : `${error.message}. Recarregue a página (Ctrl+Shift+R) para pegar a versão mais recente do app.`,
+        );
+      }
+
       return data as {
         ok?: boolean;
         error?: string;
