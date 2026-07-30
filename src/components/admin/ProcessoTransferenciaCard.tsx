@@ -567,10 +567,13 @@ export default function ProcessoTransferenciaCard() {
                 Importar folhas de transferência
               </CardTitle>
               <CardDescription>
-                Aceita <code>.xlsx</code>, <code>.csv</code> e <code>.ods</code> com as colunas do Auge:
-                Observação, Nº Portal, Situação, Qt. Item, Dt. Criação, Usuário Criação e Nº Entrada SAP.
-                Linhas com Nº Entrada SAP entram direto como recebidas da logística.
+                Aceita <code>.xlsx</code>, <code>.csv</code> e <code>.ods</code>. Basta informar o
+                <strong> Nº Entrada SAP</strong> e marcar as colunas
+                “Entregar folha de transf. p/ logística” e/ou “Receber folha de transf. da logística”
+                (escreva <code>Marcar</code> ou <code>X</code>). O app identifica a transferência
+                correspondente no Auge e executa o processo indicado.
               </CardDescription>
+
             </div>
             <Button
               variant="outline"
