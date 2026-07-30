@@ -1077,6 +1077,8 @@ export default function GerarTagTab() {
               dsTagCustomizada: l.valor,
               // TAG Calculada (Pente Fino) -> Tag Calculada (Auge)
               dsTagCalculada: calculada,
+              // Código já resolvido na busca — dispensa o lookup por nome.
+              cdTagCalculada: l.cdTagCalculada ?? '',
               dsFormula: l.formula ?? '',
               // Quando a linha já existe no Auge, sobrescreve em vez de duplicar.
               cdTagCustomizada: l.cdTagCustomizada ?? '',
