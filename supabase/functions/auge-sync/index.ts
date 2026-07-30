@@ -3917,6 +3917,78 @@ async function runConsultaAuge(auth: any, idConsulta: string): Promise<any> {
   return { idConsulta, filtros, resultado };
 }
 
+/**
+ * Lista as consultas do Gerador de Consultas do Auge.
+ * Estratégia defensiva: tenta endpoints ajax conhecidos e, se nenhum responder
+ * JSON utilizável, faz o scrape do <select>/<option> da página.
+ */
+async function listarConsultasAuge(auth: any): Promise<Array<{ id: string; nome: string; grupo?: string }>> {
+  const candidatos = [
+    '/l.unilux/modTI/Ajax/getListaConsulta.php',
+    '/l.unilux/modTI/Ajax/getConsultas.php',
+    '/l.unilux/modTI/Ajax/getListaConsultas.php',
+  ];
+  let itens: Array<{ id: string; nome: string; grupo?: string }> = [];
+  for (const path of candidatos) {
+    try {
+      const txt = await postAugePhp(auth, path, new URLSearchParams(), '/l.unilux/modTI/gerirConsulta.php');
+      const j = JSON.parse(txt);
+      const arr = Array.isArray(j) ? j : (Array.isArray(j?.data) ? j.data : []);
+      if (arr.length) {
+        itens = arr.map((r: any) => ({
+          id: String(r.idConsulta ?? r.id ?? r.cdConsulta ?? '').trim(),
+          nome: String(r.nmConsulta ?? r.nome ?? r.descricao ?? r.dsConsulta ?? '').trim(),
+          grupo: String(r.nmGrupo ?? r.grupo ?? r.modulo ?? '').trim() || undefined,
+        })).filter((r: any) => r.id && r.nome);
+        if (itens.length) break;
+      }
+    } catch { /* tenta o próximo */ }
+  }
+
+  if (!itens.length) {
+    const headers: Record<string, string> = {
+      'Cookie': auth.jar.header(),
+      'User-Agent': UA,
+      'Accept': 'text/html,application/xhtml+xml',
+    };
+    if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
+    const res = await fetch(`${AUGE_BASE_URL}/l.unilux/modTI/gerirConsulta.php`, { headers });
+    auth.jar.ingest(res);
+    const html = await res.text();
+    const re = /<option[^>]*value=["'](\d+)["'][^>]*>([^<]+)<\/option>/gi;
+    const seen = new Set<string>();
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(html)) !== null) {
+      const id = m[1];
+      const nome = m[2].replace(/&amp;/g, '&').trim();
+      if (!id || !nome || seen.has(id)) continue;
+      seen.add(id);
+      itens.push({ id, nome });
+    }
+  }
+  return itens;
+}
+
+const normalizaNome = (s: string) =>
+  String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+
+/**
+ * Resolve automaticamente a consulta de Análise de Compra, sem exigir que o
+ * usuário informe o ID. Prioriza "análise de compra v5" e, se não encontrar,
+ * aceita qualquer consulta cujo nome contenha "analise de compra".
+ */
+async function resolverConsultaAnaliseCompra(auth: any) {
+  const itens = await listarConsultasAuge(auth);
+  if (!itens.length) return { consulta: null, itens };
+  const alvo =
+    itens.find((c) => /analise\s*de\s*compra\s*v5/.test(normalizaNome(c.nome))) ??
+    itens.find((c) => normalizaNome(c.nome).includes('analise de compra')) ??
+    null;
+  return { consulta: alvo, itens };
+}
+
+
+
 
 Deno.serve(async (req) => {
 
@@ -5142,58 +5214,31 @@ Deno.serve(async (req) => {
     }
 
     // -------------- LISTAR CONSULTAS DISPONÍVEIS (Gerador de Consultas) ------
-    // Estratégia defensiva: tenta endpoints ajax conhecidos e, se nenhum
-    // responder JSON utilizável, faz o scrape do <select>/<option> da página.
     if (action === 'listar_consultas') {
-      const candidatos = [
-        '/l.unilux/modTI/Ajax/getListaConsulta.php',
-        '/l.unilux/modTI/Ajax/getConsultas.php',
-        '/l.unilux/modTI/Ajax/getListaConsultas.php',
-      ];
-      let itens: Array<{ id: string; nome: string; grupo?: string }> = [];
-      for (const path of candidatos) {
-        try {
-          const txt = await postAugePhp(auth, path, new URLSearchParams(), '/l.unilux/modTI/gerirConsulta.php');
-          const j = JSON.parse(txt);
-          const arr = Array.isArray(j) ? j : (Array.isArray(j?.data) ? j.data : []);
-          if (arr.length) {
-            itens = arr.map((r: any) => ({
-              id: String(r.idConsulta ?? r.id ?? r.cdConsulta ?? '').trim(),
-              nome: String(r.nmConsulta ?? r.nome ?? r.descricao ?? r.dsConsulta ?? '').trim(),
-              grupo: String(r.nmGrupo ?? r.grupo ?? r.modulo ?? '').trim() || undefined,
-            })).filter((r: any) => r.id && r.nome);
-            if (itens.length) break;
-          }
-        } catch { /* tenta o próximo */ }
-      }
-
-      if (!itens.length) {
-        // Fallback: scrape do HTML da página do gerador de consultas.
-        const headers: Record<string, string> = {
-          'Cookie': auth.jar.header(),
-          'User-Agent': UA,
-          'Accept': 'text/html,application/xhtml+xml',
-        };
-        if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
-        const res = await fetch(`${AUGE_BASE_URL}/l.unilux/modTI/gerirConsulta.php`, { headers });
-        auth.jar.ingest(res);
-        const html = await res.text();
-        const re = /<option[^>]*value=["'](\d+)["'][^>]*>([^<]+)<\/option>/gi;
-        const seen = new Set<string>();
-        let m: RegExpExecArray | null;
-        while ((m = re.exec(html)) !== null) {
-          const id = m[1];
-          const nome = m[2].replace(/&amp;/g, '&').trim();
-          if (!id || !nome || seen.has(id)) continue;
-          seen.add(id);
-          itens.push({ id, nome });
-        }
-      }
-
+      const itens = await listarConsultasAuge(auth);
       return new Response(JSON.stringify({ ok: true, total: itens.length, data: itens }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
+    // -------------- RELATÓRIO DE ANÁLISE DE COMPRA (sem informar ID) --------
+    // O app não deve pedir o ID da consulta: resolvemos "Análise de compra V5"
+    // automaticamente e devolvemos o resultado bruto para a filtragem no front.
+    if (action === 'analise_compra') {
+      const { consulta, itens } = await resolverConsultaAnaliseCompra(auth);
+      if (!consulta) {
+        return new Response(JSON.stringify({
+          ok: false,
+          error: 'Consulta "Análise de compra V5 - HANA" não encontrada no Gerador de Consultas do Auge.',
+          disponiveis: itens.slice(0, 50),
+        }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      const data = await runConsultaAuge(auth, consulta.id);
+      return new Response(JSON.stringify({ ok: true, consulta, ...data }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
 
 
 

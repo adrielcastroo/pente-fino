@@ -1,13 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { Download, Loader2, RefreshCw, Search } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
+import { Download, FileSpreadsheet, Loader2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { PageShell, PageHeader } from '@/components/compras/ui';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -21,65 +19,35 @@ import {
   type NormalizedResult,
 } from '@/lib/compras/analiseCompra';
 
-const STORAGE_KEY = 'compras:analise-compra:idConsulta';
-
-interface ConsultaOption {
-  id: string;
-  nome: string;
-  grupo?: string;
-}
-
 /**
- * Lista as consultas do "Gerador de Consultas" do Auge. Falha de forma suave:
- * o usuário sempre pode digitar o ID manualmente.
+ * Relatório de itens com saldo baixo.
+ *
+ * O usuário não precisa escolher/consultar nada: o Edge Function resolve
+ * sozinho a consulta "Análise de compra V5 - HANA" no Auge e o app aplica os
+ * quatro conjuntos de filtros (Geral, Tecido, Siplan, Lâmina).
  */
-function useConsultas() {
-  return useQuery<ConsultaOption[]>({
-    queryKey: ['compras', 'auge', 'consultas'],
-    staleTime: 10 * 60_000,
-    retry: false,
-    queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke('auge-sync', {
-        body: { action: 'listar_consultas' },
-      });
-      if (error) throw error;
-      if (data?.ok === false) throw new Error(data?.error || 'Falha ao listar consultas.');
-      return Array.isArray(data?.data) ? data.data : [];
-    },
-  });
-}
-
 export default function AnaliseCompraPage() {
-  const [idConsulta, setIdConsulta] = useState(() => localStorage.getItem(STORAGE_KEY) ?? '');
   const [resultado, setResultado] = useState<NormalizedResult>({ columns: [], rows: [] });
+  const [origem, setOrigem] = useState<string | null>(null);
   const [preset, setPreset] = useState(ANALISE_COMPRA_PRESETS[0].key);
 
-  const consultas = useConsultas();
-
-  // Pré-seleciona a consulta "Análise de compra V5 - HANA" quando encontrada.
-  useEffect(() => {
-    if (idConsulta || !consultas.data?.length) return;
-    const alvo = consultas.data.find((c) => /an[aá]lise\s*de\s*compra\s*v5/i.test(c.nome));
-    if (alvo) setIdConsulta(alvo.id);
-  }, [consultas.data, idConsulta]);
-
-  const executar = useMutation({
-    mutationFn: async (id: string) => {
+  const gerar = useMutation({
+    mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke('auge-sync', {
-        body: { action: 'run_consulta', idConsulta: id },
+        body: { action: 'analise_compra' },
       });
       if (error) throw error;
-      if (data?.ok === false) throw new Error(data?.error || 'Falha ao executar a consulta.');
-      return normalizeConsulta(data);
+      if (data?.ok === false) throw new Error(data?.error || 'Falha ao gerar o relatório.');
+      return { nome: data?.consulta?.nome as string | undefined, result: normalizeConsulta(data) };
     },
-    onSuccess: (r) => {
-      setResultado(r);
-      localStorage.setItem(STORAGE_KEY, idConsulta.trim());
-      if (!r.rows.length) toast.warning('A consulta retornou sem linhas.');
-      else toast.success(`${r.rows.length} linhas carregadas do Auge.`);
+    onSuccess: ({ nome, result }) => {
+      setResultado(result);
+      setOrigem(nome ?? null);
+      if (!result.rows.length) toast.warning('O relatório retornou sem linhas.');
+      else toast.success(`${result.rows.length} linhas carregadas.`);
     },
     onError: (e: unknown) => {
-      toast.error(e instanceof Error ? e.message : 'Erro ao consultar o Auge.');
+      toast.error(e instanceof Error ? e.message : 'Erro ao gerar o relatório.');
     },
   });
 
@@ -92,8 +60,6 @@ export default function AnaliseCompraPage() {
     [resultado.rows],
   );
 
-  const ativo = blocos.find((b) => b.key === preset) ?? blocos[0];
-
   const exportar = () => {
     if (!resultado.columns.length) return;
     exportAnaliseCompraXLSX(
@@ -101,75 +67,38 @@ export default function AnaliseCompraPage() {
     );
   };
 
-  const carregando = executar.isPending;
+  const carregando = gerar.isPending;
 
   return (
     <PageShell>
       <PageHeader
         title="Análise de Compra"
-        subtitle="Itens com saldo baixo — Gerador de Consultas do Auge (Análise de compra V5 - HANA)"
+        subtitle="Itens com saldo baixo — Geral, Tecido, Siplan e Lâmina"
         backTo="/compras/acompanhamentos"
         actions={
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={exportar}
-            disabled={!resultado.rows.length}
-          >
-            <Download className="w-4 h-4 mr-2" />
-            Exportar XLSX
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={exportar}
+              disabled={!resultado.rows.length}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Exportar XLSX
+            </Button>
+            <Button size="sm" onClick={() => gerar.mutate()} disabled={carregando}>
+              {carregando ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : resultado.rows.length ? (
+                <RefreshCw className="w-4 h-4 mr-2" />
+              ) : (
+                <FileSpreadsheet className="w-4 h-4 mr-2" />
+              )}
+              {carregando ? 'Gerando…' : resultado.rows.length ? 'Atualizar' : 'Gerar relatório'}
+            </Button>
+          </div>
         }
       />
-
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm">Consulta do Auge</CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 items-end">
-          <div className="space-y-1.5 min-w-0">
-            <Label htmlFor="idConsulta" className="text-xs">
-              ID da consulta
-            </Label>
-            <Input
-              id="idConsulta"
-              list="auge-consultas"
-              value={idConsulta}
-              onChange={(e) => setIdConsulta(e.target.value)}
-              placeholder="Ex.: 128 — ou selecione na lista"
-              className="h-11"
-            />
-            <datalist id="auge-consultas">
-              {(consultas.data ?? []).map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.nome}
-                </option>
-              ))}
-            </datalist>
-            <p className="text-[11px] text-muted-foreground">
-              {consultas.isLoading
-                ? 'Carregando consultas disponíveis…'
-                : consultas.data?.length
-                  ? `${consultas.data.length} consultas encontradas no Auge.`
-                  : 'Não foi possível listar automaticamente — informe o ID manualmente.'}
-            </p>
-          </div>
-          <Button
-            onClick={() => executar.mutate(idConsulta.trim())}
-            disabled={!idConsulta.trim() || carregando}
-            className="h-11 w-full md:w-auto"
-          >
-            {carregando ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : resultado.rows.length ? (
-              <RefreshCw className="w-4 h-4 mr-2" />
-            ) : (
-              <Search className="w-4 h-4 mr-2" />
-            )}
-            {carregando ? 'Consultando…' : 'Buscar no Auge'}
-          </Button>
-        </CardContent>
-      </Card>
 
       {carregando && (
         <div className="space-y-2">
@@ -207,19 +136,31 @@ export default function AnaliseCompraPage() {
               />
             </TabsContent>
           ))}
+
+          {origem && (
+            <p className="text-[11px] text-muted-foreground mt-3">
+              Origem: {origem} · {resultado.rows.length} linhas brutas
+            </p>
+          )}
         </Tabs>
       )}
 
       {!carregando && !resultado.columns.length && (
         <Card>
-          <CardContent className="py-12 text-center text-sm text-muted-foreground">
-            Informe o ID da consulta e clique em “Buscar no Auge” para gerar a lista de itens com
-            saldo baixo. Os filtros {ANALISE_COMPRA_PRESETS.map((p) => p.label).join(', ')} são
-            aplicados automaticamente sobre o resultado.
-            <span className="sr-only">{ativo?.label}</span>
+          <CardContent className="py-12 text-center text-sm text-muted-foreground space-y-4">
+            <p>
+              Clique em “Gerar relatório” para montar a lista de itens com saldo baixo. Os filtros{' '}
+              {ANALISE_COMPRA_PRESETS.map((p) => p.label).join(', ')} são aplicados
+              automaticamente.
+            </p>
+            <Button onClick={() => gerar.mutate()} disabled={carregando}>
+              <FileSpreadsheet className="w-4 h-4 mr-2" />
+              Gerar relatório
+            </Button>
           </CardContent>
         </Card>
       )}
     </PageShell>
   );
 }
+
