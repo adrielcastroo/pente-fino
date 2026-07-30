@@ -612,6 +612,7 @@ export default function ProcessoTransferenciaCard() {
       toast.error(e instanceof Error ? e.message : 'Falha ao registrar.');
     } finally {
       setSalvando(false);
+      setProgresso(null);
     }
   };
 
