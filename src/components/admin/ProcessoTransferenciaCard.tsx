@@ -9,7 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import {
-  CheckCircle2, FileSpreadsheet, History, Loader2, PackageCheck,
+  CheckCircle2, Download, FileSpreadsheet, History, Loader2, PackageCheck,
   RefreshCw, Search, Truck, Upload, X,
 } from 'lucide-react';
 
@@ -95,6 +95,31 @@ const ALIASES: Record<keyof ImportRow, string[]> = {
     'nr entrada sap', 'sap',
   ],
 };
+
+/** Cabeçalhos e exemplos do modelo oferecido para download. */
+const MODELO_HEADERS = [
+  'Nº Transferência', 'Nº Portal', 'Observação', 'Situação',
+  'Qt. Item', 'Dt. Criação', 'Usuário Criação', 'Nº Entrada SAP',
+] as const;
+
+const MODELO_EXEMPLOS: (string | number)[][] = [
+  ['180829', '180829', 'Tecido PVT Nec 30/07', 'Em Edição', 1, '30/07/2026', 'Tainã Quadros', ''],
+  ['180830', '180830', 'Motor 24V Linha 3', 'Efetivado', 4, '30/07/2026', 'Adriel Avila', '183351'],
+];
+
+/** Gera e baixa um .xlsx modelo com as colunas aceitas pelo importador. */
+function baixarModelo() {
+  const ws = XLSX.utils.aoa_to_sheet([[...MODELO_HEADERS], ...MODELO_EXEMPLOS]);
+  ws['!cols'] = [
+    { wch: 18 }, { wch: 14 }, { wch: 34 }, { wch: 14 },
+    { wch: 10 }, { wch: 14 }, { wch: 22 }, { wch: 16 },
+  ];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Transferências');
+  XLSX.writeFile(wb, 'modelo-folhas-transferencia.xlsx');
+}
+
+
 
 function findKey(headers: string[], aliases: string[]): string | null {
   const wanted = new Set(aliases);
@@ -404,16 +429,30 @@ export default function ProcessoTransferenciaCard() {
       {/* Importação */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <FileSpreadsheet className="h-4 w-4 text-primary" />
-            Importar folhas de transferência
-          </CardTitle>
-          <CardDescription>
-            Aceita <code>.xlsx</code>, <code>.csv</code> e <code>.ods</code> com as colunas do Auge:
-            Observação, Nº Portal, Situação, Qt. Item, Dt. Criação, Usuário Criação e Nº Entrada SAP.
-            Linhas com Nº Entrada SAP entram direto como recebidas da logística.
-          </CardDescription>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <FileSpreadsheet className="h-4 w-4 text-primary" />
+                Importar folhas de transferência
+              </CardTitle>
+              <CardDescription>
+                Aceita <code>.xlsx</code>, <code>.csv</code> e <code>.ods</code> com as colunas do Auge:
+                Observação, Nº Portal, Situação, Qt. Item, Dt. Criação, Usuário Criação e Nº Entrada SAP.
+                Linhas com Nº Entrada SAP entram direto como recebidas da logística.
+              </CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0 gap-2"
+              onClick={baixarModelo}
+            >
+              <Download className="h-3.5 w-3.5" />
+              Baixar modelo
+            </Button>
+          </div>
         </CardHeader>
+
         <CardContent className="space-y-3">
           <div
             onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
