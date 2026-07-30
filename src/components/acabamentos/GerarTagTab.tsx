@@ -17,6 +17,8 @@ import {
   Search,
   Sparkles,
   Pencil,
+  History,
+
 
 
 } from 'lucide-react';
@@ -150,16 +152,22 @@ function toIlikePattern(raw: string): string {
  * Quebra o termo em tokens para busca AND (cada token precisa existir na
  * configuração, em qualquer ordem). Evita falhas quando o usuário digita a
  * descrição com espaçamento/ordem levemente diferente do cadastro no Auge.
+ *
+ * O curinga `*` também é tratado como separador: "Cortina*CM*35*Liso*10*"
+ * vira os tokens `%cortina%`, `%cm%`, `%35%`, `%liso%`, `%10%`, todos exigidos
+ * (AND) mas sem impor a ORDEM em que aparecem no nome — que era exatamente o
+ * motivo de a busca com curinga não retornar todos os itens esperados.
  */
 function toIlikeTokens(raw: string): string[] {
   const clean = sanitizeTerm(raw).replace(/%/g, ' ');
   return clean
-    .split(/\s+/)
+    .split(/[\s*]+/)
     .map((t) => t.trim())
-    .filter((t) => t.length >= 2)
+    .filter((t) => t.length >= 1)
     .slice(0, 12)
-    .map((t) => (t.includes('*') ? t.replace(/\*/g, '%') : `%${t}%`));
+    .map((t) => `%${t}%`);
 }
+
 
 /** Normalização usada nas comparações por palavra-chave. */
 function normKey(s: string): string {
@@ -248,6 +256,54 @@ const rascunho: RascunhoGerarTag = {
   customAberta: null,
   resultado: null,
 };
+
+// ============================================================
+// Histórico local ("Últimos registros")
+// ============================================================
+
+/** Um lançamento feito nesta aba, guardado para reedição/relançamento. */
+export interface RegistroGerarTag {
+  id: string;
+  /** ISO timestamp da gravação. */
+  em: string;
+  ok: boolean;
+  descricao: string;
+  configuracao: { cd: string; nm: string } | null;
+  linhas: LinhaTag[];
+}
+
+const HISTORICO_KEY = 'gerar-tag:historico';
+const HISTORICO_MAX = 10;
+
+function lerHistorico(): RegistroGerarTag[] {
+  try {
+    const raw = localStorage.getItem(HISTORICO_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as RegistroGerarTag[]).slice(0, HISTORICO_MAX) : [];
+  } catch {
+    return [];
+  }
+}
+
+function gravarHistorico(regs: RegistroGerarTag[]): void {
+  try {
+    localStorage.setItem(HISTORICO_KEY, JSON.stringify(regs.slice(0, HISTORICO_MAX)));
+  } catch {
+    /* quota cheia — histórico é conveniência, nunca bloqueia o fluxo */
+  }
+}
+
+function formatarData(iso: string): string {
+  try {
+    return new Date(iso).toLocaleString('pt-BR', {
+      day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit',
+    });
+  } catch {
+    return iso;
+  }
+}
+
 
 /** Valor completo de uma TAG calculada selecionada. */
 interface TagCalculadaSel {
@@ -557,41 +613,43 @@ function ConfiguracaoSelect({
         return out;
       };
 
-      // 1) View local (só lista configurações que já têm linhas de TAG gravadas).
-      const exata = await (supabase as any)
-        .from('auge_tag_custom_configuracoes')
-        .select('cd_configuracao, nm_configuracao, qtd_tags')
-        .ilike('nm_configuracao', padrao)
-        .limit(50);
-      if (!exata.error && (exata.data ?? []).length > 0) return dedupe(exata.data as ConfiguracaoLite[]);
+      // A busca NÃO pode ser curto-circuitada pelo padrão ordenado: com curinga
+      // ("Cortina*CM*35*Liso*10*") o usuário espera TODOS os itens que contêm
+      // essas informações, em qualquer ordem. Por isso unimos os resultados do
+      // padrão ordenado com os do AND por tokens, nas duas fontes locais.
+      const acumulado: ConfiguracaoLite[] = [];
 
-      // 2) View local por tokens (AND, ordem livre).
-      if (tokens.length > 0) {
-        let q = (supabase as any)
-          .from('auge_tag_custom_configuracoes')
-          .select('cd_configuracao, nm_configuracao, qtd_tags');
-        for (const t of tokens) q = q.ilike('nm_configuracao', t);
-        const { data } = await q.limit(50);
-        if ((data ?? []).length > 0) return dedupe(data as ConfiguracaoLite[]);
+      const buscarEm = async (tabela: string) => {
+        // a) padrão ordenado (comportamento SAP B1 clássico)
+        const exata = await (supabase as any)
+          .from(tabela)
+          .select('cd_configuracao, nm_configuracao, qtd_tags')
+          .ilike('nm_configuracao', padrao)
+          .limit(100);
+        if (!exata.error) acumulado.push(...((exata.data ?? []) as ConfiguracaoLite[]));
+
+        // b) AND por tokens (ordem livre) — cobre o caso do curinga
+        if (tokens.length > 0) {
+          let q = (supabase as any)
+            .from(tabela)
+            .select('cd_configuracao, nm_configuracao, qtd_tags');
+          for (const t of tokens) q = q.ilike('nm_configuracao', t);
+          const { data, error } = await q.limit(100);
+          if (!error) acumulado.push(...((data ?? []) as ConfiguracaoLite[]));
+        }
+      };
+
+      // 1) View local (configurações que já têm linhas de TAG gravadas).
+      await buscarEm('auge_tag_custom_configuracoes');
+      // 2) Varredura: configurações conhecidas no Auge ainda sem linhas locais.
+      if (acumulado.length === 0) await buscarEm('auge_tag_custom_scan');
+
+      if (acumulado.length > 0) {
+        return dedupe(acumulado).sort((a, b) =>
+          (a.nm_configuracao ?? '').localeCompare(b.nm_configuracao ?? '', 'pt-BR'),
+        );
       }
 
-      // 3) Varredura (auge_tag_custom_scan): configurações conhecidas no Auge que
-      //    ainda não têm linhas de TAG gravadas localmente.
-      const scanExata = await (supabase as any)
-        .from('auge_tag_custom_scan')
-        .select('cd_configuracao, nm_configuracao, qtd_tags')
-        .ilike('nm_configuracao', padrao)
-        .limit(50);
-      if (!scanExata.error && (scanExata.data ?? []).length > 0) return dedupe(scanExata.data as ConfiguracaoLite[]);
-
-      if (tokens.length > 0) {
-        let qs = (supabase as any)
-          .from('auge_tag_custom_scan')
-          .select('cd_configuracao, nm_configuracao, qtd_tags');
-        for (const t of tokens) qs = qs.ilike('nm_configuracao', t);
-        const { data } = await qs.limit(50);
-        if ((data ?? []).length > 0) return dedupe(data as ConfiguracaoLite[]);
-      }
 
       // 4) Último recurso: lookup ao vivo no Auge (fonte oficial).
       try {
@@ -673,6 +731,121 @@ function ConfiguracaoSelect({
 }
 
 // ============================================================
+// Busca manual de TAG Configurada (para inclusão avulsa na composição)
+// ============================================================
+
+interface TagConfiguradaOpt { valor: string; calculada: string; cfgNome: string }
+
+function TagConfiguradaSearch({ onPick }: { onPick: (o: TagConfiguradaOpt) => void }) {
+  const [busca, setBusca] = useState('');
+  const [termo, setTermo] = useState('');
+
+  useEffect(() => {
+    const t = setTimeout(() => setTermo(busca.trim()), 300);
+    return () => clearTimeout(t);
+  }, [busca]);
+
+  const padrao = useMemo(() => toIlikePattern(termo), [termo]);
+  const tokens = useMemo(() => toIlikeTokens(termo), [termo]);
+
+  const { data: opcoes = [], isFetching } = useQuery({
+    queryKey: ['tag-configurada-manual', padrao, tokens.join('|')],
+    enabled: termo.length >= 2,
+    staleTime: 60 * 1000,
+    queryFn: async () => {
+      const sel = 'nm_configuracao, nm_tag_customizada, ds_tag_customizada, ds_tag_calculada, ds_tag_texto';
+      const acc: any[] = [];
+
+      const { data, error } = await (supabase as any)
+        .from('auge_tag_custom')
+        .select(sel)
+        .or(
+          ['ds_tag_customizada', 'nm_tag_customizada']
+            .map((c) => `${c}.ilike.${JSON.stringify(padrao)}`)
+            .join(','),
+        )
+        .limit(300);
+      if (!error) acc.push(...(data ?? []));
+
+      if (tokens.length > 0) {
+        let q = (supabase as any).from('auge_tag_custom').select(sel);
+        for (const t of tokens) q = q.ilike('ds_tag_customizada', t);
+        const alt = await q.limit(300);
+        if (!alt.error) acc.push(...(alt.data ?? []));
+      }
+
+      const seen = new Set<string>();
+      const out: TagConfiguradaOpt[] = [];
+      for (const r of acc) {
+        const valor = normalizeTagFormatC(r.ds_tag_customizada ?? r.nm_tag_customizada ?? '');
+        if (!valor) continue;
+        const key = normalizeTagCode(valor);
+        if (!key || seen.has(key)) continue;
+        seen.add(key);
+        out.push({
+          valor,
+          calculada: normalizeTagFormatC(r.ds_tag_calculada ?? ''),
+          cfgNome: r.nm_configuracao ?? '',
+        });
+      }
+      return out.sort((a, b) => a.valor.localeCompare(b.valor, 'pt-BR')).slice(0, 60);
+    },
+  });
+
+  const livre = termo.replace(/\*/g, '').trim();
+
+  return (
+    <div className="p-3 border-b bg-muted/30 space-y-2">
+      <div className="relative">
+        <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+        <Input
+          autoFocus
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+          placeholder="Pesquisar TAG Configurada (use * como curinga)"
+          className="h-9 pl-7 text-[11px] font-mono"
+        />
+      </div>
+      {termo.length >= 2 && (
+        <div className="rounded border bg-background max-h-56 overflow-auto">
+          {isFetching && (
+            <div className="p-2 text-[10px] text-muted-foreground flex items-center gap-1">
+              <Loader2 className="h-3 w-3 animate-spin" /> Buscando…
+            </div>
+          )}
+          {!isFetching && opcoes.length === 0 && (
+            <div className="p-2 space-y-1">
+              <p className="text-[10px] text-muted-foreground">Nenhuma TAG Configurada encontrada.</p>
+              {livre && (
+                <button
+                  onClick={() => onPick({ valor: livre, calculada: '', cfgNome: '' })}
+                  className="text-[10px] text-primary hover:underline"
+                >
+                  Adicionar “{livre}” como texto livre
+                </button>
+              )}
+            </div>
+          )}
+          {opcoes.map((o) => (
+            <button
+              key={o.valor}
+              onClick={() => onPick(o)}
+              className="w-full text-left px-2 py-1 hover:bg-muted/60 transition"
+            >
+              <div className="font-mono text-[11px] break-all">{o.valor}</div>
+              {o.calculada && (
+                <div className="text-[9px] text-muted-foreground font-mono truncate">= {o.calculada}</div>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+// ============================================================
 // Componente principal
 // ============================================================
 export default function GerarTagTab() {
@@ -689,6 +862,13 @@ export default function GerarTagTab() {
   const [editandoAuge, setEditandoAuge] = useState(false);
   const [edicoesAuge, setEdicoesAuge] = useState<Record<string, TagCalculadaSel>>({});
   const [regravando, setRegravando] = useState(false);
+
+  // Inclusão manual de TAG Configurada na composição.
+  const [addManual, setAddManual] = useState(false);
+
+  // Histórico local dos últimos lançamentos desta aba.
+  const [historico, setHistorico] = useState<RegistroGerarTag[]>(() => lerHistorico());
+
 
   useEffect(() => { rascunho.descricao = descricao; }, [descricao]);
   useEffect(() => { rascunho.linhas = linhas; }, [linhas]);
@@ -761,24 +941,35 @@ export default function GerarTagTab() {
     enabled: padraoBusca.length >= 3,
     staleTime: 60 * 1000,
     queryFn: async () => {
+      const sel = 'cd_configuracao, nm_configuracao, nm_tag_customizada, ds_tag_customizada, ds_tag_calculada, ds_tag_texto';
       const cols = ['nm_configuracao', 'ds_tag_customizada', 'nm_tag_customizada', 'ds_tag_texto', 'ds_tag_calculada'];
+      const acc: CustomTag[] = [];
+
       const { data, error } = await (supabase as any)
         .from('auge_tag_custom')
-        .select('cd_configuracao, nm_configuracao, nm_tag_customizada, ds_tag_customizada, ds_tag_calculada, ds_tag_texto')
-        .or(cols.map((c) => `${c}.ilike.${padraoBusca}`).join(','))
+        .select(sel)
+        .or(cols.map((c) => `${c}.ilike.${JSON.stringify(padraoBusca)}`).join(','))
         .limit(300);
-      if (error) throw error;
-      if ((data ?? []).length > 0) return data as CustomTag[];
+      if (!error) acc.push(...((data ?? []) as CustomTag[]));
 
-      // Fallback por tokens na configuração (ordem/espaçamento diferentes).
-      if (tokensBusca.length === 0) return [] as CustomTag[];
-      let q = (supabase as any)
-        .from('auge_tag_custom')
-        .select('cd_configuracao, nm_configuracao, nm_tag_customizada, ds_tag_customizada, ds_tag_calculada, ds_tag_texto');
-      for (const t of tokensBusca) q = q.ilike('nm_configuracao', t);
-      const alt = await q.limit(300);
-      return (alt.data ?? []) as CustomTag[];
+      // AND por tokens (ordem livre) — sempre somado, nunca só fallback:
+      // é o que faz o curinga "A*B*C*" trazer tudo que contém A, B e C.
+      if (tokensBusca.length > 0) {
+        let q = (supabase as any).from('auge_tag_custom').select(sel);
+        for (const t of tokensBusca) q = q.ilike('nm_configuracao', t);
+        const alt = await q.limit(300);
+        if (!alt.error) acc.push(...((alt.data ?? []) as CustomTag[]));
+      }
+
+      const seen = new Set<string>();
+      return acc.filter((t) => {
+        const k = `${t.cd_configuracao}|${t.ds_tag_customizada ?? t.nm_tag_customizada ?? ''}|${t.ds_tag_texto ?? ''}`;
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return true;
+      });
     },
+
 
   });
 
@@ -1063,28 +1254,27 @@ export default function GerarTagTab() {
     });
   };
 
-  /** Adiciona a "Tag" (texto livre) digitada pelo usuário como linha da tabela. */
-  const adicionarTagTextoLivre = () => {
-    const valor = normalizeTagFormatC(descricao);
-    if (!valor) {
-      toast.error('Digite o nome da Tag antes de adicionar.');
-      return;
-    }
-    const id = `livre|${valor}`;
-    if (linhas.some((l) => l.id === id)) {
-      toast.info('Essa Tag já está na tabela.');
+  /** Adiciona manualmente uma TAG Configurada pesquisada pelo usuário. */
+  const adicionarTagConfiguradaManual = (opt: { valor: string; calculada: string; cfgNome: string }) => {
+    const valor = normalizeTagFormatC(opt.valor);
+    if (!valor) return;
+    const code = normalizeTagCode(valor) || 'TAG';
+    const id = `manual|${code}|${valor}`;
+    if (linhas.some((l) => l.id === id || l.code === code)) {
+      toast.info(`A TAG ${code} já está na composição.`);
       return;
     }
     setLinhas((prev) => [...prev, {
       id,
-      code: normalizeTagCode(valor) || 'TAG',
+      code,
       valor,
-      cfgNome: customAberta?.nm ?? '',
-      calculada: '',
+      cfgNome: opt.cfgNome || customAberta?.nm || '',
+      calculada: normalizeTagFormatC(opt.calculada ?? ''),
       formula: '',
     }]);
-    toast.success('Tag adicionada à coluna Tag Configurada.');
+    toast.success(`TAG ${code} adicionada à composição.`);
   };
+
 
   const setCalculada = (id: string, sel: TagCalculadaSel) => {
     setLinhas((prev) => prev.map((l) => (
@@ -1114,12 +1304,56 @@ export default function GerarTagTab() {
     toast.success(`${obrigatoriasFaltando.length} TAG(s) obrigatória(s) adicionada(s).`);
   };
 
-  const descricaoInvalida = tentouEnviar && descricao.trim().length === 0;
+  /**
+   * Nome da TAG Custom enviado ao Auge. O campo de texto livre foi removido da
+   * interface: usamos a própria Configuração selecionada/pesquisada como nome.
+   */
+  const descricaoFinal = useMemo(
+    () => (descricao.trim() || customAberta?.nm?.trim() || termoBusca.trim()),
+    [descricao, customAberta, termoBusca],
+  );
+
+  /** Guarda o lançamento atual no histórico local (últimos 10). */
+  const registrarHistorico = (ok: boolean) => {
+    const reg: RegistroGerarTag = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      em: new Date().toISOString(),
+      ok,
+      descricao: descricaoFinal,
+      configuracao: customAberta,
+      // cópia profunda leve: o histórico não pode referenciar o estado vivo
+      linhas: linhas.map((l) => ({ ...l })),
+    };
+    setHistorico((prev) => {
+      const next = [reg, ...prev].slice(0, HISTORICO_MAX);
+      gravarHistorico(next);
+      return next;
+    });
+  };
+
+  /** Recarrega um registro do histórico na composição para editar e relançar. */
+  const relancarRegistro = (reg: RegistroGerarTag) => {
+    setCustomAberta(reg.configuracao);
+    setDescricao(reg.descricao ?? '');
+    setLinhas(reg.linhas.map((l) => ({ ...l })));
+    setResultado(null);
+    setEditandoAuge(false);
+    setEdicoesAuge({});
+    setTentouEnviar(false);
+    toast.success('Registro carregado — edite e grave novamente.');
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const limparHistorico = () => {
+    setHistorico([]);
+    gravarHistorico([]);
+  };
+
 
   const adicionarTagCustom = async () => {
     setTentouEnviar(true);
-    if (!descricao.trim()) {
-      toast.error('Informe a descrição da TAG Custom antes de continuar.');
+    if (!descricaoFinal) {
+      toast.error('Selecione ou pesquise a Configuração antes de gravar.');
       return;
     }
     if (linhas.length === 0) {
@@ -1139,7 +1373,7 @@ export default function GerarTagTab() {
         body: {
           // Configuração (Pente Fino) -> Configuração (Auge)
           cdConfiguracao: customAberta?.cd ?? '',
-          descricao: descricao.trim(),
+          descricao: descricaoFinal,
           itens: linhas.map((l) => {
             const calculada = (l.calculada ?? '').trim();
             return {
@@ -1163,8 +1397,10 @@ export default function GerarTagTab() {
       setResultado(res);
       setEditandoAuge(false);
       setEdicoesAuge({});
+      registrarHistorico(res?.ok === true);
       if (res?.ok) toast.success(`TAG Custom gravada no Auge (${res.gravadas}/${res.total}).`);
       else toast.error(res?.error ?? 'O Auge não confirmou a gravação da TAG Custom.');
+
     } catch (e: any) {
       const msg = e?.message ?? 'Falha ao criar a TAG Custom no Auge.';
       setResultado({ ok: false, error: msg });
@@ -1263,33 +1499,8 @@ export default function GerarTagTab() {
 
         </div>
 
-        {/* Tag: nome livre */}
-        <div className="space-y-1">
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-            Tag
-          </div>
-          <div className="flex gap-2">
-            <Input
-              value={descricao}
-              onChange={(e) => setDescricao(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') adicionarTagTextoLivre(); }}
-              placeholder="Nome da Tag (texto livre). Ex: Rollo Abs2.0 T42 Standard Preto"
-              className={`h-11 text-xs font-mono flex-1 ${descricaoInvalida ? 'border-destructive focus-visible:ring-destructive' : ''}`}
-            />
-            <Button variant="outline" className="h-11 px-3 gap-1 text-[11px] shrink-0" onClick={adicionarTagTextoLivre}>
-              <Plus className="h-3.5 w-3.5" /> Adicionar
-            </Button>
-          </div>
-          {descricaoInvalida && (
-            <p className="text-[10px] text-destructive flex items-center gap-1">
-              <AlertTriangle className="h-3 w-3" /> O nome da Tag é obrigatório.
-            </p>
-          )}
-          <p className="text-[10px] text-muted-foreground">
-            Apenas o nome da TAG que será criada. Este campo não é usado em nenhuma busca.
-          </p>
 
-        </div>
+
 
 
         {ehTagCustomNova && (
@@ -1392,17 +1603,35 @@ export default function GerarTagTab() {
                 {linhas.length} TAG(s)
               </span>
             </div>
-            {linhas.length > 0 && (
+            <div className="flex items-center gap-1.5">
               <Button
                 size="sm"
-                variant="ghost"
-                className="h-7 px-2 text-[10px]"
-                onClick={() => { setLinhas([]); setResultado(null); }}
+                variant={addManual ? 'secondary' : 'outline'}
+                className="h-7 px-2 text-[10px] gap-1"
+                onClick={() => setAddManual((v) => !v)}
               >
-                Limpar
+                <Plus className="h-3 w-3" /> Adicionar TAG Configurada
               </Button>
-            )}
+              {linhas.length > 0 && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 px-2 text-[10px]"
+                  onClick={() => { setLinhas([]); setResultado(null); }}
+                >
+                  Limpar
+                </Button>
+              )}
+            </div>
           </div>
+
+          {addManual && (
+            <TagConfiguradaSearch
+              onPick={(o) => { adicionarTagConfiguradaManual(o); setAddManual(false); }}
+            />
+          )}
+
+
 
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
@@ -1645,6 +1874,75 @@ export default function GerarTagTab() {
           )}
 
         </Card>
+
+        {/* Últimos registros: as 10 últimas alterações feitas nesta aba */}
+        <Card className="overflow-hidden">
+          <div className="p-3 border-b flex items-center justify-between gap-2">
+            <div className="text-xs font-semibold flex items-center gap-1.5">
+              <History className="h-3.5 w-3.5 text-muted-foreground" />
+              Últimos registros
+              <span className="text-[10px] font-normal text-muted-foreground">
+                {historico.length}/{HISTORICO_MAX}
+              </span>
+            </div>
+            {historico.length > 0 && (
+              <Button size="sm" variant="ghost" className="h-7 px-2 text-[10px]" onClick={limparHistorico}>
+                Limpar histórico
+              </Button>
+            )}
+          </div>
+
+          {historico.length === 0 ? (
+            <div className="p-6 text-center text-[11px] text-muted-foreground">
+              Nenhum lançamento ainda. Ao gravar uma TAG Custom, ela aparece aqui para reedição.
+            </div>
+          ) : (
+            <div className="divide-y">
+              {historico.map((reg) => (
+                <div key={reg.id} className="p-3 flex items-start justify-between gap-3">
+                  <div className="min-w-0 space-y-1">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {reg.ok
+                        ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                        : <AlertTriangle className="h-3.5 w-3.5 text-destructive shrink-0" />}
+                      <span className="text-[11px] font-medium break-all">{reg.descricao || '—'}</span>
+                      <Badge variant="outline" className="text-[9px]">{reg.linhas.length} TAG(s)</Badge>
+                      <span className="text-[9px] text-muted-foreground">{formatarData(reg.em)}</span>
+                    </div>
+                    {reg.configuracao?.nm && (
+                      <div className="text-[9px] text-muted-foreground break-all">
+                        Configuração: {reg.configuracao.nm}
+                      </div>
+                    )}
+                    <div className="flex flex-wrap gap-1">
+                      {reg.linhas.slice(0, 8).map((l) => (
+                        <span
+                          key={l.id}
+                          title={l.calculada ? `${l.valor} = ${l.calculada}` : l.valor}
+                          className="rounded border bg-muted/50 px-1.5 py-0.5 font-mono text-[9px]"
+                        >
+                          {l.code}
+                        </span>
+                      ))}
+                      {reg.linhas.length > 8 && (
+                        <span className="text-[9px] text-muted-foreground">+{reg.linhas.length - 8}</span>
+                      )}
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 px-2 text-[10px] gap-1 shrink-0"
+                    onClick={() => relancarRegistro(reg)}
+                  >
+                    <Pencil className="h-3 w-3" /> Editar e relançar
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+
       </div>
     </div>
   );
