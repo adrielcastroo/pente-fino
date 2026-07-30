@@ -46,7 +46,13 @@ interface ImportRow {
   dt_criacao: string | null;
   usuario_criacao: string | null;
   nr_entrada_sap: string | null;
+  /** Marcações vindas da planilha simplificada (Nº Entrada SAP + ações). */
+  marcar_entregar?: boolean;
+  marcar_receber?: boolean;
+  /** false quando o Nº Entrada SAP não corresponde a nenhuma transferência. */
+  resolvido?: boolean;
 }
+
 
 /** Situação do Auge — 20 = Efetivado ("verdinho"). */
 const SITUACAO_EFETIVADO = '20';
