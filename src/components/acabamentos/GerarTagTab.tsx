@@ -161,6 +161,30 @@ function toIlikeTokens(raw: string): string[] {
     .map((t) => (t.includes('*') ? t.replace(/\*/g, '%') : `%${t}%`));
 }
 
+/** Normalização usada nas comparações por palavra-chave. */
+function normKey(s: string): string {
+  return (s ?? '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
+export interface Palavra { token: string; weight: number; structural: boolean }
+
+/**
+ * Palavras-chave da configuração digitada, ordenadas da mais relevante
+ * (tipo/tubo/motor) para a menos relevante. Usadas para descobrir quais TAGs
+ * Configuradas são obrigatórias.
+ */
+function extrairPalavras(input: string): Palavra[] {
+  const raw = uniqTokens(normKey(input).split(' ').filter((t) => t.length >= 2));
+  return weightTokens(raw).sort((a, b) => b.weight - a.weight || a.token.localeCompare(b.token));
+}
+
+
+
 
 interface TagCategoria {
   code: string;
@@ -758,6 +782,40 @@ export default function GerarTagTab() {
 
   });
 
+  // ---------- Busca por PALAVRAS-CHAVE (item 1 e 2 do fluxo) ----------
+  // Independe da lista suspensa: sempre que houver palavras-chave, buscamos
+  // TODAS as TAGs Custom cujas configurações contenham essas palavras, para
+  // então deduzir as TAGs Configuradas obrigatórias.
+  const palavras = useMemo(() => extrairPalavras(termoDeferido), [termoDeferido]);
+
+  const { data: buscaPalavras, isFetching: loadingPalavras } = useQuery({
+    queryKey: ['auge-tag-custom-palavras', palavras.map((p) => p.token).join('|')],
+    enabled: palavras.length > 0,
+    staleTime: 60 * 1000,
+    queryFn: async () => {
+      const sel =
+        'cd_configuracao, nm_configuracao, nm_tag_customizada, ds_tag_customizada, ds_tag_calculada, ds_tag_texto';
+      // Relaxamento progressivo: começa exigindo todas as palavras (AND) e vai
+      // descartando as menos relevantes até encontrar modelos existentes.
+      for (let n = palavras.length; n >= 1; n--) {
+        const usados = palavras.slice(0, n);
+        let q = (supabase as any).from('auge_tag_custom').select(sel);
+        for (const p of usados) q = q.ilike('nm_configuracao', `%${p.token}%`);
+        const { data, error } = await q.limit(4000);
+        if (error) throw error;
+        if ((data ?? []).length > 0) {
+          return { rows: data as CustomTag[], usados: usados.map((u) => u.token) };
+        }
+      }
+      return { rows: [] as CustomTag[], usados: [] as string[] };
+    },
+  });
+
+  const tagsPalavras = buscaPalavras?.rows ?? [];
+  const palavrasUsadas = buscaPalavras?.usados ?? [];
+
+
+
   // TAGs Custom existentes que casam com o termo pesquisado.
   const customsEncontradas = useMemo(() => {
     const byCfg = new Map<string, { cd: string; nm: string; qtd: number }>();
@@ -810,14 +868,14 @@ export default function GerarTagTab() {
   const tagsUnificadas = useMemo<CustomTag[]>(() => {
     const seen = new Set<string>();
     const out: CustomTag[] = [];
-    for (const t of [...tagsDaCustom, ...tagsTop, ...tagsBusca]) {
+    for (const t of [...tagsDaCustom, ...tagsTop, ...tagsBusca, ...tagsPalavras]) {
       const k = `${t.cd_configuracao}|${t.ds_tag_customizada ?? t.nm_tag_customizada ?? ''}|${t.ds_tag_texto ?? ''}`;
       if (seen.has(k)) continue;
       seen.add(k);
       out.push(t);
     }
     return out;
-  }, [tagsDaCustom, tagsTop, tagsBusca]);
+  }, [tagsDaCustom, tagsTop, tagsBusca, tagsPalavras]);
 
   // ---------- Agrupamento por categoria (T_BASE, T_TUBO, ...) ----------
   const categorias = useMemo<TagCategoria[]>(() => {
@@ -867,7 +925,7 @@ export default function GerarTagTab() {
    */
   const modelosExistentes = useMemo(() => {
     const map = new Map<string, { nm: string; codes: Map<string, { valor: string; calculada: string }> }>();
-    for (const t of [...tagsBusca, ...tagsTop]) {
+    for (const t of [...tagsPalavras, ...tagsBusca, ...tagsTop]) {
       const code = normalizeTagCode(t.ds_tag_customizada ?? t.nm_tag_customizada);
       if (!code) continue;
       const valor = normalizeTagFormatC(t.ds_tag_customizada ?? t.nm_tag_customizada ?? t.ds_tag_texto ?? '');
@@ -882,45 +940,51 @@ export default function GerarTagTab() {
       map.set(t.cd_configuracao, cur);
     }
     return map;
-  }, [tagsBusca, tagsTop]);
+  }, [tagsPalavras, tagsBusca, tagsTop]);
 
   /**
-   * Refinamento por eliminação: usa SEMPRE o conjunto mais específico de
-   * modelos que casa com o texto digitado. Ex.: "Rollo" usa todas as Rollo;
-   * ao digitar "Rollo Pro", apenas as Rollo Pro passam a valer — o padrão das
-   * "Rollo" genéricas deixa de ser exigido.
+   * Escopo por PALAVRAS-CHAVE (independente da ordem digitada).
    *
-   * Estratégia: tenta casar todos os tokens digitados; se não houver amostra
-   * suficiente (>= 2 modelos), remove o último token e tenta novamente.
+   * 1) Cada modelo existente recebe uma pontuação = soma dos pesos das
+   *    palavras-chave da configuração digitada que ele contém.
+   * 2) Fica valendo apenas o grupo de modelos com a MAIOR cobertura
+   *    (conjunto mais específico). Ex.: "Rollo Pro T45" prioriza as Custom que
+   *    têm as três palavras; se nenhuma tiver, cai para as que têm duas.
    */
   const escopoPadrao = useMemo(() => {
-    const norm = (s: string) =>
-      (s ?? '')
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9]+/g, ' ')
-        .trim();
-
-    const tokens = norm(termoDeferido).split(' ').filter(Boolean);
     const modelos = Array.from(modelosExistentes.values());
-    if (tokens.length === 0 || modelos.length === 0) {
+    if (palavras.length === 0 || modelos.length === 0) {
       return { modelos: [] as typeof modelos, termo: '', tokens: [] as string[] };
     }
 
-    for (let n = tokens.length; n >= 1; n--) {
-      const sub = tokens.slice(0, n);
-      const filtrados = modelos.filter((m) => {
-        const alvo = norm(m.nm);
-        return sub.every((tk) => alvo.includes(tk));
-      });
-      // Nível mais específico que ainda casa com algum modelo existente.
-      if (filtrados.length >= 1) {
-        return { modelos: filtrados, termo: sub.join(' '), tokens: sub };
+    type Marcado = { modelo: (typeof modelos)[number]; peso: number; hits: string[] };
+    const marcados: Marcado[] = [];
+    for (const m of modelos) {
+      const alvo = ` ${normKey(m.nm)} `;
+      let peso = 0;
+      const hits: string[] = [];
+      for (const p of palavras) {
+        const exato = alvo.includes(` ${p.token} `);
+        const parcial = !exato && p.token.length >= 3 && alvo.includes(p.token);
+        if (exato || parcial) {
+          peso += exato ? p.weight * 2 : p.weight;
+          hits.push(p.token);
+        }
       }
+      if (hits.length > 0) marcados.push({ modelo: m, peso, hits });
     }
-    return { modelos: [] as typeof modelos, termo: '', tokens: [] as string[] };
-  }, [modelosExistentes, termoDeferido]);
+    if (marcados.length === 0) return { modelos: [] as typeof modelos, termo: '', tokens: [] as string[] };
+
+    const melhorPeso = Math.max(...marcados.map((m) => m.peso));
+    const selecionados = marcados.filter((m) => m.peso === melhorPeso);
+    const tokens = Array.from(new Set(selecionados.flatMap((s) => s.hits)));
+
+    return {
+      modelos: selecionados.map((s) => s.modelo),
+      termo: tokens.join(' '),
+      tokens,
+    };
+  }, [modelosExistentes, palavras]);
 
   /**
    * TAGs Configuradas que são padrão (presentes em praticamente todos os
@@ -970,8 +1034,10 @@ export default function GerarTagTab() {
       !cfgSearch.isSearching &&
       cfgSearch.pesquisou &&
       !cfgSearch.hasResults &&
-      customsEncontradas.length === 0,
-    [customAberta, termoBusca, loadingBusca, cfgSearch, customsEncontradas.length],
+      customsEncontradas.length === 0 &&
+      !loadingPalavras &&
+      tagsPalavras.length === 0,
+    [customAberta, termoBusca, loadingBusca, cfgSearch, customsEncontradas.length, loadingPalavras, tagsPalavras.length],
   );
 
 
@@ -1163,7 +1229,7 @@ export default function GerarTagTab() {
   };
 
 
-  const carregandoRecs = loadingCfgs || loadingTags || loadingBusca || loadingCustom;
+  const carregandoRecs = loadingCfgs || loadingTags || loadingBusca || loadingPalavras || loadingCustom;
 
   return (
     <div className="space-y-4">
@@ -1256,11 +1322,31 @@ export default function GerarTagTab() {
                   </Badge>
                 </div>
                 <p className="text-[10px] text-muted-foreground">
-                  Padrão detectado em {obrigatorias[0]?.total ?? 0} TAG(s) Custom existentes que contêm
-                  “{escopoPadrao.termo || termoBusca}”. Quanto mais específico o texto, mais restrito o padrão
-                  exigido. As TAGs em <span className="text-blue-700 dark:text-blue-400 font-medium">azul</span> são
-                  obrigatórias — a gravação fica bloqueada enquanto faltar alguma.
+                  Padrão detectado em {obrigatorias[0]?.total ?? 0} TAG(s) Custom existentes que compartilham as
+                  palavras-chave da configuração. As TAGs em{' '}
+                  <span className="text-blue-700 dark:text-blue-400 font-medium">azul</span> são obrigatórias — a
+                  gravação fica bloqueada enquanto faltar alguma.
                 </p>
+                {escopoPadrao.tokens.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-1 pt-1">
+                    <span className="text-[9px] uppercase tracking-wide text-muted-foreground">Palavras-chave:</span>
+                    {escopoPadrao.tokens.map((t) => (
+                      <span
+                        key={t}
+                        className="rounded bg-blue-500/10 border border-blue-500/30 px-1.5 py-0.5 font-mono text-[9px] text-blue-700 dark:text-blue-400"
+                      >
+                        {t}
+                      </span>
+                    ))}
+                    {palavrasUsadas.length > 0 && palavrasUsadas.length < palavras.length && (
+                      <span className="text-[9px] text-muted-foreground">
+                        (busca relaxada para {palavrasUsadas.length} de {palavras.length})
+                      </span>
+                    )}
+                  </div>
+                )}
+
+
 
 
               </div>
