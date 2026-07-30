@@ -246,7 +246,7 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
             <SidebarMenuItem>
               <SidebarMenuButton
                 size="lg"
-                onClick={() => navigate('/selecionar-modulo')}
+                onClick={() => navigate('/selecionar-modulo?switch=1')}
                 tooltip="Trocar módulo"
                 aria-label="Trocar módulo"
                 className={cn(
