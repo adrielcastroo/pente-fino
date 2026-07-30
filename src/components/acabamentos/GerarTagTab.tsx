@@ -782,6 +782,40 @@ export default function GerarTagTab() {
 
   });
 
+  // ---------- Busca por PALAVRAS-CHAVE (item 1 e 2 do fluxo) ----------
+  // Independe da lista suspensa: sempre que houver palavras-chave, buscamos
+  // TODAS as TAGs Custom cujas configurações contenham essas palavras, para
+  // então deduzir as TAGs Configuradas obrigatórias.
+  const palavras = useMemo(() => extrairPalavras(termoDeferido), [termoDeferido]);
+
+  const { data: buscaPalavras, isFetching: loadingPalavras } = useQuery({
+    queryKey: ['auge-tag-custom-palavras', palavras.map((p) => p.token).join('|')],
+    enabled: palavras.length > 0,
+    staleTime: 60 * 1000,
+    queryFn: async () => {
+      const sel =
+        'cd_configuracao, nm_configuracao, nm_tag_customizada, ds_tag_customizada, ds_tag_calculada, ds_tag_texto';
+      // Relaxamento progressivo: começa exigindo todas as palavras (AND) e vai
+      // descartando as menos relevantes até encontrar modelos existentes.
+      for (let n = palavras.length; n >= 1; n--) {
+        const usados = palavras.slice(0, n);
+        let q = (supabase as any).from('auge_tag_custom').select(sel);
+        for (const p of usados) q = q.ilike('nm_configuracao', `%${p.token}%`);
+        const { data, error } = await q.limit(4000);
+        if (error) throw error;
+        if ((data ?? []).length > 0) {
+          return { rows: data as CustomTag[], usados: usados.map((u) => u.token) };
+        }
+      }
+      return { rows: [] as CustomTag[], usados: [] as string[] };
+    },
+  });
+
+  const tagsPalavras = buscaPalavras?.rows ?? [];
+  const palavrasUsadas = buscaPalavras?.usados ?? [];
+
+
+
   // TAGs Custom existentes que casam com o termo pesquisado.
   const customsEncontradas = useMemo(() => {
     const byCfg = new Map<string, { cd: string; nm: string; qtd: number }>();
