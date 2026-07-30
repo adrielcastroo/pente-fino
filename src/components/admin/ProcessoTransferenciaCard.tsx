@@ -183,12 +183,14 @@ const txt = (raw: unknown): string | null => {
 
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
 
-function parseWorkbook(buffer: ArrayBuffer): { rows: ImportRow[]; ignoradas: number } {
+function parseWorkbook(
+  buffer: ArrayBuffer,
+): { rows: ImportRow[]; ignoradas: number; modoSap: boolean } {
   const wb = XLSX.read(buffer, { type: 'array', cellDates: true });
   const ws = wb.Sheets[wb.SheetNames[0]];
   if (!ws) throw new Error('Planilha vazia.');
   const json: Record<string, unknown>[] = XLSX.utils.sheet_to_json(ws, { defval: '' });
-  if (!json.length) return { rows: [], ignoradas: 0 };
+  if (!json.length) return { rows: [], ignoradas: 0, modoSap: false };
 
   const headers = Array.from(new Set(json.slice(0, 20).flatMap((r) => Object.keys(r))));
   const k = {
@@ -200,34 +202,45 @@ function parseWorkbook(buffer: ArrayBuffer): { rows: ImportRow[]; ignoradas: num
     dt_criacao: findKey(headers, ALIASES.dt_criacao),
     usuario_criacao: findKey(headers, ALIASES.usuario_criacao),
     nr_entrada_sap: findKey(headers, ALIASES.nr_entrada_sap),
+    marcar_entregar: findKey(headers, ALIASES.marcar_entregar),
+    marcar_receber: findKey(headers, ALIASES.marcar_receber),
   };
 
   // Nº da transferência: coluna própria ou, na ausência, o Nº Portal.
   const keyId = k.id_externo ?? k.nr_portal;
-  if (!keyId) {
+  // Modelo simplificado: só o Nº Entrada SAP + colunas de ação.
+  const modoSap = !keyId && !!k.nr_entrada_sap;
+
+  if (!keyId && !modoSap) {
     throw new Error(
-      `Não encontrei a coluna do nº da transferência (ou Nº Portal). Colunas lidas: ${headers.join(', ')}`,
+      `Não encontrei a coluna do nº da transferência nem do Nº Entrada SAP. Colunas lidas: ${headers.join(', ')}`,
     );
   }
 
   const byId = new Map<string, ImportRow>();
   let ignoradas = 0;
   for (const r of json) {
-    const id_externo = txt(r[keyId]);
-    if (!id_externo) { ignoradas++; continue; }
-    byId.set(id_externo, {
-      id_externo,
+    const nr_entrada_sap = k.nr_entrada_sap ? txt(r[k.nr_entrada_sap]) : null;
+    const id_externo = keyId ? txt(r[keyId]) : null;
+    const chave = modoSap ? nr_entrada_sap : id_externo;
+    if (!chave) { ignoradas++; continue; }
+    byId.set(chave, {
+      id_externo: id_externo ?? '',
       nr_portal: k.nr_portal ? txt(r[k.nr_portal]) : null,
       observacao: k.observacao ? txt(r[k.observacao]) : null,
       situacao_importada: k.situacao_importada ? txt(r[k.situacao_importada]) : null,
       qt_item: k.qt_item ? toNumber(r[k.qt_item]) : null,
       dt_criacao: k.dt_criacao ? toDateISO(r[k.dt_criacao]) : null,
       usuario_criacao: k.usuario_criacao ? txt(r[k.usuario_criacao]) : null,
-      nr_entrada_sap: k.nr_entrada_sap ? txt(r[k.nr_entrada_sap]) : null,
+      nr_entrada_sap,
+      marcar_entregar: k.marcar_entregar ? isMarcado(r[k.marcar_entregar]) : false,
+      marcar_receber: k.marcar_receber ? isMarcado(r[k.marcar_receber]) : false,
+      resolvido: !modoSap,
     });
   }
-  return { rows: Array.from(byId.values()), ignoradas };
+  return { rows: Array.from(byId.values()), ignoradas, modoSap };
 }
+
 
 /* ------------------------------------------------------------------ */
 /* Componente                                                          */
