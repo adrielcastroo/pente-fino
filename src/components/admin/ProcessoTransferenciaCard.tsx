@@ -429,16 +429,30 @@ export default function ProcessoTransferenciaCard() {
       {/* Importação */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <FileSpreadsheet className="h-4 w-4 text-primary" />
-            Importar folhas de transferência
-          </CardTitle>
-          <CardDescription>
-            Aceita <code>.xlsx</code>, <code>.csv</code> e <code>.ods</code> com as colunas do Auge:
-            Observação, Nº Portal, Situação, Qt. Item, Dt. Criação, Usuário Criação e Nº Entrada SAP.
-            Linhas com Nº Entrada SAP entram direto como recebidas da logística.
-          </CardDescription>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <FileSpreadsheet className="h-4 w-4 text-primary" />
+                Importar folhas de transferência
+              </CardTitle>
+              <CardDescription>
+                Aceita <code>.xlsx</code>, <code>.csv</code> e <code>.ods</code> com as colunas do Auge:
+                Observação, Nº Portal, Situação, Qt. Item, Dt. Criação, Usuário Criação e Nº Entrada SAP.
+                Linhas com Nº Entrada SAP entram direto como recebidas da logística.
+              </CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0 gap-2"
+              onClick={baixarModelo}
+            >
+              <Download className="h-3.5 w-3.5" />
+              Baixar modelo
+            </Button>
+          </div>
         </CardHeader>
+
         <CardContent className="space-y-3">
           <div
             onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
