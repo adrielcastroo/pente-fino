@@ -437,23 +437,18 @@ export default function ProcessoTransferenciaCard() {
         ];
         for (const acao of acoes) {
           if (!acao.ids.length) continue;
-          const { data, error: e2 } = await supabase.functions.invoke('auge-sync', {
-            body: {
-              action: 'transferencia_logistica',
-              ids: acao.ids,
-              idLogistica: acao.idLogistica,
-              desejado: true,
-            },
-          });
-          if (e2) throw e2;
-          const falhas = (data?.resultados ?? []).filter((r: { ok: boolean }) => !r.ok);
-          if (falhas.length) {
+          const { falhas, pendentes } = await sincronizarLogistica(acao.ids, acao.idLogistica);
+          if (falhas) {
             toast.warning(
-              `${falhas.length} folha(s) não puderam ser ${acao.idLogistica === 1 ? 'entregues' : 'recebidas'} no Auge.`,
+              `${falhas} folha(s) não puderam ser ${acao.idLogistica === 1 ? 'entregues' : 'recebidas'} no Auge.`,
             );
+          }
+          if (pendentes) {
+            toast.warning(`${pendentes} folha(s) não processadas — tente novamente para concluir.`);
           }
         }
       }
+
 
       toast.success(`${payload.length} transferência(s) processada(s).`);
       limparPreview();
