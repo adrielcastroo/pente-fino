@@ -2491,6 +2491,39 @@ async function efetivarTransferencia(
   }
 }
 
+/**
+ * Marca/desmarca a folha de transferência na logística.
+ * Confirmado via HAR Final-Transf..har (2026-07-30):
+ *   POST ctlTransferenciaEstoque.php
+ *   idAcao=5&cdMovivimentacao=&cdMovEstoqueERP=<cd>&idLogistica=1|2
+ *   idLogistica=1 -> "Entregar folha p/ logística"
+ *   idLogistica=2 -> "Receber folha da logística"
+ * Resposta: { dtAtualizacao, ok:"ok", idStatus:"S"|"N", idUsuario }
+ * ATENÇÃO: a ação é um TOGGLE — idStatus informa o estado resultante.
+ */
+async function logisticaFolhaTransferencia(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+  cdMovEstoqueERP: string,
+  idLogistica: 1 | 2,
+): Promise<{ marcado: boolean; dtAtualizacao: string | null; usuario: string | null }> {
+  if (!cdMovEstoqueERP) throw new Error('cdMovEstoqueERP é obrigatório.');
+  const body = new URLSearchParams();
+  body.set('idAcao', '5');
+  body.set('cdMovivimentacao', ''); // typo intencional (bate com Auge)
+  body.set('cdMovEstoqueERP', cdMovEstoqueERP);
+  body.set('idLogistica', String(idLogistica));
+  const j = await postCtlTransferencia(auth, body);
+  if (j?.ok !== 'ok') {
+    throw new Error(`Logística retornou: ${JSON.stringify(j).slice(0, 200)}`);
+  }
+  return {
+    marcado: String(j?.idStatus ?? '').toUpperCase() === 'S',
+    dtAtualizacao: j?.dtAtualizacao ?? null,
+    usuario: j?.idUsuario ?? null,
+  };
+}
+
+
 // Atualiza um rascunho existente: mesma estrutura de idAcao=1, porém com
 // cdMovivimentacao preenchido com o cd atual (padrão observado no portal Auge).
 async function atualizarTransferencia(
