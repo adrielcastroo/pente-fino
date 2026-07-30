@@ -322,6 +322,42 @@ export default function ProcessoTransferenciaCard() {
 
   const limparPreview = () => { setPreview([]); setFileName(''); };
 
+  /**
+   * Resolve as linhas do modelo simplificado: descobre a transferência
+   * correspondente a cada Nº Entrada SAP consultando `auge_transferencias`.
+   */
+  const resolverPorSap = async (rows: ImportRow[]): Promise<ImportRow[]> => {
+    const saps = Array.from(new Set(rows.map((r) => r.nr_entrada_sap).filter(Boolean) as string[]));
+    if (!saps.length) return rows;
+    const { data, error } = await supabase
+      .from('auge_transferencias')
+      .select('id_externo,nr_efetivacao,documento,observacao,quantidade,usuario_criacao,data_movimento,situacao')
+      .in('nr_efetivacao', saps);
+    if (error) throw error;
+
+    const porSap = new Map<string, (typeof data)[number]>();
+    for (const t of data ?? []) {
+      const key = String(t.nr_efetivacao ?? '').trim();
+      if (key && !porSap.has(key)) porSap.set(key, t);
+    }
+
+    return rows.map((r) => {
+      const t = r.nr_entrada_sap ? porSap.get(r.nr_entrada_sap) : undefined;
+      if (!t) return { ...r, resolvido: false };
+      return {
+        ...r,
+        id_externo: String(t.id_externo),
+        nr_portal: r.nr_portal ?? (t.documento ? String(t.documento) : null),
+        observacao: r.observacao ?? t.observacao ?? null,
+        situacao_importada: r.situacao_importada ?? t.situacao ?? null,
+        qt_item: r.qt_item ?? (t.quantidade != null ? Number(t.quantidade) : null),
+        dt_criacao: r.dt_criacao ?? (t.data_movimento ? String(t.data_movimento).slice(0, 10) : null),
+        usuario_criacao: r.usuario_criacao ?? t.usuario_criacao ?? null,
+        resolvido: true,
+      };
+    });
+  };
+
   const handleFile = async (file: File) => {
     if (file.size > MAX_FILE_BYTES) {
       toast.error('Arquivo excede 10 MB.');
@@ -330,10 +366,17 @@ export default function ProcessoTransferenciaCard() {
     setFileName(file.name);
     setParsing(true);
     try {
-      const { rows, ignoradas } = parseWorkbook(await file.arrayBuffer());
+      let { rows } = parseWorkbook(await file.arrayBuffer());
+      const { ignoradas, modoSap } = parseWorkbook(await file.arrayBuffer());
+      if (modoSap) rows = await resolverPorSap(rows);
       setPreview(rows);
+      const naoResolvidas = rows.filter((r) => r.resolvido === false).length;
       if (!rows.length) toast.warning('Nenhuma linha válida encontrada.');
-      else if (ignoradas) toast.info(`${ignoradas} linha(s) sem nº de transferência ignorada(s).`);
+      else if (naoResolvidas) {
+        toast.warning(`${naoResolvidas} Nº Entrada SAP sem transferência correspondente no Auge.`);
+      } else if (ignoradas) {
+        toast.info(`${ignoradas} linha(s) sem identificação ignorada(s).`);
+      }
     } catch (e) {
       setPreview([]);
       toast.error(e instanceof Error ? e.message : 'Falha ao ler a planilha.');
@@ -343,25 +386,74 @@ export default function ProcessoTransferenciaCard() {
   };
 
   const registrarImportacao = async () => {
-    if (!preview.length) return;
+    const validas = preview.filter((r) => r.id_externo && r.resolvido !== false);
+    if (!validas.length) {
+      toast.warning('Nenhuma linha válida para registrar.');
+      return;
+    }
     setSalvando(true);
     try {
       const { data: userRes } = await supabase.auth.getUser();
       const lote = crypto.randomUUID();
       const agora = new Date().toISOString();
-      const payload = preview.map((r) => ({
-        ...r,
-        lote_importacao: lote,
-        importado_por: userRes?.user?.id ?? null,
-        etapa: (r.nr_entrada_sap ? 'recebido_logistica' : 'entregue_logistica') as Etapa,
-        entregue_em: agora,
-        recebido_em: r.nr_entrada_sap ? agora : null,
-      }));
+
+      const etapaDe = (r: ImportRow): Etapa => {
+        if (r.marcar_receber) return 'recebido_logistica';
+        if (r.marcar_entregar) return 'entregue_logistica';
+        return r.nr_entrada_sap ? 'recebido_logistica' : 'entregue_logistica';
+      };
+
+      const payload = validas.map((r) => {
+        const etapa = etapaDe(r);
+        return {
+          id_externo: r.id_externo,
+          nr_portal: r.nr_portal,
+          observacao: r.observacao,
+          situacao_importada: r.situacao_importada,
+          qt_item: r.qt_item,
+          dt_criacao: r.dt_criacao,
+          usuario_criacao: r.usuario_criacao,
+          nr_entrada_sap: r.nr_entrada_sap,
+          lote_importacao: lote,
+          importado_por: userRes?.user?.id ?? null,
+          etapa,
+          entregue_em: agora,
+          recebido_em: etapa === 'recebido_logistica' ? agora : null,
+        };
+      });
+
       const { error } = await supabase
         .from('transferencia_folha_processos')
         .upsert(payload, { onConflict: 'id_externo' });
       if (error) throw error;
-      toast.success(`${payload.length} transferência(s) registrada(s).`);
+
+      // Replica no Auge as marcações indicadas na planilha (entregar → receber).
+      if (sincAuge) {
+        const acoes: { ids: string[]; idLogistica: 1 | 2 }[] = [
+          { ids: validas.filter((r) => r.marcar_entregar).map((r) => r.id_externo), idLogistica: 1 },
+          { ids: validas.filter((r) => r.marcar_receber).map((r) => r.id_externo), idLogistica: 2 },
+        ];
+        for (const acao of acoes) {
+          if (!acao.ids.length) continue;
+          const { data, error: e2 } = await supabase.functions.invoke('auge-sync', {
+            body: {
+              action: 'transferencia_logistica',
+              ids: acao.ids,
+              idLogistica: acao.idLogistica,
+              desejado: true,
+            },
+          });
+          if (e2) throw e2;
+          const falhas = (data?.resultados ?? []).filter((r: { ok: boolean }) => !r.ok);
+          if (falhas.length) {
+            toast.warning(
+              `${falhas.length} folha(s) não puderam ser ${acao.idLogistica === 1 ? 'entregues' : 'recebidas'} no Auge.`,
+            );
+          }
+        }
+      }
+
+      toast.success(`${payload.length} transferência(s) processada(s).`);
       limparPreview();
       await carregar();
     } catch (e) {
@@ -370,6 +462,7 @@ export default function ProcessoTransferenciaCard() {
       setSalvando(false);
     }
   };
+
 
   /* ---------------- Ações em lote ---------------- */
 
