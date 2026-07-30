@@ -2507,6 +2507,12 @@ async function logisticaFolhaTransferencia(
   idLogistica: 1 | 2,
 ): Promise<{ marcado: boolean; dtAtualizacao: string | null; usuario: string | null }> {
   if (!cdMovEstoqueERP) throw new Error('cdMovEstoqueERP é obrigatório.');
+  // O Auge só aceita o código numérico da transferência (cdTransferenciaEstoque /
+  // "Nº Portal"). Chaves compostas internas (ex. transf-php:180641:item:0:XX)
+  // retornam ok sem marcar nada — falhamos cedo para não mascarar o erro.
+  if (!/^\d+$/.test(cdMovEstoqueERP)) {
+    throw new Error(`cdMovEstoqueERP inválido: "${cdMovEstoqueERP}" — informe o Nº Portal numérico.`);
+  }
   const body = new URLSearchParams();
   body.set('idAcao', '5');
   body.set('cdMovivimentacao', ''); // typo intencional (bate com Auge)
