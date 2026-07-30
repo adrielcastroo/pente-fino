@@ -649,22 +649,38 @@ export default function ProcessoTransferenciaCard() {
 
           {preview.length > 0 && (
             <div className="overflow-hidden rounded-md border border-border/60">
-              <div className="flex items-center justify-between bg-muted/40 px-3 py-2 text-[11px]">
-                <span className="font-semibold">{preview.length} transferência(s)</span>
+              <div className="flex flex-wrap items-center justify-between gap-2 bg-muted/40 px-3 py-2 text-[11px]">
+                <span className="font-semibold">{preview.length} linha(s)</span>
                 <span className="font-mono text-muted-foreground">
-                  {preview.filter((r) => r.nr_entrada_sap).length} com Nº Entrada SAP
+                  {preview.filter((r) => r.marcar_entregar).length} entregar ·{' '}
+                  {preview.filter((r) => r.marcar_receber).length} receber
+                  {preview.some((r) => r.resolvido === false) && (
+                    <span className="ml-2 text-destructive">
+                      {preview.filter((r) => r.resolvido === false).length} não localizada(s)
+                    </span>
+                  )}
                 </span>
               </div>
               <div className="max-h-64 divide-y divide-border/30 overflow-y-auto text-xs">
-                {preview.slice(0, 200).map((r) => (
-                  <div key={r.id_externo} className="grid grid-cols-[110px_1fr_90px_110px] gap-2 px-3 py-1.5">
-                    <span className="font-mono">{r.id_externo}</span>
+                {preview.slice(0, 200).map((r, i) => (
+                  <div
+                    key={`${r.nr_entrada_sap ?? ''}-${r.id_externo}-${i}`}
+                    className="grid grid-cols-[100px_100px_1fr_auto] items-center gap-2 px-3 py-1.5"
+                  >
+                    <span className="font-mono text-muted-foreground">{r.nr_entrada_sap ?? '—'}</span>
+                    <span className={`font-mono ${r.resolvido === false ? 'text-destructive' : ''}`}>
+                      {r.id_externo || 'não localizada'}
+                    </span>
                     <span className="truncate text-muted-foreground" title={r.observacao ?? ''}>
                       {r.observacao ?? '—'}
                     </span>
-                    <span className="text-right font-mono tabular-nums">{r.qt_item ?? '—'}</span>
-                    <span className="text-right font-mono text-muted-foreground">
-                      {r.nr_entrada_sap ?? '—'}
+                    <span className="flex gap-1">
+                      {r.marcar_entregar && (
+                        <Badge variant="outline" className="h-5 px-1.5 text-[10px]">Entregar</Badge>
+                      )}
+                      {r.marcar_receber && (
+                        <Badge variant="outline" className="h-5 px-1.5 text-[10px]">Receber</Badge>
+                      )}
                     </span>
                   </div>
                 ))}
@@ -677,12 +693,21 @@ export default function ProcessoTransferenciaCard() {
             </div>
           )}
 
-          <div className="flex justify-end">
-            <Button onClick={registrarImportacao} disabled={salvando || !preview.length} className="gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
+            <label className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Checkbox checked={sincAuge} onCheckedChange={(v) => setSincAuge(v === true)} />
+              Refletir no Auge
+            </label>
+            <Button
+              onClick={registrarImportacao}
+              disabled={salvando || !preview.some((r) => r.id_externo && r.resolvido !== false)}
+              className="gap-2"
+            >
               {salvando ? <Loader2 className="h-4 w-4 animate-spin" /> : <PackageCheck className="h-4 w-4" />}
-              Registrar {preview.length || ''}
+              Processar {preview.filter((r) => r.id_externo && r.resolvido !== false).length || ''}
             </Button>
           </div>
+
         </CardContent>
       </Card>
 
