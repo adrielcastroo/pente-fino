@@ -874,7 +874,12 @@ function TagConfiguradaSearch({
 // ============================================================
 // Componente principal
 // ============================================================
-export default function GerarTagTab() {
+export interface GerarTagTabProps {
+  /** Abre a aba "Histórico" com o log completo por TAG Custom. */
+  onVerHistorico?: () => void;
+}
+
+export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   const [descricao, setDescricao] = useState(rascunho.descricao);
   const [linhas, setLinhas] = useState<LinhaTag[]>(rascunho.linhas);
   const [customAberta, setCustomAberta] = useState<{ cd: string; nm: string } | null>(rascunho.customAberta);
@@ -1962,11 +1967,18 @@ export default function GerarTagTab() {
                 {historico.length}/{HISTORICO_MAX}
               </span>
             </div>
-            {historico.length > 0 && (
-              <Button size="sm" variant="ghost" className="h-7 px-2 text-[10px]" onClick={limparHistorico}>
-                Limpar histórico
-              </Button>
-            )}
+            <div className="flex items-center gap-1">
+              {onVerHistorico && (
+                <Button size="sm" variant="outline" className="h-7 px-2 text-[10px] gap-1" onClick={onVerHistorico}>
+                  <History className="h-3 w-3" /> Ver histórico completo
+                </Button>
+              )}
+              {historico.length > 0 && (
+                <Button size="sm" variant="ghost" className="h-7 px-2 text-[10px]" onClick={limparHistorico}>
+                  Limpar
+                </Button>
+              )}
+            </div>
           </div>
 
           {historico.length === 0 ? (

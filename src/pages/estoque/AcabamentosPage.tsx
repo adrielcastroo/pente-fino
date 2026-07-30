@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import IncluirItemMassaTab from '@/components/acabamentos/IncluirItemMassaTab';
 import TagsTab from '@/components/acabamentos/TagsTab';
 import GerarTagTab from '@/components/acabamentos/GerarTagTab';
+import HistoricoTagsTab from '@/components/acabamentos/HistoricoTagsTab';
 
 interface SyncRun {
   id: string;
@@ -231,11 +232,12 @@ export default function AcabamentosPage() {
       />
 
       <Tabs value={tab} onValueChange={setTab} className="space-y-4">
-        <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full md:w-auto">
+        <TabsList className="grid grid-cols-2 md:grid-cols-5 w-full md:w-auto">
           <TabsTrigger value="consulta" className="text-xs">Consulta</TabsTrigger>
           <TabsTrigger value="massa" className="text-xs">Incluir em massa</TabsTrigger>
           <TabsTrigger value="tags" className="text-xs">TAGs</TabsTrigger>
           <TabsTrigger value="gerar" className="text-xs">Gerar TAG</TabsTrigger>
+          <TabsTrigger value="historico" className="text-xs">Histórico</TabsTrigger>
         </TabsList>
 
         <TabsContent value="consulta" className="space-y-4 mt-0">
@@ -429,7 +431,10 @@ export default function AcabamentosPage() {
 
         <TabsContent value="massa" className="mt-0"><IncluirItemMassaTab /></TabsContent>
         <TabsContent value="tags" className="mt-0"><TagsTab /></TabsContent>
-        <TabsContent value="gerar" className="mt-0"><GerarTagTab /></TabsContent>
+        <TabsContent value="gerar" className="mt-0">
+          <GerarTagTab onVerHistorico={() => setTab('historico')} />
+        </TabsContent>
+        <TabsContent value="historico" className="mt-0"><HistoricoTagsTab /></TabsContent>
       </Tabs>
 
 
