@@ -581,8 +581,9 @@ function ConfiguracaoSelect({
       termo,
       hasResults: opcoes.length > 0,
       isSearching: isFetching,
+      pesquisou: isSuccess && !isFetching && padrao.length >= 3,
     });
-  }, [termo, opcoes.length, isFetching, onSearchStateChange]);
+  }, [termo, opcoes.length, isFetching, isSuccess, padrao.length, onSearchStateChange]);
 
   if (valor && !aberto) {
     return (
@@ -602,7 +603,8 @@ function ConfiguracaoSelect({
   const mostrarDropdown = aberto && padrao.length >= 3 && (isFetching || opcoes.length > 0);
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-1" ref={wrapRef}>
+
       <div className="relative">
         <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
         <Input
