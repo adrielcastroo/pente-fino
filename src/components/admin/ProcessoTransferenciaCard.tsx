@@ -374,6 +374,8 @@ export default function ProcessoTransferenciaCard() {
     let falhas = 0;
     let pendentes = 0;
     const detalhes: ResultadoLogistica[] = [];
+    const rotulo = idLogistica === 1 ? 'Entregando folhas p/ logística' : 'Recebendo folhas da logística';
+    setProgresso({ feito: 0, total: ids.length, etapa: rotulo });
     for (let i = 0; i < ids.length; i += TAMANHO_BLOCO) {
       const bloco = ids.slice(i, i + TAMANHO_BLOCO);
       const { data, error } = await supabase.functions.invoke('auge-sync', {
