@@ -2529,6 +2529,27 @@ async function logisticaFolhaTransferencia(
   };
 }
 
+type EstadoLogisticaTransferencia = {
+  nrEntradaSap: string;
+  cdMovEstoqueERP: string;
+  nrPortal: string | null;
+  entregue: boolean;
+  recebido: boolean;
+};
+
+function estadoLogisticaDaTransferencia(row: any): EstadoLogisticaTransferencia | null {
+  const nrEntradaSap = cleanText(row?.nrTransfEstoqueERP);
+  const cdMovEstoqueERP = cleanText(row?.cdMovEstoqueERP);
+  if (!nrEntradaSap || !cdMovEstoqueERP || !/^\d+$/.test(cdMovEstoqueERP)) return null;
+  return {
+    nrEntradaSap,
+    cdMovEstoqueERP,
+    nrPortal: cleanText(row?.cdTransferenciaEstoque),
+    entregue: String(row?.idEnviouLogistica ?? '').toUpperCase() === 'S',
+    recebido: String(row?.idRecebidoLogistica ?? '').toUpperCase() === 'S',
+  };
+}
+
 
 // Atualiza um rascunho existente: mesma estrutura de idAcao=1, porém com
 // cdMovivimentacao preenchido com o cd atual (padrão observado no portal Auge).
@@ -4042,6 +4063,99 @@ Deno.serve(async (req) => {
         ok: resultados.every((r) => r.ok),
         idLogistica, desejado, resultados,
         nao_processados: naoProcessados,
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    // Processo idempotente por Nº Entrada SAP: consulta as duas caixas no Auge
+    // e aciona o toggle somente para aquelas que ainda estão falsas.
+    if (action === 'transferencia_logistica_processar') {
+      const codigos = Array.from(new Set(
+        (Array.isArray(requestPayload?.codigosSap) ? requestPayload.codigosSap : [])
+          .map((v: unknown) => String(v ?? '').trim())
+          .filter((v: string) => /^\d+$/.test(v)),
+      )).slice(0, 8) as string[];
+      if (!codigos.length) throw new Error('Envie ao menos um Nº Entrada SAP válido.');
+
+      const consulta = await fetchTransferenciasPHP(auth, 730);
+      const lista = Array.isArray(consulta?.data) ? consulta.data : (Array.isArray(consulta) ? consulta : []);
+      const porSap = new Map<string, EstadoLogisticaTransferencia>();
+      for (const row of lista) {
+        const estado = estadoLogisticaDaTransferencia(row);
+        if (estado && codigos.includes(estado.nrEntradaSap)) porSap.set(estado.nrEntradaSap, estado);
+      }
+
+      const resultados: Array<{
+        nrEntradaSap: string;
+        cdMovEstoqueERP?: string;
+        nrPortal?: string | null;
+        ok: boolean;
+        ignorado?: boolean;
+        caixasMarcadas: string[];
+        entregue: boolean;
+        recebido: boolean;
+        erro?: string;
+      }> = [];
+
+      for (const nrEntradaSap of codigos) {
+        const estado = porSap.get(nrEntradaSap);
+        if (!estado) {
+          resultados.push({
+            nrEntradaSap, ok: false, caixasMarcadas: [], entregue: false, recebido: false,
+            erro: 'Nº Entrada SAP não localizado no Auge nos últimos 730 dias.',
+          });
+          continue;
+        }
+
+        const caixasMarcadas: string[] = [];
+        let entregue = estado.entregue;
+        let recebido = estado.recebido;
+        try {
+          if (!entregue) {
+            const retorno = await logisticaFolhaTransferencia(auth, estado.cdMovEstoqueERP, 1);
+            entregue = retorno.marcado;
+            if (entregue) caixasMarcadas.push('Entregue folha de transf. p/ logística');
+          }
+          if (!recebido) {
+            const retorno = await logisticaFolhaTransferencia(auth, estado.cdMovEstoqueERP, 2);
+            recebido = retorno.marcado;
+            if (recebido) caixasMarcadas.push('Receber folha de transf. da logística');
+          }
+          const ok = entregue && recebido;
+          resultados.push({
+            nrEntradaSap,
+            cdMovEstoqueERP: estado.cdMovEstoqueERP,
+            nrPortal: estado.nrPortal,
+            ok,
+            ignorado: caixasMarcadas.length === 0 && ok,
+            caixasMarcadas,
+            entregue,
+            recebido,
+            erro: ok ? undefined : 'O Auge não confirmou as duas caixas como marcadas.',
+          });
+        } catch (e) {
+          resultados.push({
+            nrEntradaSap,
+            cdMovEstoqueERP: estado.cdMovEstoqueERP,
+            nrPortal: estado.nrPortal,
+            ok: false,
+            caixasMarcadas,
+            entregue,
+            recebido,
+            erro: e instanceof Error ? e.message : String(e),
+          });
+        }
+      }
+
+      await admin.from('auge_sync_runs').insert({
+        status: resultados.every((r) => r.ok) ? 'success' : 'error',
+        triggered_by: triggeredBy,
+        entidade: 'transferencias',
+        finished_at: new Date().toISOString(),
+        detalhes: { action, resultados },
+      });
+      return new Response(JSON.stringify({
+        ok: resultados.every((r) => r.ok),
+        resultados,
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 

@@ -56,9 +56,11 @@ interface ImportRow {
 
 interface ResultadoLogistica {
   id: string;
-  acao: 'Entregar' | 'Receber';
+  acao: 'Entregar' | 'Receber' | 'Processar';
   ok: boolean;
   mensagem: string;
+  caixasMarcadas?: string[];
+  ignorado?: boolean;
 }
 
 
@@ -400,6 +402,51 @@ export default function ProcessoTransferenciaCard() {
     return { falhas, pendentes, invalidos, resultados: detalhes };
   };
 
+  /**
+   * Garante as duas caixas por Nº Entrada SAP sem desfazer marcações existentes.
+   * A Edge Function consulta o estado atual e resolve internamente o
+   * cdMovEstoqueERP exigido pelo endpoint de toggle do Auge.
+   */
+  const processarLogisticaPorSap = async (rows: ImportRow[]): Promise<ResultadoLogistica[]> => {
+    const codigos = Array.from(new Set(
+      rows.map((r) => String(r.nr_entrada_sap ?? '').trim()).filter((v) => /^\d+$/.test(v)),
+    ));
+    const detalhes: ResultadoLogistica[] = [];
+    const TAMANHO_BLOCO = 8;
+    for (let i = 0; i < codigos.length; i += TAMANHO_BLOCO) {
+      const bloco = codigos.slice(i, i + TAMANHO_BLOCO);
+      const { data, error } = await supabase.functions.invoke('auge-sync', {
+        body: { action: 'transferencia_logistica_processar', codigosSap: bloco },
+      });
+      if (error) throw error;
+      const recebidos = Array.isArray(data?.resultados) ? data.resultados : [];
+      for (const resultado of recebidos as Array<{
+        nrEntradaSap: string;
+        cdMovEstoqueERP?: string;
+        nrPortal?: string | null;
+        ok: boolean;
+        ignorado?: boolean;
+        caixasMarcadas?: string[];
+        erro?: string;
+      }>) {
+        const caixas = resultado.caixasMarcadas ?? [];
+        detalhes.push({
+          id: resultado.nrEntradaSap,
+          acao: 'Processar',
+          ok: resultado.ok,
+          ignorado: resultado.ignorado,
+          caixasMarcadas: caixas,
+          mensagem: resultado.ok
+            ? resultado.ignorado
+              ? 'As duas caixas já estavam marcadas; nenhuma alteração necessária.'
+              : `Marcada(s): ${caixas.join(' e ')}. Código interno Auge: ${resultado.cdMovEstoqueERP ?? '—'}.`
+            : (resultado.erro || 'O Auge não confirmou as duas caixas.'),
+        });
+      }
+    }
+    return detalhes;
+  };
+
 
 
   /**
@@ -510,31 +557,14 @@ export default function ProcessoTransferenciaCard() {
         .upsert(payload, { onConflict: 'id_externo' });
       if (error) throw error;
 
-      // Replica no Auge as marcações indicadas na planilha (entregar → receber).
+      // Por Nº Entrada SAP, consulta o estado real e garante as duas caixas.
+      // Isso torna o processamento idempotente: itens já completos são pulados
+      // e somente as caixas ainda falsas recebem o toggle.
       let houveFalhaAuge = false;
       if (sincAuge) {
-        const retorno: ResultadoLogistica[] = [];
-        const acoes: { ids: string[]; idLogistica: 1 | 2 }[] = [
-          { ids: validas.filter((r) => r.marcar_entregar).map((r) => codigoAuge(r, 1)).filter(Boolean) as string[], idLogistica: 1 },
-          { ids: validas.filter((r) => r.marcar_receber).map((r) => codigoAuge(r, 2)).filter(Boolean) as string[], idLogistica: 2 },
-        ];
-        for (const acao of acoes) {
-          if (!acao.ids.length) continue;
-          const sincronizado = await sincronizarLogistica(acao.ids, acao.idLogistica);
-          const { falhas, pendentes, invalidos } = sincronizado;
-          retorno.push(...sincronizado.resultados);
-          if (invalidos) {
-            toast.warning(`${invalidos} linha(s) sem Nº Portal válido — não enviadas ao Auge.`);
-          }
-          if (falhas) {
-            toast.warning(
-              `${falhas} folha(s) não puderam ser ${acao.idLogistica === 1 ? 'entregues' : 'recebidas'} no Auge.`,
-            );
-          }
-          if (pendentes) {
-            toast.warning(`${pendentes} folha(s) não processadas — tente novamente para concluir.`);
-          }
-        }
+        const semSap = validas.filter((r) => !/^\d+$/.test(String(r.nr_entrada_sap ?? '').trim())).length;
+        if (semSap) toast.warning(`${semSap} linha(s) sem Nº Entrada SAP válido não foram enviadas ao Auge.`);
+        const retorno = await processarLogisticaPorSap(validas);
         setResultados(retorno);
         const confirmadas = retorno.filter((r) => r.ok).length;
         const falharam = retorno.length - confirmadas;
@@ -793,8 +823,10 @@ export default function ProcessoTransferenciaCard() {
                 <div className="mt-2 max-h-40 space-y-1 overflow-y-auto font-mono text-xs">
                   {resultados.map((r, i) => (
                     <div key={`${r.id}-${r.acao}-${i}`} className="flex items-start justify-between gap-3">
-                      <span>{r.id} · {r.acao}</span>
-                      <span className={r.ok ? 'text-success' : 'text-destructive'}>{r.ok ? 'Confirmado' : r.mensagem}</span>
+                      <span>Nº Entrada SAP {r.id}</span>
+                      <span className={r.ok ? 'text-success' : 'text-destructive'}>
+                        {r.ok ? (r.ignorado ? 'Já estava completo' : r.mensagem) : r.mensagem}
+                      </span>
                     </div>
                   ))}
                 </div>
