@@ -471,22 +471,35 @@ async function fetchSelectTagsCalculadas(
 // (ex.: "<PHA25/16_Corda1_1>+<PHA25/16_Corda1_..."). Para mostrar o mesmo valor
 // que o Auge grava, buscamos o cadastro da TAG e extraímos a fórmula inteira.
 // ---------------------------------------------------------------------------
-const TAG_DETALHE_PATHS = [
-  { path: '/l.unilux/modInventario/tag/manterTag.php', method: 'GET' as const },
-  { path: '/l.unilux/modInventario/tag/ajax/getTag.php', method: 'POST' as const },
-  { path: '/l.unilux/modInventario/tag/ajax/getDadosTag.php', method: 'POST' as const },
-  { path: '/l.unilux/modInventario/tag/ajax/carregaTag.php', method: 'POST' as const },
-];
+// O modal de edição (loadModalTag.php?cdSeqTagCalculada=<cd>) embute a fórmula
+// completa em base64 dentro de decodeBase64Unicode('...').
+const TAG_MODAL_PATH = '/l.unilux/modInventario/tag/loadModalTag.php';
+
+function decodeBase64Utf8(b64: string): string {
+  try {
+    const bin = atob(b64);
+    const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
+    return new TextDecoder('utf-8').decode(bytes);
+  } catch {
+    return '';
+  }
+}
 
 function extractFormulaFromText(text: string): string {
   if (!text) return '';
-  // 1) JSON: "formulaTag":"...", "dsFormula":"...", "formula":"..."
+  // 1) Modal de edição: valorFormula = decodeBase64Unicode('<base64>')
+  const b64m = text.match(/decodeBase64Unicode\(\s*['"]([A-Za-z0-9+/=]+)['"]\s*\)/);
+  if (b64m) {
+    const dec = decodeBase64Utf8(b64m[1]).trim();
+    if (dec) return dec;
+  }
+  // 2) JSON: "formulaTag":"...", "dsFormula":"...", "formula":"..."
   const jsonRe = /"(?:formulaTag|dsFormula|formula|dsExpressao)"\s*:\s*"((?:[^"\\]|\\.)*)"/i;
   const jm = text.match(jsonRe);
   if (jm) {
     try { return JSON.parse(`"${jm[1]}"`).trim(); } catch { return jm[1].trim(); }
   }
-  // 2) <input name="formulaTag" ... value="...">
+  // 3) <input name="formulaTag" ... value="...">
   const inputRe = /<(?:input|textarea)[^>]*name=["'](?:formulaTag|dsFormula|formula)["'][^>]*?(?:value=["']([^"']*)["'])?[^>]*>(?:([\s\S]*?)<\/textarea>)?/i;
   const im = text.match(inputRe);
   if (im) {
@@ -512,32 +525,20 @@ async function fetchTagFormulaCompleta(
     'Origin': AUGE_BASE_URL,
     'Referer': `${AUGE_BASE_URL}/l.unilux/modInventario/tag/tag.php`,
     'User-Agent': UA,
-    'Accept': 'application/json, text/javascript, text/html, */*; q=0.01',
+    'Accept': 'text/html, */*; q=0.01',
     'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
   };
-  for (const cand of TAG_DETALHE_PATHS) {
-    try {
-      // Timeout por candidato: sem isso a soma das tentativas estoura o
-      // limite de CPU/wall time da Edge Function e o cliente fica pendurado.
-      const signal = AbortSignal.timeout(8000);
-      let res: Response;
-      if (cand.method === 'GET') {
-        res = await fetch(`${AUGE_BASE_URL}${cand.path}?cdTag=${encodeURIComponent(cd)}&idAcao=2`, { headers, signal });
-      } else {
-        res = await fetch(`${AUGE_BASE_URL}${cand.path}`, {
-          method: 'POST',
-          headers: { ...headers, 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
-          body: new URLSearchParams({ cdTag: cd, cdTagCalculada: cd }),
-          signal,
-        });
-      }
-      auth.jar.ingest(res);
-      if (!res.ok) { await res.body?.cancel(); continue; }
-      const formula = extractFormulaFromText(await res.text());
-      if (formula) return formula;
-    } catch { /* tenta o próximo candidato */ }
+  try {
+    const res = await fetch(
+      `${AUGE_BASE_URL}${TAG_MODAL_PATH}?cdSeqTagCalculada=${encodeURIComponent(cd)}`,
+      { headers, signal: AbortSignal.timeout(10000) },
+    );
+    auth.jar.ingest(res);
+    if (!res.ok) { await res.body?.cancel(); return ''; }
+    return extractFormulaFromText(await res.text());
+  } catch {
+    return '';
   }
-  return '';
 }
 
 
@@ -4435,6 +4436,7 @@ Deno.serve(async (req) => {
         });
       }
     }
+
 
 
 
