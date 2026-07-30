@@ -571,12 +571,21 @@ export default function GerarTagTab() {
   const [linhas, setLinhas] = useState<LinhaTag[]>(rascunho.linhas);
   const [customAberta, setCustomAberta] = useState<{ cd: string; nm: string } | null>(rascunho.customAberta);
   const [enviando, setEnviando] = useState(false);
-  const [resultado, setResultado] = useState<ResultadoAuge | null>(null);
+  // O resultado é preservado no rascunho de módulo: alternar de aba, rota ou
+  // janela (alt+tab) não pode limpar o retorno do Auge.
+  const [resultado, setResultado] = useState<ResultadoAuge | null>(rascunho.resultado);
   const [tentouEnviar, setTentouEnviar] = useState(false);
+
+  // Edição das TAGs calculadas já gravadas no Auge.
+  const [editandoAuge, setEditandoAuge] = useState(false);
+  const [edicoesAuge, setEdicoesAuge] = useState<Record<string, TagCalculadaSel>>({});
+  const [regravando, setRegravando] = useState(false);
 
   useEffect(() => { rascunho.descricao = descricao; }, [descricao]);
   useEffect(() => { rascunho.linhas = linhas; }, [linhas]);
   useEffect(() => { rascunho.customAberta = customAberta; }, [customAberta]);
+  useEffect(() => { rascunho.resultado = resultado; }, [resultado]);
+
 
   // Estado da busca no campo Configuração (para indicar "Nova TAG Custom").
   const [cfgSearch, setCfgSearch] = useState<{ termo: string; hasResults: boolean; isSearching: boolean }>({
