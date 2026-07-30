@@ -3777,6 +3777,66 @@ export type Database = {
         }
         Relationships: []
       }
+      transferencia_folha_processos: {
+        Row: {
+          created_at: string
+          dt_criacao: string | null
+          entregue_em: string | null
+          etapa: string
+          finalizado_em: string | null
+          id: string
+          id_externo: string
+          importado_por: string | null
+          lote_importacao: string | null
+          nr_entrada_sap: string | null
+          nr_portal: string | null
+          observacao: string | null
+          qt_item: number | null
+          recebido_em: string | null
+          situacao_importada: string | null
+          updated_at: string
+          usuario_criacao: string | null
+        }
+        Insert: {
+          created_at?: string
+          dt_criacao?: string | null
+          entregue_em?: string | null
+          etapa?: string
+          finalizado_em?: string | null
+          id?: string
+          id_externo: string
+          importado_por?: string | null
+          lote_importacao?: string | null
+          nr_entrada_sap?: string | null
+          nr_portal?: string | null
+          observacao?: string | null
+          qt_item?: number | null
+          recebido_em?: string | null
+          situacao_importada?: string | null
+          updated_at?: string
+          usuario_criacao?: string | null
+        }
+        Update: {
+          created_at?: string
+          dt_criacao?: string | null
+          entregue_em?: string | null
+          etapa?: string
+          finalizado_em?: string | null
+          id?: string
+          id_externo?: string
+          importado_por?: string | null
+          lote_importacao?: string | null
+          nr_entrada_sap?: string | null
+          nr_portal?: string | null
+          observacao?: string | null
+          qt_item?: number | null
+          recebido_em?: string | null
+          situacao_importada?: string | null
+          updated_at?: string
+          usuario_criacao?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
