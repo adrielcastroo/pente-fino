@@ -144,12 +144,43 @@ export default function AnaliseCompraPage() {
         }
       />
 
+      {aviso && !carregando && (
+        <Card className="border-destructive/40">
+          <CardContent className="py-4 space-y-3">
+            <div className="flex items-start gap-2 text-sm">
+              <AlertTriangle className="w-4 h-4 mt-0.5 text-destructive shrink-0" />
+              <p className="text-muted-foreground">{aviso}</p>
+            </div>
+            {disponiveis.length > 0 && (
+              <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+                <Select value={idConsulta} onValueChange={escolherConsulta}>
+                  <SelectTrigger className="w-full sm:w-[380px]">
+                    <SelectValue placeholder="Escolher consulta do Auge" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[320px]">
+                    {disponiveis.map((c) => (
+                      <SelectItem key={`${c.grupo}-${c.id}`} value={c.id}>
+                        {c.grupo ? `${c.grupo} · ` : ''}{c.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <span className="text-[11px] text-muted-foreground">
+                  A escolha fica salva para os próximos relatórios.
+                </span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {carregando && (
         <div className="space-y-2">
           <Skeleton className="h-10 w-full" />
           <Skeleton className="h-64 w-full" />
         </div>
       )}
+
 
       {!carregando && resultado.columns.length > 0 && (
         <Tabs value={preset} onValueChange={setPreset} className="w-full">
