@@ -3918,35 +3918,28 @@ async function runConsultaAuge(
     'X-CSRF-TOKEN': auth.csrf,
     'Referer': `${AUGE_BASE_URL}/l.unilux/modTI/gerirConsulta.php`,
     'User-Agent': UA,
-    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-    'Accept': 'application/json, text/javascript, */*; q=0.01',
+    'Accept': 'text/html, */*; q=0.01',
   };
   if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
 
-  const fetchResultado = async (method: 'POST' | 'GET') => {
-    const url = method === 'POST'
-      ? `${AUGE_BASE_URL}/l.unilux/modTI/Ajax/getResultadoConsulta.php`
-      : `${AUGE_BASE_URL}/l.unilux/modTI/Ajax/getResultadoConsulta.php?${body.toString()}`;
-    const r = await fetch(url, method === 'POST' ? { method, headers, body } : { method, headers });
-    auth.jar.ingest(r);
-    return await r.text();
-  };
+  // O Auge responde com um <table> HTML (dataType: 'HTML' no jQuery da tela),
+  // por GET com o form serializado. Não existe payload JSON.
+  const res = await fetch(
+    `${AUGE_BASE_URL}/l.unilux/modTI/Ajax/getResultadoConsulta.php?${body.toString()}`,
+    { method: 'GET', headers },
+  );
+  auth.jar.ingest(res);
+  const text = await res.text();
 
-  let text = await fetchResultado('POST');
   let resultado: any = null;
   try { resultado = JSON.parse(text); } catch { resultado = null; }
-  const vazio = (v: any) => {
-    if (!v) return true;
-    const arr = v?.data ?? v?.aaData ?? v?.rows ?? (Array.isArray(v) ? v : null);
-    return !Array.isArray(arr) || arr.length === 0;
-  };
-  if (vazio(resultado)) {
-    const alt = await fetchResultado('GET');
-    let altJson: any = null;
-    try { altJson = JSON.parse(alt); } catch { altJson = null; }
-    if (!vazio(altJson)) { resultado = altJson; text = alt; }
+  if (!resultado) {
+    const tabela = parseHtmlTable(text);
+    resultado = tabela.rows.length || tabela.columns.length
+      ? { columns: tabela.columns, data: tabela.rows }
+      : { raw: text.slice(0, 20000) };
   }
-  if (!resultado) resultado = { raw: text.slice(0, 20000) };
+
 
   return {
     idConsulta,
