@@ -738,7 +738,15 @@ function ConfiguracaoSelect({
 
 interface TagConfiguradaOpt { valor: string; calculada: string; cfgNome: string }
 
-function TagConfiguradaSearch({ onPick }: { onPick: (o: TagConfiguradaOpt) => void }) {
+function TagConfiguradaSearch({
+  onPick,
+  inline = false,
+  onCancel,
+}: {
+  onPick: (o: TagConfiguradaOpt) => void;
+  inline?: boolean;
+  onCancel?: () => void;
+}) {
   const [busca, setBusca] = useState('');
   const [termo, setTermo] = useState('');
 
@@ -796,8 +804,8 @@ function TagConfiguradaSearch({ onPick }: { onPick: (o: TagConfiguradaOpt) => vo
 
   const livre = termo.replace(/\*/g, '').trim();
 
-  return (
-    <div className="p-3 border-b bg-muted/30 space-y-2">
+  const body = (
+    <>
       <div className="relative">
         <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
         <Input
@@ -842,6 +850,21 @@ function TagConfiguradaSearch({ onPick }: { onPick: (o: TagConfiguradaOpt) => vo
           ))}
         </div>
       )}
+      {inline && onCancel && (
+        <Button size="sm" variant="ghost" className="h-7 px-2 text-[10px]" onClick={onCancel}>
+          Cancelar
+        </Button>
+      )}
+    </>
+  );
+
+  if (inline) {
+    return <div className="space-y-2">{body}</div>;
+  }
+
+  return (
+    <div className="p-3 border-b bg-muted/30 space-y-2">
+      {body}
     </div>
   );
 }
@@ -1605,35 +1628,17 @@ export default function GerarTagTab() {
                 {linhas.length} TAG(s)
               </span>
             </div>
-            <div className="flex items-center gap-1.5">
+            {linhas.length > 0 && (
               <Button
                 size="sm"
-                variant={addManual ? 'secondary' : 'outline'}
-                className="h-7 px-2 text-[10px] gap-1"
-                onClick={() => setAddManual((v) => !v)}
+                variant="ghost"
+                className="h-7 px-2 text-[10px]"
+                onClick={() => { setLinhas([]); setResultado(null); }}
               >
-                <Plus className="h-3 w-3" /> Adicionar TAG Configurada
+                Limpar
               </Button>
-              {linhas.length > 0 && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-7 px-2 text-[10px]"
-                  onClick={() => { setLinhas([]); setResultado(null); }}
-                >
-                  Limpar
-                </Button>
-              )}
-            </div>
+            )}
           </div>
-
-          {addManual && (
-            <TagConfiguradaSearch
-              onPick={(o) => { adicionarTagConfiguradaManual(o); setAddManual(false); }}
-            />
-          )}
-
-
 
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
@@ -1682,10 +1687,34 @@ export default function GerarTagTab() {
                     </tr>
                   );
                 })}
-                {linhas.length === 0 && (
+                {linhas.length === 0 && !addManual && (
                   <tr>
                     <td colSpan={4} className="p-6 text-center text-muted-foreground text-[11px]">
                       Nenhuma TAG adicionada à composição.
+                    </td>
+                  </tr>
+                )}
+                {addManual ? (
+                  <tr className="border-t align-top bg-muted/20">
+                    <td colSpan={4} className="p-2">
+                      <TagConfiguradaSearch
+                        inline
+                        onPick={(o) => { adicionarTagConfiguradaManual(o); setAddManual(false); }}
+                        onCancel={() => setAddManual(false)}
+                      />
+                    </td>
+                  </tr>
+                ) : (
+                  <tr className="border-t">
+                    <td colSpan={4} className="p-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 px-2 text-[10px] gap-1"
+                        onClick={() => setAddManual(true)}
+                      >
+                        <Plus className="h-3 w-3" /> Adicionar TAG Configurada
+                      </Button>
                     </td>
                   </tr>
                 )}
