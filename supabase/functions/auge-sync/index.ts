@@ -4114,13 +4114,8 @@ Deno.serve(async (req) => {
       )).slice(0, 8) as string[];
       if (!codigos.length) throw new Error('Envie ao menos um Nº Entrada SAP válido.');
 
-      const consulta = await fetchTransferenciasPHP(auth, 730);
-      const lista = Array.isArray(consulta?.data) ? consulta.data : (Array.isArray(consulta) ? consulta : []);
-      const porSap = new Map<string, EstadoLogisticaTransferencia>();
-      for (const row of lista) {
-        const estado = estadoLogisticaDaTransferencia(row);
-        if (estado && codigos.includes(estado.nrEntradaSap)) porSap.set(estado.nrEntradaSap, estado);
-      }
+      const porSap = await buscarEstadosLogisticaPorSap(auth, codigos);
+
 
       const resultados: Array<{
         nrEntradaSap: string;
