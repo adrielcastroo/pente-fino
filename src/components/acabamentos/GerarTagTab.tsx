@@ -1082,28 +1082,27 @@ export default function GerarTagTab() {
     });
   };
 
-  /** Adiciona a "Tag" (texto livre) digitada pelo usuário como linha da tabela. */
-  const adicionarTagTextoLivre = () => {
-    const valor = normalizeTagFormatC(descricao);
-    if (!valor) {
-      toast.error('Digite o nome da Tag antes de adicionar.');
-      return;
-    }
-    const id = `livre|${valor}`;
-    if (linhas.some((l) => l.id === id)) {
-      toast.info('Essa Tag já está na tabela.');
+  /** Adiciona manualmente uma TAG Configurada pesquisada pelo usuário. */
+  const adicionarTagConfiguradaManual = (opt: { valor: string; calculada: string; cfgNome: string }) => {
+    const valor = normalizeTagFormatC(opt.valor);
+    if (!valor) return;
+    const code = normalizeTagCode(valor) || 'TAG';
+    const id = `manual|${code}|${valor}`;
+    if (linhas.some((l) => l.id === id || l.code === code)) {
+      toast.info(`A TAG ${code} já está na composição.`);
       return;
     }
     setLinhas((prev) => [...prev, {
       id,
-      code: normalizeTagCode(valor) || 'TAG',
+      code,
       valor,
-      cfgNome: customAberta?.nm ?? '',
-      calculada: '',
+      cfgNome: opt.cfgNome || customAberta?.nm || '',
+      calculada: normalizeTagFormatC(opt.calculada ?? ''),
       formula: '',
     }]);
-    toast.success('Tag adicionada à coluna Tag Configurada.');
+    toast.success(`TAG ${code} adicionada à composição.`);
   };
+
 
   const setCalculada = (id: string, sel: TagCalculadaSel) => {
     setLinhas((prev) => prev.map((l) => (
