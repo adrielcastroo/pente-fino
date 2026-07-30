@@ -861,6 +861,13 @@ export default function GerarTagTab() {
   const [edicoesAuge, setEdicoesAuge] = useState<Record<string, TagCalculadaSel>>({});
   const [regravando, setRegravando] = useState(false);
 
+  // Inclusão manual de TAG Configurada na composição.
+  const [addManual, setAddManual] = useState(false);
+
+  // Histórico local dos últimos lançamentos desta aba.
+  const [historico, setHistorico] = useState<RegistroGerarTag[]>(() => lerHistorico());
+
+
   useEffect(() => { rascunho.descricao = descricao; }, [descricao]);
   useEffect(() => { rascunho.linhas = linhas; }, [linhas]);
   useEffect(() => { rascunho.customAberta = customAberta; }, [customAberta]);
