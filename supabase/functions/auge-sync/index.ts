@@ -4436,6 +4436,52 @@ Deno.serve(async (req) => {
       }
     }
 
+    // DEBUG temporário: inspeciona respostas cruas do Auge para uma TAG calculada.
+    if (action === 'tag_calculada_debug') {
+      let payload: any = {};
+      try { payload = await req.json(); } catch { /* ignore */ }
+      const cd = String(payload?.cdTag ?? '').trim();
+      const termo = String(payload?.termo ?? '').trim();
+      const headers: Record<string, string> = {
+        'Cookie': auth.jar.header(),
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRF-TOKEN': auth.csrf,
+        'Origin': AUGE_BASE_URL,
+        'Referer': `${AUGE_BASE_URL}/l.unilux/modInventario/tag/tag.php`,
+        'User-Agent': UA,
+        'Accept': 'application/json, text/html, */*; q=0.01',
+        'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
+      };
+      const out: any[] = [];
+      // 1) grade filtrada pelo termo
+      try {
+        const res = await fetch(`${AUGE_BASE_URL}/l.unilux/modInventario/tag/ajax/getListaTag.php`, {
+          method: 'POST',
+          headers: { ...headers, 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+          body: new URLSearchParams({ nrPagina: '1', qtdItens: '50', idAtivo: 'Y', dsPesquisaGeral: termo }),
+          signal: AbortSignal.timeout(15000),
+        });
+        const t = await res.text();
+        const idx = t.indexOf(termo);
+        out.push({ src: 'grid', status: res.status, len: t.length, snippet: idx >= 0 ? t.slice(Math.max(0, idx - 600), idx + 1200) : t.slice(0, 1500) });
+      } catch (e) { out.push({ src: 'grid', error: getErrorMessage(e) }); }
+      // 2) páginas de detalhe candidatas
+      for (const p of [
+        `/l.unilux/modInventario/tag/manterTag.php?cdTag=${encodeURIComponent(cd)}&idAcao=2`,
+        `/l.unilux/modInventario/tag/tag.php?cdTag=${encodeURIComponent(cd)}&idAcao=2`,
+      ]) {
+        try {
+          const res = await fetch(`${AUGE_BASE_URL}${p}`, { headers, signal: AbortSignal.timeout(15000) });
+          const t = await res.text();
+          const i = t.toLowerCase().indexOf('formula');
+          out.push({ src: p, status: res.status, len: t.length, snippet: i >= 0 ? t.slice(Math.max(0, i - 500), i + 1500) : t.slice(0, 800) });
+        } catch (e) { out.push({ src: p, error: getErrorMessage(e) }); }
+      }
+      return new Response(JSON.stringify({ ok: true, out }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
 
 
 
