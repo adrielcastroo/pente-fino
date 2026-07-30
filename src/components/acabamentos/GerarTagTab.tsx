@@ -1347,15 +1347,61 @@ export default function GerarTagTab() {
           {/* Retorno do Auge */}
           {resultado && (
             <div className={`m-3 rounded border p-3 space-y-2 ${resultado.ok ? 'border-emerald-500/40 bg-emerald-500/5' : 'border-destructive/40 bg-destructive/5'}`}>
-              <div className="text-[10px] uppercase flex items-center gap-1 font-semibold">
-                {resultado.ok
-                  ? <><CheckCircle2 className="h-3 w-3 text-emerald-600" /> Gravada no Auge</>
-                  : <><AlertTriangle className="h-3 w-3 text-destructive" /> Falha na gravação</>}
-                {typeof resultado.gravadas === 'number' && (
-                  <Badge variant="outline" className="text-[9px]">
-                    {resultado.gravadas}/{resultado.total} ok
-                  </Badge>
-                )}
+              <div className="flex items-start justify-between gap-2 flex-wrap">
+                <div className="text-[10px] uppercase flex items-center gap-1 font-semibold">
+                  {resultado.ok
+                    ? <><CheckCircle2 className="h-3 w-3 text-emerald-600" /> Gravada no Auge</>
+                    : <><AlertTriangle className="h-3 w-3 text-destructive" /> Falha na gravação</>}
+                  {typeof resultado.gravadas === 'number' && (
+                    <Badge variant="outline" className="text-[9px]">
+                      {resultado.gravadas}/{resultado.total} ok
+                    </Badge>
+                  )}
+                </div>
+                <div className="flex items-center gap-1.5">
+                  {!!resultado.augeRows?.length && !editandoAuge && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 px-2 text-[10px] gap-1"
+                      onClick={() => { setEditandoAuge(true); setEdicoesAuge({}); }}
+                    >
+                      <Pencil className="h-3 w-3" /> Edição
+                    </Button>
+                  )}
+                  {editandoAuge && (
+                    <>
+                      <Button
+                        size="sm"
+                        className="h-7 px-2 text-[10px] gap-1"
+                        disabled={regravando || Object.keys(edicoesAuge).length === 0}
+                        onClick={confirmarEdicaoAuge}
+                      >
+                        {regravando
+                          ? <Loader2 className="h-3 w-3 animate-spin" />
+                          : <CheckCircle2 className="h-3 w-3" />}
+                        {regravando ? 'Regravando…' : `Confirmar edição (${Object.keys(edicoesAuge).length})`}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 px-2 text-[10px]"
+                        disabled={regravando}
+                        onClick={() => { setEditandoAuge(false); setEdicoesAuge({}); }}
+                      >
+                        Cancelar
+                      </Button>
+                    </>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 px-2 text-[10px]"
+                    onClick={() => { setResultado(null); setEditandoAuge(false); setEdicoesAuge({}); }}
+                  >
+                    Fechar
+                  </Button>
+                </div>
               </div>
 
               {resultado.error && (
@@ -1366,8 +1412,9 @@ export default function GerarTagTab() {
                 <div className="rounded border bg-background overflow-x-auto">
                   <table className="w-full text-[10px]">
                     <thead className="bg-muted"><tr className="text-left">
-                      <th className="p-1.5">Tag Customizada</th>
+                      <th className="p-1.5">Tag Configurada</th>
                       <th className="p-1.5">Tag Calculada</th>
+                      <th className="p-1.5">Fórmula</th>
                       <th className="p-1.5">Status</th>
                     </tr></thead>
                     <tbody>
@@ -1375,6 +1422,7 @@ export default function GerarTagTab() {
                         <tr key={i} className="border-t">
                           <td className="p-1.5 font-mono break-all">{r.tag}</td>
                           <td className="p-1.5 font-mono break-all">{r.calculada || '—'}</td>
+                          <td className="p-1.5 font-mono break-all text-muted-foreground">{r.formula || '—'}</td>
                           <td className="p-1.5">
                             {r.ok
                               ? <span className="text-emerald-600">OK</span>
@@ -1389,22 +1437,54 @@ export default function GerarTagTab() {
 
               {!!resultado.augeRows?.length && (
                 <div className="space-y-1">
-                  <div className="text-[9px] uppercase text-muted-foreground">Como ficou no Auge</div>
-                  <div className="rounded border bg-background max-h-56 overflow-auto">
+                  <div className="text-[9px] uppercase text-muted-foreground flex items-center gap-1.5">
+                    Como ficou no Auge
+                    {editandoAuge && (
+                      <Badge variant="outline" className="text-[8px] border-blue-500/50 text-blue-700 dark:text-blue-400">
+                        edição — a TAG calculada antiga será substituída
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="rounded border bg-background max-h-72 overflow-auto">
                     <table className="w-full text-[10px]">
                       <thead className="bg-muted"><tr className="text-left">
-                        <th className="p-1.5">Tag Customizada</th>
+                        <th className="p-1.5">Tag Configurada</th>
                         <th className="p-1.5">Tag Calculada</th>
+                        <th className="p-1.5">Fórmula</th>
                         <th className="p-1.5">Configuração</th>
                       </tr></thead>
                       <tbody>
-                        {resultado.augeRows.map((r: any, i: number) => (
-                          <tr key={i} className="border-t">
-                            <td className="p-1.5 font-mono break-all">{r.dsTagCustomizada ?? r.nmTagCustomizada ?? '—'}</td>
-                            <td className="p-1.5 font-mono break-all">{r.dsTagCalculada ?? r.dsTagTexto ?? '—'}</td>
-                            <td className="p-1.5 break-all">{r.nmConfiguracao ?? r.cdConfiguracao ?? '—'}</td>
-                          </tr>
-                        ))}
+                        {resultado.augeRows.map((r: any, i: number) => {
+                          const chave = String(r?.cdTagCustomizada ?? i);
+                          const edicao = edicoesAuge[chave];
+                          const calculadaAtual = String(r?.dsTagCalculada ?? r?.dsTagTexto ?? '').trim();
+                          const formulaAtual = String(r?.dsFormula ?? '').trim();
+                          return (
+                            <tr key={chave} className="border-t align-top">
+                              <td className="p-1.5 font-mono break-all">{r.dsTagCustomizada ?? r.nmTagCustomizada ?? '—'}</td>
+                              <td className="p-1.5 font-mono break-all min-w-[180px]">
+                                {editandoAuge ? (
+                                  <TagCalculadaCell
+                                    compacto
+                                    valor={edicao?.valor ?? ''}
+                                    onChange={(sel) => setEdicoesAuge((prev) => ({ ...prev, [chave]: sel }))}
+                                  />
+                                ) : (
+                                  calculadaAtual || '—'
+                                )}
+                                {editandoAuge && calculadaAtual && (
+                                  <div className="text-[9px] text-muted-foreground line-through break-all mt-0.5">
+                                    {calculadaAtual}
+                                  </div>
+                                )}
+                              </td>
+                              <td className="p-1.5 font-mono break-all text-muted-foreground">
+                                {(edicao?.formula || formulaAtual) || '—'}
+                              </td>
+                              <td className="p-1.5 break-all">{r.nmConfiguracao ?? r.cdConfiguracao ?? '—'}</td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
@@ -1412,6 +1492,7 @@ export default function GerarTagTab() {
               )}
             </div>
           )}
+
         </Card>
       </div>
     </div>
