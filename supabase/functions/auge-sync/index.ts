@@ -4662,6 +4662,13 @@ Deno.serve(async (req) => {
 
       // Resolve o CÓDIGO da TAG Calculada a partir do nome/descrição informado.
       // O Auge grava por `cdTagCalculada` (id numérico), não pelo texto.
+      //
+      // ATENÇÃO: o espelho local guarda MAIS DE UM `cd_tag` para o mesmo nome
+      // (varreduras antigas gravaram códigos que não existem mais em
+      // PC_TAG_CALCULADA e ficaram sem fórmula). Enviar um desses códigos faz o
+      // Auge devolver "SQLSTATE[23000] ... FOREIGN KEY PC_TAG_CUSTOMIZADA_PC_TAG_CALCULADA_FK".
+      // Por isso guardamos TODOS os candidatos por nome, priorizando os que têm
+      // fórmula (registros confirmados), e tentamos um a um na gravação.
       const nomesCalculadas = Array.from(
         new Set(
           itens
@@ -4669,24 +4676,33 @@ Deno.serve(async (req) => {
             .filter((v) => v.length > 0),
         ),
       );
-      const mapaCalculadas = new Map<string, string>();
+      const mapaCalculadas = new Map<string, string[]>();
+      const codigoTemFormula = new Map<string, boolean>();
+
+      const registrar = (t: any) => {
+        const cd = String(t?.cd_tag ?? '').trim();
+        if (!cd) return;
+        const temFormula = Boolean(String(t?.formula ?? '').trim());
+        codigoTemFormula.set(cd, temFormula || (codigoTemFormula.get(cd) ?? false));
+        for (const key of [t.nm_tag, t.nome, t.descricao]) {
+          const k = String(key ?? '').trim().toLowerCase();
+          if (!k) continue;
+          const lista = mapaCalculadas.get(k) ?? [];
+          if (!lista.includes(cd)) lista.push(cd);
+          mapaCalculadas.set(k, lista);
+        }
+      };
+
       if (nomesCalculadas.length) {
-        // ATENÇÃO: não usar `.or("nm_tag.eq.<valor>,...")` aqui. O PostgREST
-        // separa as condições por vírgula, e nomes de TAG calculada são
-        // fórmulas que contêm vírgula decimal (ex.: "[LAR]-0,004"), o que
-        // quebrava o filtro e fazia toda busca retornar vazio.
-        // `.in()` faz o quoting/escaping correto de cada valor.
+        // Não usar `.or("nm_tag.eq.<valor>,...")`: o PostgREST separa as
+        // condições por vírgula e os nomes contêm vírgula decimal
+        // (ex.: "[LAR]-0,004"). `.in()` faz o quoting correto.
         for (const coluna of ['nm_tag', 'nome', 'descricao'] as const) {
           const { data: tagsCalc } = await admin
             .from('auge_tags_calculadas')
-            .select('cd_tag, nm_tag, nome, descricao')
+            .select('cd_tag, nm_tag, nome, descricao, formula')
             .in(coluna, nomesCalculadas);
-          for (const t of (tagsCalc ?? []) as any[]) {
-            for (const key of [t.nm_tag, t.nome, t.descricao]) {
-              const k = String(key ?? '').trim().toLowerCase();
-              if (k && !mapaCalculadas.has(k)) mapaCalculadas.set(k, String(t.cd_tag));
-            }
-          }
+          for (const t of (tagsCalc ?? []) as any[]) registrar(t);
         }
 
         // Fallback case-insensitive: o `.in()` é sensível a maiúsculas e o
@@ -4695,17 +4711,30 @@ Deno.serve(async (req) => {
         for (const nome of faltantes) {
           const { data: alt } = await admin
             .from('auge_tags_calculadas')
-            .select('cd_tag, nm_tag, nome, descricao')
+            .select('cd_tag, nm_tag, nome, descricao, formula')
             .or(
               ['nm_tag', 'nome', 'descricao']
                 .map((c) => `${c}.ilike.${JSON.stringify(nome)}`)
                 .join(','),
             )
-            .limit(1);
-          const t = (alt ?? [])[0] as any;
-          if (t) mapaCalculadas.set(nome.toLowerCase(), String(t.cd_tag));
+            .limit(10);
+          for (const t of (alt ?? []) as any[]) registrar(t);
+        }
+
+        // Códigos com fórmula primeiro; entre iguais, o menor id (mais antigo,
+        // que é o que realmente existe em PC_TAG_CALCULADA).
+        for (const [k, lista] of mapaCalculadas) {
+          mapaCalculadas.set(
+            k,
+            lista.slice().sort((a, b) => {
+              const fa = codigoTemFormula.get(a) ? 0 : 1;
+              const fb = codigoTemFormula.get(b) ? 0 : 1;
+              return fa !== fb ? fa - fb : Number(a) - Number(b);
+            }),
+          );
         }
       }
+
 
 
       const results: Array<{
