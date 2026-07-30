@@ -181,6 +181,8 @@ interface LinhaTag {
 interface ResultadoAuge {
   ok: boolean;
   descricao?: string;
+  cdConfiguracao?: string;
+
   total?: number;
   gravadas?: number;
   falhas?: number;
