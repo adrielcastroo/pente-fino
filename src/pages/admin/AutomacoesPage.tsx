@@ -13,10 +13,11 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { PageShell, PageHeader } from '@/components/expedicao/ui';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { CalendarClock, Loader2, PlayCircle, Search, Sparkles, CheckCircle2, XCircle, MinusCircle, ExternalLink, ArrowRight, Type, Plus, Boxes } from 'lucide-react';
+import { CalendarClock, Loader2, PlayCircle, Search, Sparkles, CheckCircle2, XCircle, MinusCircle, ExternalLink, ArrowRight, Type, Plus, Boxes, Truck } from 'lucide-react';
 import NecessidadeCard from '@/components/admin/NecessidadeCard';
 import NecessidadeCronCard from '@/components/admin/NecessidadeCronCard';
 import AugeAccountCard from '@/components/admin/AugeAccountCard';
+import ProcessoTransferenciaCard from '@/components/admin/ProcessoTransferenciaCard';
 
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
@@ -600,6 +601,9 @@ export default function AutomacoesPage() {
             <TabsTrigger value="entrega-apos" className="gap-2">
               <CalendarClock className="h-4 w-4" /> Entrega Após
             </TabsTrigger>
+            <TabsTrigger value="processo-transferencia" className="gap-2">
+              <Truck className="h-4 w-4" /> Processo de Transferência
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="necessidade" className="mt-0 space-y-4">
             <AugeAccountCard />
@@ -608,6 +612,9 @@ export default function AutomacoesPage() {
           </TabsContent>
           <TabsContent value="entrega-apos" className="mt-0">
             <EntregaAposCard />
+          </TabsContent>
+          <TabsContent value="processo-transferencia" className="mt-0">
+            <ProcessoTransferenciaCard />
           </TabsContent>
         </Tabs>
       </motion.div>
