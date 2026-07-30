@@ -904,6 +904,54 @@ export type Database = {
         }
         Relationships: []
       }
+      auge_tag_custom_historico: {
+        Row: {
+          cd_configuracao: string | null
+          created_at: string
+          descricao: string
+          erro: string | null
+          gravadas: number | null
+          id: string
+          linhas: Json
+          nm_configuracao: string | null
+          ok: boolean
+          tipo: string
+          total: number | null
+          user_id: string | null
+          user_nome: string | null
+        }
+        Insert: {
+          cd_configuracao?: string | null
+          created_at?: string
+          descricao: string
+          erro?: string | null
+          gravadas?: number | null
+          id?: string
+          linhas?: Json
+          nm_configuracao?: string | null
+          ok?: boolean
+          tipo?: string
+          total?: number | null
+          user_id?: string | null
+          user_nome?: string | null
+        }
+        Update: {
+          cd_configuracao?: string | null
+          created_at?: string
+          descricao?: string
+          erro?: string | null
+          gravadas?: number | null
+          id?: string
+          linhas?: Json
+          nm_configuracao?: string | null
+          ok?: boolean
+          tipo?: string
+          total?: number | null
+          user_id?: string | null
+          user_nome?: string | null
+        }
+        Relationships: []
+      }
       auge_tag_custom_scan: {
         Row: {
           cd_configuracao: string
