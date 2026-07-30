@@ -2495,7 +2495,7 @@ async function efetivarTransferencia(
  * Marca/desmarca a folha de transferência na logística.
  * Confirmado via HAR Final-Transf..har (2026-07-30):
  *   POST ctlTransferenciaEstoque.php
- *   idAcao=5&cdMovivimentacao=&cdMovEstoqueERP=<cd>&idLogistica=1|2
+ *   idAcao=5&cdMovivimentacao=<nrPortal>&cdMovEstoqueERP=<cd>&idLogistica=1|2
  *   idLogistica=1 -> "Entregar folha p/ logística"
  *   idLogistica=2 -> "Receber folha da logística"
  * Resposta: { dtAtualizacao, ok:"ok", idStatus:"S"|"N", idUsuario }
