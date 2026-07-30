@@ -2550,6 +2550,44 @@ function estadoLogisticaDaTransferencia(row: any): EstadoLogisticaTransferencia 
   };
 }
 
+// Busca o estado das caixas de logística em JANELAS CURTAS de data.
+// Buscar 730 dias de uma vez estourava a memória do worker (WORKER_RESOURCE_LIMIT),
+// pois a resposta do Auge chega como um único JSON gigante. Aqui pedimos blocos de
+// ~45 dias, aproveitamos só as linhas dos códigos procurados e descartamos o resto.
+async function buscarEstadosLogisticaPorSap(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+  codigos: string[],
+  maxDiasBack = 730,
+  janelaDias = 45,
+): Promise<Map<string, EstadoLogisticaTransferencia>> {
+  const alvo = new Set(codigos);
+  const encontrados = new Map<string, EstadoLogisticaTransferencia>();
+  const fmt = (d: Date) =>
+    `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+
+  for (let offset = 0; offset < maxDiasBack && encontrados.size < alvo.size; offset += janelaDias) {
+    const ate = new Date(Date.now() - offset * 86400000);
+    const de = new Date(Date.now() - Math.min(offset + janelaDias, maxDiasBack) * 86400000);
+    let lista: any[] = [];
+    try {
+      const consulta = await fetchTransferenciasPHP(auth, 0, fmt(de), fmt(ate));
+      lista = Array.isArray(consulta?.data) ? consulta.data : [];
+    } catch {
+      continue; // janela com falha não interrompe a varredura
+    }
+    for (const row of lista) {
+      const nrEntradaSap = cleanText(row?.nrTransfEstoqueERP);
+      if (!nrEntradaSap || !alvo.has(nrEntradaSap) || encontrados.has(nrEntradaSap)) continue;
+      const estado = estadoLogisticaDaTransferencia(row);
+      if (estado) encontrados.set(estado.nrEntradaSap, estado);
+    }
+    lista.length = 0; // libera a referência antes da próxima janela
+  }
+  return encontrados;
+}
+
+
+
 
 // Atualiza um rascunho existente: mesma estrutura de idAcao=1, porém com
 // cdMovivimentacao preenchido com o cd atual (padrão observado no portal Auge).
