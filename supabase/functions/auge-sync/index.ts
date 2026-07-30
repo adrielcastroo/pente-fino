@@ -3332,8 +3332,12 @@ async function deleteAcabamentoItem(auth: any, cdAcabamento: string, cdAcabament
 
 /**
  * Grava (inclui/altera) uma linha de TAG Customizada no Auge.
- * Espelha o formulário de /modInventario/tag/manterTagCustomizada.php.
- * idAcao: 1 = incluir, 2 = alterar.
+ * Espelha exatamente o submit de /modInventario/tag/manterTagCustomizada.php
+ * (capturado em HAR):
+ *   POST /l.unilux/modInventario/tag/controle/ctlTagCustomizada.php
+ *   cdConfiguracao=...&dsTagCustomizada=...&cdTagCalculada=<id>&dsTextoLivre=&idAcao=1
+ * Observação: o Auge espera o **código** da TAG Calculada (cdTagCalculada),
+ * não a descrição. `idAcao`: 1 = incluir, 2 = alterar.
  */
 async function saveTagCustomizada(
   auth: any,
@@ -3341,21 +3345,22 @@ async function saveTagCustomizada(
     cdConfiguracao?: string;
     cdTagCustomizada?: string;
     dsTagCustomizada: string;
-    dsTagCalculada?: string;
-    dsTagTexto?: string;
+    cdTagCalculada?: string;
+    dsTextoLivre?: string;
   },
 ): Promise<any> {
-  const body = new URLSearchParams({
-    idAcao: row.cdTagCustomizada ? '2' : '1',
+  const params: Record<string, string> = {
     cdConfiguracao: row.cdConfiguracao ?? '',
-    cdTagCustomizada: row.cdTagCustomizada ?? '',
     dsTagCustomizada: row.dsTagCustomizada ?? '',
-    dsTagCalculada: row.dsTagCalculada ?? '',
-    dsTagTexto: row.dsTagTexto ?? '',
-  });
+    cdTagCalculada: row.cdTagCalculada ?? '',
+    dsTextoLivre: row.cdTagCalculada ? '' : (row.dsTextoLivre ?? ''),
+    idAcao: row.cdTagCustomizada ? '2' : '1',
+  };
+  if (row.cdTagCustomizada) params.cdTagCustomizada = row.cdTagCustomizada;
+  const body = new URLSearchParams(params);
   const txt = await postAugePhp(
     auth,
-    '/l.unilux/modInventario/Controle/ctlTagCustomizada.php',
+    '/l.unilux/modInventario/tag/controle/ctlTagCustomizada.php',
     body,
     '/l.unilux/modInventario/tag/manterTagCustomizada.php',
   );
@@ -3363,8 +3368,12 @@ async function saveTagCustomizada(
   try { j = JSON.parse(txt); } catch { /* mantém texto cru */ }
   const msg = typeof j?.message === 'string' ? j.message : '';
   if (msg && !/sucesso/i.test(msg)) throw new Error(msg);
+  if (!j?.cdTagCustomizada && msg === '' && !txt.trim()) {
+    throw new Error('O Auge não retornou confirmação da gravação da TAG Custom.');
+  }
   return j;
 }
+
 
 
 
@@ -4044,27 +4053,71 @@ Deno.serve(async (req) => {
       if (!descricao) throw new Error('Descrição da TAG Custom é obrigatória.');
       if (!itens.length) throw new Error('Inclua ao menos 1 TAG customizada.');
 
+      // Resolve o CÓDIGO da TAG Calculada a partir do nome/descrição informado.
+      // O Auge grava por `cdTagCalculada` (id numérico), não pelo texto.
+      const nomesCalculadas = Array.from(
+        new Set(
+          itens
+            .map((it) => String(it?.dsTagCalculada ?? '').trim())
+            .filter((v) => v.length > 0),
+        ),
+      );
+      const mapaCalculadas = new Map<string, string>();
+      if (nomesCalculadas.length) {
+        const { data: tagsCalc } = await admin
+          .from('auge_tags_calculadas')
+          .select('cd_tag, nm_tag, nome, descricao')
+          .or(
+            nomesCalculadas
+              .map((n) => `nm_tag.eq.${n},nome.eq.${n},descricao.eq.${n}`)
+              .join(','),
+          );
+        for (const t of (tagsCalc ?? []) as any[]) {
+          for (const key of [t.nm_tag, t.nome, t.descricao]) {
+            const k = String(key ?? '').trim().toLowerCase();
+            if (k && !mapaCalculadas.has(k)) mapaCalculadas.set(k, String(t.cd_tag));
+          }
+        }
+      }
+
       const results: Array<{ tag: string; calculada: string; ok: boolean; erro?: string; auge?: any }> = [];
       for (const it of itens) {
-        // Mapa de campos: Configuração -> cdConfiguracao | TAG -> dsTagCustomizada | TAG Calculada -> dsTagCalculada
+        // Mapa de campos: Configuração -> cdConfiguracao | TAG -> dsTagCustomizada | TAG Calculada -> cdTagCalculada
         const dsTagCustomizada = String(it?.dsTagCustomizada ?? '').trim();
         const dsTagCalculada = String(it?.dsTagCalculada ?? '').trim();
-        // No Auge "Tag Calculada" e "Texto Livre" são mutuamente exclusivos.
-        const dsTagTexto = dsTagCalculada ? '' : String(it?.dsTagTexto ?? dsTagCustomizada).trim();
         if (!dsTagCustomizada) continue;
+
+        // Aceita o código direto do cliente; senão resolve pelo nome espelhado.
+        const cdTagCalculada = String(it?.cdTagCalculada ?? '').trim()
+          || (dsTagCalculada ? (mapaCalculadas.get(dsTagCalculada.toLowerCase()) ?? '') : '');
+
+        if (dsTagCalculada && !cdTagCalculada) {
+          results.push({
+            tag: dsTagCustomizada,
+            calculada: dsTagCalculada,
+            ok: false,
+            erro: `TAG Calculada "${dsTagCalculada}" não encontrada no espelho local. Rode "Sincronizar TAGs calculadas" e tente novamente.`,
+          });
+          continue;
+        }
+
+        // No Auge "Tag Calculada" e "Texto Livre" são mutuamente exclusivos.
+        const dsTextoLivre = cdTagCalculada ? '' : String(it?.dsTagTexto ?? dsTagCustomizada).trim();
+
         try {
           const auge = await saveTagCustomizada(auth, {
             cdConfiguracao,
             cdTagCustomizada: String(it?.cdTagCustomizada ?? '').trim(),
             dsTagCustomizada,
-            dsTagCalculada,
-            dsTagTexto,
+            cdTagCalculada,
+            dsTextoLivre,
           });
           results.push({ tag: dsTagCustomizada, calculada: dsTagCalculada, ok: true, auge });
         } catch (e) {
           results.push({ tag: dsTagCustomizada, calculada: dsTagCalculada, ok: false, erro: getErrorMessage(e) });
         }
       }
+
 
       // Estado final no Auge (o que o usuário vê na tela manterTagCustomizada).
       let augeRows: any[] = [];
