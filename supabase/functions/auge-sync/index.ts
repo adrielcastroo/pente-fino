@@ -4764,11 +4764,23 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Aceita o código direto do cliente; senão resolve pelo nome espelhado.
-        const cdTagCalculada = String(it?.cdTagCalculada ?? '').trim()
-          || (dsTagCalculada ? (mapaCalculadas.get(dsTagCalculada.toLowerCase()) ?? '') : '');
+        // Candidatos de código: o enviado pelo cliente + os do espelho para o
+        // mesmo nome. Códigos sem fórmula (registros fantasmas) vão para o fim.
+        const doEspelho = dsTagCalculada
+          ? (mapaCalculadas.get(dsTagCalculada.toLowerCase()) ?? [])
+          : [];
+        const informado = String(it?.cdTagCalculada ?? '').trim();
+        const candidatos: string[] = [];
+        for (const cd of [informado, ...doEspelho]) {
+          if (cd && !candidatos.includes(cd)) candidatos.push(cd);
+        }
+        candidatos.sort((a, b) => {
+          const fa = codigoTemFormula.get(a) === false ? 1 : 0;
+          const fb = codigoTemFormula.get(b) === false ? 1 : 0;
+          return fa - fb;
+        });
 
-        if (dsTagCalculada && !cdTagCalculada) {
+        if (dsTagCalculada && !candidatos.length) {
           results.push({
             tag: dsTagCustomizada,
             calculada: dsTagCalculada,
@@ -4779,40 +4791,63 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // No Auge "Tag Calculada" e "Texto Livre" são mutuamente exclusivos.
-        const dsTextoLivre = cdTagCalculada ? '' : String(it?.dsTagTexto ?? dsTagCustomizada).trim();
-
         // Quando o cliente manda o código da linha existente, o Auge sobrescreve
         // (idAcao=2) em vez de criar uma nova — é o caminho da edição.
         const cdTagCustomizadaExistente = String(it?.cdTagCustomizada ?? '').trim();
 
-        try {
-          const auge = await saveTagCustomizada(auth, {
-            cdConfiguracao,
-            cdTagCustomizada: cdTagCustomizadaExistente,
-            dsTagCustomizada,
-            cdTagCalculada,
-            dsTextoLivre,
-          });
-          results.push({
-            tag: dsTagCustomizada,
-            calculada: dsTagCalculada,
-            formula: dsFormula,
-            cdTagCustomizada: String(auge?.cdTagCustomizada ?? cdTagCustomizadaExistente ?? ''),
-            ok: true,
-            auge,
-          });
-        } catch (e) {
+        // Sem TAG calculada => grava como texto livre (mutuamente exclusivos).
+        const tentativas = candidatos.length ? candidatos : [''];
+        let gravou = false;
+        let ultimoErro = '';
+        let ultimoCd = '';
+
+        for (const cdTagCalculada of tentativas) {
+          const dsTextoLivre = cdTagCalculada ? '' : String(it?.dsTagTexto ?? dsTagCustomizada).trim();
+          ultimoCd = cdTagCalculada;
+          try {
+            const auge = await saveTagCustomizada(auth, {
+              cdConfiguracao,
+              cdTagCustomizada: cdTagCustomizadaExistente,
+              dsTagCustomizada,
+              cdTagCalculada,
+              dsTextoLivre,
+            });
+            results.push({
+              tag: dsTagCustomizada,
+              calculada: dsTagCalculada,
+              formula: dsFormula,
+              cdTagCustomizada: String(auge?.cdTagCustomizada ?? cdTagCustomizadaExistente ?? ''),
+              ok: true,
+              auge,
+            });
+            gravou = true;
+            break;
+          } catch (e) {
+            ultimoErro = getErrorMessage(e);
+            // Só faz sentido tentar o próximo código quando o erro é a violação
+            // de chave estrangeira da TAG calculada. Qualquer outro erro é real.
+            const fkTagCalculada = /PC_TAG_CALCULADA|cdSeqTagCalculada|23000/i.test(ultimoErro);
+            if (!fkTagCalculada) break;
+            // Marca o código como inválido para não reutilizá-lo nas próximas linhas.
+            if (cdTagCalculada) codigoTemFormula.set(cdTagCalculada, false);
+          }
+        }
+
+        if (!gravou) {
+          const fkTagCalculada = /PC_TAG_CALCULADA|cdSeqTagCalculada|23000/i.test(ultimoErro);
           results.push({
             tag: dsTagCustomizada,
             calculada: dsTagCalculada,
             formula: dsFormula,
             cdTagCustomizada: cdTagCustomizadaExistente,
             ok: false,
-            erro: getErrorMessage(e),
+            erro: fkTagCalculada
+              ? `A TAG Calculada "${dsTagCalculada}" não existe mais no Auge (código ${ultimoCd || '—'} inválido). Rode "Sincronizar TAGs calculadas" e selecione a fórmula novamente.`
+              : ultimoErro,
           });
         }
       }
+
 
 
 
