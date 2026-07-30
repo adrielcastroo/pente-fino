@@ -1034,8 +1034,10 @@ export default function GerarTagTab() {
       !cfgSearch.isSearching &&
       cfgSearch.pesquisou &&
       !cfgSearch.hasResults &&
-      customsEncontradas.length === 0,
-    [customAberta, termoBusca, loadingBusca, cfgSearch, customsEncontradas.length],
+      customsEncontradas.length === 0 &&
+      !loadingPalavras &&
+      tagsPalavras.length === 0,
+    [customAberta, termoBusca, loadingBusca, cfgSearch, customsEncontradas.length, loadingPalavras, tagsPalavras.length],
   );
 
 
