@@ -338,7 +338,14 @@ export default function ProcessoTransferenciaCard() {
    * (`transf-php:180641:item:0:TC.000.050`) — enviá-la ao Auge não marca nada.
    * Este helper extrai sempre o código numérico correto.
    */
-  const codigoAuge = (r: { nr_portal?: string | null; id_externo?: string | null }): string | null => {
+  const codigoAuge = (
+    r: { nr_portal?: string | null; nr_entrada_sap?: string | null; id_externo?: string | null },
+    idLogistica: 1 | 2,
+  ): string | null => {
+    // No endpoint legado, cada ícone usa uma chave diferente:
+    // entregar (roxo) = Nº Portal; receber (verde) = Nº Entrada SAP.
+    const entradaSap = String(r.nr_entrada_sap ?? '').trim();
+    if (idLogistica === 2 && /^\d+$/.test(entradaSap)) return entradaSap;
     const portal = String(r.nr_portal ?? '').trim();
     if (/^\d+$/.test(portal)) return portal;
     const ext = String(r.id_externo ?? '').trim();
@@ -507,8 +514,8 @@ export default function ProcessoTransferenciaCard() {
       if (sincAuge) {
         const retorno: ResultadoLogistica[] = [];
         const acoes: { ids: string[]; idLogistica: 1 | 2 }[] = [
-          { ids: validas.filter((r) => r.marcar_entregar).map(codigoAuge).filter(Boolean) as string[], idLogistica: 1 },
-          { ids: validas.filter((r) => r.marcar_receber).map(codigoAuge).filter(Boolean) as string[], idLogistica: 2 },
+          { ids: validas.filter((r) => r.marcar_entregar).map((r) => codigoAuge(r, 1)).filter(Boolean) as string[], idLogistica: 1 },
+          { ids: validas.filter((r) => r.marcar_receber).map((r) => codigoAuge(r, 2)).filter(Boolean) as string[], idLogistica: 2 },
         ];
         for (const acao of acoes) {
           if (!acao.ids.length) continue;
@@ -538,7 +545,9 @@ export default function ProcessoTransferenciaCard() {
       }
 
 
-      toast.success(`${payload.length} transferência(s) processada(s).`);
+      if (!resultados.some((r) => !r.ok)) {
+        toast.success(`${payload.length} transferência(s) registrada(s).`);
+      }
       limparPreview();
       await carregar();
     } catch (e) {
@@ -562,10 +571,11 @@ export default function ProcessoTransferenciaCard() {
     setAplicando(etapa);
     try {
       if (sincAuge && (etapa === 'entregue_logistica' || etapa === 'recebido_logistica')) {
-        const externos = linhas.map(codigoAuge).filter(Boolean) as string[];
+        const idLogistica = etapa === 'entregue_logistica' ? 1 : 2;
+        const externos = linhas.map((r) => codigoAuge(r, idLogistica)).filter(Boolean) as string[];
         const { falhas, pendentes, invalidos } = await sincronizarLogistica(
           externos,
-          etapa === 'entregue_logistica' ? 1 : 2,
+          idLogistica,
         );
         if (invalidos) toast.warning(`${invalidos} linha(s) sem Nº Portal válido — não enviadas ao Auge.`);
         if (falhas) toast.warning(`${falhas} folha(s) não puderam ser marcadas no Auge.`);
