@@ -255,6 +255,54 @@ const rascunho: RascunhoGerarTag = {
   resultado: null,
 };
 
+// ============================================================
+// Histórico local ("Últimos registros")
+// ============================================================
+
+/** Um lançamento feito nesta aba, guardado para reedição/relançamento. */
+export interface RegistroGerarTag {
+  id: string;
+  /** ISO timestamp da gravação. */
+  em: string;
+  ok: boolean;
+  descricao: string;
+  configuracao: { cd: string; nm: string } | null;
+  linhas: LinhaTag[];
+}
+
+const HISTORICO_KEY = 'gerar-tag:historico';
+const HISTORICO_MAX = 10;
+
+function lerHistorico(): RegistroGerarTag[] {
+  try {
+    const raw = localStorage.getItem(HISTORICO_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as RegistroGerarTag[]).slice(0, HISTORICO_MAX) : [];
+  } catch {
+    return [];
+  }
+}
+
+function gravarHistorico(regs: RegistroGerarTag[]): void {
+  try {
+    localStorage.setItem(HISTORICO_KEY, JSON.stringify(regs.slice(0, HISTORICO_MAX)));
+  } catch {
+    /* quota cheia — histórico é conveniência, nunca bloqueia o fluxo */
+  }
+}
+
+function formatarData(iso: string): string {
+  try {
+    return new Date(iso).toLocaleString('pt-BR', {
+      day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit',
+    });
+  } catch {
+    return iso;
+  }
+}
+
+
 /** Valor completo de uma TAG calculada selecionada. */
 interface TagCalculadaSel {
   valor: string;
