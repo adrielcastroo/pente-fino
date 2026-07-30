@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -8,29 +10,48 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 import {
-  History, Search, CheckCircle2, AlertTriangle, Trash2, Tag as TagIcon, ChevronRight,
+  History, Search, CheckCircle2, AlertTriangle, Trash2, Tag as TagIcon,
+  ChevronRight, Loader2, RefreshCw, User,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import {
   TagHistoricoGrupo,
   TAG_EVENTO_LABEL,
   agruparEventosTag,
   formatarDataTag,
   lerEventosTag,
-  limparEventosTag,
-  observarEventosTag,
   removerGrupoTag,
 } from '@/lib/tag-historico';
 
 /**
- * Aba "Histórico": consolida todas as ações e edições feitas nas TAGs Custom,
- * agrupadas por TAG. Clicar em uma TAG abre o detalhamento completo.
+ * Aba "Histórico": consolida todas as ações e edições feitas nas TAGs Custom
+ * por toda a equipe (tabela compartilhada + Realtime), agrupadas por TAG.
+ * Clicar em uma TAG abre o detalhamento completo.
  */
 export default function HistoricoTagsTab() {
-  const [eventos, setEventos] = useState(() => lerEventosTag());
+  const qc = useQueryClient();
   const [busca, setBusca] = useState('');
-  const [aberta, setAberta] = useState<TagHistoricoGrupo | null>(null);
+  const [chaveAberta, setChaveAberta] = useState<string | null>(null);
+  const [removendo, setRemovendo] = useState(false);
 
-  useEffect(() => observarEventosTag(() => setEventos(lerEventosTag())), []);
+  const { data: eventos = [], isLoading, isFetching, refetch } = useQuery({
+    queryKey: ['tag-custom-historico'],
+    queryFn: lerEventosTag,
+    staleTime: 30 * 1000,
+  });
+
+  // Histórico compartilhado: qualquer ação de qualquer usuário chega em tempo real.
+  useEffect(() => {
+    const channel = supabase
+      .channel('tag-custom-historico-live')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'auge_tag_custom_historico' },
+        () => { qc.invalidateQueries({ queryKey: ['tag-custom-historico'] }); },
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [qc]);
 
   const grupos = useMemo(() => agruparEventosTag(eventos), [eventos]);
 
@@ -40,15 +61,30 @@ export default function HistoricoTagsTab() {
     return grupos.filter((g) =>
       g.descricao.toLowerCase().includes(t) ||
       (g.nmConfiguracao ?? '').toLowerCase().includes(t) ||
-      (g.cdConfiguracao ?? '').toLowerCase().includes(t),
+      (g.cdConfiguracao ?? '').toLowerCase().includes(t) ||
+      g.autores.some((a) => a.toLowerCase().includes(t)),
     );
   }, [grupos, busca]);
 
-  // Mantém o diálogo sincronizado quando novos eventos chegam.
-  const grupoAberto = useMemo(
-    () => (aberta ? grupos.find((g) => g.chave === aberta.chave) ?? aberta : null),
-    [aberta, grupos],
+  const grupoAberto: TagHistoricoGrupo | null = useMemo(
+    () => (chaveAberta ? grupos.find((g) => g.chave === chaveAberta) ?? null : null),
+    [chaveAberta, grupos],
   );
+
+  const removerGrupo = async (grupo: TagHistoricoGrupo) => {
+    setRemovendo(true);
+    try {
+      const apagados = await removerGrupoTag(grupo.eventos);
+      setChaveAberta(null);
+      await refetch();
+      if (apagados === 0) toast.error('Você não tem permissão para apagar estes registros.');
+      else toast.success(`${apagados} registro(s) removido(s).`);
+    } catch (e: any) {
+      toast.error(e?.message ?? 'Falha ao remover o histórico desta TAG.');
+    } finally {
+      setRemovendo(false);
+    }
+  };
 
   return (
     <div className="space-y-3">
@@ -84,27 +120,29 @@ export default function HistoricoTagsTab() {
             <Input
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
-              placeholder="Buscar por TAG Custom ou configuração…"
+              placeholder="Buscar por TAG Custom, configuração ou autor…"
               className="h-9 pl-7 text-xs"
             />
           </div>
-          {eventos.length > 0 && (
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-8 px-2 text-[10px] gap-1"
-              onClick={() => { limparEventosTag(); setAberta(null); }}
-            >
-              <Trash2 className="h-3 w-3" /> Limpar histórico
-            </Button>
-          )}
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-9 gap-2 text-[11px]"
+            onClick={() => refetch()}
+            disabled={isFetching}
+          >
+            {isFetching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+            Recarregar
+          </Button>
         </div>
 
-        {lista.length === 0 ? (
+        {isLoading ? (
+          <div className="p-8 text-center"><Loader2 className="h-4 w-4 animate-spin inline" /></div>
+        ) : lista.length === 0 ? (
           <div className="p-8 text-center text-[11px] text-muted-foreground">
             <History className="h-5 w-5 mx-auto mb-2 opacity-50" />
             {eventos.length === 0
-              ? 'Nenhuma ação registrada ainda. Ao gravar ou editar uma TAG Custom na aba "Gerar TAG", ela aparece aqui.'
+              ? 'Nenhuma ação registrada ainda. Ao gravar ou editar uma TAG Custom na aba "Gerar TAG", ela aparece aqui para toda a equipe.'
               : 'Nenhuma TAG Custom encontrada para esta busca.'}
           </div>
         ) : (
@@ -113,7 +151,7 @@ export default function HistoricoTagsTab() {
               <button
                 key={g.chave}
                 type="button"
-                onClick={() => setAberta(g)}
+                onClick={() => setChaveAberta(g.chave)}
                 className="w-full text-left p-3 flex items-center justify-between gap-3 hover:bg-muted/50 transition-colors"
               >
                 <div className="min-w-0 space-y-1">
@@ -128,6 +166,7 @@ export default function HistoricoTagsTab() {
                   <div className="text-[9px] text-muted-foreground break-all">
                     {g.nmConfiguracao ? `Configuração: ${g.nmConfiguracao}` : 'Sem configuração'}
                     {' · '}Última: {formatarDataTag(g.ultimoEm)}
+                    {g.autores.length > 0 && ` · ${g.autores.join(', ')}`}
                   </div>
                 </div>
                 <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -137,7 +176,7 @@ export default function HistoricoTagsTab() {
         )}
       </Card>
 
-      <Dialog open={!!grupoAberto} onOpenChange={(v) => !v && setAberta(null)}>
+      <Dialog open={!!grupoAberto} onOpenChange={(v) => !v && setChaveAberta(null)}>
         <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 flex-wrap">
@@ -163,6 +202,11 @@ export default function HistoricoTagsTab() {
                       : <AlertTriangle className="h-3.5 w-3.5 text-destructive shrink-0" />}
                     <span className="text-[11px] font-semibold">{TAG_EVENTO_LABEL[ev.tipo]}</span>
                     <span className="text-[9px] text-muted-foreground">{formatarDataTag(ev.em)}</span>
+                    {ev.usuarioNome && (
+                      <span className="text-[9px] text-muted-foreground flex items-center gap-0.5">
+                        <User className="h-2.5 w-2.5" />{ev.usuarioNome}
+                      </span>
+                    )}
                     {ev.total != null && (
                       <Badge variant="outline" className="text-[9px]">
                         {ev.gravadas ?? 0}/{ev.total} gravada(s)
@@ -209,9 +253,11 @@ export default function HistoricoTagsTab() {
                 size="sm"
                 variant="ghost"
                 className="h-8 px-2 text-[10px] gap-1 text-destructive"
-                onClick={() => { removerGrupoTag(grupoAberto.chave); setAberta(null); }}
+                disabled={removendo}
+                onClick={() => removerGrupo(grupoAberto)}
               >
-                <Trash2 className="h-3 w-3" /> Remover histórico desta TAG
+                {removendo ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
+                Remover histórico desta TAG
               </Button>
             </div>
           )}
