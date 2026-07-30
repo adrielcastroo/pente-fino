@@ -544,22 +544,36 @@ export default function ProcessoTransferenciaCard() {
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="outline" size="sm" className="gap-2"
-              disabled={!sel.size}
+              disabled={!sel.size || aplicando !== null}
               onClick={() => void aplicarEtapa('entregue_logistica')}
             >
-              <Truck className="h-3.5 w-3.5" /> Entregar folha p/ logística
+              {aplicando === 'entregue_logistica'
+                ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                : <Truck className="h-3.5 w-3.5" />}
+              Entregar folha p/ logística
             </Button>
             <Button
               variant="outline" size="sm" className="gap-2"
-              disabled={!sel.size}
+              disabled={!sel.size || aplicando !== null}
               onClick={() => void aplicarEtapa('recebido_logistica')}
             >
-              <PackageCheck className="h-3.5 w-3.5" /> Receber folha da logística
+              {aplicando === 'recebido_logistica'
+                ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                : <PackageCheck className="h-3.5 w-3.5" />}
+              Receber folha da logística
             </Button>
+            <label className="flex cursor-pointer items-center gap-2 text-[11px] text-muted-foreground">
+              <Checkbox
+                checked={sincAuge}
+                onCheckedChange={(v) => setSincAuge(v === true)}
+              />
+              Refletir no Auge
+            </label>
           </div>
+
 
           {loading ? (
             <div className="space-y-2">
