@@ -323,6 +323,32 @@ export default function ProcessoTransferenciaCard() {
   const limparPreview = () => { setPreview([]); setFileName(''); };
 
   /**
+   * Replica marcações de logística no Auge em blocos pequenos.
+   * Cada id gera 1-2 requisições HTTP na edge function; lotes grandes em uma
+   * única chamada estouravam o limite de CPU/tempo ("CPU Time exceeded"),
+   * derrubando a resposta e deixando a tela em branco.
+   */
+  const sincronizarLogistica = async (
+    ids: string[],
+    idLogistica: 1 | 2,
+  ): Promise<{ falhas: number; pendentes: number }> => {
+    const TAMANHO_BLOCO = 15;
+    let falhas = 0;
+    let pendentes = 0;
+    for (let i = 0; i < ids.length; i += TAMANHO_BLOCO) {
+      const bloco = ids.slice(i, i + TAMANHO_BLOCO);
+      const { data, error } = await supabase.functions.invoke('auge-sync', {
+        body: { action: 'transferencia_logistica', ids: bloco, idLogistica, desejado: true },
+      });
+      if (error) throw error;
+      falhas += (data?.resultados ?? []).filter((r: { ok: boolean }) => !r.ok).length;
+      pendentes += (data?.nao_processados ?? []).length;
+    }
+    return { falhas, pendentes };
+  };
+
+
+  /**
    * Resolve as linhas do modelo simplificado: descobre a transferência
    * correspondente a cada Nº Entrada SAP consultando `auge_transferencias`.
    */
@@ -437,23 +463,18 @@ export default function ProcessoTransferenciaCard() {
         ];
         for (const acao of acoes) {
           if (!acao.ids.length) continue;
-          const { data, error: e2 } = await supabase.functions.invoke('auge-sync', {
-            body: {
-              action: 'transferencia_logistica',
-              ids: acao.ids,
-              idLogistica: acao.idLogistica,
-              desejado: true,
-            },
-          });
-          if (e2) throw e2;
-          const falhas = (data?.resultados ?? []).filter((r: { ok: boolean }) => !r.ok);
-          if (falhas.length) {
+          const { falhas, pendentes } = await sincronizarLogistica(acao.ids, acao.idLogistica);
+          if (falhas) {
             toast.warning(
-              `${falhas.length} folha(s) não puderam ser ${acao.idLogistica === 1 ? 'entregues' : 'recebidas'} no Auge.`,
+              `${falhas} folha(s) não puderam ser ${acao.idLogistica === 1 ? 'entregues' : 'recebidas'} no Auge.`,
             );
+          }
+          if (pendentes) {
+            toast.warning(`${pendentes} folha(s) não processadas — tente novamente para concluir.`);
           }
         }
       }
+
 
       toast.success(`${payload.length} transferência(s) processada(s).`);
       limparPreview();
@@ -480,19 +501,12 @@ export default function ProcessoTransferenciaCard() {
     try {
       if (sincAuge && (etapa === 'entregue_logistica' || etapa === 'recebido_logistica')) {
         const externos = linhas.map((r) => r.id_externo).filter(Boolean);
-        const { data, error } = await supabase.functions.invoke('auge-sync', {
-          body: {
-            action: 'transferencia_logistica',
-            ids: externos,
-            idLogistica: etapa === 'entregue_logistica' ? 1 : 2,
-            desejado: true,
-          },
-        });
-        if (error) throw error;
-        const falhas = (data?.resultados ?? []).filter((r: { ok: boolean }) => !r.ok);
-        if (falhas.length) {
-          toast.warning(`${falhas.length} folha(s) não puderam ser marcadas no Auge.`);
-        }
+        const { falhas, pendentes } = await sincronizarLogistica(
+          externos,
+          etapa === 'entregue_logistica' ? 1 : 2,
+        );
+        if (falhas) toast.warning(`${falhas} folha(s) não puderam ser marcadas no Auge.`);
+        if (pendentes) toast.warning(`${pendentes} folha(s) não processadas — repita a ação para concluir.`);
       }
 
       const agora = new Date().toISOString();
