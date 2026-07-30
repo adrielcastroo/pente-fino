@@ -321,7 +321,9 @@ function TagCalculadaCell({
         const { data } = await (supabase as any)
           .from('auge_tags_calculadas')
           .select('cd_tag, nome, descricao, formula, nm_tag')
-          .or(cols.map((c) => `${c}.ilike.${padrao}`).join(','))
+          // O valor precisa ir entre aspas: fórmulas têm vírgula decimal
+          // ("[LAR]-0,004") e o PostgREST usa vírgula como separador do `or`.
+          .or(cols.map((c) => `${c}.ilike.${JSON.stringify(padrao)}`).join(','))
           .order('nome', { ascending: true })
           .limit(200);
         for (const r of (data ?? []) as any[]) {
