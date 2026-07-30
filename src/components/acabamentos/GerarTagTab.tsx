@@ -1601,17 +1601,35 @@ export default function GerarTagTab() {
                 {linhas.length} TAG(s)
               </span>
             </div>
-            {linhas.length > 0 && (
+            <div className="flex items-center gap-1.5">
               <Button
                 size="sm"
-                variant="ghost"
-                className="h-7 px-2 text-[10px]"
-                onClick={() => { setLinhas([]); setResultado(null); }}
+                variant={addManual ? 'secondary' : 'outline'}
+                className="h-7 px-2 text-[10px] gap-1"
+                onClick={() => setAddManual((v) => !v)}
               >
-                Limpar
+                <Plus className="h-3 w-3" /> Adicionar TAG Configurada
               </Button>
-            )}
+              {linhas.length > 0 && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 px-2 text-[10px]"
+                  onClick={() => { setLinhas([]); setResultado(null); }}
+                >
+                  Limpar
+                </Button>
+              )}
+            </div>
           </div>
+
+          {addManual && (
+            <TagConfiguradaSearch
+              onPick={(o) => { adicionarTagConfiguradaManual(o); setAddManual(false); }}
+            />
+          )}
+
+
 
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
