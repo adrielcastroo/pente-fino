@@ -272,6 +272,8 @@ export default function ProcessoTransferenciaCard() {
   /** Replica a ação de entrega/recebimento diretamente no Auge. */
   const [sincAuge, setSincAuge] = useState(true);
   const [dragOver, setDragOver] = useState(false);
+  /** Progresso das chamadas ao Auge (blocos concluídos / total de folhas). */
+  const [progresso, setProgresso] = useState<{ feito: number; total: number; etapa: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const montadoRef = useRef(true);
 
