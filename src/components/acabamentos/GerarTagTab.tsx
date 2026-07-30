@@ -150,16 +150,22 @@ function toIlikePattern(raw: string): string {
  * Quebra o termo em tokens para busca AND (cada token precisa existir na
  * configuração, em qualquer ordem). Evita falhas quando o usuário digita a
  * descrição com espaçamento/ordem levemente diferente do cadastro no Auge.
+ *
+ * O curinga `*` também é tratado como separador: "Cortina*CM*35*Liso*10*"
+ * vira os tokens `%cortina%`, `%cm%`, `%35%`, `%liso%`, `%10%`, todos exigidos
+ * (AND) mas sem impor a ORDEM em que aparecem no nome — que era exatamente o
+ * motivo de a busca com curinga não retornar todos os itens esperados.
  */
 function toIlikeTokens(raw: string): string[] {
   const clean = sanitizeTerm(raw).replace(/%/g, ' ');
   return clean
-    .split(/\s+/)
+    .split(/[\s*]+/)
     .map((t) => t.trim())
-    .filter((t) => t.length >= 2)
+    .filter((t) => t.length >= 1)
     .slice(0, 12)
-    .map((t) => (t.includes('*') ? t.replace(/\*/g, '%') : `%${t}%`));
+    .map((t) => `%${t}%`);
 }
+
 
 /** Normalização usada nas comparações por palavra-chave. */
 function normKey(s: string): string {
