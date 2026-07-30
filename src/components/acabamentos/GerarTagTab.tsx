@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { normalizeTagFormatC } from '@/lib/tag-utils';
+import { registrarEventoTag, type TagEventoTipo } from '@/lib/tag-historico';
 
 interface ConfiguracaoLite {
   cd_configuracao: string;
@@ -1339,7 +1340,7 @@ export default function GerarTagTab() {
   );
 
   /** Guarda o lançamento atual no histórico local (últimos 10). */
-  const registrarHistorico = (ok: boolean) => {
+  const registrarHistorico = (ok: boolean, res?: ResultadoAuge | null, tipo: TagEventoTipo = 'criacao') => {
     const reg: RegistroGerarTag = {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       em: new Date().toISOString(),
@@ -1354,6 +1355,23 @@ export default function GerarTagTab() {
       gravarHistorico(next);
       return next;
     });
+    // Log permanente por TAG Custom, consumido pela aba "Histórico".
+    registrarEventoTag({
+      ok,
+      tipo,
+      descricao: descricaoFinal || '—',
+      cdConfiguracao: customAberta?.cd ?? res?.cdConfiguracao ?? null,
+      nmConfiguracao: customAberta?.nm ?? null,
+      linhas: reg.linhas.map((l) => ({
+        code: l.code,
+        valor: l.valor,
+        calculada: l.calculada ?? null,
+        formula: l.formula ?? null,
+      })),
+      gravadas: res?.gravadas ?? null,
+      total: res?.total ?? null,
+      erro: res?.ok === false ? (res?.error ?? null) : null,
+    });
   };
 
   /** Recarrega um registro do histórico na composição para editar e relançar. */
@@ -1365,6 +1383,19 @@ export default function GerarTagTab() {
     setEditandoAuge(false);
     setEdicoesAuge({});
     setTentouEnviar(false);
+    registrarEventoTag({
+      ok: true,
+      tipo: 'relancamento',
+      descricao: reg.descricao || '—',
+      cdConfiguracao: reg.configuracao?.cd ?? null,
+      nmConfiguracao: reg.configuracao?.nm ?? null,
+      linhas: reg.linhas.map((l) => ({
+        code: l.code,
+        valor: l.valor,
+        calculada: l.calculada ?? null,
+        formula: l.formula ?? null,
+      })),
+    });
     toast.success('Registro carregado — edite e grave novamente.');
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -1422,7 +1453,7 @@ export default function GerarTagTab() {
       setResultado(res);
       setEditandoAuge(false);
       setEdicoesAuge({});
-      registrarHistorico(res?.ok === true);
+      registrarHistorico(res?.ok === true, res, 'criacao');
       if (res?.ok) toast.success(`TAG Custom gravada no Auge (${res.gravadas}/${res.total}).`);
       else toast.error(res?.error ?? 'O Auge não confirmou a gravação da TAG Custom.');
 
@@ -1480,6 +1511,21 @@ export default function GerarTagTab() {
       setResultado(res);
       setEdicoesAuge({});
       setEditandoAuge(false);
+      registrarEventoTag({
+        ok: res?.ok === true,
+        tipo: 'edicao',
+        descricao: (resultado?.descricao ?? descricao).trim() || descricaoFinal || '—',
+        cdConfiguracao: customAberta?.cd ?? resultado?.cdConfiguracao ?? null,
+        nmConfiguracao: customAberta?.nm ?? null,
+        linhas: (itens as any[]).map((it) => ({
+          valor: it.dsTagCustomizada,
+          calculada: it.dsTagCalculada || null,
+          formula: it.dsFormula || null,
+        })),
+        gravadas: res?.gravadas ?? null,
+        total: res?.total ?? null,
+        erro: res?.ok === false ? (res?.error ?? null) : null,
+      });
       if (res?.ok) toast.success(`Edição gravada no Auge (${res.gravadas}/${res.total}).`);
       else toast.error(res?.error ?? 'O Auge não confirmou a edição.');
     } catch (e: any) {
