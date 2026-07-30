@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import {
@@ -272,6 +273,8 @@ export default function ProcessoTransferenciaCard() {
   /** Replica a ação de entrega/recebimento diretamente no Auge. */
   const [sincAuge, setSincAuge] = useState(true);
   const [dragOver, setDragOver] = useState(false);
+  /** Progresso das chamadas ao Auge (blocos concluídos / total de folhas). */
+  const [progresso, setProgresso] = useState<{ feito: number; total: number; etapa: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const montadoRef = useRef(true);
 
@@ -371,6 +374,8 @@ export default function ProcessoTransferenciaCard() {
     let falhas = 0;
     let pendentes = 0;
     const detalhes: ResultadoLogistica[] = [];
+    const rotulo = idLogistica === 1 ? 'Entregando folhas p/ logística' : 'Recebendo folhas da logística';
+    setProgresso({ feito: 0, total: ids.length, etapa: rotulo });
     for (let i = 0; i < ids.length; i += TAMANHO_BLOCO) {
       const bloco = ids.slice(i, i + TAMANHO_BLOCO);
       const { data, error } = await supabase.functions.invoke('auge-sync', {
@@ -398,6 +403,7 @@ export default function ProcessoTransferenciaCard() {
         ok: false,
         mensagem: 'Não processado no limite desta execução',
       })));
+      setProgresso({ feito: Math.min(i + TAMANHO_BLOCO, ids.length), total: ids.length, etapa: rotulo });
     }
     return { falhas, pendentes, invalidos, resultados: detalhes };
   };
@@ -408,15 +414,30 @@ export default function ProcessoTransferenciaCard() {
    * cdMovEstoqueERP exigido pelo endpoint de toggle do Auge.
    */
   const processarLogisticaPorSap = async (rows: ImportRow[]): Promise<ResultadoLogistica[]> => {
-    const codigos = Array.from(new Set(
-      rows.map((r) => String(r.nr_entrada_sap ?? '').trim()).filter((v) => /^\d+$/.test(v)),
-    ));
+    // Uma folha por Nº Entrada SAP, com as ações pedidas na planilha.
+    // Sem marcação explícita, o padrão é executar as duas caixas.
+    const porSap = new Map<string, { nrEntradaSap: string; entregar: boolean; receber: boolean }>();
+    for (const r of rows) {
+      const sap = String(r.nr_entrada_sap ?? '').trim();
+      if (!/^\d+$/.test(sap)) continue;
+      const semMarcacao = !r.marcar_entregar && !r.marcar_receber;
+      const atual = porSap.get(sap) ?? { nrEntradaSap: sap, entregar: false, receber: false };
+      atual.entregar = atual.entregar || semMarcacao || Boolean(r.marcar_entregar);
+      atual.receber = atual.receber || semMarcacao || Boolean(r.marcar_receber);
+      porSap.set(sap, atual);
+    }
+    const itens = Array.from(porSap.values());
     const detalhes: ResultadoLogistica[] = [];
     const TAMANHO_BLOCO = 8;
-    for (let i = 0; i < codigos.length; i += TAMANHO_BLOCO) {
-      const bloco = codigos.slice(i, i + TAMANHO_BLOCO);
+    setProgresso({ feito: 0, total: itens.length, etapa: 'Sincronizando folhas no Auge' });
+    for (let i = 0; i < itens.length; i += TAMANHO_BLOCO) {
+      const bloco = itens.slice(i, i + TAMANHO_BLOCO);
       const { data, error } = await supabase.functions.invoke('auge-sync', {
-        body: { action: 'transferencia_logistica_processar', codigosSap: bloco },
+        body: {
+          action: 'transferencia_logistica_processar',
+          codigosSap: bloco.map((b) => b.nrEntradaSap),
+          itens: bloco,
+        },
       });
       if (error) throw error;
       const recebidos = Array.isArray(data?.resultados) ? data.resultados : [];
@@ -438,11 +459,16 @@ export default function ProcessoTransferenciaCard() {
           caixasMarcadas: caixas,
           mensagem: resultado.ok
             ? resultado.ignorado
-              ? 'As duas caixas já estavam marcadas; nenhuma alteração necessária.'
+              ? 'As caixas solicitadas já estavam marcadas; nenhuma alteração necessária.'
               : `Marcada(s): ${caixas.join(' e ')}. Código interno Auge: ${resultado.cdMovEstoqueERP ?? '—'}.`
-            : (resultado.erro || 'O Auge não confirmou as duas caixas.'),
+            : (resultado.erro || 'O Auge não confirmou as caixas solicitadas.'),
         });
       }
+      setProgresso({
+        feito: Math.min(i + TAMANHO_BLOCO, itens.length),
+        total: itens.length,
+        etapa: 'Sincronizando folhas no Auge',
+      });
     }
     return detalhes;
   };
@@ -586,6 +612,7 @@ export default function ProcessoTransferenciaCard() {
       toast.error(e instanceof Error ? e.message : 'Falha ao registrar.');
     } finally {
       setSalvando(false);
+      setProgresso(null);
     }
   };
 
@@ -631,6 +658,7 @@ export default function ProcessoTransferenciaCard() {
       toast.error(e instanceof Error ? e.message : 'Falha ao aplicar etapa.');
     } finally {
       setAplicando(null);
+      setProgresso(null);
     }
   };
 
@@ -677,6 +705,30 @@ export default function ProcessoTransferenciaCard() {
 
   return (
     <div className="space-y-4">
+      {/* Barra de progresso das chamadas ao Auge */}
+      {progresso && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="space-y-2 p-3">
+            <div className="flex items-center justify-between gap-2 text-xs">
+              <span className="flex items-center gap-2 font-medium">
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                {progresso.etapa}…
+              </span>
+              <span className="font-mono text-muted-foreground">
+                {progresso.feito}/{progresso.total}
+              </span>
+            </div>
+            <Progress
+              value={progresso.total ? (progresso.feito / progresso.total) * 100 : 0}
+              className="h-2"
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Cada folha é conferida no Auge antes e depois da marcação — não feche esta página.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Importação */}
       <Card>
         <CardHeader className="pb-3">

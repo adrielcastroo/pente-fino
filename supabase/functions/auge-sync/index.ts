@@ -4129,14 +4129,29 @@ Deno.serve(async (req) => {
     // Processo idempotente por Nº Entrada SAP: consulta as duas caixas no Auge
     // e aciona o toggle somente para aquelas que ainda estão falsas.
     if (action === 'transferencia_logistica_processar') {
-      const codigos = Array.from(new Set(
-        (Array.isArray(requestPayload?.codigosSap) ? requestPayload.codigosSap : [])
-          .map((v: unknown) => String(v ?? '').trim())
-          .filter((v: string) => /^\d+$/.test(v)),
-      )).slice(0, 8) as string[];
+      // `itens` (novo) permite escolher quais caixas marcar por SAP.
+      // `codigosSap` (legado) mantém o comportamento de marcar as duas.
+      const itensPayload: Array<{ nrEntradaSap: string; entregar: boolean; receber: boolean }> =
+        Array.isArray(requestPayload?.itens)
+          ? requestPayload.itens
+              .map((it: any) => ({
+                nrEntradaSap: String(it?.nrEntradaSap ?? '').trim(),
+                entregar: it?.entregar !== false,
+                receber: it?.receber !== false,
+              }))
+              .filter((it: any) => /^\d+$/.test(it.nrEntradaSap) && (it.entregar || it.receber))
+          : (Array.isArray(requestPayload?.codigosSap) ? requestPayload.codigosSap : [])
+              .map((v: unknown) => ({ nrEntradaSap: String(v ?? '').trim(), entregar: true, receber: true }))
+              .filter((it: any) => /^\d+$/.test(it.nrEntradaSap));
+
+      const porCodigo = new Map<string, { nrEntradaSap: string; entregar: boolean; receber: boolean }>();
+      for (const it of itensPayload) if (!porCodigo.has(it.nrEntradaSap)) porCodigo.set(it.nrEntradaSap, it);
+      const pedidos = Array.from(porCodigo.values()).slice(0, 8);
+      const codigos = pedidos.map((p) => p.nrEntradaSap);
       if (!codigos.length) throw new Error('Envie ao menos um Nº Entrada SAP válido.');
 
       const porSap = await buscarEstadosLogisticaPorSap(auth, codigos);
+
 
 
       const resultados: Array<{
@@ -4151,7 +4166,8 @@ Deno.serve(async (req) => {
         erro?: string;
       }> = [];
 
-      for (const nrEntradaSap of codigos) {
+      for (const pedido of pedidos) {
+        const nrEntradaSap = pedido.nrEntradaSap;
         const estado = porSap.get(nrEntradaSap);
         if (!estado) {
           resultados.push({
@@ -4164,15 +4180,18 @@ Deno.serve(async (req) => {
         const caixasMarcadas: string[] = [];
         let entregue = estado.entregue;
         let recebido = estado.recebido;
+        // Estado alvo: só as caixas pedidas mudam; as demais permanecem como estão.
+        const alvoEntregue = pedido.entregar ? true : estado.entregue;
+        const alvoRecebido = pedido.receber ? true : estado.recebido;
         try {
-          if (!entregue) {
+          if (pedido.entregar && !entregue) {
             const retorno = await logisticaFolhaTransferencia(
               auth, estado.cdMovEstoqueERP, 1, estado.nrPortal ?? '',
             );
             entregue = retorno.marcado;
             if (entregue) caixasMarcadas.push('Entregue folha de transf. p/ logística');
           }
-          if (!recebido) {
+          if (pedido.receber && !recebido) {
             const retorno = await logisticaFolhaTransferencia(
               auth, estado.cdMovEstoqueERP, 2, estado.nrPortal ?? '',
             );
@@ -4181,12 +4200,14 @@ Deno.serve(async (req) => {
           }
           // A resposta do toggle pode retornar `ok`/`idStatus=S` antes de a listagem
           // refletir a alteração. Só reportamos sucesso depois de reler o registro.
-          const confirmado = entregue && recebido
-            ? await confirmarEstadoLogisticaPorSap(auth, nrEntradaSap, { entregue: true, recebido: true })
+          const confirmado = entregue === alvoEntregue && recebido === alvoRecebido
+            ? await confirmarEstadoLogisticaPorSap(
+                auth, nrEntradaSap, { entregue: alvoEntregue, recebido: alvoRecebido },
+              )
             : null;
-          entregue = confirmado?.entregue ?? false;
-          recebido = confirmado?.recebido ?? false;
-          const ok = Boolean(confirmado && entregue && recebido);
+          entregue = confirmado?.entregue ?? entregue;
+          recebido = confirmado?.recebido ?? recebido;
+          const ok = Boolean(confirmado);
           resultados.push({
             nrEntradaSap,
             cdMovEstoqueERP: confirmado?.cdMovEstoqueERP ?? estado.cdMovEstoqueERP,
@@ -4196,7 +4217,7 @@ Deno.serve(async (req) => {
             caixasMarcadas,
             entregue,
             recebido,
-            erro: ok ? undefined : 'O toggle respondeu, mas a releitura do Auge não confirmou as duas caixas marcadas.',
+            erro: ok ? undefined : 'O toggle respondeu, mas a releitura do Auge não confirmou as caixas solicitadas.',
           });
         } catch (e) {
           resultados.push({
