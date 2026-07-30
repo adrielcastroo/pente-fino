@@ -476,12 +476,15 @@ export default function ProcessoTransferenciaCard() {
       // Replica no Auge as marcações indicadas na planilha (entregar → receber).
       if (sincAuge) {
         const acoes: { ids: string[]; idLogistica: 1 | 2 }[] = [
-          { ids: validas.filter((r) => r.marcar_entregar).map((r) => r.id_externo), idLogistica: 1 },
-          { ids: validas.filter((r) => r.marcar_receber).map((r) => r.id_externo), idLogistica: 2 },
+          { ids: validas.filter((r) => r.marcar_entregar).map(codigoAuge).filter(Boolean) as string[], idLogistica: 1 },
+          { ids: validas.filter((r) => r.marcar_receber).map(codigoAuge).filter(Boolean) as string[], idLogistica: 2 },
         ];
         for (const acao of acoes) {
           if (!acao.ids.length) continue;
-          const { falhas, pendentes } = await sincronizarLogistica(acao.ids, acao.idLogistica);
+          const { falhas, pendentes, invalidos } = await sincronizarLogistica(acao.ids, acao.idLogistica);
+          if (invalidos) {
+            toast.warning(`${invalidos} linha(s) sem Nº Portal válido — não enviadas ao Auge.`);
+          }
           if (falhas) {
             toast.warning(
               `${falhas} folha(s) não puderam ser ${acao.idLogistica === 1 ? 'entregues' : 'recebidas'} no Auge.`,
