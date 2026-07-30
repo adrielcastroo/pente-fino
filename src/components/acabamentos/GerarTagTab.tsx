@@ -1382,55 +1382,7 @@ export default function GerarTagTab() {
 
 
 
-      <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-4 items-start">
-        {/* Bloco esquerdo: TAGs necessárias */}
-        <Card className="p-3 space-y-2">
-          <div className="text-[10px] uppercase text-muted-foreground flex items-center gap-1">
-            <TagIcon className="h-3 w-3" /> TAGs necessárias
-            <Badge variant="outline" className="text-[9px]">{recomendadas.length}</Badge>
-          </div>
-          <p className="text-[10px] text-muted-foreground">
-            Clique para enviar a TAG para a coluna <span className="font-medium text-foreground">Tag Customizada</span>.
-          </p>
-
-          {carregandoRecs && recomendadas.length === 0 && (
-            <div className="text-[10px] text-muted-foreground flex items-center gap-1">
-              <Loader2 className="h-3 w-3 animate-spin" /> Buscando TAGs no catálogo do Auge…
-            </div>
-          )}
-          {!carregandoRecs && recomendadas.length === 0 && (
-            <div className="text-[10px] text-muted-foreground">
-              Digite no campo <span className="font-medium text-foreground">Configuração</span> acima
-              para o app analisar as TAGs Custom semelhantes.
-            </div>
-          )}
-
-
-          <div className="space-y-1.5 max-h-[65vh] overflow-auto">
-            {recomendadas.map((r) => {
-              const dentro = jaNaTabela(r.id);
-              return (
-                <button
-                  key={r.id}
-                  onClick={() => adicionarLinha(r)}
-                  className={`w-full text-left rounded border p-2 transition ${dentro ? 'border-primary bg-primary/15' : 'hover:bg-muted/50'}`}
-                >
-                  <div className="flex items-start gap-1.5">
-                    {dentro
-                      ? <CheckCircle2 className="h-3 w-3 mt-0.5 text-primary shrink-0" />
-                      : <Plus className="h-3 w-3 mt-0.5 text-muted-foreground shrink-0" />}
-                    <div className="min-w-0">
-                      <div className="font-mono font-semibold text-[10px] text-primary">{r.code}</div>
-                      <div className="font-mono text-[10px] break-all">{r.valor}</div>
-                      <div className="text-[9px] text-muted-foreground truncate">{r.cfgNome}</div>
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </Card>
-
+      <div className="grid grid-cols-1 gap-4 items-start">
         {/* Tabela principal */}
         <Card className="overflow-hidden">
           <div className="p-3 border-b flex items-center justify-between gap-2">
@@ -1502,7 +1454,7 @@ export default function GerarTagTab() {
                 {linhas.length === 0 && (
                   <tr>
                     <td colSpan={4} className="p-6 text-center text-muted-foreground text-[11px]">
-                      Selecione TAGs necessárias à esquerda para montar a TAG Custom.
+                      Nenhuma TAG adicionada à composição.
                     </td>
                   </tr>
                 )}
