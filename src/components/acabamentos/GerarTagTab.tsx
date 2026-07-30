@@ -273,11 +273,18 @@ function TagCalculadaCell({
   const [busca, setBusca] = useState('');
   const [aberto, setAberto] = useState(false);
   const [termo, setTermo] = useState('');
+  /** Evita atualizar estado depois que a célula sai da tela (blank screen). */
+  const montadoRef = useRef(true);
+  useEffect(() => {
+    montadoRef.current = true;
+    return () => { montadoRef.current = false; };
+  }, []);
 
   useEffect(() => {
     const t = setTimeout(() => setTermo(busca.trim()), 300);
     return () => clearTimeout(t);
   }, [busca]);
+
 
   const padrao = useMemo(() => toIlikePattern(termo), [termo]);
 
