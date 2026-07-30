@@ -4662,6 +4662,13 @@ Deno.serve(async (req) => {
 
       // Resolve o CÓDIGO da TAG Calculada a partir do nome/descrição informado.
       // O Auge grava por `cdTagCalculada` (id numérico), não pelo texto.
+      //
+      // ATENÇÃO: o espelho local guarda MAIS DE UM `cd_tag` para o mesmo nome
+      // (varreduras antigas gravaram códigos que não existem mais em
+      // PC_TAG_CALCULADA e ficaram sem fórmula). Enviar um desses códigos faz o
+      // Auge devolver "SQLSTATE[23000] ... FOREIGN KEY PC_TAG_CUSTOMIZADA_PC_TAG_CALCULADA_FK".
+      // Por isso guardamos TODOS os candidatos por nome, priorizando os que têm
+      // fórmula (registros confirmados), e tentamos um a um na gravação.
       const nomesCalculadas = Array.from(
         new Set(
           itens
@@ -4669,24 +4676,33 @@ Deno.serve(async (req) => {
             .filter((v) => v.length > 0),
         ),
       );
-      const mapaCalculadas = new Map<string, string>();
+      const mapaCalculadas = new Map<string, string[]>();
+      const codigoTemFormula = new Map<string, boolean>();
+
+      const registrar = (t: any) => {
+        const cd = String(t?.cd_tag ?? '').trim();
+        if (!cd) return;
+        const temFormula = Boolean(String(t?.formula ?? '').trim());
+        codigoTemFormula.set(cd, temFormula || (codigoTemFormula.get(cd) ?? false));
+        for (const key of [t.nm_tag, t.nome, t.descricao]) {
+          const k = String(key ?? '').trim().toLowerCase();
+          if (!k) continue;
+          const lista = mapaCalculadas.get(k) ?? [];
+          if (!lista.includes(cd)) lista.push(cd);
+          mapaCalculadas.set(k, lista);
+        }
+      };
+
       if (nomesCalculadas.length) {
-        // ATENÇÃO: não usar `.or("nm_tag.eq.<valor>,...")` aqui. O PostgREST
-        // separa as condições por vírgula, e nomes de TAG calculada são
-        // fórmulas que contêm vírgula decimal (ex.: "[LAR]-0,004"), o que
-        // quebrava o filtro e fazia toda busca retornar vazio.
-        // `.in()` faz o quoting/escaping correto de cada valor.
+        // Não usar `.or("nm_tag.eq.<valor>,...")`: o PostgREST separa as
+        // condições por vírgula e os nomes contêm vírgula decimal
+        // (ex.: "[LAR]-0,004"). `.in()` faz o quoting correto.
         for (const coluna of ['nm_tag', 'nome', 'descricao'] as const) {
           const { data: tagsCalc } = await admin
             .from('auge_tags_calculadas')
-            .select('cd_tag, nm_tag, nome, descricao')
+            .select('cd_tag, nm_tag, nome, descricao, formula')
             .in(coluna, nomesCalculadas);
-          for (const t of (tagsCalc ?? []) as any[]) {
-            for (const key of [t.nm_tag, t.nome, t.descricao]) {
-              const k = String(key ?? '').trim().toLowerCase();
-              if (k && !mapaCalculadas.has(k)) mapaCalculadas.set(k, String(t.cd_tag));
-            }
-          }
+          for (const t of (tagsCalc ?? []) as any[]) registrar(t);
         }
 
         // Fallback case-insensitive: o `.in()` é sensível a maiúsculas e o
@@ -4695,17 +4711,30 @@ Deno.serve(async (req) => {
         for (const nome of faltantes) {
           const { data: alt } = await admin
             .from('auge_tags_calculadas')
-            .select('cd_tag, nm_tag, nome, descricao')
+            .select('cd_tag, nm_tag, nome, descricao, formula')
             .or(
               ['nm_tag', 'nome', 'descricao']
                 .map((c) => `${c}.ilike.${JSON.stringify(nome)}`)
                 .join(','),
             )
-            .limit(1);
-          const t = (alt ?? [])[0] as any;
-          if (t) mapaCalculadas.set(nome.toLowerCase(), String(t.cd_tag));
+            .limit(10);
+          for (const t of (alt ?? []) as any[]) registrar(t);
+        }
+
+        // Códigos com fórmula primeiro; entre iguais, o menor id (mais antigo,
+        // que é o que realmente existe em PC_TAG_CALCULADA).
+        for (const [k, lista] of mapaCalculadas) {
+          mapaCalculadas.set(
+            k,
+            lista.slice().sort((a, b) => {
+              const fa = codigoTemFormula.get(a) ? 0 : 1;
+              const fb = codigoTemFormula.get(b) ? 0 : 1;
+              return fa !== fb ? fa - fb : Number(a) - Number(b);
+            }),
+          );
         }
       }
+
 
 
       const results: Array<{
@@ -4735,11 +4764,23 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Aceita o código direto do cliente; senão resolve pelo nome espelhado.
-        const cdTagCalculada = String(it?.cdTagCalculada ?? '').trim()
-          || (dsTagCalculada ? (mapaCalculadas.get(dsTagCalculada.toLowerCase()) ?? '') : '');
+        // Candidatos de código: o enviado pelo cliente + os do espelho para o
+        // mesmo nome. Códigos sem fórmula (registros fantasmas) vão para o fim.
+        const doEspelho = dsTagCalculada
+          ? (mapaCalculadas.get(dsTagCalculada.toLowerCase()) ?? [])
+          : [];
+        const informado = String(it?.cdTagCalculada ?? '').trim();
+        const candidatos: string[] = [];
+        for (const cd of [informado, ...doEspelho]) {
+          if (cd && !candidatos.includes(cd)) candidatos.push(cd);
+        }
+        candidatos.sort((a, b) => {
+          const fa = codigoTemFormula.get(a) === false ? 1 : 0;
+          const fb = codigoTemFormula.get(b) === false ? 1 : 0;
+          return fa - fb;
+        });
 
-        if (dsTagCalculada && !cdTagCalculada) {
+        if (dsTagCalculada && !candidatos.length) {
           results.push({
             tag: dsTagCustomizada,
             calculada: dsTagCalculada,
@@ -4750,40 +4791,63 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // No Auge "Tag Calculada" e "Texto Livre" são mutuamente exclusivos.
-        const dsTextoLivre = cdTagCalculada ? '' : String(it?.dsTagTexto ?? dsTagCustomizada).trim();
-
         // Quando o cliente manda o código da linha existente, o Auge sobrescreve
         // (idAcao=2) em vez de criar uma nova — é o caminho da edição.
         const cdTagCustomizadaExistente = String(it?.cdTagCustomizada ?? '').trim();
 
-        try {
-          const auge = await saveTagCustomizada(auth, {
-            cdConfiguracao,
-            cdTagCustomizada: cdTagCustomizadaExistente,
-            dsTagCustomizada,
-            cdTagCalculada,
-            dsTextoLivre,
-          });
-          results.push({
-            tag: dsTagCustomizada,
-            calculada: dsTagCalculada,
-            formula: dsFormula,
-            cdTagCustomizada: String(auge?.cdTagCustomizada ?? cdTagCustomizadaExistente ?? ''),
-            ok: true,
-            auge,
-          });
-        } catch (e) {
+        // Sem TAG calculada => grava como texto livre (mutuamente exclusivos).
+        const tentativas = candidatos.length ? candidatos : [''];
+        let gravou = false;
+        let ultimoErro = '';
+        let ultimoCd = '';
+
+        for (const cdTagCalculada of tentativas) {
+          const dsTextoLivre = cdTagCalculada ? '' : String(it?.dsTagTexto ?? dsTagCustomizada).trim();
+          ultimoCd = cdTagCalculada;
+          try {
+            const auge = await saveTagCustomizada(auth, {
+              cdConfiguracao,
+              cdTagCustomizada: cdTagCustomizadaExistente,
+              dsTagCustomizada,
+              cdTagCalculada,
+              dsTextoLivre,
+            });
+            results.push({
+              tag: dsTagCustomizada,
+              calculada: dsTagCalculada,
+              formula: dsFormula,
+              cdTagCustomizada: String(auge?.cdTagCustomizada ?? cdTagCustomizadaExistente ?? ''),
+              ok: true,
+              auge,
+            });
+            gravou = true;
+            break;
+          } catch (e) {
+            ultimoErro = getErrorMessage(e);
+            // Só faz sentido tentar o próximo código quando o erro é a violação
+            // de chave estrangeira da TAG calculada. Qualquer outro erro é real.
+            const fkTagCalculada = /PC_TAG_CALCULADA|cdSeqTagCalculada|23000/i.test(ultimoErro);
+            if (!fkTagCalculada) break;
+            // Marca o código como inválido para não reutilizá-lo nas próximas linhas.
+            if (cdTagCalculada) codigoTemFormula.set(cdTagCalculada, false);
+          }
+        }
+
+        if (!gravou) {
+          const fkTagCalculada = /PC_TAG_CALCULADA|cdSeqTagCalculada|23000/i.test(ultimoErro);
           results.push({
             tag: dsTagCustomizada,
             calculada: dsTagCalculada,
             formula: dsFormula,
             cdTagCustomizada: cdTagCustomizadaExistente,
             ok: false,
-            erro: getErrorMessage(e),
+            erro: fkTagCalculada
+              ? `A TAG Calculada "${dsTagCalculada}" não existe mais no Auge (código ${ultimoCd || '—'} inválido). Rode "Sincronizar TAGs calculadas" e selecione a fórmula novamente.`
+              : ultimoErro,
           });
         }
       }
+
 
 
 
