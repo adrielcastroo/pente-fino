@@ -477,23 +477,38 @@ function ConfiguracaoSelect({
 }: {
   valor: { cd: string; nm: string } | null;
   onChange: (v: { cd: string; nm: string } | null) => void;
-  onSearchStateChange?: (state: { termo: string; hasResults: boolean; isSearching: boolean }) => void;
+  onSearchStateChange?: (state: { termo: string; hasResults: boolean; isSearching: boolean; pesquisou: boolean }) => void;
 }) {
   const [busca, setBusca] = useState('');
   const [termo, setTermo] = useState('');
   const [aberto, setAberto] = useState(false);
+  const wrapRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const t = setTimeout(() => setTermo(busca.trim()), 300);
     return () => clearTimeout(t);
   }, [busca]);
 
+  // Clicar fora apenas fecha a lista suspensa: o termo e o resultado da busca
+  // permanecem, então a configuração NÃO passa a ser tratada como nova.
+  useEffect(() => {
+    const onDocDown = (ev: MouseEvent) => {
+      if (!wrapRef.current) return;
+      if (!wrapRef.current.contains(ev.target as Node)) setAberto(false);
+    };
+    document.addEventListener('mousedown', onDocDown);
+    return () => document.removeEventListener('mousedown', onDocDown);
+  }, []);
+
   const padrao = useMemo(() => toIlikePattern(termo), [termo]);
   const tokens = useMemo(() => toIlikeTokens(termo), [termo]);
 
-  const { data: opcoes = [], isFetching } = useQuery({
+  // A busca roda sempre que houver termo suficiente (mesmo com a lista fechada),
+  // garantindo análise imediata das TAGs obrigatórias.
+  const { data: opcoes = [], isFetching, isSuccess } = useQuery({
     queryKey: ['tag-custom-configuracao-busca', padrao, tokens.join('|')],
-    enabled: aberto && padrao.length >= 3,
+    enabled: padrao.length >= 3,
+
     staleTime: 60 * 1000,
     queryFn: async () => {
       const dedupe = (rows: ConfiguracaoLite[]) => {
@@ -566,8 +581,9 @@ function ConfiguracaoSelect({
       termo,
       hasResults: opcoes.length > 0,
       isSearching: isFetching,
+      pesquisou: isSuccess && !isFetching && padrao.length >= 3,
     });
-  }, [termo, opcoes.length, isFetching, onSearchStateChange]);
+  }, [termo, opcoes.length, isFetching, isSuccess, padrao.length, onSearchStateChange]);
 
   if (valor && !aberto) {
     return (
@@ -587,7 +603,8 @@ function ConfiguracaoSelect({
   const mostrarDropdown = aberto && padrao.length >= 3 && (isFetching || opcoes.length > 0);
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-1" ref={wrapRef}>
+
       <div className="relative">
         <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
         <Input
@@ -646,11 +663,13 @@ export default function GerarTagTab() {
 
 
   // Estado da busca no campo Configuração (para indicar "Nova TAG Custom").
-  const [cfgSearch, setCfgSearch] = useState<{ termo: string; hasResults: boolean; isSearching: boolean }>({
+  const [cfgSearch, setCfgSearch] = useState<{ termo: string; hasResults: boolean; isSearching: boolean; pesquisou: boolean }>({
     termo: '',
     hasResults: false,
     isSearching: false,
+    pesquisou: false,
   });
+
 
   // O texto da CONFIGURAÇÃO (não o nome da Tag) é o único driver das análises:
   // recomendações e detecção do padrão obrigatório.
@@ -885,8 +904,8 @@ export default function GerarTagTab() {
         const alvo = norm(m.nm);
         return sub.every((tk) => alvo.includes(tk));
       });
-      // Nível mais específico com amostra estatisticamente utilizável.
-      if (filtrados.length >= 2) {
+      // Nível mais específico que ainda casa com algum modelo existente.
+      if (filtrados.length >= 1) {
         return { modelos: filtrados, termo: sub.join(' '), tokens: sub };
       }
     }
@@ -900,7 +919,7 @@ export default function GerarTagTab() {
   const obrigatorias = useMemo(() => {
     const modelos = escopoPadrao.modelos;
     const totalModelos = modelos.length;
-    if (totalModelos < 2) return [] as Array<{ code: string; valor: string; calculada: string; freq: number; total: number }>;
+    if (totalModelos < 1) return [] as Array<{ code: string; valor: string; calculada: string; freq: number; total: number }>;
     const acc = new Map<string, { n: number; valor: string; calculadas: Map<string, number> }>();
     for (const modelo of modelos) {
       for (const [code, info] of modelo.codes) {
@@ -910,7 +929,8 @@ export default function GerarTagTab() {
         acc.set(code, cur);
       }
     }
-    const minimo = Math.max(2, Math.ceil(totalModelos * 0.9));
+    // Com um único modelo de referência, todas as suas TAGs são o padrão.
+    const minimo = totalModelos === 1 ? 1 : Math.max(2, Math.ceil(totalModelos * 0.9));
     const out: Array<{ code: string; valor: string; calculada: string; freq: number; total: number }> = [];
     for (const [code, info] of acc) {
       if (info.n < minimo) continue;
@@ -927,15 +947,23 @@ export default function GerarTagTab() {
     [obrigatorias, codigosNaTabela],
   );
 
-  /** Nenhuma configuração existente casou com o texto → TAG Custom nova. */
+  /**
+   * Nenhuma configuração existente casou com o texto → TAG Custom nova.
+   * Só vale quando a busca do campo Configuração realmente terminou sem
+   * resultados: fechar a lista suspensa (clique fora) não muda esse estado.
+   */
   const ehTagCustomNova = useMemo(
     () =>
       !customAberta &&
       termoBusca.trim().length >= 3 &&
       !loadingBusca &&
+      !cfgSearch.isSearching &&
+      cfgSearch.pesquisou &&
+      !cfgSearch.hasResults &&
       customsEncontradas.length === 0,
-    [customAberta, termoBusca, loadingBusca, customsEncontradas.length],
+    [customAberta, termoBusca, loadingBusca, cfgSearch, customsEncontradas.length],
   );
+
 
   // ---------- Manipulação das linhas da tabela ----------
   const jaNaTabela = (id: string) => linhas.some((l) => l.id === id);
@@ -1135,9 +1163,10 @@ export default function GerarTagTab() {
         <div className="space-y-1">
           <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
             Configuração
-            {cfgSearch.termo.trim().length >= 3 && !customAberta && !cfgSearch.isSearching && !cfgSearch.hasResults && (
+            {ehTagCustomNova && (
               <Badge className="bg-amber-500 text-amber-950 hover:bg-amber-500 text-[9px]">Nova TAG Custom</Badge>
             )}
+
           </div>
           <ConfiguracaoSelect
             valor={customAberta}
