@@ -308,23 +308,53 @@ export default function ProcessoTransferenciaCard() {
 
   /* ---------------- Ações em lote ---------------- */
 
+  /**
+   * Aplica a etapa localmente e, se habilitado, replica a ação no Auge
+   * (idAcao=5 / idLogistica=1 entregar, 2 receber) via edge function.
+   */
   const aplicarEtapa = async (etapa: Etapa) => {
     const ids = Array.from(sel);
     if (!ids.length) { toast.warning('Selecione ao menos uma transferência.'); return; }
-    const agora = new Date().toISOString();
-    const patch: Partial<ProcessoRow> = { etapa };
-    if (etapa === 'entregue_logistica') patch.entregue_em = agora;
-    if (etapa === 'recebido_logistica') patch.recebido_em = agora;
-    if (etapa === 'finalizada') patch.finalizado_em = agora;
-    const { error } = await supabase
-      .from('transferencia_folha_processos')
-      .update(patch)
-      .in('id', ids);
-    if (error) { toast.error(error.message); return; }
-    toast.success(`${ids.length} atualizada(s) para "${ETAPA_LABEL[etapa]}".`);
-    setSel(new Set());
-    await carregar();
+    const linhas = processos.filter((r) => ids.includes(r.id));
+    setAplicando(etapa);
+    try {
+      if (sincAuge && (etapa === 'entregue_logistica' || etapa === 'recebido_logistica')) {
+        const externos = linhas.map((r) => r.id_externo).filter(Boolean);
+        const { data, error } = await supabase.functions.invoke('auge-sync', {
+          body: {
+            action: 'transferencia_logistica',
+            ids: externos,
+            idLogistica: etapa === 'entregue_logistica' ? 1 : 2,
+            desejado: true,
+          },
+        });
+        if (error) throw error;
+        const falhas = (data?.resultados ?? []).filter((r: { ok: boolean }) => !r.ok);
+        if (falhas.length) {
+          toast.warning(`${falhas.length} folha(s) não puderam ser marcadas no Auge.`);
+        }
+      }
+
+      const agora = new Date().toISOString();
+      const patch: Partial<ProcessoRow> = { etapa };
+      if (etapa === 'entregue_logistica') patch.entregue_em = agora;
+      if (etapa === 'recebido_logistica') patch.recebido_em = agora;
+      if (etapa === 'finalizada') patch.finalizado_em = agora;
+      const { error } = await supabase
+        .from('transferencia_folha_processos')
+        .update(patch)
+        .in('id', ids);
+      if (error) throw error;
+      toast.success(`${ids.length} atualizada(s) para "${ETAPA_LABEL[etapa]}".`);
+      setSel(new Set());
+      await carregar();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Falha ao aplicar etapa.');
+    } finally {
+      setAplicando(null);
+    }
   };
+
 
   const salvarSap = async (id: string, valor: string) => {
     const nr = valor.trim() || null;
