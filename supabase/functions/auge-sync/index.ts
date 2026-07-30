@@ -2507,15 +2507,14 @@ async function logisticaFolhaTransferencia(
   idLogistica: 1 | 2,
 ): Promise<{ marcado: boolean; dtAtualizacao: string | null; usuario: string | null }> {
   if (!cdMovEstoqueERP) throw new Error('cdMovEstoqueERP é obrigatório.');
-  // O Auge só aceita o código numérico da transferência (cdTransferenciaEstoque /
-  // "Nº Portal"). Chaves compostas internas (ex. transf-php:180641:item:0:XX)
+  // O Auge só aceita o código numérico interno cdMovEstoqueERP.
+  // Chaves compostas internas (ex. transf-php:180641:item:0:XX)
   // retornam ok sem marcar nada — falhamos cedo para não mascarar o erro.
   if (!/^\d+$/.test(cdMovEstoqueERP)) {
-    throw new Error(`cdMovEstoqueERP inválido: "${cdMovEstoqueERP}" — informe o Nº Portal numérico.`);
+    throw new Error(`cdMovEstoqueERP inválido: "${cdMovEstoqueERP}".`);
   }
   const body = new URLSearchParams();
   body.set('idAcao', '5');
-  body.set('cdMovivimentacao', ''); // typo intencional (bate com Auge)
   body.set('cdMovEstoqueERP', cdMovEstoqueERP);
   body.set('idLogistica', String(idLogistica));
   const j = await postCtlTransferencia(auth, body);
@@ -2584,6 +2583,25 @@ async function buscarEstadosLogisticaPorSap(
     lista.length = 0; // libera a referência antes da próxima janela
   }
   return encontrados;
+}
+
+async function confirmarEstadoLogisticaPorSap(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+  nrEntradaSap: string,
+  estadoEsperado: Pick<EstadoLogisticaTransferencia, 'entregue' | 'recebido'>,
+  tentativas = 3,
+): Promise<EstadoLogisticaTransferencia | null> {
+  for (let tentativa = 0; tentativa < tentativas; tentativa += 1) {
+    if (tentativa > 0) await new Promise((resolve) => setTimeout(resolve, 700));
+    const encontrados = await buscarEstadosLogisticaPorSap(auth, [nrEntradaSap], 90, 15);
+    const confirmado = encontrados.get(nrEntradaSap) ?? null;
+    if (
+      confirmado &&
+      confirmado.entregue === estadoEsperado.entregue &&
+      confirmado.recebido === estadoEsperado.recebido
+    ) return confirmado;
+  }
+  return null;
 }
 
 
@@ -4153,17 +4171,24 @@ Deno.serve(async (req) => {
             recebido = retorno.marcado;
             if (recebido) caixasMarcadas.push('Receber folha de transf. da logística');
           }
-          const ok = entregue && recebido;
+          // A resposta do toggle pode retornar `ok`/`idStatus=S` antes de a listagem
+          // refletir a alteração. Só reportamos sucesso depois de reler o registro.
+          const confirmado = entregue && recebido
+            ? await confirmarEstadoLogisticaPorSap(auth, nrEntradaSap, { entregue: true, recebido: true })
+            : null;
+          entregue = confirmado?.entregue ?? false;
+          recebido = confirmado?.recebido ?? false;
+          const ok = Boolean(confirmado && entregue && recebido);
           resultados.push({
             nrEntradaSap,
-            cdMovEstoqueERP: estado.cdMovEstoqueERP,
-            nrPortal: estado.nrPortal,
+            cdMovEstoqueERP: confirmado?.cdMovEstoqueERP ?? estado.cdMovEstoqueERP,
+            nrPortal: confirmado?.nrPortal ?? estado.nrPortal,
             ok,
             ignorado: caixasMarcadas.length === 0 && ok,
             caixasMarcadas,
             entregue,
             recebido,
-            erro: ok ? undefined : 'O Auge não confirmou as duas caixas como marcadas.',
+            erro: ok ? undefined : 'O toggle respondeu, mas a releitura do Auge não confirmou as duas caixas marcadas.',
           });
         } catch (e) {
           resultados.push({
