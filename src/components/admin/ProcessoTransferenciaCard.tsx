@@ -195,6 +195,10 @@ export default function ProcessoTransferenciaCard() {
   const [fileName, setFileName] = useState('');
   const [parsing, setParsing] = useState(false);
   const [salvando, setSalvando] = useState(false);
+  /** Etapa sendo aplicada no momento (bloqueia os botões em lote). */
+  const [aplicando, setAplicando] = useState<Etapa | null>(null);
+  /** Replica a ação de entrega/recebimento diretamente no Auge. */
+  const [sincAuge, setSincAuge] = useState(true);
   const [dragOver, setDragOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const montadoRef = useRef(true);
