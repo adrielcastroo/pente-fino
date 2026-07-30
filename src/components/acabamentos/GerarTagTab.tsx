@@ -641,8 +641,10 @@ function ConfiguracaoSelect({
 
       // 1) View local (configurações que já têm linhas de TAG gravadas).
       await buscarEm('auge_tag_custom_configuracoes');
-      // 2) Varredura: configurações conhecidas no Auge ainda sem linhas locais.
-      if (acumulado.length === 0) await buscarEm('auge_tag_custom_scan');
+      // 2) Varredura completa: esta fonte também contém configurações ainda sem
+      // TAGs locais. Ela deve ser consultada SEMPRE; antes, um único resultado
+      // na view local impedia a leitura dos demais cadastros conhecidos no Auge.
+      await buscarEm('auge_tag_custom_scan');
 
       if (acumulado.length > 0) {
         return dedupe(acumulado).sort((a, b) =>
