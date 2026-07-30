@@ -4465,16 +4465,27 @@ Deno.serve(async (req) => {
         const idx = t.indexOf(termo);
         out.push({ src: 'grid', status: res.status, len: t.length, snippet: idx >= 0 ? t.slice(Math.max(0, idx - 600), idx + 1200) : t.slice(0, 1500) });
       } catch (e) { out.push({ src: 'grid', error: getErrorMessage(e) }); }
-      // 2) páginas de detalhe candidatas
+      // 2) endpoints php citados na página tag.php
+      try {
+        const res = await fetch(`${AUGE_BASE_URL}/l.unilux/modInventario/tag/tag.php`, { headers, signal: AbortSignal.timeout(15000) });
+        const t = await res.text();
+        const phps = [...new Set([...t.matchAll(/["'`]([^"'`\s]*\.php)[^"'`]*["'`]/g)].map((m) => m[1]))];
+        out.push({ src: 'tag.php-endpoints', status: res.status, phps });
+      } catch (e) { out.push({ src: 'tag.php-endpoints', error: getErrorMessage(e) }); }
+      // 3) controle candidatos com idAcao=2 (carregar para edição)
       for (const p of [
-        `/l.unilux/modInventario/tag/manterTag.php?cdTag=${encodeURIComponent(cd)}&idAcao=2`,
-        `/l.unilux/modInventario/tag/tag.php?cdTag=${encodeURIComponent(cd)}&idAcao=2`,
+        '/l.unilux/modInventario/tag/controle/ctlTag.php',
+        '/l.unilux/modInventario/tag/ajax/getListaTag.php',
       ]) {
         try {
-          const res = await fetch(`${AUGE_BASE_URL}${p}`, { headers, signal: AbortSignal.timeout(15000) });
+          const res = await fetch(`${AUGE_BASE_URL}${p}`, {
+            method: 'POST',
+            headers: { ...headers, 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+            body: new URLSearchParams({ cdTag: cd, idAcao: '2', nrPagina: '1', qtdItens: '1', dsPesquisaGeral: 'PHA25/16_Corda1' }),
+            signal: AbortSignal.timeout(15000),
+          });
           const t = await res.text();
-          const i = t.toLowerCase().indexOf('formula');
-          out.push({ src: p, status: res.status, len: t.length, snippet: i >= 0 ? t.slice(Math.max(0, i - 500), i + 1500) : t.slice(0, 800) });
+          out.push({ src: p, status: res.status, len: t.length, snippet: t.slice(0, 1500) });
         } catch (e) { out.push({ src: p, error: getErrorMessage(e) }); }
       }
       return new Response(JSON.stringify({ ok: true, out }), {
