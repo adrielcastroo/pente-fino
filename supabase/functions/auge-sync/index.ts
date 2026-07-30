@@ -4472,20 +4472,24 @@ Deno.serve(async (req) => {
         const phps = [...new Set([...t.matchAll(/["'`]([^"'`\s]*\.php)[^"'`]*["'`]/g)].map((m) => m[1]))];
         out.push({ src: 'tag.php-endpoints', status: res.status, phps });
       } catch (e) { out.push({ src: 'tag.php-endpoints', error: getErrorMessage(e) }); }
-      // 3) controle candidatos com idAcao=2 (carregar para edição)
+      // 3) modal de edição (loadModalTag.php) — traz a fórmula completa
       for (const p of [
-        '/l.unilux/modInventario/tag/controle/ctlTag.php',
-        '/l.unilux/modInventario/tag/ajax/getListaTag.php',
+        `/l.unilux/modInventario/tag/loadModalTag.php?cdTag=${encodeURIComponent(cd)}&idAcao=2`,
+        `/l.unilux/modInventario/tag/loadModalTag.php`,
       ]) {
         try {
-          const res = await fetch(`${AUGE_BASE_URL}${p}`, {
-            method: 'POST',
-            headers: { ...headers, 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
-            body: new URLSearchParams({ cdTag: cd, idAcao: '2', nrPagina: '1', qtdItens: '1', dsPesquisaGeral: 'PHA25/16_Corda1' }),
-            signal: AbortSignal.timeout(15000),
-          });
+          const isGet = p.includes('?');
+          const res = await fetch(`${AUGE_BASE_URL}${p}`, isGet
+            ? { headers, signal: AbortSignal.timeout(15000) }
+            : {
+              method: 'POST',
+              headers: { ...headers, 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+              body: new URLSearchParams({ cdTag: cd, idAcao: '2' }),
+              signal: AbortSignal.timeout(15000),
+            });
           const t = await res.text();
-          out.push({ src: p, status: res.status, len: t.length, snippet: t.slice(0, 1500) });
+          const i = t.toLowerCase().indexOf('formula');
+          out.push({ src: p, status: res.status, len: t.length, snippet: i >= 0 ? t.slice(Math.max(0, i - 800), i + 2000) : t.slice(0, 1200) });
         } catch (e) { out.push({ src: p, error: getErrorMessage(e) }); }
       }
       return new Response(JSON.stringify({ ok: true, out }), {
