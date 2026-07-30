@@ -239,15 +239,21 @@ function formulaTruncada(f: string): boolean {
 async function completarFormula(sel: TagCalculadaSel): Promise<TagCalculadaSel> {
   if (!sel.valor || (sel.formula && !formulaTruncada(sel.formula))) return sel;
   try {
-    const { data } = await supabase.functions.invoke('auge-sync?action=tag_calculada_formula', {
+    // Timeout defensivo: o Auge pode demorar/estourar CPU na Edge Function.
+    // Sem isso a promise fica pendurada e a célula nunca conclui a seleção.
+    const req = supabase.functions.invoke('auge-sync?action=tag_calculada_formula', {
       body: { cdTag: sel.cdTag ?? '', nome: sel.valor },
     });
-    const formula = String((data as any)?.formula ?? '').trim();
+    const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 12_000));
+    const res = await Promise.race([req, timeout]);
+    if (!res) return sel;
+    const formula = String((res as { data?: { formula?: unknown } })?.data?.formula ?? '').trim();
     return formula ? { ...sel, formula } : sel;
   } catch {
     return sel;
   }
 }
+
 
 
 
