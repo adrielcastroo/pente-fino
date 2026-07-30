@@ -1227,7 +1227,7 @@ export default function GerarTagTab() {
   };
 
 
-  const carregandoRecs = loadingCfgs || loadingTags || loadingBusca || loadingCustom;
+  const carregandoRecs = loadingCfgs || loadingTags || loadingBusca || loadingPalavras || loadingCustom;
 
   return (
     <div className="space-y-4">
