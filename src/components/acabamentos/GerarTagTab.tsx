@@ -1163,9 +1163,10 @@ export default function GerarTagTab() {
         <div className="space-y-1">
           <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
             Configuração
-            {cfgSearch.termo.trim().length >= 3 && !customAberta && !cfgSearch.isSearching && !cfgSearch.hasResults && (
+            {ehTagCustomNova && (
               <Badge className="bg-amber-500 text-amber-950 hover:bg-amber-500 text-[9px]">Nova TAG Custom</Badge>
             )}
+
           </div>
           <ConfiguracaoSelect
             valor={customAberta}
