@@ -5300,6 +5300,30 @@ Deno.serve(async (req) => {
       });
     }
 
+    // -------------- DEBUG: JS da tela de consultas --------------------------
+    if (action === 'debug_consulta_js') {
+      const h = { 'Cookie': auth.jar.header(), 'User-Agent': UA, 'Accept': '*/*' };
+      const page = await fetch(`${AUGE_BASE_URL}/l.unilux/modTI/gerirConsulta.php`, { headers: h });
+      auth.jar.ingest(page);
+      const html = await page.text();
+      const scripts = Array.from(html.matchAll(/<script[^>]+src=["']([^"']+)["']/gi)).map((m) => m[1]);
+      const alvo = scripts.find((s) => /consulta/i.test(s));
+      let js = '';
+      if (alvo) {
+        const jsUrl = alvo.startsWith('http')
+          ? alvo
+          : `${AUGE_BASE_URL}/l.unilux/modTI/${alvo.replace(/^\.?\//, '')}`;
+        const r = await fetch(jsUrl, { headers: h });
+        auth.jar.ingest(r);
+        const txt = await r.text();
+        const i = txt.indexOf('Resultado');
+        js = `url=${jsUrl}\nlen=${txt.length}\n` + txt.slice(Math.max(0, i - 1500), i + 3500);
+      }
+      return new Response(JSON.stringify({ ok: true, scripts, js }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // -------------- LISTAR CONSULTAS DISPONÍVEIS (Gerador de Consultas) ------
     if (action === 'listar_consultas') {
       const itens = await listarConsultasAuge(auth);
