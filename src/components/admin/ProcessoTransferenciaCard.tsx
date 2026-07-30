@@ -46,7 +46,13 @@ interface ImportRow {
   dt_criacao: string | null;
   usuario_criacao: string | null;
   nr_entrada_sap: string | null;
+  /** Marcações vindas da planilha simplificada (Nº Entrada SAP + ações). */
+  marcar_entregar?: boolean;
+  marcar_receber?: boolean;
+  /** false quando o Nº Entrada SAP não corresponde a nenhuma transferência. */
+  resolvido?: boolean;
 }
+
 
 /** Situação do Auge — 20 = Efetivado ("verdinho"). */
 const SITUACAO_EFETIVADO = '20';
@@ -78,7 +84,12 @@ const norm = (s: unknown) =>
     .replace(/\s+/g, ' ')
     .trim();
 
-const ALIASES: Record<keyof ImportRow, string[]> = {
+type CampoPlanilha =
+  | 'id_externo' | 'nr_portal' | 'observacao' | 'situacao_importada'
+  | 'qt_item' | 'dt_criacao' | 'usuario_criacao' | 'nr_entrada_sap'
+  | 'marcar_entregar' | 'marcar_receber';
+
+const ALIASES: Record<CampoPlanilha, string[]> = {
   id_externo: [
     'no transferencia', 'n transferencia', 'numero transferencia', 'transferencia',
     'no rascunho', 'n rascunho', 'rascunho', 'documento', 'cd movimentacao',
@@ -94,30 +105,42 @@ const ALIASES: Record<keyof ImportRow, string[]> = {
     'no entrada sap', 'n entrada sap', 'numero entrada sap', 'entrada sap',
     'nr entrada sap', 'sap',
   ],
+  marcar_entregar: [
+    'entregar folha de transf p logistica', 'entregar folha de transf p logistica marcar',
+    'entregar folha', 'entregar', 'entrega logistica', 'entregar logistica',
+  ],
+  marcar_receber: [
+    'receber folha de transf da logistica', 'receber folha de transf da logistica marcar',
+    'receber folha', 'receber', 'recebimento logistica', 'receber logistica',
+  ],
 };
+
+/** Valores aceitos como "marcar" nas colunas de ação. */
+const MARCADORES = new Set(['marcar', 'x', 'sim', 's', 'ok', '1', 'true', 'v', 'marcado']);
+const isMarcado = (raw: unknown) => MARCADORES.has(norm(raw));
 
 /** Cabeçalhos e exemplos do modelo oferecido para download. */
 const MODELO_HEADERS = [
-  'Nº Transferência', 'Nº Portal', 'Observação', 'Situação',
-  'Qt. Item', 'Dt. Criação', 'Usuário Criação', 'Nº Entrada SAP',
+  'Nº Entrada SAP',
+  'Entregar folha de transf. p/ logística',
+  'Receber folha de transf. da logística',
 ] as const;
 
 const MODELO_EXEMPLOS: (string | number)[][] = [
-  ['180829', '180829', 'Tecido PVT Nec 30/07', 'Em Edição', 1, '30/07/2026', 'Tainã Quadros', ''],
-  ['180830', '180830', 'Motor 24V Linha 3', 'Efetivado', 4, '30/07/2026', 'Adriel Avila', '183351'],
+  ['198857', 'Marcar', 'Marcar'],
+  ['198858', 'Marcar', ''],
+  ['198859', '', 'Marcar'],
 ];
 
 /** Gera e baixa um .xlsx modelo com as colunas aceitas pelo importador. */
 function baixarModelo() {
   const ws = XLSX.utils.aoa_to_sheet([[...MODELO_HEADERS], ...MODELO_EXEMPLOS]);
-  ws['!cols'] = [
-    { wch: 18 }, { wch: 14 }, { wch: 34 }, { wch: 14 },
-    { wch: 10 }, { wch: 14 }, { wch: 22 }, { wch: 16 },
-  ];
+  ws['!cols'] = [{ wch: 18 }, { wch: 38 }, { wch: 38 }];
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Transferências');
+  XLSX.utils.book_append_sheet(wb, ws, 'Folhas');
   XLSX.writeFile(wb, 'modelo-folhas-transferencia.xlsx');
 }
+
 
 
 
@@ -160,12 +183,14 @@ const txt = (raw: unknown): string | null => {
 
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
 
-function parseWorkbook(buffer: ArrayBuffer): { rows: ImportRow[]; ignoradas: number } {
+function parseWorkbook(
+  buffer: ArrayBuffer,
+): { rows: ImportRow[]; ignoradas: number; modoSap: boolean } {
   const wb = XLSX.read(buffer, { type: 'array', cellDates: true });
   const ws = wb.Sheets[wb.SheetNames[0]];
   if (!ws) throw new Error('Planilha vazia.');
   const json: Record<string, unknown>[] = XLSX.utils.sheet_to_json(ws, { defval: '' });
-  if (!json.length) return { rows: [], ignoradas: 0 };
+  if (!json.length) return { rows: [], ignoradas: 0, modoSap: false };
 
   const headers = Array.from(new Set(json.slice(0, 20).flatMap((r) => Object.keys(r))));
   const k = {
@@ -177,34 +202,45 @@ function parseWorkbook(buffer: ArrayBuffer): { rows: ImportRow[]; ignoradas: num
     dt_criacao: findKey(headers, ALIASES.dt_criacao),
     usuario_criacao: findKey(headers, ALIASES.usuario_criacao),
     nr_entrada_sap: findKey(headers, ALIASES.nr_entrada_sap),
+    marcar_entregar: findKey(headers, ALIASES.marcar_entregar),
+    marcar_receber: findKey(headers, ALIASES.marcar_receber),
   };
 
   // Nº da transferência: coluna própria ou, na ausência, o Nº Portal.
   const keyId = k.id_externo ?? k.nr_portal;
-  if (!keyId) {
+  // Modelo simplificado: só o Nº Entrada SAP + colunas de ação.
+  const modoSap = !keyId && !!k.nr_entrada_sap;
+
+  if (!keyId && !modoSap) {
     throw new Error(
-      `Não encontrei a coluna do nº da transferência (ou Nº Portal). Colunas lidas: ${headers.join(', ')}`,
+      `Não encontrei a coluna do nº da transferência nem do Nº Entrada SAP. Colunas lidas: ${headers.join(', ')}`,
     );
   }
 
   const byId = new Map<string, ImportRow>();
   let ignoradas = 0;
   for (const r of json) {
-    const id_externo = txt(r[keyId]);
-    if (!id_externo) { ignoradas++; continue; }
-    byId.set(id_externo, {
-      id_externo,
+    const nr_entrada_sap = k.nr_entrada_sap ? txt(r[k.nr_entrada_sap]) : null;
+    const id_externo = keyId ? txt(r[keyId]) : null;
+    const chave = modoSap ? nr_entrada_sap : id_externo;
+    if (!chave) { ignoradas++; continue; }
+    byId.set(chave, {
+      id_externo: id_externo ?? '',
       nr_portal: k.nr_portal ? txt(r[k.nr_portal]) : null,
       observacao: k.observacao ? txt(r[k.observacao]) : null,
       situacao_importada: k.situacao_importada ? txt(r[k.situacao_importada]) : null,
       qt_item: k.qt_item ? toNumber(r[k.qt_item]) : null,
       dt_criacao: k.dt_criacao ? toDateISO(r[k.dt_criacao]) : null,
       usuario_criacao: k.usuario_criacao ? txt(r[k.usuario_criacao]) : null,
-      nr_entrada_sap: k.nr_entrada_sap ? txt(r[k.nr_entrada_sap]) : null,
+      nr_entrada_sap,
+      marcar_entregar: k.marcar_entregar ? isMarcado(r[k.marcar_entregar]) : false,
+      marcar_receber: k.marcar_receber ? isMarcado(r[k.marcar_receber]) : false,
+      resolvido: !modoSap,
     });
   }
-  return { rows: Array.from(byId.values()), ignoradas };
+  return { rows: Array.from(byId.values()), ignoradas, modoSap };
 }
+
 
 /* ------------------------------------------------------------------ */
 /* Componente                                                          */
@@ -286,6 +322,42 @@ export default function ProcessoTransferenciaCard() {
 
   const limparPreview = () => { setPreview([]); setFileName(''); };
 
+  /**
+   * Resolve as linhas do modelo simplificado: descobre a transferência
+   * correspondente a cada Nº Entrada SAP consultando `auge_transferencias`.
+   */
+  const resolverPorSap = async (rows: ImportRow[]): Promise<ImportRow[]> => {
+    const saps = Array.from(new Set(rows.map((r) => r.nr_entrada_sap).filter(Boolean) as string[]));
+    if (!saps.length) return rows;
+    const { data, error } = await supabase
+      .from('auge_transferencias')
+      .select('id_externo,nr_efetivacao,documento,observacao,quantidade,usuario_criacao,data_movimento,situacao')
+      .in('nr_efetivacao', saps);
+    if (error) throw error;
+
+    const porSap = new Map<string, (typeof data)[number]>();
+    for (const t of data ?? []) {
+      const key = String(t.nr_efetivacao ?? '').trim();
+      if (key && !porSap.has(key)) porSap.set(key, t);
+    }
+
+    return rows.map((r) => {
+      const t = r.nr_entrada_sap ? porSap.get(r.nr_entrada_sap) : undefined;
+      if (!t) return { ...r, resolvido: false };
+      return {
+        ...r,
+        id_externo: String(t.id_externo),
+        nr_portal: r.nr_portal ?? (t.documento ? String(t.documento) : null),
+        observacao: r.observacao ?? t.observacao ?? null,
+        situacao_importada: r.situacao_importada ?? t.situacao ?? null,
+        qt_item: r.qt_item ?? (t.quantidade != null ? Number(t.quantidade) : null),
+        dt_criacao: r.dt_criacao ?? (t.data_movimento ? String(t.data_movimento).slice(0, 10) : null),
+        usuario_criacao: r.usuario_criacao ?? t.usuario_criacao ?? null,
+        resolvido: true,
+      };
+    });
+  };
+
   const handleFile = async (file: File) => {
     if (file.size > MAX_FILE_BYTES) {
       toast.error('Arquivo excede 10 MB.');
@@ -294,10 +366,19 @@ export default function ProcessoTransferenciaCard() {
     setFileName(file.name);
     setParsing(true);
     try {
-      const { rows, ignoradas } = parseWorkbook(await file.arrayBuffer());
+      const parsed = parseWorkbook(await file.arrayBuffer());
+      const { ignoradas, modoSap } = parsed;
+      let rows = parsed.rows;
+      if (modoSap) rows = await resolverPorSap(rows);
+
       setPreview(rows);
+      const naoResolvidas = rows.filter((r) => r.resolvido === false).length;
       if (!rows.length) toast.warning('Nenhuma linha válida encontrada.');
-      else if (ignoradas) toast.info(`${ignoradas} linha(s) sem nº de transferência ignorada(s).`);
+      else if (naoResolvidas) {
+        toast.warning(`${naoResolvidas} Nº Entrada SAP sem transferência correspondente no Auge.`);
+      } else if (ignoradas) {
+        toast.info(`${ignoradas} linha(s) sem identificação ignorada(s).`);
+      }
     } catch (e) {
       setPreview([]);
       toast.error(e instanceof Error ? e.message : 'Falha ao ler a planilha.');
@@ -307,25 +388,74 @@ export default function ProcessoTransferenciaCard() {
   };
 
   const registrarImportacao = async () => {
-    if (!preview.length) return;
+    const validas = preview.filter((r) => r.id_externo && r.resolvido !== false);
+    if (!validas.length) {
+      toast.warning('Nenhuma linha válida para registrar.');
+      return;
+    }
     setSalvando(true);
     try {
       const { data: userRes } = await supabase.auth.getUser();
       const lote = crypto.randomUUID();
       const agora = new Date().toISOString();
-      const payload = preview.map((r) => ({
-        ...r,
-        lote_importacao: lote,
-        importado_por: userRes?.user?.id ?? null,
-        etapa: (r.nr_entrada_sap ? 'recebido_logistica' : 'entregue_logistica') as Etapa,
-        entregue_em: agora,
-        recebido_em: r.nr_entrada_sap ? agora : null,
-      }));
+
+      const etapaDe = (r: ImportRow): Etapa => {
+        if (r.marcar_receber) return 'recebido_logistica';
+        if (r.marcar_entregar) return 'entregue_logistica';
+        return r.nr_entrada_sap ? 'recebido_logistica' : 'entregue_logistica';
+      };
+
+      const payload = validas.map((r) => {
+        const etapa = etapaDe(r);
+        return {
+          id_externo: r.id_externo,
+          nr_portal: r.nr_portal,
+          observacao: r.observacao,
+          situacao_importada: r.situacao_importada,
+          qt_item: r.qt_item,
+          dt_criacao: r.dt_criacao,
+          usuario_criacao: r.usuario_criacao,
+          nr_entrada_sap: r.nr_entrada_sap,
+          lote_importacao: lote,
+          importado_por: userRes?.user?.id ?? null,
+          etapa,
+          entregue_em: agora,
+          recebido_em: etapa === 'recebido_logistica' ? agora : null,
+        };
+      });
+
       const { error } = await supabase
         .from('transferencia_folha_processos')
         .upsert(payload, { onConflict: 'id_externo' });
       if (error) throw error;
-      toast.success(`${payload.length} transferência(s) registrada(s).`);
+
+      // Replica no Auge as marcações indicadas na planilha (entregar → receber).
+      if (sincAuge) {
+        const acoes: { ids: string[]; idLogistica: 1 | 2 }[] = [
+          { ids: validas.filter((r) => r.marcar_entregar).map((r) => r.id_externo), idLogistica: 1 },
+          { ids: validas.filter((r) => r.marcar_receber).map((r) => r.id_externo), idLogistica: 2 },
+        ];
+        for (const acao of acoes) {
+          if (!acao.ids.length) continue;
+          const { data, error: e2 } = await supabase.functions.invoke('auge-sync', {
+            body: {
+              action: 'transferencia_logistica',
+              ids: acao.ids,
+              idLogistica: acao.idLogistica,
+              desejado: true,
+            },
+          });
+          if (e2) throw e2;
+          const falhas = (data?.resultados ?? []).filter((r: { ok: boolean }) => !r.ok);
+          if (falhas.length) {
+            toast.warning(
+              `${falhas.length} folha(s) não puderam ser ${acao.idLogistica === 1 ? 'entregues' : 'recebidas'} no Auge.`,
+            );
+          }
+        }
+      }
+
+      toast.success(`${payload.length} transferência(s) processada(s).`);
       limparPreview();
       await carregar();
     } catch (e) {
@@ -334,6 +464,7 @@ export default function ProcessoTransferenciaCard() {
       setSalvando(false);
     }
   };
+
 
   /* ---------------- Ações em lote ---------------- */
 
@@ -436,10 +567,13 @@ export default function ProcessoTransferenciaCard() {
                 Importar folhas de transferência
               </CardTitle>
               <CardDescription>
-                Aceita <code>.xlsx</code>, <code>.csv</code> e <code>.ods</code> com as colunas do Auge:
-                Observação, Nº Portal, Situação, Qt. Item, Dt. Criação, Usuário Criação e Nº Entrada SAP.
-                Linhas com Nº Entrada SAP entram direto como recebidas da logística.
+                Aceita <code>.xlsx</code>, <code>.csv</code> e <code>.ods</code>. Basta informar o
+                <strong> Nº Entrada SAP</strong> e marcar as colunas
+                “Entregar folha de transf. p/ logística” e/ou “Receber folha de transf. da logística”
+                (escreva <code>Marcar</code> ou <code>X</code>). O app identifica a transferência
+                correspondente no Auge e executa o processo indicado.
               </CardDescription>
+
             </div>
             <Button
               variant="outline"
@@ -515,22 +649,38 @@ export default function ProcessoTransferenciaCard() {
 
           {preview.length > 0 && (
             <div className="overflow-hidden rounded-md border border-border/60">
-              <div className="flex items-center justify-between bg-muted/40 px-3 py-2 text-[11px]">
-                <span className="font-semibold">{preview.length} transferência(s)</span>
+              <div className="flex flex-wrap items-center justify-between gap-2 bg-muted/40 px-3 py-2 text-[11px]">
+                <span className="font-semibold">{preview.length} linha(s)</span>
                 <span className="font-mono text-muted-foreground">
-                  {preview.filter((r) => r.nr_entrada_sap).length} com Nº Entrada SAP
+                  {preview.filter((r) => r.marcar_entregar).length} entregar ·{' '}
+                  {preview.filter((r) => r.marcar_receber).length} receber
+                  {preview.some((r) => r.resolvido === false) && (
+                    <span className="ml-2 text-destructive">
+                      {preview.filter((r) => r.resolvido === false).length} não localizada(s)
+                    </span>
+                  )}
                 </span>
               </div>
               <div className="max-h-64 divide-y divide-border/30 overflow-y-auto text-xs">
-                {preview.slice(0, 200).map((r) => (
-                  <div key={r.id_externo} className="grid grid-cols-[110px_1fr_90px_110px] gap-2 px-3 py-1.5">
-                    <span className="font-mono">{r.id_externo}</span>
+                {preview.slice(0, 200).map((r, i) => (
+                  <div
+                    key={`${r.nr_entrada_sap ?? ''}-${r.id_externo}-${i}`}
+                    className="grid grid-cols-[100px_100px_1fr_auto] items-center gap-2 px-3 py-1.5"
+                  >
+                    <span className="font-mono text-muted-foreground">{r.nr_entrada_sap ?? '—'}</span>
+                    <span className={`font-mono ${r.resolvido === false ? 'text-destructive' : ''}`}>
+                      {r.id_externo || 'não localizada'}
+                    </span>
                     <span className="truncate text-muted-foreground" title={r.observacao ?? ''}>
                       {r.observacao ?? '—'}
                     </span>
-                    <span className="text-right font-mono tabular-nums">{r.qt_item ?? '—'}</span>
-                    <span className="text-right font-mono text-muted-foreground">
-                      {r.nr_entrada_sap ?? '—'}
+                    <span className="flex gap-1">
+                      {r.marcar_entregar && (
+                        <Badge variant="outline" className="h-5 px-1.5 text-[10px]">Entregar</Badge>
+                      )}
+                      {r.marcar_receber && (
+                        <Badge variant="outline" className="h-5 px-1.5 text-[10px]">Receber</Badge>
+                      )}
                     </span>
                   </div>
                 ))}
@@ -543,12 +693,21 @@ export default function ProcessoTransferenciaCard() {
             </div>
           )}
 
-          <div className="flex justify-end">
-            <Button onClick={registrarImportacao} disabled={salvando || !preview.length} className="gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
+            <label className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Checkbox checked={sincAuge} onCheckedChange={(v) => setSincAuge(v === true)} />
+              Refletir no Auge
+            </label>
+            <Button
+              onClick={registrarImportacao}
+              disabled={salvando || !preview.some((r) => r.id_externo && r.resolvido !== false)}
+              className="gap-2"
+            >
               {salvando ? <Loader2 className="h-4 w-4 animate-spin" /> : <PackageCheck className="h-4 w-4" />}
-              Registrar {preview.length || ''}
+              Processar {preview.filter((r) => r.id_externo && r.resolvido !== false).length || ''}
             </Button>
           </div>
+
         </CardContent>
       </Card>
 
