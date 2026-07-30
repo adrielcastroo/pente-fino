@@ -477,23 +477,38 @@ function ConfiguracaoSelect({
 }: {
   valor: { cd: string; nm: string } | null;
   onChange: (v: { cd: string; nm: string } | null) => void;
-  onSearchStateChange?: (state: { termo: string; hasResults: boolean; isSearching: boolean }) => void;
+  onSearchStateChange?: (state: { termo: string; hasResults: boolean; isSearching: boolean; pesquisou: boolean }) => void;
 }) {
   const [busca, setBusca] = useState('');
   const [termo, setTermo] = useState('');
   const [aberto, setAberto] = useState(false);
+  const wrapRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const t = setTimeout(() => setTermo(busca.trim()), 300);
     return () => clearTimeout(t);
   }, [busca]);
 
+  // Clicar fora apenas fecha a lista suspensa: o termo e o resultado da busca
+  // permanecem, então a configuração NÃO passa a ser tratada como nova.
+  useEffect(() => {
+    const onDocDown = (ev: MouseEvent) => {
+      if (!wrapRef.current) return;
+      if (!wrapRef.current.contains(ev.target as Node)) setAberto(false);
+    };
+    document.addEventListener('mousedown', onDocDown);
+    return () => document.removeEventListener('mousedown', onDocDown);
+  }, []);
+
   const padrao = useMemo(() => toIlikePattern(termo), [termo]);
   const tokens = useMemo(() => toIlikeTokens(termo), [termo]);
 
-  const { data: opcoes = [], isFetching } = useQuery({
+  // A busca roda sempre que houver termo suficiente (mesmo com a lista fechada),
+  // garantindo análise imediata das TAGs obrigatórias.
+  const { data: opcoes = [], isFetching, isSuccess } = useQuery({
     queryKey: ['tag-custom-configuracao-busca', padrao, tokens.join('|')],
-    enabled: aberto && padrao.length >= 3,
+    enabled: padrao.length >= 3,
+
     staleTime: 60 * 1000,
     queryFn: async () => {
       const dedupe = (rows: ConfiguracaoLite[]) => {
