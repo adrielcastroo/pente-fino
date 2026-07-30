@@ -4125,6 +4125,36 @@ Deno.serve(async (req) => {
         augeRows = await fetchListaTagsCustomizadas(auth, cdConfiguracao, cdConfiguracao ? '' : descricao);
       } catch { /* consulta de conferência é best-effort */ }
 
+      // A listagem do Auge devolve apenas o CÓDIGO da TAG calculada. Resolvemos
+      // o nome/fórmula pelo espelho local para a tabela "Como ficou no Auge"
+      // não exibir a coluna vazia.
+      try {
+        const codigos = Array.from(new Set(
+          augeRows
+            .map((r: any) => String(r?.cdTagCalculada ?? r?.cdTag ?? '').trim())
+            .filter((v: string) => v.length > 0),
+        ));
+        if (codigos.length) {
+          const { data: espelho } = await admin
+            .from('auge_tags_calculadas')
+            .select('cd_tag, nm_tag, nome, descricao, formula')
+            .in('cd_tag', codigos);
+          const porCd = new Map<string, any>();
+          for (const t of (espelho ?? []) as any[]) porCd.set(String(t.cd_tag), t);
+          augeRows = augeRows.map((r: any) => {
+            const cd = String(r?.cdTagCalculada ?? r?.cdTag ?? '').trim();
+            const hit = cd ? porCd.get(cd) : null;
+            if (!hit) return r;
+            return {
+              ...r,
+              dsTagCalculada: r?.dsTagCalculada || hit.nome || hit.nm_tag || hit.descricao || '',
+              dsFormula: r?.dsFormula || hit.formula || '',
+            };
+          });
+        }
+      } catch { /* enriquecimento é best-effort */ }
+
+
       const okCount = results.filter((r) => r.ok).length;
       return new Response(JSON.stringify({
         ok: okCount > 0,
