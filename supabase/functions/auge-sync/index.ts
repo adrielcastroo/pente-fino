@@ -3844,7 +3844,12 @@ Deno.serve(async (req) => {
 
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
   const url = new URL(req.url);
-  const action = url.searchParams.get('action');
+  // `supabase.functions.invoke` envia o payload no corpo. Aceitar `action`
+  // tanto na query quanto no JSON evita que uma ação pontual caia, por engano,
+  // no sincronismo completo de todas as entidades.
+  let requestPayload: Record<string, unknown> = {};
+  try { requestPayload = await req.clone().json(); } catch { /* GET ou corpo ausente */ }
+  const action = url.searchParams.get('action') ?? cleanText(requestPayload.action);
   const entityParam = url.searchParams.get('entity');
   const entities: Entity[] = entityParam
     ? entityParam.split(',').filter(e => (ALL_ENTITIES as string[]).includes(e)) as Entity[]
@@ -4014,7 +4019,15 @@ Deno.serve(async (req) => {
           if (r.marcado !== desejado) {
             r = await logisticaFolhaTransferencia(auth, id, idLogistica as 1 | 2);
           }
-          resultados.push({ id, ok: true, marcado: r.marcado, dtAtualizacao: r.dtAtualizacao, usuario: r.usuario });
+          const confirmado = r.marcado === desejado;
+          resultados.push({
+            id,
+            ok: confirmado,
+            marcado: r.marcado,
+            erro: confirmado ? undefined : `O Auge respondeu, mas manteve a marcação como ${r.marcado ? 'ativa' : 'inativa'}.`,
+            dtAtualizacao: r.dtAtualizacao,
+            usuario: r.usuario,
+          });
         } catch (e) {
           resultados.push({ id, ok: false, erro: e instanceof Error ? e.message : String(e) });
         }
