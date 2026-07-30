@@ -3989,8 +3989,19 @@ Deno.serve(async (req) => {
       const desejado = typeof payload?.desejado === 'boolean' ? payload.desejado : true;
       if (!ids.length) throw new Error('Envie ao menos um id em "ids".');
 
+      // Limites de segurança: cada id gera 1-2 requisições HTTP ao Auge.
+      // Sem teto, lotes grandes estouram o CPU/wall time da Edge Function
+      // (erro "CPU Time exceeded" → resposta vazia no cliente).
+      const MAX_POR_CHAMADA = 20;
+      const TEMPO_LIMITE_MS = 45_000;
+      const inicio = Date.now();
+
+      const alvo = ids.slice(0, MAX_POR_CHAMADA);
+      const naoProcessados: string[] = ids.slice(MAX_POR_CHAMADA);
+
       const resultados: Array<{ id: string; ok: boolean; marcado?: boolean; erro?: string; dtAtualizacao?: string | null; usuario?: string | null }> = [];
-      for (const id of ids) {
+      for (const id of alvo) {
+        if (Date.now() - inicio > TEMPO_LIMITE_MS) { naoProcessados.push(id); continue; }
         try {
           let r = await logisticaFolhaTransferencia(auth, id, idLogistica as 1 | 2);
           // A ação é um toggle: se o estado resultante não é o desejado, reverte.
