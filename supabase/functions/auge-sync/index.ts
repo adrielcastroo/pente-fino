@@ -5281,23 +5281,53 @@ Deno.serve(async (req) => {
     }
 
 
-    // -------------- RELATÓRIO DE ANÁLISE DE COMPRA (sem informar ID) --------
-    // O app não deve pedir o ID da consulta: resolvemos "Análise de compra V5"
-    // automaticamente e devolvemos o resultado bruto para a filtragem no front.
+    // -------------- RELATÓRIO DE ANÁLISE DE COMPRA -------------------------
+    // Resolvemos "Análise de compra V5 - HANA" automaticamente. Se a consulta
+    // não existir para as credenciais em uso, devolvemos 200 com a lista de
+    // consultas disponíveis para o usuário escolher no app (evita erro opaco).
     if (action === 'analise_compra') {
-      const { consulta, itens } = await resolverConsultaAnaliseCompra(auth);
+      const idForcado = String(
+        (requestPayload as any)?.idConsulta ?? url.searchParams.get('idConsulta') ?? '',
+      ).trim();
+
+      let consulta: { id: string; nome: string; grupo?: string } | null = null;
+      let itens: Array<{ id: string; nome: string; grupo?: string }> = [];
+
+      if (idForcado) {
+        itens = await listarConsultasAuge(auth);
+        consulta = itens.find((c) => c.id === idForcado) ?? { id: idForcado, nome: `Consulta ${idForcado}` };
+      } else {
+        const r = await resolverConsultaAnaliseCompra(auth);
+        consulta = r.consulta;
+        itens = r.itens;
+      }
+
       if (!consulta) {
         return new Response(JSON.stringify({
           ok: false,
-          error: 'Consulta "Análise de compra V5 - HANA" não encontrada no Gerador de Consultas do Auge.',
-          disponiveis: itens.slice(0, 50),
-        }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          needsSelection: true,
+          error: 'Não encontrei a consulta "Análise de compra V5 - HANA" no Gerador de Consultas do Auge com as suas credenciais. Selecione a consulta desejada.',
+          disponiveis: itens,
+        }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
+
       const data = await runConsultaAuge(auth, consulta.id);
-      return new Response(JSON.stringify({ ok: true, consulta, ...data }), {
+      const rawErro = typeof (data as any)?.resultado?.raw === 'string' ? (data as any).resultado.raw : '';
+      if (/SQLSTATE|Fatal error|Warning:/i.test(rawErro)) {
+        return new Response(JSON.stringify({
+          ok: false,
+          needsSelection: true,
+          consulta,
+          error: `A consulta "${consulta.nome}" retornou erro no Auge: ${rawErro.slice(0, 300)}`,
+          disponiveis: itens,
+        }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      return new Response(JSON.stringify({ ok: true, consulta, disponiveis: itens, ...data }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
 
 
 
