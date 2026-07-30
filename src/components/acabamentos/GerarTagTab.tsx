@@ -1132,12 +1132,19 @@ export default function GerarTagTab() {
     toast.success(`${obrigatoriasFaltando.length} TAG(s) obrigatória(s) adicionada(s).`);
   };
 
-  const descricaoInvalida = tentouEnviar && descricao.trim().length === 0;
+  /**
+   * Nome da TAG Custom enviado ao Auge. O campo de texto livre foi removido da
+   * interface: usamos a própria Configuração selecionada/pesquisada como nome.
+   */
+  const descricaoFinal = useMemo(
+    () => (descricao.trim() || customAberta?.nm?.trim() || termoBusca.trim()),
+    [descricao, customAberta, termoBusca],
+  );
 
   const adicionarTagCustom = async () => {
     setTentouEnviar(true);
-    if (!descricao.trim()) {
-      toast.error('Informe a descrição da TAG Custom antes de continuar.');
+    if (!descricaoFinal) {
+      toast.error('Selecione ou pesquise a Configuração antes de gravar.');
       return;
     }
     if (linhas.length === 0) {
@@ -1157,7 +1164,7 @@ export default function GerarTagTab() {
         body: {
           // Configuração (Pente Fino) -> Configuração (Auge)
           cdConfiguracao: customAberta?.cd ?? '',
-          descricao: descricao.trim(),
+          descricao: descricaoFinal,
           itens: linhas.map((l) => {
             const calculada = (l.calculada ?? '').trim();
             return {
@@ -1181,8 +1188,10 @@ export default function GerarTagTab() {
       setResultado(res);
       setEditandoAuge(false);
       setEdicoesAuge({});
+      registrarHistorico(res?.ok === true);
       if (res?.ok) toast.success(`TAG Custom gravada no Auge (${res.gravadas}/${res.total}).`);
       else toast.error(res?.error ?? 'O Auge não confirmou a gravação da TAG Custom.');
+
     } catch (e: any) {
       const msg = e?.message ?? 'Falha ao criar a TAG Custom no Auge.';
       setResultado({ ok: false, error: msg });
