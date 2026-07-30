@@ -729,6 +729,121 @@ function ConfiguracaoSelect({
 }
 
 // ============================================================
+// Busca manual de TAG Configurada (para inclusão avulsa na composição)
+// ============================================================
+
+interface TagConfiguradaOpt { valor: string; calculada: string; cfgNome: string }
+
+function TagConfiguradaSearch({ onPick }: { onPick: (o: TagConfiguradaOpt) => void }) {
+  const [busca, setBusca] = useState('');
+  const [termo, setTermo] = useState('');
+
+  useEffect(() => {
+    const t = setTimeout(() => setTermo(busca.trim()), 300);
+    return () => clearTimeout(t);
+  }, [busca]);
+
+  const padrao = useMemo(() => toIlikePattern(termo), [termo]);
+  const tokens = useMemo(() => toIlikeTokens(termo), [termo]);
+
+  const { data: opcoes = [], isFetching } = useQuery({
+    queryKey: ['tag-configurada-manual', padrao, tokens.join('|')],
+    enabled: termo.length >= 2,
+    staleTime: 60 * 1000,
+    queryFn: async () => {
+      const sel = 'nm_configuracao, nm_tag_customizada, ds_tag_customizada, ds_tag_calculada, ds_tag_texto';
+      const acc: any[] = [];
+
+      const { data, error } = await (supabase as any)
+        .from('auge_tag_custom')
+        .select(sel)
+        .or(
+          ['ds_tag_customizada', 'nm_tag_customizada']
+            .map((c) => `${c}.ilike.${JSON.stringify(padrao)}`)
+            .join(','),
+        )
+        .limit(300);
+      if (!error) acc.push(...(data ?? []));
+
+      if (tokens.length > 0) {
+        let q = (supabase as any).from('auge_tag_custom').select(sel);
+        for (const t of tokens) q = q.ilike('ds_tag_customizada', t);
+        const alt = await q.limit(300);
+        if (!alt.error) acc.push(...(alt.data ?? []));
+      }
+
+      const seen = new Set<string>();
+      const out: TagConfiguradaOpt[] = [];
+      for (const r of acc) {
+        const valor = normalizeTagFormatC(r.ds_tag_customizada ?? r.nm_tag_customizada ?? '');
+        if (!valor) continue;
+        const key = normalizeTagCode(valor);
+        if (!key || seen.has(key)) continue;
+        seen.add(key);
+        out.push({
+          valor,
+          calculada: normalizeTagFormatC(r.ds_tag_calculada ?? ''),
+          cfgNome: r.nm_configuracao ?? '',
+        });
+      }
+      return out.sort((a, b) => a.valor.localeCompare(b.valor, 'pt-BR')).slice(0, 60);
+    },
+  });
+
+  const livre = termo.replace(/\*/g, '').trim();
+
+  return (
+    <div className="p-3 border-b bg-muted/30 space-y-2">
+      <div className="relative">
+        <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+        <Input
+          autoFocus
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+          placeholder="Pesquisar TAG Configurada (use * como curinga)"
+          className="h-9 pl-7 text-[11px] font-mono"
+        />
+      </div>
+      {termo.length >= 2 && (
+        <div className="rounded border bg-background max-h-56 overflow-auto">
+          {isFetching && (
+            <div className="p-2 text-[10px] text-muted-foreground flex items-center gap-1">
+              <Loader2 className="h-3 w-3 animate-spin" /> Buscando…
+            </div>
+          )}
+          {!isFetching && opcoes.length === 0 && (
+            <div className="p-2 space-y-1">
+              <p className="text-[10px] text-muted-foreground">Nenhuma TAG Configurada encontrada.</p>
+              {livre && (
+                <button
+                  onClick={() => onPick({ valor: livre, calculada: '', cfgNome: '' })}
+                  className="text-[10px] text-primary hover:underline"
+                >
+                  Adicionar “{livre}” como texto livre
+                </button>
+              )}
+            </div>
+          )}
+          {opcoes.map((o) => (
+            <button
+              key={o.valor}
+              onClick={() => onPick(o)}
+              className="w-full text-left px-2 py-1 hover:bg-muted/60 transition"
+            >
+              <div className="font-mono text-[11px] break-all">{o.valor}</div>
+              {o.calculada && (
+                <div className="text-[9px] text-muted-foreground font-mono truncate">= {o.calculada}</div>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+// ============================================================
 // Componente principal
 // ============================================================
 export default function GerarTagTab() {
