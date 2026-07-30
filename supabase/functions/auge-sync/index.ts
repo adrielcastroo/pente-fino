@@ -4166,7 +4166,8 @@ Deno.serve(async (req) => {
         erro?: string;
       }> = [];
 
-      for (const nrEntradaSap of codigos) {
+      for (const pedido of pedidos) {
+        const nrEntradaSap = pedido.nrEntradaSap;
         const estado = porSap.get(nrEntradaSap);
         if (!estado) {
           resultados.push({
@@ -4179,15 +4180,18 @@ Deno.serve(async (req) => {
         const caixasMarcadas: string[] = [];
         let entregue = estado.entregue;
         let recebido = estado.recebido;
+        // Estado alvo: só as caixas pedidas mudam; as demais permanecem como estão.
+        const alvoEntregue = pedido.entregar ? true : estado.entregue;
+        const alvoRecebido = pedido.receber ? true : estado.recebido;
         try {
-          if (!entregue) {
+          if (pedido.entregar && !entregue) {
             const retorno = await logisticaFolhaTransferencia(
               auth, estado.cdMovEstoqueERP, 1, estado.nrPortal ?? '',
             );
             entregue = retorno.marcado;
             if (entregue) caixasMarcadas.push('Entregue folha de transf. p/ logística');
           }
-          if (!recebido) {
+          if (pedido.receber && !recebido) {
             const retorno = await logisticaFolhaTransferencia(
               auth, estado.cdMovEstoqueERP, 2, estado.nrPortal ?? '',
             );
@@ -4196,12 +4200,14 @@ Deno.serve(async (req) => {
           }
           // A resposta do toggle pode retornar `ok`/`idStatus=S` antes de a listagem
           // refletir a alteração. Só reportamos sucesso depois de reler o registro.
-          const confirmado = entregue && recebido
-            ? await confirmarEstadoLogisticaPorSap(auth, nrEntradaSap, { entregue: true, recebido: true })
+          const confirmado = entregue === alvoEntregue && recebido === alvoRecebido
+            ? await confirmarEstadoLogisticaPorSap(
+                auth, nrEntradaSap, { entregue: alvoEntregue, recebido: alvoRecebido },
+              )
             : null;
-          entregue = confirmado?.entregue ?? false;
-          recebido = confirmado?.recebido ?? false;
-          const ok = Boolean(confirmado && entregue && recebido);
+          entregue = confirmado?.entregue ?? entregue;
+          recebido = confirmado?.recebido ?? recebido;
+          const ok = Boolean(confirmado);
           resultados.push({
             nrEntradaSap,
             cdMovEstoqueERP: confirmado?.cdMovEstoqueERP ?? estado.cdMovEstoqueERP,
@@ -4211,7 +4217,7 @@ Deno.serve(async (req) => {
             caixasMarcadas,
             entregue,
             recebido,
-            erro: ok ? undefined : 'O toggle respondeu, mas a releitura do Auge não confirmou as duas caixas marcadas.',
+            erro: ok ? undefined : 'O toggle respondeu, mas a releitura do Auge não confirmou as caixas solicitadas.',
           });
         } catch (e) {
           resultados.push({
