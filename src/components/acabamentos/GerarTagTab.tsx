@@ -1311,6 +1311,43 @@ export default function GerarTagTab() {
     [descricao, customAberta, termoBusca],
   );
 
+  /** Guarda o lançamento atual no histórico local (últimos 10). */
+  const registrarHistorico = (ok: boolean) => {
+    const reg: RegistroGerarTag = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      em: new Date().toISOString(),
+      ok,
+      descricao: descricaoFinal,
+      configuracao: customAberta,
+      // cópia profunda leve: o histórico não pode referenciar o estado vivo
+      linhas: linhas.map((l) => ({ ...l })),
+    };
+    setHistorico((prev) => {
+      const next = [reg, ...prev].slice(0, HISTORICO_MAX);
+      gravarHistorico(next);
+      return next;
+    });
+  };
+
+  /** Recarrega um registro do histórico na composição para editar e relançar. */
+  const relancarRegistro = (reg: RegistroGerarTag) => {
+    setCustomAberta(reg.configuracao);
+    setDescricao(reg.descricao ?? '');
+    setLinhas(reg.linhas.map((l) => ({ ...l })));
+    setResultado(null);
+    setEditandoAuge(false);
+    setEdicoesAuge({});
+    setTentouEnviar(false);
+    toast.success('Registro carregado — edite e grave novamente.');
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const limparHistorico = () => {
+    setHistorico([]);
+    gravarHistorico([]);
+  };
+
+
   const adicionarTagCustom = async () => {
     setTentouEnviar(true);
     if (!descricaoFinal) {
