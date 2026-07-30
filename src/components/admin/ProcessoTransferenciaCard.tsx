@@ -195,6 +195,10 @@ export default function ProcessoTransferenciaCard() {
   const [fileName, setFileName] = useState('');
   const [parsing, setParsing] = useState(false);
   const [salvando, setSalvando] = useState(false);
+  /** Etapa sendo aplicada no momento (bloqueia os botões em lote). */
+  const [aplicando, setAplicando] = useState<Etapa | null>(null);
+  /** Replica a ação de entrega/recebimento diretamente no Auge. */
+  const [sincAuge, setSincAuge] = useState(true);
   const [dragOver, setDragOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const montadoRef = useRef(true);
@@ -308,23 +312,53 @@ export default function ProcessoTransferenciaCard() {
 
   /* ---------------- Ações em lote ---------------- */
 
+  /**
+   * Aplica a etapa localmente e, se habilitado, replica a ação no Auge
+   * (idAcao=5 / idLogistica=1 entregar, 2 receber) via edge function.
+   */
   const aplicarEtapa = async (etapa: Etapa) => {
     const ids = Array.from(sel);
     if (!ids.length) { toast.warning('Selecione ao menos uma transferência.'); return; }
-    const agora = new Date().toISOString();
-    const patch: Partial<ProcessoRow> = { etapa };
-    if (etapa === 'entregue_logistica') patch.entregue_em = agora;
-    if (etapa === 'recebido_logistica') patch.recebido_em = agora;
-    if (etapa === 'finalizada') patch.finalizado_em = agora;
-    const { error } = await supabase
-      .from('transferencia_folha_processos')
-      .update(patch)
-      .in('id', ids);
-    if (error) { toast.error(error.message); return; }
-    toast.success(`${ids.length} atualizada(s) para "${ETAPA_LABEL[etapa]}".`);
-    setSel(new Set());
-    await carregar();
+    const linhas = processos.filter((r) => ids.includes(r.id));
+    setAplicando(etapa);
+    try {
+      if (sincAuge && (etapa === 'entregue_logistica' || etapa === 'recebido_logistica')) {
+        const externos = linhas.map((r) => r.id_externo).filter(Boolean);
+        const { data, error } = await supabase.functions.invoke('auge-sync', {
+          body: {
+            action: 'transferencia_logistica',
+            ids: externos,
+            idLogistica: etapa === 'entregue_logistica' ? 1 : 2,
+            desejado: true,
+          },
+        });
+        if (error) throw error;
+        const falhas = (data?.resultados ?? []).filter((r: { ok: boolean }) => !r.ok);
+        if (falhas.length) {
+          toast.warning(`${falhas.length} folha(s) não puderam ser marcadas no Auge.`);
+        }
+      }
+
+      const agora = new Date().toISOString();
+      const patch: Partial<ProcessoRow> = { etapa };
+      if (etapa === 'entregue_logistica') patch.entregue_em = agora;
+      if (etapa === 'recebido_logistica') patch.recebido_em = agora;
+      if (etapa === 'finalizada') patch.finalizado_em = agora;
+      const { error } = await supabase
+        .from('transferencia_folha_processos')
+        .update(patch)
+        .in('id', ids);
+      if (error) throw error;
+      toast.success(`${ids.length} atualizada(s) para "${ETAPA_LABEL[etapa]}".`);
+      setSel(new Set());
+      await carregar();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Falha ao aplicar etapa.');
+    } finally {
+      setAplicando(null);
+    }
   };
+
 
   const salvarSap = async (id: string, valor: string) => {
     const nr = valor.trim() || null;
@@ -510,22 +544,36 @@ export default function ProcessoTransferenciaCard() {
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="outline" size="sm" className="gap-2"
-              disabled={!sel.size}
+              disabled={!sel.size || aplicando !== null}
               onClick={() => void aplicarEtapa('entregue_logistica')}
             >
-              <Truck className="h-3.5 w-3.5" /> Entregar folha p/ logística
+              {aplicando === 'entregue_logistica'
+                ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                : <Truck className="h-3.5 w-3.5" />}
+              Entregar folha p/ logística
             </Button>
             <Button
               variant="outline" size="sm" className="gap-2"
-              disabled={!sel.size}
+              disabled={!sel.size || aplicando !== null}
               onClick={() => void aplicarEtapa('recebido_logistica')}
             >
-              <PackageCheck className="h-3.5 w-3.5" /> Receber folha da logística
+              {aplicando === 'recebido_logistica'
+                ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                : <PackageCheck className="h-3.5 w-3.5" />}
+              Receber folha da logística
             </Button>
+            <label className="flex cursor-pointer items-center gap-2 text-[11px] text-muted-foreground">
+              <Checkbox
+                checked={sincAuge}
+                onCheckedChange={(v) => setSincAuge(v === true)}
+              />
+              Refletir no Auge
+            </label>
           </div>
+
 
           {loading ? (
             <div className="space-y-2">

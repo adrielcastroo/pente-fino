@@ -2491,6 +2491,39 @@ async function efetivarTransferencia(
   }
 }
 
+/**
+ * Marca/desmarca a folha de transferência na logística.
+ * Confirmado via HAR Final-Transf..har (2026-07-30):
+ *   POST ctlTransferenciaEstoque.php
+ *   idAcao=5&cdMovivimentacao=&cdMovEstoqueERP=<cd>&idLogistica=1|2
+ *   idLogistica=1 -> "Entregar folha p/ logística"
+ *   idLogistica=2 -> "Receber folha da logística"
+ * Resposta: { dtAtualizacao, ok:"ok", idStatus:"S"|"N", idUsuario }
+ * ATENÇÃO: a ação é um TOGGLE — idStatus informa o estado resultante.
+ */
+async function logisticaFolhaTransferencia(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+  cdMovEstoqueERP: string,
+  idLogistica: 1 | 2,
+): Promise<{ marcado: boolean; dtAtualizacao: string | null; usuario: string | null }> {
+  if (!cdMovEstoqueERP) throw new Error('cdMovEstoqueERP é obrigatório.');
+  const body = new URLSearchParams();
+  body.set('idAcao', '5');
+  body.set('cdMovivimentacao', ''); // typo intencional (bate com Auge)
+  body.set('cdMovEstoqueERP', cdMovEstoqueERP);
+  body.set('idLogistica', String(idLogistica));
+  const j = await postCtlTransferencia(auth, body);
+  if (j?.ok !== 'ok') {
+    throw new Error(`Logística retornou: ${JSON.stringify(j).slice(0, 200)}`);
+  }
+  return {
+    marcado: String(j?.idStatus ?? '').toUpperCase() === 'S',
+    dtAtualizacao: j?.dtAtualizacao ?? null,
+    usuario: j?.idUsuario ?? null,
+  };
+}
+
+
 // Atualiza um rascunho existente: mesma estrutura de idAcao=1, porém com
 // cdMovivimentacao preenchido com o cd atual (padrão observado no portal Auge).
 async function atualizarTransferencia(
@@ -3943,6 +3976,47 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
+    // Entregar/Receber folha de transferência da logística (em lote).
+    // payload: { ids: string[], idLogistica: 1|2, desejado?: boolean }
+    if (action === 'transferencia_logistica') {
+      let payload: any = {};
+      try { payload = await req.json(); } catch { /* body opcional */ }
+      const ids: string[] = Array.isArray(payload?.ids)
+        ? payload.ids.map((v: unknown) => String(v ?? '').trim()).filter(Boolean)
+        : [];
+      const idLogistica = Number(payload?.idLogistica) === 2 ? 2 : 1;
+      const desejado = typeof payload?.desejado === 'boolean' ? payload.desejado : true;
+      if (!ids.length) throw new Error('Envie ao menos um id em "ids".');
+
+      const resultados: Array<{ id: string; ok: boolean; marcado?: boolean; erro?: string; dtAtualizacao?: string | null; usuario?: string | null }> = [];
+      for (const id of ids) {
+        try {
+          let r = await logisticaFolhaTransferencia(auth, id, idLogistica as 1 | 2);
+          // A ação é um toggle: se o estado resultante não é o desejado, reverte.
+          if (r.marcado !== desejado) {
+            r = await logisticaFolhaTransferencia(auth, id, idLogistica as 1 | 2);
+          }
+          resultados.push({ id, ok: true, marcado: r.marcado, dtAtualizacao: r.dtAtualizacao, usuario: r.usuario });
+        } catch (e) {
+          resultados.push({ id, ok: false, erro: e instanceof Error ? e.message : String(e) });
+        }
+      }
+
+      await admin.from('auge_sync_runs').insert({
+        status: resultados.every((r) => r.ok) ? 'success' : 'error',
+        triggered_by: triggeredBy, entidade: 'transferencias',
+        finished_at: new Date().toISOString(),
+        detalhes: { action, idLogistica, desejado, resultados },
+      });
+
+      return new Response(JSON.stringify({
+        ok: resultados.every((r) => r.ok),
+        idLogistica, desejado, resultados,
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+
 
 
     if (action === 'sync_tecidos_map') {
