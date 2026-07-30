@@ -1106,7 +1106,7 @@ export default function GerarTagTab() {
           <div className="flex gap-2">
             <Input
               value={descricao}
-              onChange={(e) => { setDescricao(e.target.value); setResultado(null); }}
+              onChange={(e) => setDescricao(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') adicionarTagTextoLivre(); }}
               placeholder="Nome da Tag (texto livre). Ex: Rollo Abs2.0 T42 Standard Preto"
               className={`h-11 text-xs font-mono flex-1 ${descricaoInvalida ? 'border-destructive focus-visible:ring-destructive' : ''}`}
