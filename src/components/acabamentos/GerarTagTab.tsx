@@ -1445,32 +1445,46 @@ export default function GerarTagTab() {
                 <div className="text-[11px] text-destructive break-words">{resultado.error}</div>
               )}
 
-              {!!resultado.results?.length && (
-                <div className="rounded border bg-background overflow-x-auto">
-                  <table className="w-full text-[10px]">
-                    <thead className="bg-muted"><tr className="text-left">
-                      <th className="p-1.5">Tag Configurada</th>
-                      <th className="p-1.5">Tag Calculada</th>
-                      <th className="p-1.5">Fórmula</th>
-                      <th className="p-1.5">Status</th>
-                    </tr></thead>
-                    <tbody>
-                      {resultado.results.map((r, i) => (
-                        <tr key={i} className="border-t">
-                          <td className="p-1.5 font-mono break-all">{r.tag}</td>
-                          <td className="p-1.5 font-mono break-all">{r.calculada || '—'}</td>
-                          <td className="p-1.5 font-mono break-all text-muted-foreground">{r.formula || '—'}</td>
-                          <td className="p-1.5">
-                            {r.ok
-                              ? <span className="text-emerald-600">OK</span>
-                              : <span className="text-destructive break-words">{r.erro}</span>}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+              {(() => {
+                // Se o Auge não devolveu detalhamento, mostramos ao menos o que
+                // foi enviado — a tabela nunca mais fica vazia sem explicação.
+                const linhasResultado = resultado.results?.length
+                  ? resultado.results
+                  : linhas.map((l) => ({
+                      tag: l.valor,
+                      calculada: l.calculada,
+                      formula: l.formula,
+                      ok: false,
+                      erro: resultado.error ?? 'Sem retorno detalhado do Auge para esta linha.',
+                    }));
+                if (!linhasResultado.length) return null;
+                return (
+                  <div className="rounded border bg-background overflow-x-auto">
+                    <table className="w-full text-[10px]">
+                      <thead className="bg-muted"><tr className="text-left">
+                        <th className="p-1.5">Tag Configurada</th>
+                        <th className="p-1.5">Tag Calculada</th>
+                        <th className="p-1.5">Fórmula</th>
+                        <th className="p-1.5">Status</th>
+                      </tr></thead>
+                      <tbody>
+                        {linhasResultado.map((r, i) => (
+                          <tr key={i} className="border-t">
+                            <td className="p-1.5 font-mono break-all">{r.tag || '—'}</td>
+                            <td className="p-1.5 font-mono break-all">{r.calculada || '—'}</td>
+                            <td className="p-1.5 font-mono break-all text-muted-foreground">{r.formula || '—'}</td>
+                            <td className="p-1.5">
+                              {r.ok
+                                ? <span className="text-emerald-600">OK</span>
+                                : <span className="text-destructive break-words">{r.erro}</span>}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })()}
 
               {!!resultado.augeRows?.length && (
                 <div className="space-y-1">
