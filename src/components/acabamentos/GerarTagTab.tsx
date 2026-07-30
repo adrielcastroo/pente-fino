@@ -1157,7 +1157,6 @@ export default function GerarTagTab() {
         <div className="space-y-1">
           <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
             Tag
-            <Badge variant="destructive" className="text-[9px]">obrigatório</Badge>
           </div>
           <div className="flex gap-2">
             <Input
