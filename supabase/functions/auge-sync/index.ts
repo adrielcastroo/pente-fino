@@ -3886,7 +3886,59 @@ async function syncDicionariosFull(admin: any, auth: any, triggeredBy: string | 
   }
 }
 
-async function runConsultaAuge(auth: any, idConsulta: string): Promise<any> {
+/**
+ * Converte o <table> HTML devolvido por getResultadoConsulta.php em
+ * `{ columns, rows }`. O Auge não expõe JSON nessa tela.
+ */
+function parseHtmlTable(html: string): { columns: string[]; rows: string[][] } {
+  const limpar = (s: string) => s
+    .replace(/<br\s*\/?>/gi, ' ')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#0?39;|&apos;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const celulas = (tr: string, tag: 'th' | 'td') =>
+    Array.from(tr.matchAll(new RegExp(`<${tag}\\b[^>]*>([\\s\\S]*?)</${tag}>`, 'gi')))
+      .map((m) => limpar(m[1]));
+
+  const thead = /<thead\b[^>]*>([\s\S]*?)<\/thead>/i.exec(html)?.[1] ?? '';
+  const tbody = /<tbody\b[^>]*>([\s\S]*?)<\/tbody>/i.exec(html)?.[1] ?? html;
+
+  const trs = (bloco: string) =>
+    Array.from(bloco.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)).map((m) => m[1]);
+
+  let columns: string[] = [];
+  for (const tr of trs(thead)) {
+    const ths = celulas(tr, 'th');
+    if (ths.length > columns.length) columns = ths;
+  }
+
+  const rows: string[][] = [];
+  for (const tr of trs(tbody)) {
+    const tds = celulas(tr, 'td');
+    if (!tds.length) continue;
+    rows.push(tds);
+  }
+
+  if (!columns.length && rows.length) {
+    const largura = rows.reduce((m, r) => Math.max(m, r.length), 0);
+    columns = Array.from({ length: largura }, (_, i) => `Coluna ${String(i + 1).padStart(2, '0')}`);
+  }
+  return { columns, rows };
+}
+
+async function runConsultaAuge(
+
+  auth: any,
+  idConsulta: string,
+  parametros?: Record<string, string>,
+): Promise<any> {
   const filtroTxt = await postAugePhp(
     auth,
     '/l.unilux/modTI/Ajax/getFiltroConsulta.php',
@@ -3894,28 +3946,58 @@ async function runConsultaAuge(auth: any, idConsulta: string): Promise<any> {
     '/l.unilux/modTI/gerirConsulta.php',
   );
   let filtros: any = null;
-  try { filtros = JSON.parse(filtroTxt); } catch { filtros = { html: filtroTxt.slice(0, 2000) }; }
+  try { filtros = JSON.parse(filtroTxt); } catch { filtros = { html: filtroTxt.slice(0, 4000) }; }
 
-  // Resultado: GET com querystring
+  // A tela monta os parâmetros dinamicamente (param_0..param_N). Sem enviá-los
+  // o PHP devolve a consulta sem linhas, então replicamos o form completo.
+  const filtroHtml = typeof filtros?.html === 'string' ? filtros.html : filtroTxt;
+  const nomesParam = Array.from(
+    new Set(
+      Array.from(String(filtroHtml).matchAll(/name=["'](param_\d+)["']/gi)).map((m) => m[1]),
+    ),
+  );
+
+  const body = new URLSearchParams({ idConsulta });
+  for (const nome of nomesParam) body.append(nome, parametros?.[nome] ?? '');
+
   const headers: Record<string, string> = {
     'Cookie': auth.jar.header(),
     'X-Requested-With': 'XMLHttpRequest',
     'X-CSRF-TOKEN': auth.csrf,
     'Referer': `${AUGE_BASE_URL}/l.unilux/modTI/gerirConsulta.php`,
     'User-Agent': UA,
-    'Accept': 'application/json, text/javascript, */*; q=0.01',
+    'Accept': 'text/html, */*; q=0.01',
   };
   if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
+
+  // O Auge responde com um <table> HTML (dataType: 'HTML' no jQuery da tela),
+  // por GET com o form serializado. Não existe payload JSON.
   const res = await fetch(
-    `${AUGE_BASE_URL}/l.unilux/modTI/Ajax/getResultadoConsulta.php?idConsulta=${encodeURIComponent(idConsulta)}`,
+    `${AUGE_BASE_URL}/l.unilux/modTI/Ajax/getResultadoConsulta.php?${body.toString()}`,
     { method: 'GET', headers },
   );
   auth.jar.ingest(res);
   const text = await res.text();
+
   let resultado: any = null;
-  try { resultado = JSON.parse(text); } catch { resultado = { raw: text.slice(0, 20000) }; }
-  return { idConsulta, filtros, resultado };
+  try { resultado = JSON.parse(text); } catch { resultado = null; }
+  if (!resultado) {
+    const tabela = parseHtmlTable(text);
+    resultado = tabela.rows.length || tabela.columns.length
+      ? { columns: tabela.columns, data: tabela.rows }
+      : { raw: text.slice(0, 20000) };
+  }
+
+
+  return {
+    idConsulta,
+    filtros,
+    parametros: nomesParam,
+    resultado,
+    debugAmostra: text.slice(0, 600),
+  };
 }
+
 
 /**
  * Lista as consultas do Gerador de Consultas do Auge.
@@ -4015,22 +4097,29 @@ const normalizaNome = (s: string) =>
  */
 async function resolverConsultaAnaliseCompra(auth: any) {
   const itens = await listarConsultasAuge(auth);
-  if (!itens.length) return { consulta: null, itens };
+  if (!itens.length) return { consulta: null, itens, candidatos: [] as typeof itens };
 
-  const analises = itens.filter((c) => normalizaNome(c.nome).includes('analise de compra'));
+  // Grupos prefixados com "x." são os legados apontando para o SQL Server
+  // antigo (retornam SQLSTATE 42S02). Só interessam os grupos ativos (HANA).
+  const ativo = (c: { grupo?: string }) => !/^x\./i.test(String(c.grupo ?? '').trim());
+  const analises = itens
+    .filter((c) => normalizaNome(c.nome).includes('analise de compra'))
+    .sort((a, b) => Number(ativo(b)) - Number(ativo(a)));
+
   const versao = (nome: string) => {
     const v = /analise de compra\s*v(\d+)/.exec(normalizaNome(nome));
     return v ? Number(v[1]) : 0;
   };
 
-  const alvo =
-    analises.find((c) => /analise de compra\s*v5.*hana/.test(normalizaNome(c.nome))) ??
-    analises.find((c) => /analise de compra\s*v5/.test(normalizaNome(c.nome))) ??
-    analises.slice().sort((a, b) => versao(b.nome) - versao(a.nome))[0] ??
-    null;
+  const candidatos = [
+    ...analises.filter((c) => ativo(c) && /hana/.test(normalizaNome(c.nome))),
+    ...analises.filter((c) => ativo(c)).sort((a, b) => versao(b.nome) - versao(a.nome)),
+    ...analises.filter((c) => !ativo(c)).sort((a, b) => versao(b.nome) - versao(a.nome)),
+  ].filter((c, i, arr) => arr.findIndex((x) => x.id === c.id) === i);
 
-  return { consulta: alvo, itens };
+  return { consulta: candidatos[0] ?? null, itens, candidatos };
 }
+
 
 
 
@@ -5259,6 +5348,9 @@ Deno.serve(async (req) => {
       });
     }
 
+
+
+
     // -------------- LISTAR CONSULTAS DISPONÍVEIS (Gerador de Consultas) ------
     if (action === 'listar_consultas') {
       const itens = await listarConsultasAuge(auth);
@@ -5290,43 +5382,50 @@ Deno.serve(async (req) => {
         (requestPayload as any)?.idConsulta ?? url.searchParams.get('idConsulta') ?? '',
       ).trim();
 
-      let consulta: { id: string; nome: string; grupo?: string } | null = null;
       let itens: Array<{ id: string; nome: string; grupo?: string }> = [];
+      let candidatos: Array<{ id: string; nome: string; grupo?: string }> = [];
 
       if (idForcado) {
         itens = await listarConsultasAuge(auth);
-        consulta = itens.find((c) => c.id === idForcado) ?? { id: idForcado, nome: `Consulta ${idForcado}` };
+        candidatos = [itens.find((c) => c.id === idForcado) ?? { id: idForcado, nome: `Consulta ${idForcado}` }];
       } else {
         const r = await resolverConsultaAnaliseCompra(auth);
-        consulta = r.consulta;
         itens = r.itens;
+        candidatos = r.candidatos;
       }
 
-      if (!consulta) {
+      if (!candidatos.length) {
         return new Response(JSON.stringify({
           ok: false,
           needsSelection: true,
-          error: 'Não encontrei a consulta "Análise de compra V5 - HANA" no Gerador de Consultas do Auge com as suas credenciais. Selecione a consulta desejada.',
+          error: 'Não encontrei nenhuma consulta de Análise de Compra no Gerador de Consultas do Auge com as suas credenciais. Selecione a consulta desejada.',
           disponiveis: itens,
         }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
-      const data = await runConsultaAuge(auth, consulta.id);
-      const rawErro = typeof (data as any)?.resultado?.raw === 'string' ? (data as any).resultado.raw : '';
-      if (/SQLSTATE|Fatal error|Warning:/i.test(rawErro)) {
-        return new Response(JSON.stringify({
-          ok: false,
-          needsSelection: true,
-          consulta,
-          error: `A consulta "${consulta.nome}" retornou erro no Auge: ${rawErro.slice(0, 300)}`,
-          disponiveis: itens,
-        }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      // Consultas legadas apontam para o banco antigo e devolvem SQLSTATE.
+      // Percorremos os candidatos até uma responder com linhas de verdade.
+      let ultimoErro = '';
+      for (const consulta of candidatos.slice(0, 4)) {
+        const data = await runConsultaAuge(auth, consulta.id);
+        const raw = typeof (data as any)?.resultado?.raw === 'string' ? (data as any).resultado.raw : '';
+        if (/SQLSTATE|Fatal error|Warning:|não foi poss/i.test(raw)) {
+          ultimoErro = `A consulta "${consulta.nome}" retornou erro no Auge: ${raw.slice(0, 300)}`;
+          continue;
+        }
+        return new Response(JSON.stringify({ ok: true, consulta, disponiveis: itens, ...data }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
 
-      return new Response(JSON.stringify({ ok: true, consulta, disponiveis: itens, ...data }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return new Response(JSON.stringify({
+        ok: false,
+        needsSelection: true,
+        error: `${ultimoErro || 'Nenhuma consulta de Análise de Compra respondeu com dados.'} Selecione manualmente a consulta desejada.`,
+        disponiveis: itens,
+      }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
+
 
 
 
