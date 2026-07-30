@@ -769,24 +769,35 @@ export default function GerarTagTab() {
     enabled: padraoBusca.length >= 3,
     staleTime: 60 * 1000,
     queryFn: async () => {
+      const sel = 'cd_configuracao, nm_configuracao, nm_tag_customizada, ds_tag_customizada, ds_tag_calculada, ds_tag_texto';
       const cols = ['nm_configuracao', 'ds_tag_customizada', 'nm_tag_customizada', 'ds_tag_texto', 'ds_tag_calculada'];
+      const acc: CustomTag[] = [];
+
       const { data, error } = await (supabase as any)
         .from('auge_tag_custom')
-        .select('cd_configuracao, nm_configuracao, nm_tag_customizada, ds_tag_customizada, ds_tag_calculada, ds_tag_texto')
-        .or(cols.map((c) => `${c}.ilike.${padraoBusca}`).join(','))
+        .select(sel)
+        .or(cols.map((c) => `${c}.ilike.${JSON.stringify(padraoBusca)}`).join(','))
         .limit(300);
-      if (error) throw error;
-      if ((data ?? []).length > 0) return data as CustomTag[];
+      if (!error) acc.push(...((data ?? []) as CustomTag[]));
 
-      // Fallback por tokens na configuração (ordem/espaçamento diferentes).
-      if (tokensBusca.length === 0) return [] as CustomTag[];
-      let q = (supabase as any)
-        .from('auge_tag_custom')
-        .select('cd_configuracao, nm_configuracao, nm_tag_customizada, ds_tag_customizada, ds_tag_calculada, ds_tag_texto');
-      for (const t of tokensBusca) q = q.ilike('nm_configuracao', t);
-      const alt = await q.limit(300);
-      return (alt.data ?? []) as CustomTag[];
+      // AND por tokens (ordem livre) — sempre somado, nunca só fallback:
+      // é o que faz o curinga "A*B*C*" trazer tudo que contém A, B e C.
+      if (tokensBusca.length > 0) {
+        let q = (supabase as any).from('auge_tag_custom').select(sel);
+        for (const t of tokensBusca) q = q.ilike('nm_configuracao', t);
+        const alt = await q.limit(300);
+        if (!alt.error) acc.push(...((alt.data ?? []) as CustomTag[]));
+      }
+
+      const seen = new Set<string>();
+      return acc.filter((t) => {
+        const k = `${t.cd_configuracao}|${t.ds_tag_customizada ?? t.nm_tag_customizada ?? ''}|${t.ds_tag_texto ?? ''}`;
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return true;
+      });
     },
+
 
   });
 
