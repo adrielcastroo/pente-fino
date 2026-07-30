@@ -4472,17 +4472,18 @@ Deno.serve(async (req) => {
         const phps = [...new Set([...t.matchAll(/["'`]([^"'`\s]*\.php)[^"'`]*["'`]/g)].map((m) => m[1]))];
         out.push({ src: 'tag.php-endpoints', status: res.status, phps });
       } catch (e) { out.push({ src: 'tag.php-endpoints', error: getErrorMessage(e) }); }
-      // 3) JS da página tag.php em volta de formulaTag / getListaTag
+      // 3) modal de edição: loadModalTag.php?cdSeqTagCalculada=<cd>
       try {
-        const res = await fetch(`${AUGE_BASE_URL}/l.unilux/modInventario/tag/tag.php`, { headers, signal: AbortSignal.timeout(15000) });
+        const url = `${AUGE_BASE_URL}/l.unilux/modInventario/tag/loadModalTag.php?cdSeqTagCalculada=${encodeURIComponent(cd)}`;
+        const res = await fetch(url, { headers, signal: AbortSignal.timeout(15000) });
         const t = await res.text();
+        const needle = String(payload?.needle ?? 'dsFormula');
         const snippets: string[] = [];
-        const needle = String(payload?.needle ?? 'formulaTag');
         for (const m of t.matchAll(new RegExp(needle, 'g'))) {
-          snippets.push(t.slice(Math.max(0, (m.index ?? 0) - 700), (m.index ?? 0) + 900));
+          snippets.push(t.slice(Math.max(0, (m.index ?? 0) - 500), (m.index ?? 0) + 1200));
         }
-        out.push({ src: `tag.php-js:${needle}`, count: snippets.length, snippets: snippets.slice(0, 5) });
-      } catch (e) { out.push({ src: 'tag.php-js', error: getErrorMessage(e) }); }
+        out.push({ src: 'loadModalTag', status: res.status, len: t.length, count: snippets.length, snippets: snippets.slice(0, 4) });
+      } catch (e) { out.push({ src: 'loadModalTag', error: getErrorMessage(e) }); }
       return new Response(JSON.stringify({ ok: true, out }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
