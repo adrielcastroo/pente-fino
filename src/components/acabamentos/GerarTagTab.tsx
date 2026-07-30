@@ -738,7 +738,15 @@ function ConfiguracaoSelect({
 
 interface TagConfiguradaOpt { valor: string; calculada: string; cfgNome: string }
 
-function TagConfiguradaSearch({ onPick }: { onPick: (o: TagConfiguradaOpt) => void }) {
+function TagConfiguradaSearch({
+  onPick,
+  inline = false,
+  onCancel,
+}: {
+  onPick: (o: TagConfiguradaOpt) => void;
+  inline?: boolean;
+  onCancel?: () => void;
+}) {
   const [busca, setBusca] = useState('');
   const [termo, setTermo] = useState('');
 
@@ -796,8 +804,8 @@ function TagConfiguradaSearch({ onPick }: { onPick: (o: TagConfiguradaOpt) => vo
 
   const livre = termo.replace(/\*/g, '').trim();
 
-  return (
-    <div className="p-3 border-b bg-muted/30 space-y-2">
+  const body = (
+    <>
       <div className="relative">
         <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
         <Input
@@ -842,6 +850,21 @@ function TagConfiguradaSearch({ onPick }: { onPick: (o: TagConfiguradaOpt) => vo
           ))}
         </div>
       )}
+      {inline && onCancel && (
+        <Button size="sm" variant="ghost" className="h-7 px-2 text-[10px]" onClick={onCancel}>
+          Cancelar
+        </Button>
+      )}
+    </>
+  );
+
+  if (inline) {
+    return <div className="space-y-2">{body}</div>;
+  }
+
+  return (
+    <div className="p-3 border-b bg-muted/30 space-y-2">
+      {body}
     </div>
   );
 }
