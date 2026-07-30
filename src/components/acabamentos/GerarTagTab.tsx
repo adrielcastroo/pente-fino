@@ -810,7 +810,7 @@ export default function GerarTagTab() {
     return arr;
   }, [tagsUnificadas, configsRanqueadas]);
 
-  /** TAGs recomendadas (bloco da esquerda): melhor item de cada categoria. */
+  /** TAGs necessárias (bloco da esquerda): melhor item de cada categoria. */
   const recomendadas = useMemo(() => {
     const out: Array<{ id: string; code: string; valor: string; cfgNome: string; calculada: string }> = [];
     for (const cat of categorias) {
@@ -1253,10 +1253,10 @@ export default function GerarTagTab() {
 
 
       <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-4 items-start">
-        {/* Bloco esquerdo: TAGs recomendadas */}
+        {/* Bloco esquerdo: TAGs necessárias */}
         <Card className="p-3 space-y-2">
           <div className="text-[10px] uppercase text-muted-foreground flex items-center gap-1">
-            <TagIcon className="h-3 w-3" /> TAGs recomendadas
+            <TagIcon className="h-3 w-3" /> TAGs necessárias
             <Badge variant="outline" className="text-[9px]">{recomendadas.length}</Badge>
           </div>
           <p className="text-[10px] text-muted-foreground">
@@ -1372,7 +1372,7 @@ export default function GerarTagTab() {
                 {linhas.length === 0 && (
                   <tr>
                     <td colSpan={4} className="p-6 text-center text-muted-foreground text-[11px]">
-                      Selecione TAGs recomendadas à esquerda para montar a TAG Custom.
+                      Selecione TAGs necessárias à esquerda para montar a TAG Custom.
                     </td>
                   </tr>
                 )}
