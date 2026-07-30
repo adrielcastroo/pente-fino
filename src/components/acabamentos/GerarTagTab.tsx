@@ -16,6 +16,8 @@ import {
   Plus,
   Search,
   Sparkles,
+  Pencil,
+
 
 } from 'lucide-react';
 import { toast } from 'sonner';
