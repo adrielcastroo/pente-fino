@@ -4129,14 +4129,29 @@ Deno.serve(async (req) => {
     // Processo idempotente por Nº Entrada SAP: consulta as duas caixas no Auge
     // e aciona o toggle somente para aquelas que ainda estão falsas.
     if (action === 'transferencia_logistica_processar') {
-      const codigos = Array.from(new Set(
-        (Array.isArray(requestPayload?.codigosSap) ? requestPayload.codigosSap : [])
-          .map((v: unknown) => String(v ?? '').trim())
-          .filter((v: string) => /^\d+$/.test(v)),
-      )).slice(0, 8) as string[];
+      // `itens` (novo) permite escolher quais caixas marcar por SAP.
+      // `codigosSap` (legado) mantém o comportamento de marcar as duas.
+      const itensPayload: Array<{ nrEntradaSap: string; entregar: boolean; receber: boolean }> =
+        Array.isArray(requestPayload?.itens)
+          ? requestPayload.itens
+              .map((it: any) => ({
+                nrEntradaSap: String(it?.nrEntradaSap ?? '').trim(),
+                entregar: it?.entregar !== false,
+                receber: it?.receber !== false,
+              }))
+              .filter((it: any) => /^\d+$/.test(it.nrEntradaSap) && (it.entregar || it.receber))
+          : (Array.isArray(requestPayload?.codigosSap) ? requestPayload.codigosSap : [])
+              .map((v: unknown) => ({ nrEntradaSap: String(v ?? '').trim(), entregar: true, receber: true }))
+              .filter((it: any) => /^\d+$/.test(it.nrEntradaSap));
+
+      const porCodigo = new Map<string, { nrEntradaSap: string; entregar: boolean; receber: boolean }>();
+      for (const it of itensPayload) if (!porCodigo.has(it.nrEntradaSap)) porCodigo.set(it.nrEntradaSap, it);
+      const pedidos = Array.from(porCodigo.values()).slice(0, 8);
+      const codigos = pedidos.map((p) => p.nrEntradaSap);
       if (!codigos.length) throw new Error('Envie ao menos um Nº Entrada SAP válido.');
 
       const porSap = await buscarEstadosLogisticaPorSap(auth, codigos);
+
 
 
       const resultados: Array<{
