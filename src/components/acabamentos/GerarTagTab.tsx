@@ -1320,11 +1320,31 @@ export default function GerarTagTab() {
                   </Badge>
                 </div>
                 <p className="text-[10px] text-muted-foreground">
-                  Padrão detectado em {obrigatorias[0]?.total ?? 0} TAG(s) Custom existentes que contêm
-                  “{escopoPadrao.termo || termoBusca}”. Quanto mais específico o texto, mais restrito o padrão
-                  exigido. As TAGs em <span className="text-blue-700 dark:text-blue-400 font-medium">azul</span> são
-                  obrigatórias — a gravação fica bloqueada enquanto faltar alguma.
+                  Padrão detectado em {obrigatorias[0]?.total ?? 0} TAG(s) Custom existentes que compartilham as
+                  palavras-chave da configuração. As TAGs em{' '}
+                  <span className="text-blue-700 dark:text-blue-400 font-medium">azul</span> são obrigatórias — a
+                  gravação fica bloqueada enquanto faltar alguma.
                 </p>
+                {escopoPadrao.tokens.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-1 pt-1">
+                    <span className="text-[9px] uppercase tracking-wide text-muted-foreground">Palavras-chave:</span>
+                    {escopoPadrao.tokens.map((t) => (
+                      <span
+                        key={t}
+                        className="rounded bg-blue-500/10 border border-blue-500/30 px-1.5 py-0.5 font-mono text-[9px] text-blue-700 dark:text-blue-400"
+                      >
+                        {t}
+                      </span>
+                    ))}
+                    {palavrasUsadas.length > 0 && palavrasUsadas.length < palavras.length && (
+                      <span className="text-[9px] text-muted-foreground">
+                        (busca relaxada para {palavrasUsadas.length} de {palavras.length})
+                      </span>
+                    )}
+                  </div>
+                )}
+
+
 
 
               </div>
