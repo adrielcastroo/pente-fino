@@ -904,8 +904,8 @@ export default function GerarTagTab() {
         const alvo = norm(m.nm);
         return sub.every((tk) => alvo.includes(tk));
       });
-      // Nível mais específico com amostra estatisticamente utilizável.
-      if (filtrados.length >= 2) {
+      // Nível mais específico que ainda casa com algum modelo existente.
+      if (filtrados.length >= 1) {
         return { modelos: filtrados, termo: sub.join(' '), tokens: sub };
       }
     }
@@ -919,7 +919,7 @@ export default function GerarTagTab() {
   const obrigatorias = useMemo(() => {
     const modelos = escopoPadrao.modelos;
     const totalModelos = modelos.length;
-    if (totalModelos < 2) return [] as Array<{ code: string; valor: string; calculada: string; freq: number; total: number }>;
+    if (totalModelos < 1) return [] as Array<{ code: string; valor: string; calculada: string; freq: number; total: number }>;
     const acc = new Map<string, { n: number; valor: string; calculadas: Map<string, number> }>();
     for (const modelo of modelos) {
       for (const [code, info] of modelo.codes) {
@@ -929,7 +929,8 @@ export default function GerarTagTab() {
         acc.set(code, cur);
       }
     }
-    const minimo = Math.max(2, Math.ceil(totalModelos * 0.9));
+    // Com um único modelo de referência, todas as suas TAGs são o padrão.
+    const minimo = totalModelos === 1 ? 1 : Math.max(2, Math.ceil(totalModelos * 0.9));
     const out: Array<{ code: string; valor: string; calculada: string; freq: number; total: number }> = [];
     for (const [code, info] of acc) {
       if (info.n < minimo) continue;
@@ -946,15 +947,23 @@ export default function GerarTagTab() {
     [obrigatorias, codigosNaTabela],
   );
 
-  /** Nenhuma configuração existente casou com o texto → TAG Custom nova. */
+  /**
+   * Nenhuma configuração existente casou com o texto → TAG Custom nova.
+   * Só vale quando a busca do campo Configuração realmente terminou sem
+   * resultados: fechar a lista suspensa (clique fora) não muda esse estado.
+   */
   const ehTagCustomNova = useMemo(
     () =>
       !customAberta &&
       termoBusca.trim().length >= 3 &&
       !loadingBusca &&
+      !cfgSearch.isSearching &&
+      cfgSearch.pesquisou &&
+      !cfgSearch.hasResults &&
       customsEncontradas.length === 0,
-    [customAberta, termoBusca, loadingBusca, customsEncontradas.length],
+    [customAberta, termoBusca, loadingBusca, cfgSearch, customsEncontradas.length],
   );
+
 
   // ---------- Manipulação das linhas da tabela ----------
   const jaNaTabela = (id: string) => linhas.some((l) => l.id === id);
