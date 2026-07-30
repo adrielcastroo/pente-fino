@@ -4166,7 +4166,18 @@ Deno.serve(async (req) => {
         const dsTagCustomizada = String(it?.dsTagCustomizada ?? '').trim();
         const dsTagCalculada = String(it?.dsTagCalculada ?? '').trim();
         const dsFormula = String(it?.dsFormula ?? '').trim();
-        if (!dsTagCustomizada) continue;
+        if (!dsTagCustomizada) {
+          // Nunca descarta a linha em silêncio: sem isso a tabela "Gravada no
+          // Auge" ficava vazia e o usuário não sabia o que aconteceu.
+          results.push({
+            tag: String(it?.dsTagTexto ?? '').trim() || '(sem nome)',
+            calculada: dsTagCalculada,
+            formula: dsFormula,
+            ok: false,
+            erro: 'Linha sem nome da TAG configurada — nada foi enviado ao Auge.',
+          });
+          continue;
+        }
 
         // Aceita o código direto do cliente; senão resolve pelo nome espelhado.
         const cdTagCalculada = String(it?.cdTagCalculada ?? '').trim()
