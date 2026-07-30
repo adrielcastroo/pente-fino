@@ -84,7 +84,12 @@ const norm = (s: unknown) =>
     .replace(/\s+/g, ' ')
     .trim();
 
-const ALIASES: Record<keyof ImportRow, string[]> = {
+type CampoPlanilha =
+  | 'id_externo' | 'nr_portal' | 'observacao' | 'situacao_importada'
+  | 'qt_item' | 'dt_criacao' | 'usuario_criacao' | 'nr_entrada_sap'
+  | 'marcar_entregar' | 'marcar_receber';
+
+const ALIASES: Record<CampoPlanilha, string[]> = {
   id_externo: [
     'no transferencia', 'n transferencia', 'numero transferencia', 'transferencia',
     'no rascunho', 'n rascunho', 'rascunho', 'documento', 'cd movimentacao',
@@ -100,30 +105,42 @@ const ALIASES: Record<keyof ImportRow, string[]> = {
     'no entrada sap', 'n entrada sap', 'numero entrada sap', 'entrada sap',
     'nr entrada sap', 'sap',
   ],
+  marcar_entregar: [
+    'entregar folha de transf p logistica', 'entregar folha de transf p logistica marcar',
+    'entregar folha', 'entregar', 'entrega logistica', 'entregar logistica',
+  ],
+  marcar_receber: [
+    'receber folha de transf da logistica', 'receber folha de transf da logistica marcar',
+    'receber folha', 'receber', 'recebimento logistica', 'receber logistica',
+  ],
 };
+
+/** Valores aceitos como "marcar" nas colunas de ação. */
+const MARCADORES = new Set(['marcar', 'x', 'sim', 's', 'ok', '1', 'true', 'v', 'marcado']);
+const isMarcado = (raw: unknown) => MARCADORES.has(norm(raw));
 
 /** Cabeçalhos e exemplos do modelo oferecido para download. */
 const MODELO_HEADERS = [
-  'Nº Transferência', 'Nº Portal', 'Observação', 'Situação',
-  'Qt. Item', 'Dt. Criação', 'Usuário Criação', 'Nº Entrada SAP',
+  'Nº Entrada SAP',
+  'Entregar folha de transf. p/ logística',
+  'Receber folha de transf. da logística',
 ] as const;
 
 const MODELO_EXEMPLOS: (string | number)[][] = [
-  ['180829', '180829', 'Tecido PVT Nec 30/07', 'Em Edição', 1, '30/07/2026', 'Tainã Quadros', ''],
-  ['180830', '180830', 'Motor 24V Linha 3', 'Efetivado', 4, '30/07/2026', 'Adriel Avila', '183351'],
+  ['198857', 'Marcar', 'Marcar'],
+  ['198858', 'Marcar', ''],
+  ['198859', '', 'Marcar'],
 ];
 
 /** Gera e baixa um .xlsx modelo com as colunas aceitas pelo importador. */
 function baixarModelo() {
   const ws = XLSX.utils.aoa_to_sheet([[...MODELO_HEADERS], ...MODELO_EXEMPLOS]);
-  ws['!cols'] = [
-    { wch: 18 }, { wch: 14 }, { wch: 34 }, { wch: 14 },
-    { wch: 10 }, { wch: 14 }, { wch: 22 }, { wch: 16 },
-  ];
+  ws['!cols'] = [{ wch: 18 }, { wch: 38 }, { wch: 38 }];
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Transferências');
+  XLSX.utils.book_append_sheet(wb, ws, 'Folhas');
   XLSX.writeFile(wb, 'modelo-folhas-transferencia.xlsx');
 }
+
 
 
 
