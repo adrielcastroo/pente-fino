@@ -1085,7 +1085,7 @@ export default function GerarTagTab() {
           </div>
           <ConfiguracaoSelect
             valor={customAberta}
-            onChange={(v) => { setCustomAberta(v); setResultado(null); }}
+            onChange={(v) => setCustomAberta(v)}
             onSearchStateChange={setCfgSearch}
           />
           <p className="text-[10px] text-muted-foreground">
