@@ -221,7 +221,7 @@ export default function ProcessoTransferenciaCard() {
         const ids = rows.map((r) => r.id_externo);
         const { data: transf, error: e2 } = await supabase
           .from('auge_transferencias')
-          .select('id_externo,situacao,dt_efetivacao,nr_efetivacao')
+          .select('id_externo,situacao,nr_efetivacao')
           .in('id_externo', ids)
           .eq('situacao', SITUACAO_EFETIVADO);
         if (e2) throw e2;
