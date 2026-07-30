@@ -4472,26 +4472,16 @@ Deno.serve(async (req) => {
         const phps = [...new Set([...t.matchAll(/["'`]([^"'`\s]*\.php)[^"'`]*["'`]/g)].map((m) => m[1]))];
         out.push({ src: 'tag.php-endpoints', status: res.status, phps });
       } catch (e) { out.push({ src: 'tag.php-endpoints', error: getErrorMessage(e) }); }
-      // 3) modal de edição (loadModalTag.php) — traz a fórmula completa
-      for (const p of [
-        `/l.unilux/modInventario/tag/loadModalTag.php?cdTag=${encodeURIComponent(cd)}&idAcao=2`,
-        `/l.unilux/modInventario/tag/loadModalTag.php`,
-      ]) {
-        try {
-          const isGet = p.includes('?');
-          const res = await fetch(`${AUGE_BASE_URL}${p}`, isGet
-            ? { headers, signal: AbortSignal.timeout(15000) }
-            : {
-              method: 'POST',
-              headers: { ...headers, 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
-              body: new URLSearchParams({ cdTag: cd, idAcao: '2' }),
-              signal: AbortSignal.timeout(15000),
-            });
-          const t = await res.text();
-          const i = t.toLowerCase().indexOf('formula');
-          out.push({ src: p, status: res.status, len: t.length, snippet: i >= 0 ? t.slice(Math.max(0, i - 800), i + 2000) : t.slice(0, 1200) });
-        } catch (e) { out.push({ src: p, error: getErrorMessage(e) }); }
-      }
+      // 3) JS da página tag.php em volta de ctlTag.php (descobrir parâmetros)
+      try {
+        const res = await fetch(`${AUGE_BASE_URL}/l.unilux/modInventario/tag/tag.php`, { headers, signal: AbortSignal.timeout(15000) });
+        const t = await res.text();
+        const snippets: string[] = [];
+        for (const m of t.matchAll(/ctlTag\.php/g)) {
+          snippets.push(t.slice(Math.max(0, (m.index ?? 0) - 900), (m.index ?? 0) + 900));
+        }
+        out.push({ src: 'tag.php-ctlTag-js', count: snippets.length, snippets: snippets.slice(0, 4) });
+      } catch (e) { out.push({ src: 'tag.php-ctlTag-js', error: getErrorMessage(e) }); }
       return new Response(JSON.stringify({ ok: true, out }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
