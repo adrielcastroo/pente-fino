@@ -4097,22 +4097,29 @@ const normalizaNome = (s: string) =>
  */
 async function resolverConsultaAnaliseCompra(auth: any) {
   const itens = await listarConsultasAuge(auth);
-  if (!itens.length) return { consulta: null, itens };
+  if (!itens.length) return { consulta: null, itens, candidatos: [] as typeof itens };
 
-  const analises = itens.filter((c) => normalizaNome(c.nome).includes('analise de compra'));
+  // Grupos prefixados com "x." são os legados apontando para o SQL Server
+  // antigo (retornam SQLSTATE 42S02). Só interessam os grupos ativos (HANA).
+  const ativo = (c: { grupo?: string }) => !/^x\./i.test(String(c.grupo ?? '').trim());
+  const analises = itens
+    .filter((c) => normalizaNome(c.nome).includes('analise de compra'))
+    .sort((a, b) => Number(ativo(b)) - Number(ativo(a)));
+
   const versao = (nome: string) => {
     const v = /analise de compra\s*v(\d+)/.exec(normalizaNome(nome));
     return v ? Number(v[1]) : 0;
   };
 
-  const alvo =
-    analises.find((c) => /analise de compra\s*v5.*hana/.test(normalizaNome(c.nome))) ??
-    analises.find((c) => /analise de compra\s*v5/.test(normalizaNome(c.nome))) ??
-    analises.slice().sort((a, b) => versao(b.nome) - versao(a.nome))[0] ??
-    null;
+  const candidatos = [
+    ...analises.filter((c) => ativo(c) && /hana/.test(normalizaNome(c.nome))),
+    ...analises.filter((c) => ativo(c)).sort((a, b) => versao(b.nome) - versao(a.nome)),
+    ...analises.filter((c) => !ativo(c)).sort((a, b) => versao(b.nome) - versao(a.nome)),
+  ].filter((c, i, arr) => arr.findIndex((x) => x.id === c.id) === i);
 
-  return { consulta: alvo, itens };
+  return { consulta: candidatos[0] ?? null, itens, candidatos };
 }
+
 
 
 
