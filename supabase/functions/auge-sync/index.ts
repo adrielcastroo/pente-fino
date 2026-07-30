@@ -5223,8 +5223,11 @@ Deno.serve(async (req) => {
         });
         auth.jar.ingest(res);
         const html = await res.text();
-        const i = html.toLowerCase().indexOf('consulta');
-        debug = `len=${html.length}\n` + html.slice(Math.max(0, i - 500), i + 6000);
+        const i = html.indexOf('id="treeTableConsulta"') >= 0
+          ? html.indexOf('id="treeTableConsulta"')
+          : html.indexOf("id='treeTableConsulta'");
+        debug = `len=${html.length}\n` + html.slice(Math.max(0, i), i + 6000);
+
       }
       return new Response(JSON.stringify({ ok: true, total: itens.length, data: itens, debug }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
