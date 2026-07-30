@@ -884,14 +884,20 @@ export default function GerarTagTab() {
 
 
   const adicionarLinha = (r: { id: string; code: string; valor: string; cfgNome: string; calculada: string }) => {
-    setResultado(null);
     setLinhas((prev) => {
       if (prev.some((l) => l.id === r.id)) {
         toast.info(`TAG ${r.code} removida da tabela.`);
         return prev.filter((l) => l.id !== r.id);
       }
-      toast.success(`TAG ${r.code} adicionada à coluna Tag Customizada.`);
-      return [...prev, { id: r.id, code: r.code, valor: r.valor, cfgNome: r.cfgNome, calculada: r.calculada }];
+      toast.success(`TAG ${r.code} adicionada à coluna Tag Configurada.`);
+      return [...prev, {
+        id: r.id,
+        code: r.code,
+        valor: r.valor,
+        cfgNome: r.cfgNome,
+        calculada: r.calculada,
+        formula: '',
+      }];
     });
   };
 
@@ -907,28 +913,29 @@ export default function GerarTagTab() {
       toast.info('Essa Tag já está na tabela.');
       return;
     }
-    setResultado(null);
     setLinhas((prev) => [...prev, {
       id,
       code: normalizeTagCode(valor) || 'TAG',
       valor,
       cfgNome: customAberta?.nm ?? '',
       calculada: '',
+      formula: '',
     }]);
-    toast.success('Tag adicionada à coluna Tag Customizada.');
+    toast.success('Tag adicionada à coluna Tag Configurada.');
   };
 
-  const setCalculada = (id: string, calculada: string) => {
-    setLinhas((prev) => prev.map((l) => (l.id === id ? { ...l, calculada } : l)));
+  const setCalculada = (id: string, sel: TagCalculadaSel) => {
+    setLinhas((prev) => prev.map((l) => (
+      l.id === id ? { ...l, calculada: sel.valor, formula: sel.formula } : l
+    )));
   };
 
   /** Insere de uma vez todas as TAGs Configuradas obrigatórias que faltam. */
   const adicionarObrigatoriasFaltando = () => {
     if (obrigatoriasFaltando.length === 0) return;
-    setResultado(null);
     setLinhas((prev) => {
       const existentes = new Set(prev.map((l) => l.code));
-      const novas = obrigatoriasFaltando
+      const novas: LinhaTag[] = obrigatoriasFaltando
         .filter((o) => !existentes.has(o.code))
         .map((o) => ({
           id: `obrig|${o.code}|${o.valor}`,
@@ -936,6 +943,7 @@ export default function GerarTagTab() {
           valor: o.valor,
           cfgNome: customAberta?.nm ?? '',
           calculada: o.calculada,
+          formula: '',
         }));
       return [...prev, ...novas];
     });
@@ -951,7 +959,7 @@ export default function GerarTagTab() {
       return;
     }
     if (linhas.length === 0) {
-      toast.error('Adicione ao menos uma TAG customizada na tabela.');
+      toast.error('Adicione ao menos uma TAG configurada na tabela.');
       return;
     }
     if (obrigatoriasFaltando.length > 0) {
@@ -962,7 +970,6 @@ export default function GerarTagTab() {
     }
 
     setEnviando(true);
-    setResultado(null);
     try {
       const { data, error } = await supabase.functions.invoke('auge-sync?action=criar_tag_custom', {
         body: {
@@ -976,6 +983,9 @@ export default function GerarTagTab() {
               dsTagCustomizada: l.valor,
               // TAG Calculada (Pente Fino) -> Tag Calculada (Auge)
               dsTagCalculada: calculada,
+              dsFormula: l.formula ?? '',
+              // Quando a linha já existe no Auge, sobrescreve em vez de duplicar.
+              cdTagCustomizada: l.cdTagCustomizada ?? '',
               // "Texto Livre" só é usado quando não há Tag Calculada (são mutuamente exclusivos no Auge)
               dsTagTexto: calculada ? '' : l.valor,
             };
@@ -985,6 +995,8 @@ export default function GerarTagTab() {
       if (error) throw error;
       const res = data as ResultadoAuge;
       setResultado(res);
+      setEditandoAuge(false);
+      setEdicoesAuge({});
       if (res?.ok) toast.success(`TAG Custom gravada no Auge (${res.gravadas}/${res.total}).`);
       else toast.error(res?.error ?? 'O Auge não confirmou a gravação da TAG Custom.');
     } catch (e: any) {
@@ -995,6 +1007,60 @@ export default function GerarTagTab() {
       setEnviando(false);
     }
   };
+
+  /**
+   * Regrava no Auge as TAGs calculadas editadas pelo usuário no bloco de
+   * retorno. Como enviamos o `cdTagCustomizada` da linha existente, o Auge
+   * executa uma atualização (idAcao=2) e a TAG calculada antiga é substituída.
+   */
+  const confirmarEdicaoAuge = async () => {
+    const rows = resultado?.augeRows ?? [];
+    const itens = rows
+      .map((r: any, i: number) => {
+        const chave = String(r?.cdTagCustomizada ?? i);
+        const edicao = edicoesAuge[chave];
+        if (!edicao) return null;
+        const calculada = (edicao.valor ?? '').trim();
+        const dsTagCustomizada = String(r?.dsTagCustomizada ?? r?.nmTagCustomizada ?? '').trim();
+        if (!dsTagCustomizada) return null;
+        return {
+          cdTagCustomizada: String(r?.cdTagCustomizada ?? ''),
+          dsTagCustomizada,
+          dsTagCalculada: calculada,
+          dsFormula: edicao.formula ?? '',
+          dsTagTexto: calculada ? '' : dsTagCustomizada,
+        };
+      })
+      .filter(Boolean);
+
+    if (itens.length === 0) {
+      toast.info('Altere ao menos uma TAG calculada antes de confirmar.');
+      return;
+    }
+
+    setRegravando(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('auge-sync?action=criar_tag_custom', {
+        body: {
+          cdConfiguracao: customAberta?.cd ?? resultado?.cdConfiguracao ?? '',
+          descricao: (resultado?.descricao ?? descricao).trim() || descricao.trim(),
+          itens,
+        },
+      });
+      if (error) throw error;
+      const res = data as ResultadoAuge;
+      setResultado(res);
+      setEdicoesAuge({});
+      setEditandoAuge(false);
+      if (res?.ok) toast.success(`Edição gravada no Auge (${res.gravadas}/${res.total}).`);
+      else toast.error(res?.error ?? 'O Auge não confirmou a edição.');
+    } catch (e: any) {
+      toast.error(e?.message ?? 'Falha ao regravar a TAG Custom no Auge.');
+    } finally {
+      setRegravando(false);
+    }
+  };
+
 
   const carregandoRecs = loadingCfgs || loadingTags || loadingBusca || loadingCustom;
 
