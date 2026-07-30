@@ -501,19 +501,12 @@ export default function ProcessoTransferenciaCard() {
     try {
       if (sincAuge && (etapa === 'entregue_logistica' || etapa === 'recebido_logistica')) {
         const externos = linhas.map((r) => r.id_externo).filter(Boolean);
-        const { data, error } = await supabase.functions.invoke('auge-sync', {
-          body: {
-            action: 'transferencia_logistica',
-            ids: externos,
-            idLogistica: etapa === 'entregue_logistica' ? 1 : 2,
-            desejado: true,
-          },
-        });
-        if (error) throw error;
-        const falhas = (data?.resultados ?? []).filter((r: { ok: boolean }) => !r.ok);
-        if (falhas.length) {
-          toast.warning(`${falhas.length} folha(s) não puderam ser marcadas no Auge.`);
-        }
+        const { falhas, pendentes } = await sincronizarLogistica(
+          externos,
+          etapa === 'entregue_logistica' ? 1 : 2,
+        );
+        if (falhas) toast.warning(`${falhas} folha(s) não puderam ser marcadas no Auge.`);
+        if (pendentes) toast.warning(`${pendentes} folha(s) não processadas — repita a ação para concluir.`);
       }
 
       const agora = new Date().toISOString();
