@@ -512,12 +512,19 @@ function extractFormulaFromText(text: string): string {
   return '';
 }
 
-async function fetchTagFormulaCompleta(
+function extractInputValue(html: string, id: string): string {
+  const re = new RegExp(`<(?:input|textarea)[^>]*id=["']${id}["'][^>]*value=["']([^"']*)["']`, 'i');
+  const m = html.match(re);
+  return m ? m[1].replace(/&quot;/g, '"').replace(/&amp;/g, '&').trim() : '';
+}
+
+async function fetchTagModal(
   auth: { jar: Jar; csrf: string; apiToken: string | null },
   cdTag: string,
-): Promise<string> {
+): Promise<{ nome: string; descricao: string; formula: string }> {
+  const vazio = { nome: '', descricao: '', formula: '' };
   const cd = String(cdTag ?? '').trim();
-  if (!cd) return '';
+  if (!cd) return vazio;
   const headers: Record<string, string> = {
     'Cookie': auth.jar.header(),
     'X-Requested-With': 'XMLHttpRequest',
@@ -534,11 +541,23 @@ async function fetchTagFormulaCompleta(
       { headers, signal: AbortSignal.timeout(10000) },
     );
     auth.jar.ingest(res);
-    if (!res.ok) { await res.body?.cancel(); return ''; }
-    return extractFormulaFromText(await res.text());
+    if (!res.ok) { await res.body?.cancel(); return vazio; }
+    const html = await res.text();
+    return {
+      nome: extractInputValue(html, 'nmTag'),
+      descricao: extractInputValue(html, 'dsTag'),
+      formula: extractFormulaFromText(html),
+    };
   } catch {
-    return '';
+    return vazio;
   }
+}
+
+async function fetchTagFormulaCompleta(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+  cdTag: string,
+): Promise<string> {
+  return (await fetchTagModal(auth, cdTag)).formula;
 }
 
 
