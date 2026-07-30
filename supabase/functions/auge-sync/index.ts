@@ -3886,7 +3886,11 @@ async function syncDicionariosFull(admin: any, auth: any, triggeredBy: string | 
   }
 }
 
-async function runConsultaAuge(auth: any, idConsulta: string): Promise<any> {
+async function runConsultaAuge(
+  auth: any,
+  idConsulta: string,
+  parametros?: Record<string, string>,
+): Promise<any> {
   const filtroTxt = await postAugePhp(
     auth,
     '/l.unilux/modTI/Ajax/getFiltroConsulta.php',
@@ -3894,28 +3898,65 @@ async function runConsultaAuge(auth: any, idConsulta: string): Promise<any> {
     '/l.unilux/modTI/gerirConsulta.php',
   );
   let filtros: any = null;
-  try { filtros = JSON.parse(filtroTxt); } catch { filtros = { html: filtroTxt.slice(0, 2000) }; }
+  try { filtros = JSON.parse(filtroTxt); } catch { filtros = { html: filtroTxt.slice(0, 4000) }; }
 
-  // Resultado: GET com querystring
+  // A tela monta os parâmetros dinamicamente (param_0..param_N). Sem enviá-los
+  // o PHP devolve a consulta sem linhas, então replicamos o form completo.
+  const filtroHtml = typeof filtros?.html === 'string' ? filtros.html : filtroTxt;
+  const nomesParam = Array.from(
+    new Set(
+      Array.from(String(filtroHtml).matchAll(/name=["'](param_\d+)["']/gi)).map((m) => m[1]),
+    ),
+  );
+
+  const body = new URLSearchParams({ idConsulta });
+  for (const nome of nomesParam) body.append(nome, parametros?.[nome] ?? '');
+
   const headers: Record<string, string> = {
     'Cookie': auth.jar.header(),
     'X-Requested-With': 'XMLHttpRequest',
     'X-CSRF-TOKEN': auth.csrf,
     'Referer': `${AUGE_BASE_URL}/l.unilux/modTI/gerirConsulta.php`,
     'User-Agent': UA,
+    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
     'Accept': 'application/json, text/javascript, */*; q=0.01',
   };
   if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
-  const res = await fetch(
-    `${AUGE_BASE_URL}/l.unilux/modTI/Ajax/getResultadoConsulta.php?idConsulta=${encodeURIComponent(idConsulta)}`,
-    { method: 'GET', headers },
-  );
-  auth.jar.ingest(res);
-  const text = await res.text();
+
+  const fetchResultado = async (method: 'POST' | 'GET') => {
+    const url = method === 'POST'
+      ? `${AUGE_BASE_URL}/l.unilux/modTI/Ajax/getResultadoConsulta.php`
+      : `${AUGE_BASE_URL}/l.unilux/modTI/Ajax/getResultadoConsulta.php?${body.toString()}`;
+    const r = await fetch(url, method === 'POST' ? { method, headers, body } : { method, headers });
+    auth.jar.ingest(r);
+    return await r.text();
+  };
+
+  let text = await fetchResultado('POST');
   let resultado: any = null;
-  try { resultado = JSON.parse(text); } catch { resultado = { raw: text.slice(0, 20000) }; }
-  return { idConsulta, filtros, resultado };
+  try { resultado = JSON.parse(text); } catch { resultado = null; }
+  const vazio = (v: any) => {
+    if (!v) return true;
+    const arr = v?.data ?? v?.aaData ?? v?.rows ?? (Array.isArray(v) ? v : null);
+    return !Array.isArray(arr) || arr.length === 0;
+  };
+  if (vazio(resultado)) {
+    const alt = await fetchResultado('GET');
+    let altJson: any = null;
+    try { altJson = JSON.parse(alt); } catch { altJson = null; }
+    if (!vazio(altJson)) { resultado = altJson; text = alt; }
+  }
+  if (!resultado) resultado = { raw: text.slice(0, 20000) };
+
+  return {
+    idConsulta,
+    filtros,
+    parametros: nomesParam,
+    resultado,
+    debugAmostra: text.slice(0, 600),
+  };
 }
+
 
 /**
  * Lista as consultas do Gerador de Consultas do Auge.
