@@ -521,11 +521,12 @@ export default function ProcessoTransferenciaCard() {
     setAplicando(etapa);
     try {
       if (sincAuge && (etapa === 'entregue_logistica' || etapa === 'recebido_logistica')) {
-        const externos = linhas.map((r) => r.id_externo).filter(Boolean);
-        const { falhas, pendentes } = await sincronizarLogistica(
+        const externos = linhas.map(codigoAuge).filter(Boolean) as string[];
+        const { falhas, pendentes, invalidos } = await sincronizarLogistica(
           externos,
           etapa === 'entregue_logistica' ? 1 : 2,
         );
+        if (invalidos) toast.warning(`${invalidos} linha(s) sem Nº Portal válido — não enviadas ao Auge.`);
         if (falhas) toast.warning(`${falhas} folha(s) não puderam ser marcadas no Auge.`);
         if (pendentes) toast.warning(`${pendentes} folha(s) não processadas — repita a ação para concluir.`);
       }
