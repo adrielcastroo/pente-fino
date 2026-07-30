@@ -16,6 +16,8 @@ import {
   Plus,
   Search,
   Sparkles,
+  Pencil,
+
 
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -165,41 +167,64 @@ interface TagCategoria {
   items: Array<{ tag: CustomTag; cfgNome: string; score: number }>;
 }
 
-/** Linha da tabela: TAG customizada escolhida + TAG calculada vinculada. */
+/** Linha da tabela: TAG configurada escolhida + TAG calculada vinculada. */
 interface LinhaTag {
   id: string;
   code: string;
   valor: string;
   cfgNome: string;
   calculada: string;
+  /** Fórmula da TAG calculada (mesma coluna existente no Auge). */
+  formula: string;
+  /** Código da linha no Auge — quando presente, a gravação sobrescreve. */
+  cdTagCustomizada?: string;
 }
 
 interface ResultadoAuge {
   ok: boolean;
   descricao?: string;
+  cdConfiguracao?: string;
+
   total?: number;
   gravadas?: number;
   falhas?: number;
-  results?: Array<{ tag: string; calculada: string; ok: boolean; erro?: string }>;
+  results?: Array<{
+    tag: string;
+    calculada: string;
+    formula?: string;
+    cdTagCustomizada?: string;
+    ok: boolean;
+    erro?: string;
+  }>;
   augeRows?: any[];
   error?: string;
 }
 
 /**
  * Rascunho em memória (escopo do módulo): mantém o progresso ao navegar entre
- * abas/páginas do SPA e é descartado ao recarregar a página.
+ * abas/páginas do SPA e ao alternar de janela (alt+tab). Só é descartado
+ * quando a página é recarregada ou o navegador é fechado.
  */
 interface RascunhoGerarTag {
   descricao: string;
   linhas: LinhaTag[];
   customAberta: { cd: string; nm: string } | null;
+  resultado: ResultadoAuge | null;
 }
 
 const rascunho: RascunhoGerarTag = {
   descricao: '',
   linhas: [],
   customAberta: null,
+  resultado: null,
 };
+
+/** Valor completo de uma TAG calculada selecionada. */
+interface TagCalculadaSel {
+  valor: string;
+  formula: string;
+}
+
 
 // ============================================================
 // Célula de busca da TAG calculada (curinga SAP B1)
@@ -208,9 +233,11 @@ const rascunho: RascunhoGerarTag = {
 function TagCalculadaCell({
   valor,
   onChange,
+  compacto = false,
 }: {
   valor: string;
-  onChange: (v: string) => void;
+  onChange: (v: TagCalculadaSel) => void;
+  compacto?: boolean;
 }) {
   const [busca, setBusca] = useState('');
   const [aberto, setAberto] = useState(false);
@@ -229,42 +256,35 @@ function TagCalculadaCell({
     staleTime: 60 * 1000,
     queryFn: async () => {
       const seen = new Set<string>();
-      const out: Array<{ valor: string; cfg: string }> = [];
-      const push = (valor: string, cfg: string) => {
-        const v = String(valor ?? '').trim();
+      const out: Array<{ valor: string; formula: string; descricao: string }> = [];
+      const push = (valorRaw: unknown, formulaRaw: unknown, descricaoRaw: unknown) => {
+        const v = String(valorRaw ?? '').trim();
         if (!v || seen.has(v)) return;
         seen.add(v);
-        out.push({ valor: v, cfg });
+        out.push({
+          valor: v,
+          formula: String(formulaRaw ?? '').trim(),
+          descricao: String(descricaoRaw ?? '').trim(),
+        });
       };
 
-      // 1) PRIORIDADE: coluna "Nome" do espelho auge_tags_calculadas
-      //    (ex.: PHA25/16_Corda1_1). É a fonte oficial da TAG calculada.
+      // 1) Espelho auge_tags_calculadas: busca simultânea por NOME, DESCRIÇÃO
+      //    e FÓRMULA (não apenas fallback) — o usuário pode procurar por
+      //    qualquer uma das três colunas, como faz na grade do Auge.
       if (padrao) {
+        const cols = ['nome', 'descricao', 'formula', 'nm_tag'];
         const { data } = await (supabase as any)
           .from('auge_tags_calculadas')
           .select('nome, descricao, formula, nm_tag')
-          .not('nome', 'is', null)
-          .ilike('nome', padrao)
+          .or(cols.map((c) => `${c}.ilike.${padrao}`).join(','))
           .order('nome', { ascending: true })
           .limit(200);
         for (const r of (data ?? []) as any[]) {
-          push(r.nome, r.formula ?? '');
+          push(r.nome ?? r.nm_tag ?? r.descricao, r.formula, r.descricao);
         }
       }
 
-      // 2) FALLBACK: descrição do espelho (texto completo "FORMULA\NOME").
-      if (out.length === 0 && padrao) {
-        const { data } = await (supabase as any)
-          .from('auge_tags_calculadas')
-          .select('nome, descricao, nm_tag')
-          .or(`descricao.ilike.${padrao},nm_tag.ilike.${padrao}`)
-          .limit(200);
-        for (const r of (data ?? []) as any[]) {
-          push(r.nome ?? r.descricao ?? r.nm_tag, r.descricao ?? r.nm_tag ?? '');
-        }
-      }
-
-      // 3) Fallback: nomes já sincronizados nos acabamentos.
+      // 2) Fallback: nomes já sincronizados nos acabamentos.
       if (out.length === 0 && padrao) {
         const { data } = await (supabase as any)
           .from('auge_acabamentos')
@@ -273,10 +293,10 @@ function TagCalculadaCell({
           .ilike('ds_tag_calculada', padrao)
           .order('ds_tag_calculada', { ascending: true })
           .limit(200);
-        for (const r of (data ?? []) as any[]) push(r.ds_tag_calculada, r.nm_acabamento ?? '');
+        for (const r of (data ?? []) as any[]) push(r.ds_tag_calculada, '', r.nm_acabamento ?? '');
       }
 
-      // 4) Busca ao vivo no Auge (caso o espelho ainda não esteja sincronizado).
+      // 3) Busca ao vivo no Auge (caso o espelho ainda não esteja sincronizado).
       if (out.length === 0) {
         try {
           const { data: fn } = await supabase.functions.invoke('auge-sync?action=tag_calculada_select', {
@@ -292,12 +312,12 @@ function TagCalculadaCell({
             const nome = idx >= 0 ? raw.slice(idx + 1).trim() : raw;
             const formula = idx >= 0 ? raw.slice(0, idx).trim() : '';
             if (alvo && !nome.toLowerCase().includes(alvo) && !raw.toLowerCase().includes(alvo)) continue;
-            push(nome || raw, formula);
+            push(nome || raw, formula, raw);
           }
         } catch { /* segue para o fallback local */ }
       }
 
-      // 5) Fallback: TAGs calculadas já vinculadas em TAG Custom.
+      // 4) Fallback: TAGs calculadas já vinculadas em TAG Custom.
       if (out.length === 0 && padrao) {
         const { data } = await (supabase as any)
           .from('auge_tag_custom')
@@ -305,7 +325,7 @@ function TagCalculadaCell({
           .or(`ds_tag_calculada.ilike.${padrao},cd_tag_calculada.ilike.${padrao}`)
           .limit(200);
         for (const r of (data ?? []) as any[]) {
-          push(r.ds_tag_calculada ?? r.cd_tag_calculada, r.nm_configuracao ?? '');
+          push(r.ds_tag_calculada ?? r.cd_tag_calculada, '', r.nm_configuracao ?? '');
         }
       }
 
@@ -339,7 +359,7 @@ function TagCalculadaCell({
           autoFocus={aberto}
           onFocus={() => setAberto(true)}
           onChange={(e) => { setBusca(e.target.value); setAberto(true); }}
-          placeholder="Buscar TAG calculada (use * como curinga)"
+          placeholder={compacto ? 'Nome, descrição ou fórmula' : 'Buscar por nome, descrição ou fórmula (use * como curinga)'}
           className="h-8 pl-7 text-[11px] font-mono"
         />
       </div>
@@ -357,7 +377,7 @@ function TagCalculadaCell({
                 Nenhuma TAG calculada encontrada. Tente <code className="font-mono">*termo*</code>.
               </p>
               <button
-                onClick={() => { onChange(termo.replace(/\*/g, '').trim()); setAberto(false); }}
+                onClick={() => { onChange({ valor: termo.replace(/\*/g, '').trim(), formula: '' }); setAberto(false); }}
                 className="text-[10px] text-primary hover:underline"
               >
                 Usar “{termo.replace(/\*/g, '').trim()}” como texto livre
@@ -368,11 +388,16 @@ function TagCalculadaCell({
           {opcoes.map((o) => (
             <button
               key={o.valor}
-              onClick={() => { onChange(o.valor); setAberto(false); }}
+              onClick={() => { onChange({ valor: o.valor, formula: o.formula }); setAberto(false); }}
               className="w-full text-left px-2 py-1 hover:bg-muted/60 transition"
             >
               <div className="font-mono text-[11px] break-all">{o.valor}</div>
-              {o.cfg && <div className="text-[9px] text-muted-foreground truncate">{o.cfg}</div>}
+              {o.formula && (
+                <div className="text-[9px] text-muted-foreground font-mono truncate">ƒ {o.formula}</div>
+              )}
+              {!o.formula && o.descricao && (
+                <div className="text-[9px] text-muted-foreground truncate">{o.descricao}</div>
+              )}
             </button>
           ))}
         </div>
@@ -385,6 +410,7 @@ function TagCalculadaCell({
     </div>
   );
 }
+
 
 // ============================================================
 // Busca de Configuração (equivale ao campo "Configuração" do Auge)
@@ -549,12 +575,21 @@ export default function GerarTagTab() {
   const [linhas, setLinhas] = useState<LinhaTag[]>(rascunho.linhas);
   const [customAberta, setCustomAberta] = useState<{ cd: string; nm: string } | null>(rascunho.customAberta);
   const [enviando, setEnviando] = useState(false);
-  const [resultado, setResultado] = useState<ResultadoAuge | null>(null);
+  // O resultado é preservado no rascunho de módulo: alternar de aba, rota ou
+  // janela (alt+tab) não pode limpar o retorno do Auge.
+  const [resultado, setResultado] = useState<ResultadoAuge | null>(rascunho.resultado);
   const [tentouEnviar, setTentouEnviar] = useState(false);
+
+  // Edição das TAGs calculadas já gravadas no Auge.
+  const [editandoAuge, setEditandoAuge] = useState(false);
+  const [edicoesAuge, setEdicoesAuge] = useState<Record<string, TagCalculadaSel>>({});
+  const [regravando, setRegravando] = useState(false);
 
   useEffect(() => { rascunho.descricao = descricao; }, [descricao]);
   useEffect(() => { rascunho.linhas = linhas; }, [linhas]);
   useEffect(() => { rascunho.customAberta = customAberta; }, [customAberta]);
+  useEffect(() => { rascunho.resultado = resultado; }, [resultado]);
+
 
   // Estado da busca no campo Configuração (para indicar "Nova TAG Custom").
   const [cfgSearch, setCfgSearch] = useState<{ termo: string; hasResults: boolean; isSearching: boolean }>({
@@ -853,14 +888,20 @@ export default function GerarTagTab() {
 
 
   const adicionarLinha = (r: { id: string; code: string; valor: string; cfgNome: string; calculada: string }) => {
-    setResultado(null);
     setLinhas((prev) => {
       if (prev.some((l) => l.id === r.id)) {
         toast.info(`TAG ${r.code} removida da tabela.`);
         return prev.filter((l) => l.id !== r.id);
       }
-      toast.success(`TAG ${r.code} adicionada à coluna Tag Customizada.`);
-      return [...prev, { id: r.id, code: r.code, valor: r.valor, cfgNome: r.cfgNome, calculada: r.calculada }];
+      toast.success(`TAG ${r.code} adicionada à coluna Tag Configurada.`);
+      return [...prev, {
+        id: r.id,
+        code: r.code,
+        valor: r.valor,
+        cfgNome: r.cfgNome,
+        calculada: r.calculada,
+        formula: '',
+      }];
     });
   };
 
@@ -876,28 +917,29 @@ export default function GerarTagTab() {
       toast.info('Essa Tag já está na tabela.');
       return;
     }
-    setResultado(null);
     setLinhas((prev) => [...prev, {
       id,
       code: normalizeTagCode(valor) || 'TAG',
       valor,
       cfgNome: customAberta?.nm ?? '',
       calculada: '',
+      formula: '',
     }]);
-    toast.success('Tag adicionada à coluna Tag Customizada.');
+    toast.success('Tag adicionada à coluna Tag Configurada.');
   };
 
-  const setCalculada = (id: string, calculada: string) => {
-    setLinhas((prev) => prev.map((l) => (l.id === id ? { ...l, calculada } : l)));
+  const setCalculada = (id: string, sel: TagCalculadaSel) => {
+    setLinhas((prev) => prev.map((l) => (
+      l.id === id ? { ...l, calculada: sel.valor, formula: sel.formula } : l
+    )));
   };
 
   /** Insere de uma vez todas as TAGs Configuradas obrigatórias que faltam. */
   const adicionarObrigatoriasFaltando = () => {
     if (obrigatoriasFaltando.length === 0) return;
-    setResultado(null);
     setLinhas((prev) => {
       const existentes = new Set(prev.map((l) => l.code));
-      const novas = obrigatoriasFaltando
+      const novas: LinhaTag[] = obrigatoriasFaltando
         .filter((o) => !existentes.has(o.code))
         .map((o) => ({
           id: `obrig|${o.code}|${o.valor}`,
@@ -905,6 +947,7 @@ export default function GerarTagTab() {
           valor: o.valor,
           cfgNome: customAberta?.nm ?? '',
           calculada: o.calculada,
+          formula: '',
         }));
       return [...prev, ...novas];
     });
@@ -920,7 +963,7 @@ export default function GerarTagTab() {
       return;
     }
     if (linhas.length === 0) {
-      toast.error('Adicione ao menos uma TAG customizada na tabela.');
+      toast.error('Adicione ao menos uma TAG configurada na tabela.');
       return;
     }
     if (obrigatoriasFaltando.length > 0) {
@@ -931,7 +974,6 @@ export default function GerarTagTab() {
     }
 
     setEnviando(true);
-    setResultado(null);
     try {
       const { data, error } = await supabase.functions.invoke('auge-sync?action=criar_tag_custom', {
         body: {
@@ -945,6 +987,9 @@ export default function GerarTagTab() {
               dsTagCustomizada: l.valor,
               // TAG Calculada (Pente Fino) -> Tag Calculada (Auge)
               dsTagCalculada: calculada,
+              dsFormula: l.formula ?? '',
+              // Quando a linha já existe no Auge, sobrescreve em vez de duplicar.
+              cdTagCustomizada: l.cdTagCustomizada ?? '',
               // "Texto Livre" só é usado quando não há Tag Calculada (são mutuamente exclusivos no Auge)
               dsTagTexto: calculada ? '' : l.valor,
             };
@@ -954,6 +999,8 @@ export default function GerarTagTab() {
       if (error) throw error;
       const res = data as ResultadoAuge;
       setResultado(res);
+      setEditandoAuge(false);
+      setEdicoesAuge({});
       if (res?.ok) toast.success(`TAG Custom gravada no Auge (${res.gravadas}/${res.total}).`);
       else toast.error(res?.error ?? 'O Auge não confirmou a gravação da TAG Custom.');
     } catch (e: any) {
@@ -964,6 +1011,60 @@ export default function GerarTagTab() {
       setEnviando(false);
     }
   };
+
+  /**
+   * Regrava no Auge as TAGs calculadas editadas pelo usuário no bloco de
+   * retorno. Como enviamos o `cdTagCustomizada` da linha existente, o Auge
+   * executa uma atualização (idAcao=2) e a TAG calculada antiga é substituída.
+   */
+  const confirmarEdicaoAuge = async () => {
+    const rows = resultado?.augeRows ?? [];
+    const itens = rows
+      .map((r: any, i: number) => {
+        const chave = String(r?.cdTagCustomizada ?? i);
+        const edicao = edicoesAuge[chave];
+        if (!edicao) return null;
+        const calculada = (edicao.valor ?? '').trim();
+        const dsTagCustomizada = String(r?.dsTagCustomizada ?? r?.nmTagCustomizada ?? '').trim();
+        if (!dsTagCustomizada) return null;
+        return {
+          cdTagCustomizada: String(r?.cdTagCustomizada ?? ''),
+          dsTagCustomizada,
+          dsTagCalculada: calculada,
+          dsFormula: edicao.formula ?? '',
+          dsTagTexto: calculada ? '' : dsTagCustomizada,
+        };
+      })
+      .filter(Boolean);
+
+    if (itens.length === 0) {
+      toast.info('Altere ao menos uma TAG calculada antes de confirmar.');
+      return;
+    }
+
+    setRegravando(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('auge-sync?action=criar_tag_custom', {
+        body: {
+          cdConfiguracao: customAberta?.cd ?? resultado?.cdConfiguracao ?? '',
+          descricao: (resultado?.descricao ?? descricao).trim() || descricao.trim(),
+          itens,
+        },
+      });
+      if (error) throw error;
+      const res = data as ResultadoAuge;
+      setResultado(res);
+      setEdicoesAuge({});
+      setEditandoAuge(false);
+      if (res?.ok) toast.success(`Edição gravada no Auge (${res.gravadas}/${res.total}).`);
+      else toast.error(res?.error ?? 'O Auge não confirmou a edição.');
+    } catch (e: any) {
+      toast.error(e?.message ?? 'Falha ao regravar a TAG Custom no Auge.');
+    } finally {
+      setRegravando(false);
+    }
+  };
+
 
   const carregandoRecs = loadingCfgs || loadingTags || loadingBusca || loadingCustom;
 
@@ -986,7 +1087,7 @@ export default function GerarTagTab() {
           </div>
           <ConfiguracaoSelect
             valor={customAberta}
-            onChange={(v) => { setCustomAberta(v); setResultado(null); }}
+            onChange={(v) => setCustomAberta(v)}
             onSearchStateChange={setCfgSearch}
           />
           <p className="text-[10px] text-muted-foreground">
@@ -1007,7 +1108,7 @@ export default function GerarTagTab() {
           <div className="flex gap-2">
             <Input
               value={descricao}
-              onChange={(e) => { setDescricao(e.target.value); setResultado(null); }}
+              onChange={(e) => setDescricao(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') adicionarTagTextoLivre(); }}
               placeholder="Nome da Tag (texto livre). Ex: Rollo Abs2.0 T42 Standard Preto"
               className={`h-11 text-xs font-mono flex-1 ${descricaoInvalida ? 'border-destructive focus-visible:ring-destructive' : ''}`}
@@ -1045,34 +1146,29 @@ export default function GerarTagTab() {
         )}
 
         {obrigatorias.length > 0 && (
-          <div
-            className={`rounded border p-2.5 space-y-2 ${
-              obrigatoriasFaltando.length > 0
-                ? 'border-destructive/50 bg-destructive/5'
-                : 'border-emerald-500/40 bg-emerald-500/5'
-            }`}
-          >
+          <div className="rounded border border-blue-500/50 bg-blue-500/5 p-2.5 space-y-2">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <div className="text-[11px] font-semibold flex items-center gap-1.5">
+                <div className="text-[11px] font-semibold flex items-center gap-1.5 text-blue-700 dark:text-blue-400">
                   {obrigatoriasFaltando.length > 0
-                    ? <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
-                    : <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />}
+                    ? <AlertTriangle className="h-3.5 w-3.5" />
+                    : <CheckCircle2 className="h-3.5 w-3.5" />}
                   TAGs Configuradas obrigatórias
-                  <Badge variant="outline" className="text-[9px]">
+                  <Badge variant="outline" className="text-[9px] border-blue-500/50 text-blue-700 dark:text-blue-400">
                     {obrigatorias.length - obrigatoriasFaltando.length}/{obrigatorias.length}
                   </Badge>
                 </div>
                 <p className="text-[10px] text-muted-foreground">
                   Padrão detectado em {obrigatorias[0]?.total ?? 0} TAG(s) Custom existentes que contêm
                   “{escopoPadrao.termo || termoBusca}”. Quanto mais específico o texto, mais restrito o padrão
-                  exigido. A gravação fica bloqueada enquanto faltar alguma.
+                  exigido. As TAGs em <span className="text-blue-700 dark:text-blue-400 font-medium">azul</span> são
+                  obrigatórias — a gravação fica bloqueada enquanto faltar alguma.
                 </p>
 
 
               </div>
               {obrigatoriasFaltando.length > 0 && (
-                <Button size="sm" variant="outline" className="h-7 px-2 text-[10px] shrink-0" onClick={adicionarObrigatoriasFaltando}>
+                <Button size="sm" variant="outline" className="h-7 px-2 text-[10px] shrink-0 border-blue-500/50 text-blue-700 dark:text-blue-400" onClick={adicionarObrigatoriasFaltando}>
                   <Plus className="h-3 w-3 mr-1" /> Adicionar faltantes
                 </Button>
               )}
@@ -1083,11 +1179,11 @@ export default function GerarTagTab() {
                 return (
                   <span
                     key={o.code}
-                    title={`${o.valor} · presente em ${o.freq}/${o.total} modelos`}
-                    className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 font-mono text-[10px] ${
+                    title={`${o.valor} · obrigatória · presente em ${o.freq}/${o.total} modelos`}
+                    className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 font-mono text-[10px] text-blue-700 dark:text-blue-400 ${
                       ok
-                        ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
-                        : 'border-destructive/50 bg-destructive/10 text-destructive'
+                        ? 'border-blue-500/50 bg-blue-500/15'
+                        : 'border-blue-500/60 bg-blue-500/5 border-dashed'
                     }`}
                   >
                     {ok ? <CheckCircle2 className="h-3 w-3" /> : <AlertTriangle className="h-3 w-3" />}
@@ -1098,6 +1194,7 @@ export default function GerarTagTab() {
             </div>
           </div>
         )}
+
       </Card>
 
 
@@ -1176,38 +1273,52 @@ export default function GerarTagTab() {
             <table className="w-full text-xs">
               <thead className="bg-muted">
                 <tr className="text-left">
-                  <th className="p-2 w-[45%]">Tag Customizada</th>
-                  <th className="p-2 w-[45%]">Tag Calculada</th>
+                  <th className="p-2 w-[32%]">Tag Configurada</th>
+                  <th className="p-2 w-[34%]">Tag Calculada</th>
+                  <th className="p-2 w-[30%]">Fórmula</th>
                   <th className="p-2 text-right w-10"></th>
                 </tr>
               </thead>
               <tbody>
-                {linhas.map((l) => (
-                  <tr key={l.id} className="border-t align-top">
-                    <td className="p-2">
-                      <div className="font-mono font-semibold text-[10px] text-primary">{l.code}</div>
-                      <div className="font-mono text-[11px] break-all">{l.valor}</div>
-                      <div className="text-[9px] text-muted-foreground truncate">{l.cfgNome}</div>
-                    </td>
-                    <td className="p-2">
-                      <TagCalculadaCell valor={l.calculada} onChange={(v) => setCalculada(l.id, v)} />
-                    </td>
-                    <td className="p-2 text-right">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-7 w-7"
-                        onClick={() => setLinhas((prev) => prev.filter((x) => x.id !== l.id))}
-                        aria-label="Remover TAG"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
+                {linhas.map((l) => {
+                  const obrigatoria = obrigatorias.some((o) => o.code === l.code);
+                  return (
+                    <tr key={l.id} className="border-t align-top">
+                      <td className="p-2">
+                        <div className={`font-mono font-semibold text-[10px] flex items-center gap-1 ${obrigatoria ? 'text-blue-600 dark:text-blue-400' : 'text-primary'}`}>
+                          {l.code}
+                          {obrigatoria && (
+                            <span className="rounded border border-blue-500/50 bg-blue-500/10 px-1 text-[8px] uppercase">
+                              obrigatória
+                            </span>
+                          )}
+                        </div>
+                        <div className="font-mono text-[11px] break-all">{l.valor}</div>
+                        <div className="text-[9px] text-muted-foreground truncate">{l.cfgNome}</div>
+                      </td>
+                      <td className="p-2">
+                        <TagCalculadaCell valor={l.calculada} onChange={(v) => setCalculada(l.id, v)} />
+                      </td>
+                      <td className="p-2 font-mono text-[10px] text-muted-foreground break-all">
+                        {l.formula || '—'}
+                      </td>
+                      <td className="p-2 text-right">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7"
+                          onClick={() => setLinhas((prev) => prev.filter((x) => x.id !== l.id))}
+                          aria-label="Remover TAG"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
                 {linhas.length === 0 && (
                   <tr>
-                    <td colSpan={3} className="p-6 text-center text-muted-foreground text-[11px]">
+                    <td colSpan={4} className="p-6 text-center text-muted-foreground text-[11px]">
                       Selecione TAGs recomendadas à esquerda para montar a TAG Custom.
                     </td>
                   </tr>
@@ -1215,6 +1326,7 @@ export default function GerarTagTab() {
               </tbody>
             </table>
           </div>
+
 
           <div className="p-3 border-t space-y-1.5">
             <Button
@@ -1237,15 +1349,61 @@ export default function GerarTagTab() {
           {/* Retorno do Auge */}
           {resultado && (
             <div className={`m-3 rounded border p-3 space-y-2 ${resultado.ok ? 'border-emerald-500/40 bg-emerald-500/5' : 'border-destructive/40 bg-destructive/5'}`}>
-              <div className="text-[10px] uppercase flex items-center gap-1 font-semibold">
-                {resultado.ok
-                  ? <><CheckCircle2 className="h-3 w-3 text-emerald-600" /> Gravada no Auge</>
-                  : <><AlertTriangle className="h-3 w-3 text-destructive" /> Falha na gravação</>}
-                {typeof resultado.gravadas === 'number' && (
-                  <Badge variant="outline" className="text-[9px]">
-                    {resultado.gravadas}/{resultado.total} ok
-                  </Badge>
-                )}
+              <div className="flex items-start justify-between gap-2 flex-wrap">
+                <div className="text-[10px] uppercase flex items-center gap-1 font-semibold">
+                  {resultado.ok
+                    ? <><CheckCircle2 className="h-3 w-3 text-emerald-600" /> Gravada no Auge</>
+                    : <><AlertTriangle className="h-3 w-3 text-destructive" /> Falha na gravação</>}
+                  {typeof resultado.gravadas === 'number' && (
+                    <Badge variant="outline" className="text-[9px]">
+                      {resultado.gravadas}/{resultado.total} ok
+                    </Badge>
+                  )}
+                </div>
+                <div className="flex items-center gap-1.5">
+                  {!!resultado.augeRows?.length && !editandoAuge && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 px-2 text-[10px] gap-1"
+                      onClick={() => { setEditandoAuge(true); setEdicoesAuge({}); }}
+                    >
+                      <Pencil className="h-3 w-3" /> Edição
+                    </Button>
+                  )}
+                  {editandoAuge && (
+                    <>
+                      <Button
+                        size="sm"
+                        className="h-7 px-2 text-[10px] gap-1"
+                        disabled={regravando || Object.keys(edicoesAuge).length === 0}
+                        onClick={confirmarEdicaoAuge}
+                      >
+                        {regravando
+                          ? <Loader2 className="h-3 w-3 animate-spin" />
+                          : <CheckCircle2 className="h-3 w-3" />}
+                        {regravando ? 'Regravando…' : `Confirmar edição (${Object.keys(edicoesAuge).length})`}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 px-2 text-[10px]"
+                        disabled={regravando}
+                        onClick={() => { setEditandoAuge(false); setEdicoesAuge({}); }}
+                      >
+                        Cancelar
+                      </Button>
+                    </>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 px-2 text-[10px]"
+                    onClick={() => { setResultado(null); setEditandoAuge(false); setEdicoesAuge({}); }}
+                  >
+                    Fechar
+                  </Button>
+                </div>
               </div>
 
               {resultado.error && (
@@ -1256,8 +1414,9 @@ export default function GerarTagTab() {
                 <div className="rounded border bg-background overflow-x-auto">
                   <table className="w-full text-[10px]">
                     <thead className="bg-muted"><tr className="text-left">
-                      <th className="p-1.5">Tag Customizada</th>
+                      <th className="p-1.5">Tag Configurada</th>
                       <th className="p-1.5">Tag Calculada</th>
+                      <th className="p-1.5">Fórmula</th>
                       <th className="p-1.5">Status</th>
                     </tr></thead>
                     <tbody>
@@ -1265,6 +1424,7 @@ export default function GerarTagTab() {
                         <tr key={i} className="border-t">
                           <td className="p-1.5 font-mono break-all">{r.tag}</td>
                           <td className="p-1.5 font-mono break-all">{r.calculada || '—'}</td>
+                          <td className="p-1.5 font-mono break-all text-muted-foreground">{r.formula || '—'}</td>
                           <td className="p-1.5">
                             {r.ok
                               ? <span className="text-emerald-600">OK</span>
@@ -1279,22 +1439,54 @@ export default function GerarTagTab() {
 
               {!!resultado.augeRows?.length && (
                 <div className="space-y-1">
-                  <div className="text-[9px] uppercase text-muted-foreground">Como ficou no Auge</div>
-                  <div className="rounded border bg-background max-h-56 overflow-auto">
+                  <div className="text-[9px] uppercase text-muted-foreground flex items-center gap-1.5">
+                    Como ficou no Auge
+                    {editandoAuge && (
+                      <Badge variant="outline" className="text-[8px] border-blue-500/50 text-blue-700 dark:text-blue-400">
+                        edição — a TAG calculada antiga será substituída
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="rounded border bg-background max-h-72 overflow-auto">
                     <table className="w-full text-[10px]">
                       <thead className="bg-muted"><tr className="text-left">
-                        <th className="p-1.5">Tag Customizada</th>
+                        <th className="p-1.5">Tag Configurada</th>
                         <th className="p-1.5">Tag Calculada</th>
+                        <th className="p-1.5">Fórmula</th>
                         <th className="p-1.5">Configuração</th>
                       </tr></thead>
                       <tbody>
-                        {resultado.augeRows.map((r: any, i: number) => (
-                          <tr key={i} className="border-t">
-                            <td className="p-1.5 font-mono break-all">{r.dsTagCustomizada ?? r.nmTagCustomizada ?? '—'}</td>
-                            <td className="p-1.5 font-mono break-all">{r.dsTagCalculada ?? r.dsTagTexto ?? '—'}</td>
-                            <td className="p-1.5 break-all">{r.nmConfiguracao ?? r.cdConfiguracao ?? '—'}</td>
-                          </tr>
-                        ))}
+                        {resultado.augeRows.map((r: any, i: number) => {
+                          const chave = String(r?.cdTagCustomizada ?? i);
+                          const edicao = edicoesAuge[chave];
+                          const calculadaAtual = String(r?.dsTagCalculada ?? r?.dsTagTexto ?? '').trim();
+                          const formulaAtual = String(r?.dsFormula ?? '').trim();
+                          return (
+                            <tr key={chave} className="border-t align-top">
+                              <td className="p-1.5 font-mono break-all">{r.dsTagCustomizada ?? r.nmTagCustomizada ?? '—'}</td>
+                              <td className="p-1.5 font-mono break-all min-w-[180px]">
+                                {editandoAuge ? (
+                                  <TagCalculadaCell
+                                    compacto
+                                    valor={edicao?.valor ?? ''}
+                                    onChange={(sel) => setEdicoesAuge((prev) => ({ ...prev, [chave]: sel }))}
+                                  />
+                                ) : (
+                                  calculadaAtual || '—'
+                                )}
+                                {editandoAuge && calculadaAtual && (
+                                  <div className="text-[9px] text-muted-foreground line-through break-all mt-0.5">
+                                    {calculadaAtual}
+                                  </div>
+                                )}
+                              </td>
+                              <td className="p-1.5 font-mono break-all text-muted-foreground">
+                                {(edicao?.formula || formulaAtual) || '—'}
+                              </td>
+                              <td className="p-1.5 break-all">{r.nmConfiguracao ?? r.cdConfiguracao ?? '—'}</td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
@@ -1302,6 +1494,7 @@ export default function GerarTagTab() {
               )}
             </div>
           )}
+
         </Card>
       </div>
     </div>
