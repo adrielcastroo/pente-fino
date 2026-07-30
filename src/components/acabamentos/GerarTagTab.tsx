@@ -223,7 +223,32 @@ const rascunho: RascunhoGerarTag = {
 interface TagCalculadaSel {
   valor: string;
   formula: string;
+  /** Código no Auge — usado para completar a fórmula truncada da grade. */
+  cdTag?: string;
 }
+
+/** A grade do Auge trunca fórmulas longas ("...", "…"). */
+function formulaTruncada(f: string): boolean {
+  return /(\.\.\.|…)$/.test((f ?? '').trim());
+}
+
+/**
+ * Busca no Auge a fórmula inteira quando a grade devolveu a versão truncada,
+ * garantindo que a coluna "Fórmula" do Pente Fino mostre o mesmo do ERP.
+ */
+async function completarFormula(sel: TagCalculadaSel): Promise<TagCalculadaSel> {
+  if (!sel.valor || (sel.formula && !formulaTruncada(sel.formula))) return sel;
+  try {
+    const { data } = await supabase.functions.invoke('auge-sync?action=tag_calculada_formula', {
+      body: { cdTag: sel.cdTag ?? '', nome: sel.valor },
+    });
+    const formula = String((data as any)?.formula ?? '').trim();
+    return formula ? { ...sel, formula } : sel;
+  } catch {
+    return sel;
+  }
+}
+
 
 
 // ============================================================
