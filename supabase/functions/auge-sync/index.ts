@@ -3886,7 +3886,55 @@ async function syncDicionariosFull(admin: any, auth: any, triggeredBy: string | 
   }
 }
 
+/**
+ * Converte o <table> HTML devolvido por getResultadoConsulta.php em
+ * `{ columns, rows }`. O Auge não expõe JSON nessa tela.
+ */
+function parseHtmlTable(html: string): { columns: string[]; rows: string[][] } {
+  const limpar = (s: string) => s
+    .replace(/<br\s*\/?>/gi, ' ')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#0?39;|&apos;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const celulas = (tr: string, tag: 'th' | 'td') =>
+    Array.from(tr.matchAll(new RegExp(`<${tag}\\b[^>]*>([\\s\\S]*?)</${tag}>`, 'gi')))
+      .map((m) => limpar(m[1]));
+
+  const thead = /<thead\b[^>]*>([\s\S]*?)<\/thead>/i.exec(html)?.[1] ?? '';
+  const tbody = /<tbody\b[^>]*>([\s\S]*?)<\/tbody>/i.exec(html)?.[1] ?? html;
+
+  const trs = (bloco: string) =>
+    Array.from(bloco.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)).map((m) => m[1]);
+
+  let columns: string[] = [];
+  for (const tr of trs(thead)) {
+    const ths = celulas(tr, 'th');
+    if (ths.length > columns.length) columns = ths;
+  }
+
+  const rows: string[][] = [];
+  for (const tr of trs(tbody)) {
+    const tds = celulas(tr, 'td');
+    if (!tds.length) continue;
+    rows.push(tds);
+  }
+
+  if (!columns.length && rows.length) {
+    const largura = rows.reduce((m, r) => Math.max(m, r.length), 0);
+    columns = Array.from({ length: largura }, (_, i) => `Coluna ${String(i + 1).padStart(2, '0')}`);
+  }
+  return { columns, rows };
+}
+
 async function runConsultaAuge(
+
   auth: any,
   idConsulta: string,
   parametros?: Record<string, string>,
