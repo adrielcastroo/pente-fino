@@ -369,10 +369,12 @@ function TagCalculadaCell({
         const { data } = await (supabase as any)
           .from('auge_tag_custom')
           .select('ds_tag_calculada, cd_tag_calculada, nm_configuracao')
-          .or(`ds_tag_calculada.ilike.${padrao},cd_tag_calculada.ilike.${padrao}`)
+          .or(
+            `ds_tag_calculada.ilike.${JSON.stringify(padrao)},cd_tag_calculada.ilike.${JSON.stringify(padrao)}`,
+          )
           .limit(200);
         for (const r of (data ?? []) as any[]) {
-          push(r.ds_tag_calculada ?? r.cd_tag_calculada, '', r.nm_configuracao ?? '');
+          push(r.ds_tag_calculada ?? r.cd_tag_calculada, '', r.nm_configuracao ?? '', r.cd_tag_calculada);
         }
       }
 
