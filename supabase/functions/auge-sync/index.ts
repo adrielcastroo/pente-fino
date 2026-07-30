@@ -3332,8 +3332,12 @@ async function deleteAcabamentoItem(auth: any, cdAcabamento: string, cdAcabament
 
 /**
  * Grava (inclui/altera) uma linha de TAG Customizada no Auge.
- * Espelha o formulário de /modInventario/tag/manterTagCustomizada.php.
- * idAcao: 1 = incluir, 2 = alterar.
+ * Espelha exatamente o submit de /modInventario/tag/manterTagCustomizada.php
+ * (capturado em HAR):
+ *   POST /l.unilux/modInventario/tag/controle/ctlTagCustomizada.php
+ *   cdConfiguracao=...&dsTagCustomizada=...&cdTagCalculada=<id>&dsTextoLivre=&idAcao=1
+ * Observação: o Auge espera o **código** da TAG Calculada (cdTagCalculada),
+ * não a descrição. `idAcao`: 1 = incluir, 2 = alterar.
  */
 async function saveTagCustomizada(
   auth: any,
@@ -3341,21 +3345,22 @@ async function saveTagCustomizada(
     cdConfiguracao?: string;
     cdTagCustomizada?: string;
     dsTagCustomizada: string;
-    dsTagCalculada?: string;
-    dsTagTexto?: string;
+    cdTagCalculada?: string;
+    dsTextoLivre?: string;
   },
 ): Promise<any> {
-  const body = new URLSearchParams({
-    idAcao: row.cdTagCustomizada ? '2' : '1',
+  const params: Record<string, string> = {
     cdConfiguracao: row.cdConfiguracao ?? '',
-    cdTagCustomizada: row.cdTagCustomizada ?? '',
     dsTagCustomizada: row.dsTagCustomizada ?? '',
-    dsTagCalculada: row.dsTagCalculada ?? '',
-    dsTagTexto: row.dsTagTexto ?? '',
-  });
+    cdTagCalculada: row.cdTagCalculada ?? '',
+    dsTextoLivre: row.cdTagCalculada ? '' : (row.dsTextoLivre ?? ''),
+    idAcao: row.cdTagCustomizada ? '2' : '1',
+  };
+  if (row.cdTagCustomizada) params.cdTagCustomizada = row.cdTagCustomizada;
+  const body = new URLSearchParams(params);
   const txt = await postAugePhp(
     auth,
-    '/l.unilux/modInventario/Controle/ctlTagCustomizada.php',
+    '/l.unilux/modInventario/tag/controle/ctlTagCustomizada.php',
     body,
     '/l.unilux/modInventario/tag/manterTagCustomizada.php',
   );
@@ -3363,8 +3368,12 @@ async function saveTagCustomizada(
   try { j = JSON.parse(txt); } catch { /* mantém texto cru */ }
   const msg = typeof j?.message === 'string' ? j.message : '';
   if (msg && !/sucesso/i.test(msg)) throw new Error(msg);
+  if (!j?.cdTagCustomizada && msg === '' && !txt.trim()) {
+    throw new Error('O Auge não retornou confirmação da gravação da TAG Custom.');
+  }
   return j;
 }
+
 
 
 
