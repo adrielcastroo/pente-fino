@@ -4454,7 +4454,7 @@ Deno.serve(async (req) => {
       };
       const out: any[] = [];
       // 1) grade filtrada pelo termo
-      try {
+      if (termo) try {
         const res = await fetch(`${AUGE_BASE_URL}/l.unilux/modInventario/tag/ajax/getListaTag.php`, {
           method: 'POST',
           headers: { ...headers, 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
