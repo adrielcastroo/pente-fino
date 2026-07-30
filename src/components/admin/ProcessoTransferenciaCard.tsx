@@ -366,9 +366,11 @@ export default function ProcessoTransferenciaCard() {
     setFileName(file.name);
     setParsing(true);
     try {
-      let { rows } = parseWorkbook(await file.arrayBuffer());
-      const { ignoradas, modoSap } = parseWorkbook(await file.arrayBuffer());
+      const parsed = parseWorkbook(await file.arrayBuffer());
+      const { ignoradas, modoSap } = parsed;
+      let rows = parsed.rows;
       if (modoSap) rows = await resolverPorSap(rows);
+
       setPreview(rows);
       const naoResolvidas = rows.filter((r) => r.resolvido === false).length;
       if (!rows.length) toast.warning('Nenhuma linha válida encontrada.');
