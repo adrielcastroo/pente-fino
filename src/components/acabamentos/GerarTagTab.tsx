@@ -925,7 +925,7 @@ export default function GerarTagTab() {
    */
   const modelosExistentes = useMemo(() => {
     const map = new Map<string, { nm: string; codes: Map<string, { valor: string; calculada: string }> }>();
-    for (const t of [...tagsBusca, ...tagsTop]) {
+    for (const t of [...tagsPalavras, ...tagsBusca, ...tagsTop]) {
       const code = normalizeTagCode(t.ds_tag_customizada ?? t.nm_tag_customizada);
       if (!code) continue;
       const valor = normalizeTagFormatC(t.ds_tag_customizada ?? t.nm_tag_customizada ?? t.ds_tag_texto ?? '');
@@ -940,45 +940,51 @@ export default function GerarTagTab() {
       map.set(t.cd_configuracao, cur);
     }
     return map;
-  }, [tagsBusca, tagsTop]);
+  }, [tagsPalavras, tagsBusca, tagsTop]);
 
   /**
-   * Refinamento por eliminação: usa SEMPRE o conjunto mais específico de
-   * modelos que casa com o texto digitado. Ex.: "Rollo" usa todas as Rollo;
-   * ao digitar "Rollo Pro", apenas as Rollo Pro passam a valer — o padrão das
-   * "Rollo" genéricas deixa de ser exigido.
+   * Escopo por PALAVRAS-CHAVE (independente da ordem digitada).
    *
-   * Estratégia: tenta casar todos os tokens digitados; se não houver amostra
-   * suficiente (>= 2 modelos), remove o último token e tenta novamente.
+   * 1) Cada modelo existente recebe uma pontuação = soma dos pesos das
+   *    palavras-chave da configuração digitada que ele contém.
+   * 2) Fica valendo apenas o grupo de modelos com a MAIOR cobertura
+   *    (conjunto mais específico). Ex.: "Rollo Pro T45" prioriza as Custom que
+   *    têm as três palavras; se nenhuma tiver, cai para as que têm duas.
    */
   const escopoPadrao = useMemo(() => {
-    const norm = (s: string) =>
-      (s ?? '')
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9]+/g, ' ')
-        .trim();
-
-    const tokens = norm(termoDeferido).split(' ').filter(Boolean);
     const modelos = Array.from(modelosExistentes.values());
-    if (tokens.length === 0 || modelos.length === 0) {
+    if (palavras.length === 0 || modelos.length === 0) {
       return { modelos: [] as typeof modelos, termo: '', tokens: [] as string[] };
     }
 
-    for (let n = tokens.length; n >= 1; n--) {
-      const sub = tokens.slice(0, n);
-      const filtrados = modelos.filter((m) => {
-        const alvo = norm(m.nm);
-        return sub.every((tk) => alvo.includes(tk));
-      });
-      // Nível mais específico que ainda casa com algum modelo existente.
-      if (filtrados.length >= 1) {
-        return { modelos: filtrados, termo: sub.join(' '), tokens: sub };
+    type Marcado = { modelo: (typeof modelos)[number]; peso: number; hits: string[] };
+    const marcados: Marcado[] = [];
+    for (const m of modelos) {
+      const alvo = ` ${normKey(m.nm)} `;
+      let peso = 0;
+      const hits: string[] = [];
+      for (const p of palavras) {
+        const exato = alvo.includes(` ${p.token} `);
+        const parcial = !exato && p.token.length >= 3 && alvo.includes(p.token);
+        if (exato || parcial) {
+          peso += exato ? p.weight * 2 : p.weight;
+          hits.push(p.token);
+        }
       }
+      if (hits.length > 0) marcados.push({ modelo: m, peso, hits });
     }
-    return { modelos: [] as typeof modelos, termo: '', tokens: [] as string[] };
-  }, [modelosExistentes, termoDeferido]);
+    if (marcados.length === 0) return { modelos: [] as typeof modelos, termo: '', tokens: [] as string[] };
+
+    const melhorPeso = Math.max(...marcados.map((m) => m.peso));
+    const selecionados = marcados.filter((m) => m.peso === melhorPeso);
+    const tokens = Array.from(new Set(selecionados.flatMap((s) => s.hits)));
+
+    return {
+      modelos: selecionados.map((s) => s.modelo),
+      termo: tokens.join(' '),
+      tokens,
+    };
+  }, [modelosExistentes, palavras]);
 
   /**
    * TAGs Configuradas que são padrão (presentes em praticamente todos os
