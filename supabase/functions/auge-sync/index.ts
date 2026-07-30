@@ -4472,16 +4472,17 @@ Deno.serve(async (req) => {
         const phps = [...new Set([...t.matchAll(/["'`]([^"'`\s]*\.php)[^"'`]*["'`]/g)].map((m) => m[1]))];
         out.push({ src: 'tag.php-endpoints', status: res.status, phps });
       } catch (e) { out.push({ src: 'tag.php-endpoints', error: getErrorMessage(e) }); }
-      // 3) JS da página tag.php em volta de ctlTag.php (descobrir parâmetros)
+      // 3) JS da página tag.php em volta de formulaTag / getListaTag
       try {
         const res = await fetch(`${AUGE_BASE_URL}/l.unilux/modInventario/tag/tag.php`, { headers, signal: AbortSignal.timeout(15000) });
         const t = await res.text();
         const snippets: string[] = [];
-        for (const m of t.matchAll(/ctlTag\.php/g)) {
-          snippets.push(t.slice(Math.max(0, (m.index ?? 0) - 900), (m.index ?? 0) + 900));
+        const needle = String(payload?.needle ?? 'formulaTag');
+        for (const m of t.matchAll(new RegExp(needle, 'g'))) {
+          snippets.push(t.slice(Math.max(0, (m.index ?? 0) - 700), (m.index ?? 0) + 900));
         }
-        out.push({ src: 'tag.php-ctlTag-js', count: snippets.length, snippets: snippets.slice(0, 4) });
-      } catch (e) { out.push({ src: 'tag.php-ctlTag-js', error: getErrorMessage(e) }); }
+        out.push({ src: `tag.php-js:${needle}`, count: snippets.length, snippets: snippets.slice(0, 5) });
+      } catch (e) { out.push({ src: 'tag.php-js', error: getErrorMessage(e) }); }
       return new Response(JSON.stringify({ ok: true, out }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
