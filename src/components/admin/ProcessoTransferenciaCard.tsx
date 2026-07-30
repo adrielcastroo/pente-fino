@@ -403,6 +403,7 @@ export default function ProcessoTransferenciaCard() {
         ok: false,
         mensagem: 'Não processado no limite desta execução',
       })));
+      setProgresso({ feito: Math.min(i + TAMANHO_BLOCO, ids.length), total: ids.length, etapa: rotulo });
     }
     return { falhas, pendentes, invalidos, resultados: detalhes };
   };
