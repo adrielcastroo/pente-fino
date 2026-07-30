@@ -365,8 +365,7 @@ export default function ProcessoTransferenciaCard() {
     for (let i = 0; i < ids.length; i += TAMANHO_BLOCO) {
       const bloco = ids.slice(i, i + TAMANHO_BLOCO);
       const { data, error } = await supabase.functions.invoke('auge-sync', {
-        body: { ids: bloco, idLogistica, desejado: true },
-        query: { action: 'transferencia_logistica' },
+        body: { action: 'transferencia_logistica', ids: bloco, idLogistica, desejado: true },
       });
       if (error) throw error;
       if (data?.disabled || data?.error) throw new Error(data.error || 'Ação recusada pelo Auge.');
