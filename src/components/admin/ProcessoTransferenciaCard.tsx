@@ -705,6 +705,30 @@ export default function ProcessoTransferenciaCard() {
 
   return (
     <div className="space-y-4">
+      {/* Barra de progresso das chamadas ao Auge */}
+      {progresso && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="space-y-2 p-3">
+            <div className="flex items-center justify-between gap-2 text-xs">
+              <span className="flex items-center gap-2 font-medium">
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                {progresso.etapa}…
+              </span>
+              <span className="font-mono text-muted-foreground">
+                {progresso.feito}/{progresso.total}
+              </span>
+            </div>
+            <Progress
+              value={progresso.total ? (progresso.feito / progresso.total) * 100 : 0}
+              className="h-2"
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Cada folha é conferida no Auge antes e depois da marcação — não feche esta página.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Importação */}
       <Card>
         <CardHeader className="pb-3">
