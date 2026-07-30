@@ -1,4 +1,4 @@
-import { useDeferredValue, useEffect, useMemo, useState } from 'react';
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
@@ -239,15 +239,21 @@ function formulaTruncada(f: string): boolean {
 async function completarFormula(sel: TagCalculadaSel): Promise<TagCalculadaSel> {
   if (!sel.valor || (sel.formula && !formulaTruncada(sel.formula))) return sel;
   try {
-    const { data } = await supabase.functions.invoke('auge-sync?action=tag_calculada_formula', {
+    // Timeout defensivo: o Auge pode demorar/estourar CPU na Edge Function.
+    // Sem isso a promise fica pendurada e a célula nunca conclui a seleção.
+    const req = supabase.functions.invoke('auge-sync?action=tag_calculada_formula', {
       body: { cdTag: sel.cdTag ?? '', nome: sel.valor },
     });
-    const formula = String((data as any)?.formula ?? '').trim();
+    const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 12_000));
+    const res = await Promise.race([req, timeout]);
+    if (!res) return sel;
+    const formula = String((res as { data?: { formula?: unknown } })?.data?.formula ?? '').trim();
     return formula ? { ...sel, formula } : sel;
   } catch {
     return sel;
   }
 }
+
 
 
 
@@ -267,11 +273,18 @@ function TagCalculadaCell({
   const [busca, setBusca] = useState('');
   const [aberto, setAberto] = useState(false);
   const [termo, setTermo] = useState('');
+  /** Evita atualizar estado depois que a célula sai da tela (blank screen). */
+  const montadoRef = useRef(true);
+  useEffect(() => {
+    montadoRef.current = true;
+    return () => { montadoRef.current = false; };
+  }, []);
 
   useEffect(() => {
     const t = setTimeout(() => setTermo(busca.trim()), 300);
     return () => clearTimeout(t);
   }, [busca]);
+
 
   const padrao = useMemo(() => toIlikePattern(termo), [termo]);
 
@@ -414,16 +427,22 @@ function TagCalculadaCell({
           {opcoes.map((o) => (
             <button
               key={o.valor}
-              onClick={async () => {
+              onClick={() => {
                 const base: TagCalculadaSel = { valor: o.valor, formula: o.formula, cdTag: o.cdTag };
                 onChange(base);
                 setAberto(false);
                 // A grade do Auge trunca fórmulas longas; completamos no ERP.
+                // Roda em background: nunca bloqueia nem derruba o render se falhar.
                 if (formulaTruncada(o.formula) || !o.formula) {
-                  const completo = await completarFormula(base);
-                  if (completo.formula !== base.formula) onChange(completo);
+                  void completarFormula(base)
+                    .then((completo) => {
+                      if (!montadoRef.current) return;
+                      if (completo.formula !== base.formula) onChange(completo);
+                    })
+                    .catch(() => { /* fórmula truncada permanece — sem quebrar a tela */ });
                 }
               }}
+
               className="w-full text-left px-2 py-1 hover:bg-muted/60 transition"
             >
               <div className="font-mono text-[11px] break-all">{o.valor}</div>

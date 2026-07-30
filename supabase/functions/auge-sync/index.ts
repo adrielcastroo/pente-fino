@@ -517,25 +517,29 @@ async function fetchTagFormulaCompleta(
   };
   for (const cand of TAG_DETALHE_PATHS) {
     try {
+      // Timeout por candidato: sem isso a soma das tentativas estoura o
+      // limite de CPU/wall time da Edge Function e o cliente fica pendurado.
+      const signal = AbortSignal.timeout(8000);
       let res: Response;
       if (cand.method === 'GET') {
-        res = await fetch(`${AUGE_BASE_URL}${cand.path}?cdTag=${encodeURIComponent(cd)}&idAcao=2`, { headers });
+        res = await fetch(`${AUGE_BASE_URL}${cand.path}?cdTag=${encodeURIComponent(cd)}&idAcao=2`, { headers, signal });
       } else {
         res = await fetch(`${AUGE_BASE_URL}${cand.path}`, {
           method: 'POST',
           headers: { ...headers, 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
           body: new URLSearchParams({ cdTag: cd, cdTagCalculada: cd }),
+          signal,
         });
       }
       auth.jar.ingest(res);
-      if (!res.ok) continue;
+      if (!res.ok) { await res.body?.cancel(); continue; }
       const formula = extractFormulaFromText(await res.text());
-      if (formula && !/\.\.\.$|…$/.test(formula)) return formula;
       if (formula) return formula;
     } catch { /* tenta o próximo candidato */ }
   }
   return '';
 }
+
 
 // ---------------------------------------------------------------------------
 // Grade da página /modInventario/tag/tag.php — fonte CORRETA das TAGs
@@ -4391,34 +4395,47 @@ Deno.serve(async (req) => {
     }
     // Fórmula completa de uma TAG calculada (a grade do Auge trunca o texto).
     if (action === 'tag_calculada_formula') {
-      let payload: any = {};
-      try { payload = await req.json(); } catch { /* ignore */ }
-      let cdTag = String(payload?.cdTag ?? '').trim();
-      const nome = String(payload?.nome ?? '').trim();
+      try {
+        let payload: any = {};
+        try { payload = await req.json(); } catch { /* ignore */ }
+        let cdTag = String(payload?.cdTag ?? '').trim();
+        const nome = String(payload?.nome ?? '').trim();
 
-      if (!cdTag && nome) {
-        const { data } = await admin
-          .from('auge_tags_calculadas')
-          .select('cd_tag')
-          .or(`nome.eq.${nome},nm_tag.eq.${nome}`)
-          .limit(1)
-          .maybeSingle();
-        cdTag = String((data as any)?.cd_tag ?? '').trim();
-      }
-      if (!cdTag) {
-        return new Response(JSON.stringify({ ok: false, error: 'TAG calculada não identificada.' }), {
+        if (!cdTag && nome) {
+          // Consultas separadas: interpolar o nome dentro de `.or()` quebra a
+          // sintaxe do PostgREST quando há vírgula, parêntese ou barra no nome.
+          const porNome = await admin
+            .from('auge_tags_calculadas').select('cd_tag').eq('nome', nome).limit(1).maybeSingle();
+          cdTag = String((porNome.data as any)?.cd_tag ?? '').trim();
+          if (!cdTag) {
+            const porNmTag = await admin
+              .from('auge_tags_calculadas').select('cd_tag').eq('nm_tag', nome).limit(1).maybeSingle();
+            cdTag = String((porNmTag.data as any)?.cd_tag ?? '').trim();
+          }
+        }
+        if (!cdTag) {
+          return new Response(JSON.stringify({ ok: false, formula: '', error: 'TAG calculada não identificada.' }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        const formula = await fetchTagFormulaCompleta(auth, cdTag);
+        if (formula) {
+          await admin.from('auge_tags_calculadas').update({ formula }).eq('cd_tag', cdTag);
+        }
+        return new Response(JSON.stringify({ ok: !!formula, cdTag, formula }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } catch (e) {
+        // Nunca devolver 500 aqui: o cliente só precisa saber que a fórmula
+        // completa não veio, mantendo a versão truncada da grade.
+        return new Response(JSON.stringify({ ok: false, formula: '', error: getErrorMessage(e) }), {
+          status: 200,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-
-      const formula = await fetchTagFormulaCompleta(auth, cdTag);
-      if (formula) {
-        await admin.from('auge_tags_calculadas').update({ formula }).eq('cd_tag', cdTag);
-      }
-      return new Response(JSON.stringify({ ok: !!formula, cdTag, formula }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
     }
+
 
 
 
