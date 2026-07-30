@@ -1,13 +1,13 @@
 /**
- * Histórico persistente de ações feitas nas TAGs Custom (aba "Gerar TAG").
+ * Histórico compartilhado de ações feitas nas TAGs Custom (aba "Gerar TAG").
  *
- * Diferente do bloco "Últimos registros" (que guarda apenas os 10 lançamentos
- * mais recentes para reedição rápida), este log mantém TODAS as ações e edições
- * feitas, agrupadas por TAG Custom, e alimenta a aba "Histórico".
- *
- * Persistência em localStorage: é um recurso de conveniência do operador e
- * jamais pode bloquear ou quebrar o fluxo de gravação no Auge.
+ * Persistido em `public.auge_tag_custom_historico` — visível para toda a equipe,
+ * com atualização em tempo real. Diferente do bloco "Últimos registros" (local,
+ * apenas os 10 últimos lançamentos do próprio operador), este log mantém TODAS
+ * as ações e edições, agrupadas por TAG Custom, e alimenta a aba "Histórico".
  */
+
+import { supabase } from '@/integrations/supabase/client';
 
 export type TagEventoTipo = 'criacao' | 'edicao' | 'relancamento';
 
@@ -36,6 +36,9 @@ export interface TagHistoricoEvento {
   gravadas?: number | null;
   total?: number | null;
   erro?: string | null;
+  /** Autor da ação (compartilhado entre a equipe). */
+  usuarioId?: string | null;
+  usuarioNome?: string | null;
 }
 
 export interface TagHistoricoGrupo {
@@ -49,11 +52,12 @@ export interface TagHistoricoGrupo {
   ultimoEm: string;
   totalEventos: number;
   erros: number;
+  /** Nomes dos autores que agiram sobre esta TAG. */
+  autores: string[];
 }
 
-const STORAGE_KEY = 'gerar-tag:historico-eventos';
-const MAX_EVENTOS = 500;
-const UPDATE_EVENT = 'tag-historico:update';
+const TABELA = 'auge_tag_custom_historico';
+const MAX_EVENTOS = 2000;
 
 export const TAG_EVENTO_LABEL: Record<TagEventoTipo, string> = {
   criacao: 'Gravação',
@@ -67,50 +71,87 @@ export function chaveTagCustom(descricao: string, cdConfiguracao: string | null)
   return `${cdConfiguracao ?? ''}::${nome}`;
 }
 
-export function lerEventosTag(): TagHistoricoEvento[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return (parsed as TagHistoricoEvento[]).filter((e) => e && typeof e.em === 'string');
-  } catch {
-    return [];
-  }
-}
-
-function gravar(eventos: TagHistoricoEvento[]): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(eventos.slice(0, MAX_EVENTOS)));
-  } catch {
-    /* quota cheia — histórico é conveniência, nunca bloqueia o fluxo */
-  }
-  try {
-    window.dispatchEvent(new CustomEvent(UPDATE_EVENT));
-  } catch {
-    /* ambiente sem window (SSR/testes) */
-  }
-}
-
-/** Registra uma ação feita sobre uma TAG Custom. */
-export function registrarEventoTag(
-  evento: Omit<TagHistoricoEvento, 'id' | 'em'> & { em?: string },
-): void {
-  const completo: TagHistoricoEvento = {
-    ...evento,
-    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-    em: evento.em ?? new Date().toISOString(),
+function mapear(row: any): TagHistoricoEvento {
+  return {
+    id: String(row.id),
+    em: row.created_at,
+    ok: row.ok !== false,
+    tipo: (row.tipo ?? 'criacao') as TagEventoTipo,
+    descricao: row.descricao ?? '—',
+    cdConfiguracao: row.cd_configuracao ?? null,
+    nmConfiguracao: row.nm_configuracao ?? null,
+    linhas: Array.isArray(row.linhas) ? (row.linhas as TagHistoricoLinha[]) : [],
+    gravadas: row.gravadas ?? null,
+    total: row.total ?? null,
+    erro: row.erro ?? null,
+    usuarioId: row.user_id ?? null,
+    usuarioNome: row.user_nome ?? null,
   };
-  gravar([completo, ...lerEventosTag()]);
 }
 
-export function limparEventosTag(): void {
-  gravar([]);
+/** Lê o histórico compartilhado (mais recentes primeiro). */
+export async function lerEventosTag(): Promise<TagHistoricoEvento[]> {
+  const { data, error } = await (supabase as any)
+    .from(TABELA)
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(MAX_EVENTOS);
+  if (error) throw error;
+  return (data ?? []).map(mapear);
 }
 
-/** Remove todos os eventos de uma TAG Custom específica. */
-export function removerGrupoTag(chave: string): void {
-  gravar(lerEventosTag().filter((e) => chaveTagCustom(e.descricao, e.cdConfiguracao) !== chave));
+/** Nome de exibição do usuário autenticado (best effort). */
+async function resolverAutor(): Promise<{ id: string | null; nome: string | null }> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { id: null, nome: null };
+    const metaNome = (user.user_metadata?.display_name as string) || null;
+    if (metaNome) return { id: user.id, nome: metaNome };
+    const { data: perfil } = await (supabase as any)
+      .from('profiles').select('display_name').eq('id', user.id).maybeSingle();
+    return { id: user.id, nome: perfil?.display_name || user.email?.split('@')[0] || null };
+  } catch {
+    return { id: null, nome: null };
+  }
+}
+
+/**
+ * Registra uma ação feita sobre uma TAG Custom.
+ * Nunca lança: o histórico é conveniência e não pode bloquear a gravação no Auge.
+ */
+export async function registrarEventoTag(
+  evento: Omit<TagHistoricoEvento, 'id' | 'em' | 'usuarioId' | 'usuarioNome'>,
+): Promise<void> {
+  try {
+    const autor = await resolverAutor();
+    if (!autor.id) return; // a política de escrita exige usuário autenticado
+    const { error } = await (supabase as any).from(TABELA).insert({
+      tipo: evento.tipo,
+      ok: evento.ok,
+      descricao: evento.descricao || '—',
+      cd_configuracao: evento.cdConfiguracao,
+      nm_configuracao: evento.nmConfiguracao,
+      linhas: evento.linhas ?? [],
+      gravadas: evento.gravadas ?? null,
+      total: evento.total ?? null,
+      erro: evento.erro ?? null,
+      user_id: autor.id,
+      user_nome: autor.nome,
+    });
+    if (error) console.warn('[tag-historico] falha ao registrar evento:', error.message);
+  } catch (e) {
+    console.warn('[tag-historico] falha ao registrar evento:', e);
+  }
+}
+
+/** Remove todos os eventos de uma TAG Custom (respeita RLS: autor/gerente/admin). */
+export async function removerGrupoTag(eventos: TagHistoricoEvento[]): Promise<number> {
+  const ids = eventos.map((e) => e.id);
+  if (ids.length === 0) return 0;
+  const { error, count } = await (supabase as any)
+    .from(TABELA).delete({ count: 'exact' }).in('id', ids);
+  if (error) throw error;
+  return count ?? 0;
 }
 
 /** Agrupa os eventos por TAG Custom, do mais recentemente alterado ao mais antigo. */
@@ -125,6 +166,7 @@ export function agruparEventosTag(eventos: TagHistoricoEvento[]): TagHistoricoGr
       if (!ev.ok) atual.erros += 1;
       if (new Date(ev.em).getTime() > new Date(atual.ultimoEm).getTime()) atual.ultimoEm = ev.em;
       if (!atual.nmConfiguracao && ev.nmConfiguracao) atual.nmConfiguracao = ev.nmConfiguracao;
+      if (ev.usuarioNome && !atual.autores.includes(ev.usuarioNome)) atual.autores.push(ev.usuarioNome);
     } else {
       mapa.set(chave, {
         chave,
@@ -135,6 +177,7 @@ export function agruparEventosTag(eventos: TagHistoricoEvento[]): TagHistoricoGr
         ultimoEm: ev.em,
         totalEventos: 1,
         erros: ev.ok ? 0 : 1,
+        autores: ev.usuarioNome ? [ev.usuarioNome] : [],
       });
     }
   }
@@ -144,19 +187,6 @@ export function agruparEventosTag(eventos: TagHistoricoEvento[]): TagHistoricoGr
   }
   grupos.sort((a, b) => new Date(b.ultimoEm).getTime() - new Date(a.ultimoEm).getTime());
   return grupos;
-}
-
-/** Observa alterações no log (mesma aba e entre abas do navegador). */
-export function observarEventosTag(cb: () => void): () => void {
-  const onStorage = (e: StorageEvent) => {
-    if (!e.key || e.key === STORAGE_KEY) cb();
-  };
-  window.addEventListener(UPDATE_EVENT, cb as EventListener);
-  window.addEventListener('storage', onStorage);
-  return () => {
-    window.removeEventListener(UPDATE_EVENT, cb as EventListener);
-    window.removeEventListener('storage', onStorage);
-  };
 }
 
 export function formatarDataTag(iso: string): string {
