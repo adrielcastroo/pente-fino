@@ -4437,58 +4437,6 @@ Deno.serve(async (req) => {
       }
     }
 
-    // DEBUG temporário: inspeciona respostas cruas do Auge para uma TAG calculada.
-    if (action === 'tag_calculada_debug') {
-      let payload: any = {};
-      try { payload = await req.json(); } catch { /* ignore */ }
-      const cd = String(payload?.cdTag ?? '').trim();
-      const termo = String(payload?.termo ?? '').trim();
-      const headers: Record<string, string> = {
-        'Cookie': auth.jar.header(),
-        'X-Requested-With': 'XMLHttpRequest',
-        'X-CSRF-TOKEN': auth.csrf,
-        'Origin': AUGE_BASE_URL,
-        'Referer': `${AUGE_BASE_URL}/l.unilux/modInventario/tag/tag.php`,
-        'User-Agent': UA,
-        'Accept': 'application/json, text/html, */*; q=0.01',
-        'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
-      };
-      const out: any[] = [];
-      // 1) grade filtrada pelo termo
-      if (termo) try {
-        const res = await fetch(`${AUGE_BASE_URL}/l.unilux/modInventario/tag/ajax/getListaTag.php`, {
-          method: 'POST',
-          headers: { ...headers, 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
-          body: new URLSearchParams({ nrPagina: '1', qtdItens: '50', idAtivo: 'Y', dsPesquisaGeral: termo }),
-          signal: AbortSignal.timeout(15000),
-        });
-        const t = await res.text();
-        const idx = t.indexOf(termo);
-        out.push({ src: 'grid', status: res.status, len: t.length, snippet: idx >= 0 ? t.slice(Math.max(0, idx - 600), idx + 1200) : t.slice(0, 1500) });
-      } catch (e) { out.push({ src: 'grid', error: getErrorMessage(e) }); }
-      // 2) endpoints php citados na página tag.php
-      try {
-        const res = await fetch(`${AUGE_BASE_URL}/l.unilux/modInventario/tag/tag.php`, { headers, signal: AbortSignal.timeout(15000) });
-        const t = await res.text();
-        const phps = [...new Set([...t.matchAll(/["'`]([^"'`\s]*\.php)[^"'`]*["'`]/g)].map((m) => m[1]))];
-        out.push({ src: 'tag.php-endpoints', status: res.status, phps });
-      } catch (e) { out.push({ src: 'tag.php-endpoints', error: getErrorMessage(e) }); }
-      // 3) modal de edição: loadModalTag.php?cdSeqTagCalculada=<cd>
-      try {
-        const url = `${AUGE_BASE_URL}/l.unilux/modInventario/tag/loadModalTag.php?cdSeqTagCalculada=${encodeURIComponent(cd)}`;
-        const res = await fetch(url, { headers, signal: AbortSignal.timeout(15000) });
-        const t = await res.text();
-        const needle = String(payload?.needle ?? 'dsFormula');
-        const snippets: string[] = [];
-        for (const m of t.matchAll(new RegExp(needle, 'g'))) {
-          snippets.push(t.slice(Math.max(0, (m.index ?? 0) - 500), (m.index ?? 0) + 1200));
-        }
-        out.push({ src: 'loadModalTag', status: res.status, len: t.length, count: snippets.length, snippets: snippets.slice(0, 4) });
-      } catch (e) { out.push({ src: 'loadModalTag', error: getErrorMessage(e) }); }
-      return new Response(JSON.stringify({ ok: true, out }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
 
 
 
