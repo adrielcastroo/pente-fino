@@ -1271,38 +1271,52 @@ export default function GerarTagTab() {
             <table className="w-full text-xs">
               <thead className="bg-muted">
                 <tr className="text-left">
-                  <th className="p-2 w-[45%]">Tag Customizada</th>
-                  <th className="p-2 w-[45%]">Tag Calculada</th>
+                  <th className="p-2 w-[32%]">Tag Configurada</th>
+                  <th className="p-2 w-[34%]">Tag Calculada</th>
+                  <th className="p-2 w-[30%]">Fórmula</th>
                   <th className="p-2 text-right w-10"></th>
                 </tr>
               </thead>
               <tbody>
-                {linhas.map((l) => (
-                  <tr key={l.id} className="border-t align-top">
-                    <td className="p-2">
-                      <div className="font-mono font-semibold text-[10px] text-primary">{l.code}</div>
-                      <div className="font-mono text-[11px] break-all">{l.valor}</div>
-                      <div className="text-[9px] text-muted-foreground truncate">{l.cfgNome}</div>
-                    </td>
-                    <td className="p-2">
-                      <TagCalculadaCell valor={l.calculada} onChange={(v) => setCalculada(l.id, v)} />
-                    </td>
-                    <td className="p-2 text-right">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-7 w-7"
-                        onClick={() => setLinhas((prev) => prev.filter((x) => x.id !== l.id))}
-                        aria-label="Remover TAG"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
+                {linhas.map((l) => {
+                  const obrigatoria = obrigatorias.some((o) => o.code === l.code);
+                  return (
+                    <tr key={l.id} className="border-t align-top">
+                      <td className="p-2">
+                        <div className={`font-mono font-semibold text-[10px] flex items-center gap-1 ${obrigatoria ? 'text-blue-600 dark:text-blue-400' : 'text-primary'}`}>
+                          {l.code}
+                          {obrigatoria && (
+                            <span className="rounded border border-blue-500/50 bg-blue-500/10 px-1 text-[8px] uppercase">
+                              obrigatória
+                            </span>
+                          )}
+                        </div>
+                        <div className="font-mono text-[11px] break-all">{l.valor}</div>
+                        <div className="text-[9px] text-muted-foreground truncate">{l.cfgNome}</div>
+                      </td>
+                      <td className="p-2">
+                        <TagCalculadaCell valor={l.calculada} onChange={(v) => setCalculada(l.id, v)} />
+                      </td>
+                      <td className="p-2 font-mono text-[10px] text-muted-foreground break-all">
+                        {l.formula || '—'}
+                      </td>
+                      <td className="p-2 text-right">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7"
+                          onClick={() => setLinhas((prev) => prev.filter((x) => x.id !== l.id))}
+                          aria-label="Remover TAG"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
                 {linhas.length === 0 && (
                   <tr>
-                    <td colSpan={3} className="p-6 text-center text-muted-foreground text-[11px]">
+                    <td colSpan={4} className="p-6 text-center text-muted-foreground text-[11px]">
                       Selecione TAGs recomendadas à esquerda para montar a TAG Custom.
                     </td>
                   </tr>
@@ -1310,6 +1324,7 @@ export default function GerarTagTab() {
               </tbody>
             </table>
           </div>
+
 
           <div className="p-3 border-t space-y-1.5">
             <Button
