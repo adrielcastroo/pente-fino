@@ -466,6 +466,78 @@ async function fetchSelectTagsCalculadas(
 }
 
 // ---------------------------------------------------------------------------
+// Fórmula COMPLETA de uma TAG calculada.
+// A grade (getListaTag.php) devolve a fórmula truncada para exibição
+// (ex.: "<PHA25/16_Corda1_1>+<PHA25/16_Corda1_..."). Para mostrar o mesmo valor
+// que o Auge grava, buscamos o cadastro da TAG e extraímos a fórmula inteira.
+// ---------------------------------------------------------------------------
+const TAG_DETALHE_PATHS = [
+  { path: '/l.unilux/modInventario/tag/manterTag.php', method: 'GET' as const },
+  { path: '/l.unilux/modInventario/tag/ajax/getTag.php', method: 'POST' as const },
+  { path: '/l.unilux/modInventario/tag/ajax/getDadosTag.php', method: 'POST' as const },
+  { path: '/l.unilux/modInventario/tag/ajax/carregaTag.php', method: 'POST' as const },
+];
+
+function extractFormulaFromText(text: string): string {
+  if (!text) return '';
+  // 1) JSON: "formulaTag":"...", "dsFormula":"...", "formula":"..."
+  const jsonRe = /"(?:formulaTag|dsFormula|formula|dsExpressao)"\s*:\s*"((?:[^"\\]|\\.)*)"/i;
+  const jm = text.match(jsonRe);
+  if (jm) {
+    try { return JSON.parse(`"${jm[1]}"`).trim(); } catch { return jm[1].trim(); }
+  }
+  // 2) <input name="formulaTag" ... value="...">
+  const inputRe = /<(?:input|textarea)[^>]*name=["'](?:formulaTag|dsFormula|formula)["'][^>]*?(?:value=["']([^"']*)["'])?[^>]*>(?:([\s\S]*?)<\/textarea>)?/i;
+  const im = text.match(inputRe);
+  if (im) {
+    const v = (im[1] ?? im[2] ?? '')
+      .replace(/&quot;/g, '"').replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+      .trim();
+    if (v) return v;
+  }
+  return '';
+}
+
+async function fetchTagFormulaCompleta(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+  cdTag: string,
+): Promise<string> {
+  const cd = String(cdTag ?? '').trim();
+  if (!cd) return '';
+  const headers: Record<string, string> = {
+    'Cookie': auth.jar.header(),
+    'X-Requested-With': 'XMLHttpRequest',
+    'X-CSRF-TOKEN': auth.csrf,
+    'Origin': AUGE_BASE_URL,
+    'Referer': `${AUGE_BASE_URL}/l.unilux/modInventario/tag/tag.php`,
+    'User-Agent': UA,
+    'Accept': 'application/json, text/javascript, text/html, */*; q=0.01',
+    'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
+  };
+  for (const cand of TAG_DETALHE_PATHS) {
+    try {
+      let res: Response;
+      if (cand.method === 'GET') {
+        res = await fetch(`${AUGE_BASE_URL}${cand.path}?cdTag=${encodeURIComponent(cd)}&idAcao=2`, { headers });
+      } else {
+        res = await fetch(`${AUGE_BASE_URL}${cand.path}`, {
+          method: 'POST',
+          headers: { ...headers, 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+          body: new URLSearchParams({ cdTag: cd, cdTagCalculada: cd }),
+        });
+      }
+      auth.jar.ingest(res);
+      if (!res.ok) continue;
+      const formula = extractFormulaFromText(await res.text());
+      if (formula && !/\.\.\.$|…$/.test(formula)) return formula;
+      if (formula) return formula;
+    } catch { /* tenta o próximo candidato */ }
+  }
+  return '';
+}
+
+// ---------------------------------------------------------------------------
 // Grade da página /modInventario/tag/tag.php — fonte CORRETA das TAGs
 // calculadas, pois traz Nome, Descrição e Fórmula em colunas separadas.
 // O select2 (tagSelectTag.php) devolve apenas o rótulo "FORMULA\NOME", que em
