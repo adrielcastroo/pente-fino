@@ -1282,33 +1282,8 @@ export default function GerarTagTab() {
 
         </div>
 
-        {/* Tag: nome livre */}
-        <div className="space-y-1">
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-            Tag
-          </div>
-          <div className="flex gap-2">
-            <Input
-              value={descricao}
-              onChange={(e) => setDescricao(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') adicionarTagTextoLivre(); }}
-              placeholder="Nome da Tag (texto livre). Ex: Rollo Abs2.0 T42 Standard Preto"
-              className={`h-11 text-xs font-mono flex-1 ${descricaoInvalida ? 'border-destructive focus-visible:ring-destructive' : ''}`}
-            />
-            <Button variant="outline" className="h-11 px-3 gap-1 text-[11px] shrink-0" onClick={adicionarTagTextoLivre}>
-              <Plus className="h-3.5 w-3.5" /> Adicionar
-            </Button>
-          </div>
-          {descricaoInvalida && (
-            <p className="text-[10px] text-destructive flex items-center gap-1">
-              <AlertTriangle className="h-3 w-3" /> O nome da Tag é obrigatório.
-            </p>
-          )}
-          <p className="text-[10px] text-muted-foreground">
-            Apenas o nome da TAG que será criada. Este campo não é usado em nenhuma busca.
-          </p>
 
-        </div>
+
 
 
         {ehTagCustomNova && (
