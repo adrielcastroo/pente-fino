@@ -4080,11 +4080,20 @@ Deno.serve(async (req) => {
         }
       }
 
-      const results: Array<{ tag: string; calculada: string; ok: boolean; erro?: string; auge?: any }> = [];
+      const results: Array<{
+        tag: string;
+        calculada: string;
+        formula?: string;
+        cdTagCustomizada?: string;
+        ok: boolean;
+        erro?: string;
+        auge?: any;
+      }> = [];
       for (const it of itens) {
         // Mapa de campos: Configuração -> cdConfiguracao | TAG -> dsTagCustomizada | TAG Calculada -> cdTagCalculada
         const dsTagCustomizada = String(it?.dsTagCustomizada ?? '').trim();
         const dsTagCalculada = String(it?.dsTagCalculada ?? '').trim();
+        const dsFormula = String(it?.dsFormula ?? '').trim();
         if (!dsTagCustomizada) continue;
 
         // Aceita o código direto do cliente; senão resolve pelo nome espelhado.
@@ -4095,6 +4104,7 @@ Deno.serve(async (req) => {
           results.push({
             tag: dsTagCustomizada,
             calculada: dsTagCalculada,
+            formula: dsFormula,
             ok: false,
             erro: `TAG Calculada "${dsTagCalculada}" não encontrada no espelho local. Rode "Sincronizar TAGs calculadas" e tente novamente.`,
           });
@@ -4104,19 +4114,38 @@ Deno.serve(async (req) => {
         // No Auge "Tag Calculada" e "Texto Livre" são mutuamente exclusivos.
         const dsTextoLivre = cdTagCalculada ? '' : String(it?.dsTagTexto ?? dsTagCustomizada).trim();
 
+        // Quando o cliente manda o código da linha existente, o Auge sobrescreve
+        // (idAcao=2) em vez de criar uma nova — é o caminho da edição.
+        const cdTagCustomizadaExistente = String(it?.cdTagCustomizada ?? '').trim();
+
         try {
           const auge = await saveTagCustomizada(auth, {
             cdConfiguracao,
-            cdTagCustomizada: String(it?.cdTagCustomizada ?? '').trim(),
+            cdTagCustomizada: cdTagCustomizadaExistente,
             dsTagCustomizada,
             cdTagCalculada,
             dsTextoLivre,
           });
-          results.push({ tag: dsTagCustomizada, calculada: dsTagCalculada, ok: true, auge });
+          results.push({
+            tag: dsTagCustomizada,
+            calculada: dsTagCalculada,
+            formula: dsFormula,
+            cdTagCustomizada: String(auge?.cdTagCustomizada ?? cdTagCustomizadaExistente ?? ''),
+            ok: true,
+            auge,
+          });
         } catch (e) {
-          results.push({ tag: dsTagCustomizada, calculada: dsTagCalculada, ok: false, erro: getErrorMessage(e) });
+          results.push({
+            tag: dsTagCustomizada,
+            calculada: dsTagCalculada,
+            formula: dsFormula,
+            cdTagCustomizada: cdTagCustomizadaExistente,
+            ok: false,
+            erro: getErrorMessage(e),
+          });
         }
       }
+
 
 
       // Estado final no Auge (o que o usuário vê na tela manterTagCustomizada).
