@@ -165,13 +165,17 @@ interface TagCategoria {
   items: Array<{ tag: CustomTag; cfgNome: string; score: number }>;
 }
 
-/** Linha da tabela: TAG customizada escolhida + TAG calculada vinculada. */
+/** Linha da tabela: TAG configurada escolhida + TAG calculada vinculada. */
 interface LinhaTag {
   id: string;
   code: string;
   valor: string;
   cfgNome: string;
   calculada: string;
+  /** Fórmula da TAG calculada (mesma coluna existente no Auge). */
+  formula: string;
+  /** Código da linha no Auge — quando presente, a gravação sobrescreve. */
+  cdTagCustomizada?: string;
 }
 
 interface ResultadoAuge {
@@ -180,26 +184,43 @@ interface ResultadoAuge {
   total?: number;
   gravadas?: number;
   falhas?: number;
-  results?: Array<{ tag: string; calculada: string; ok: boolean; erro?: string }>;
+  results?: Array<{
+    tag: string;
+    calculada: string;
+    formula?: string;
+    cdTagCustomizada?: string;
+    ok: boolean;
+    erro?: string;
+  }>;
   augeRows?: any[];
   error?: string;
 }
 
 /**
  * Rascunho em memória (escopo do módulo): mantém o progresso ao navegar entre
- * abas/páginas do SPA e é descartado ao recarregar a página.
+ * abas/páginas do SPA e ao alternar de janela (alt+tab). Só é descartado
+ * quando a página é recarregada ou o navegador é fechado.
  */
 interface RascunhoGerarTag {
   descricao: string;
   linhas: LinhaTag[];
   customAberta: { cd: string; nm: string } | null;
+  resultado: ResultadoAuge | null;
 }
 
 const rascunho: RascunhoGerarTag = {
   descricao: '',
   linhas: [],
   customAberta: null,
+  resultado: null,
 };
+
+/** Valor completo de uma TAG calculada selecionada. */
+interface TagCalculadaSel {
+  valor: string;
+  formula: string;
+}
+
 
 // ============================================================
 // Célula de busca da TAG calculada (curinga SAP B1)
