@@ -223,7 +223,32 @@ const rascunho: RascunhoGerarTag = {
 interface TagCalculadaSel {
   valor: string;
   formula: string;
+  /** Código no Auge — usado para completar a fórmula truncada da grade. */
+  cdTag?: string;
 }
+
+/** A grade do Auge trunca fórmulas longas ("...", "…"). */
+function formulaTruncada(f: string): boolean {
+  return /(\.\.\.|…)$/.test((f ?? '').trim());
+}
+
+/**
+ * Busca no Auge a fórmula inteira quando a grade devolveu a versão truncada,
+ * garantindo que a coluna "Fórmula" do Pente Fino mostre o mesmo do ERP.
+ */
+async function completarFormula(sel: TagCalculadaSel): Promise<TagCalculadaSel> {
+  if (!sel.valor || (sel.formula && !formulaTruncada(sel.formula))) return sel;
+  try {
+    const { data } = await supabase.functions.invoke('auge-sync?action=tag_calculada_formula', {
+      body: { cdTag: sel.cdTag ?? '', nome: sel.valor },
+    });
+    const formula = String((data as any)?.formula ?? '').trim();
+    return formula ? { ...sel, formula } : sel;
+  } catch {
+    return sel;
+  }
+}
+
 
 
 // ============================================================
@@ -256,8 +281,8 @@ function TagCalculadaCell({
     staleTime: 60 * 1000,
     queryFn: async () => {
       const seen = new Set<string>();
-      const out: Array<{ valor: string; formula: string; descricao: string }> = [];
-      const push = (valorRaw: unknown, formulaRaw: unknown, descricaoRaw: unknown) => {
+      const out: Array<{ valor: string; formula: string; descricao: string; cdTag?: string }> = [];
+      const push = (valorRaw: unknown, formulaRaw: unknown, descricaoRaw: unknown, cdTagRaw?: unknown) => {
         const v = String(valorRaw ?? '').trim();
         if (!v || seen.has(v)) return;
         seen.add(v);
@@ -265,6 +290,7 @@ function TagCalculadaCell({
           valor: v,
           formula: String(formulaRaw ?? '').trim(),
           descricao: String(descricaoRaw ?? '').trim(),
+          cdTag: String(cdTagRaw ?? '').trim() || undefined,
         });
       };
 
@@ -275,12 +301,12 @@ function TagCalculadaCell({
         const cols = ['nome', 'descricao', 'formula', 'nm_tag'];
         const { data } = await (supabase as any)
           .from('auge_tags_calculadas')
-          .select('nome, descricao, formula, nm_tag')
+          .select('cd_tag, nome, descricao, formula, nm_tag')
           .or(cols.map((c) => `${c}.ilike.${padrao}`).join(','))
           .order('nome', { ascending: true })
           .limit(200);
         for (const r of (data ?? []) as any[]) {
-          push(r.nome ?? r.nm_tag ?? r.descricao, r.formula, r.descricao);
+          push(r.nome ?? r.nm_tag ?? r.descricao, r.formula, r.descricao, r.cd_tag);
         }
       }
 
@@ -388,7 +414,16 @@ function TagCalculadaCell({
           {opcoes.map((o) => (
             <button
               key={o.valor}
-              onClick={() => { onChange({ valor: o.valor, formula: o.formula }); setAberto(false); }}
+              onClick={async () => {
+                const base: TagCalculadaSel = { valor: o.valor, formula: o.formula, cdTag: o.cdTag };
+                onChange(base);
+                setAberto(false);
+                // A grade do Auge trunca fórmulas longas; completamos no ERP.
+                if (formulaTruncada(o.formula) || !o.formula) {
+                  const completo = await completarFormula(base);
+                  if (completo.formula !== base.formula) onChange(completo);
+                }
+              }}
               className="w-full text-left px-2 py-1 hover:bg-muted/60 transition"
             >
               <div className="font-mono text-[11px] break-all">{o.valor}</div>
@@ -1410,32 +1445,46 @@ export default function GerarTagTab() {
                 <div className="text-[11px] text-destructive break-words">{resultado.error}</div>
               )}
 
-              {!!resultado.results?.length && (
-                <div className="rounded border bg-background overflow-x-auto">
-                  <table className="w-full text-[10px]">
-                    <thead className="bg-muted"><tr className="text-left">
-                      <th className="p-1.5">Tag Configurada</th>
-                      <th className="p-1.5">Tag Calculada</th>
-                      <th className="p-1.5">Fórmula</th>
-                      <th className="p-1.5">Status</th>
-                    </tr></thead>
-                    <tbody>
-                      {resultado.results.map((r, i) => (
-                        <tr key={i} className="border-t">
-                          <td className="p-1.5 font-mono break-all">{r.tag}</td>
-                          <td className="p-1.5 font-mono break-all">{r.calculada || '—'}</td>
-                          <td className="p-1.5 font-mono break-all text-muted-foreground">{r.formula || '—'}</td>
-                          <td className="p-1.5">
-                            {r.ok
-                              ? <span className="text-emerald-600">OK</span>
-                              : <span className="text-destructive break-words">{r.erro}</span>}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+              {(() => {
+                // Se o Auge não devolveu detalhamento, mostramos ao menos o que
+                // foi enviado — a tabela nunca mais fica vazia sem explicação.
+                const linhasResultado = resultado.results?.length
+                  ? resultado.results
+                  : linhas.map((l) => ({
+                      tag: l.valor,
+                      calculada: l.calculada,
+                      formula: l.formula,
+                      ok: false,
+                      erro: resultado.error ?? 'Sem retorno detalhado do Auge para esta linha.',
+                    }));
+                if (!linhasResultado.length) return null;
+                return (
+                  <div className="rounded border bg-background overflow-x-auto">
+                    <table className="w-full text-[10px]">
+                      <thead className="bg-muted"><tr className="text-left">
+                        <th className="p-1.5">Tag Configurada</th>
+                        <th className="p-1.5">Tag Calculada</th>
+                        <th className="p-1.5">Fórmula</th>
+                        <th className="p-1.5">Status</th>
+                      </tr></thead>
+                      <tbody>
+                        {linhasResultado.map((r, i) => (
+                          <tr key={i} className="border-t">
+                            <td className="p-1.5 font-mono break-all">{r.tag || '—'}</td>
+                            <td className="p-1.5 font-mono break-all">{r.calculada || '—'}</td>
+                            <td className="p-1.5 font-mono break-all text-muted-foreground">{r.formula || '—'}</td>
+                            <td className="p-1.5">
+                              {r.ok
+                                ? <span className="text-emerald-600">OK</span>
+                                : <span className="text-destructive break-words">{r.erro}</span>}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })()}
 
               {!!resultado.augeRows?.length && (
                 <div className="space-y-1">

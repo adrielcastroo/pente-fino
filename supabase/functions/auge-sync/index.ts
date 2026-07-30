@@ -466,6 +466,78 @@ async function fetchSelectTagsCalculadas(
 }
 
 // ---------------------------------------------------------------------------
+// Fórmula COMPLETA de uma TAG calculada.
+// A grade (getListaTag.php) devolve a fórmula truncada para exibição
+// (ex.: "<PHA25/16_Corda1_1>+<PHA25/16_Corda1_..."). Para mostrar o mesmo valor
+// que o Auge grava, buscamos o cadastro da TAG e extraímos a fórmula inteira.
+// ---------------------------------------------------------------------------
+const TAG_DETALHE_PATHS = [
+  { path: '/l.unilux/modInventario/tag/manterTag.php', method: 'GET' as const },
+  { path: '/l.unilux/modInventario/tag/ajax/getTag.php', method: 'POST' as const },
+  { path: '/l.unilux/modInventario/tag/ajax/getDadosTag.php', method: 'POST' as const },
+  { path: '/l.unilux/modInventario/tag/ajax/carregaTag.php', method: 'POST' as const },
+];
+
+function extractFormulaFromText(text: string): string {
+  if (!text) return '';
+  // 1) JSON: "formulaTag":"...", "dsFormula":"...", "formula":"..."
+  const jsonRe = /"(?:formulaTag|dsFormula|formula|dsExpressao)"\s*:\s*"((?:[^"\\]|\\.)*)"/i;
+  const jm = text.match(jsonRe);
+  if (jm) {
+    try { return JSON.parse(`"${jm[1]}"`).trim(); } catch { return jm[1].trim(); }
+  }
+  // 2) <input name="formulaTag" ... value="...">
+  const inputRe = /<(?:input|textarea)[^>]*name=["'](?:formulaTag|dsFormula|formula)["'][^>]*?(?:value=["']([^"']*)["'])?[^>]*>(?:([\s\S]*?)<\/textarea>)?/i;
+  const im = text.match(inputRe);
+  if (im) {
+    const v = (im[1] ?? im[2] ?? '')
+      .replace(/&quot;/g, '"').replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+      .trim();
+    if (v) return v;
+  }
+  return '';
+}
+
+async function fetchTagFormulaCompleta(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+  cdTag: string,
+): Promise<string> {
+  const cd = String(cdTag ?? '').trim();
+  if (!cd) return '';
+  const headers: Record<string, string> = {
+    'Cookie': auth.jar.header(),
+    'X-Requested-With': 'XMLHttpRequest',
+    'X-CSRF-TOKEN': auth.csrf,
+    'Origin': AUGE_BASE_URL,
+    'Referer': `${AUGE_BASE_URL}/l.unilux/modInventario/tag/tag.php`,
+    'User-Agent': UA,
+    'Accept': 'application/json, text/javascript, text/html, */*; q=0.01',
+    'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
+  };
+  for (const cand of TAG_DETALHE_PATHS) {
+    try {
+      let res: Response;
+      if (cand.method === 'GET') {
+        res = await fetch(`${AUGE_BASE_URL}${cand.path}?cdTag=${encodeURIComponent(cd)}&idAcao=2`, { headers });
+      } else {
+        res = await fetch(`${AUGE_BASE_URL}${cand.path}`, {
+          method: 'POST',
+          headers: { ...headers, 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+          body: new URLSearchParams({ cdTag: cd, cdTagCalculada: cd }),
+        });
+      }
+      auth.jar.ingest(res);
+      if (!res.ok) continue;
+      const formula = extractFormulaFromText(await res.text());
+      if (formula && !/\.\.\.$|…$/.test(formula)) return formula;
+      if (formula) return formula;
+    } catch { /* tenta o próximo candidato */ }
+  }
+  return '';
+}
+
+// ---------------------------------------------------------------------------
 // Grade da página /modInventario/tag/tag.php — fonte CORRETA das TAGs
 // calculadas, pois traz Nome, Descrição e Fórmula em colunas separadas.
 // O select2 (tagSelectTag.php) devolve apenas o rótulo "FORMULA\NOME", que em
@@ -4094,7 +4166,18 @@ Deno.serve(async (req) => {
         const dsTagCustomizada = String(it?.dsTagCustomizada ?? '').trim();
         const dsTagCalculada = String(it?.dsTagCalculada ?? '').trim();
         const dsFormula = String(it?.dsFormula ?? '').trim();
-        if (!dsTagCustomizada) continue;
+        if (!dsTagCustomizada) {
+          // Nunca descarta a linha em silêncio: sem isso a tabela "Gravada no
+          // Auge" ficava vazia e o usuário não sabia o que aconteceu.
+          results.push({
+            tag: String(it?.dsTagTexto ?? '').trim() || '(sem nome)',
+            calculada: dsTagCalculada,
+            formula: dsFormula,
+            ok: false,
+            erro: 'Linha sem nome da TAG configurada — nada foi enviado ao Auge.',
+          });
+          continue;
+        }
 
         // Aceita o código direto do cliente; senão resolve pelo nome espelhado.
         const cdTagCalculada = String(it?.cdTagCalculada ?? '').trim()
@@ -4306,6 +4389,37 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+    // Fórmula completa de uma TAG calculada (a grade do Auge trunca o texto).
+    if (action === 'tag_calculada_formula') {
+      let payload: any = {};
+      try { payload = await req.json(); } catch { /* ignore */ }
+      let cdTag = String(payload?.cdTag ?? '').trim();
+      const nome = String(payload?.nome ?? '').trim();
+
+      if (!cdTag && nome) {
+        const { data } = await admin
+          .from('auge_tags_calculadas')
+          .select('cd_tag')
+          .or(`nome.eq.${nome},nm_tag.eq.${nome}`)
+          .limit(1)
+          .maybeSingle();
+        cdTag = String((data as any)?.cd_tag ?? '').trim();
+      }
+      if (!cdTag) {
+        return new Response(JSON.stringify({ ok: false, error: 'TAG calculada não identificada.' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const formula = await fetchTagFormulaCompleta(auth, cdTag);
+      if (formula) {
+        await admin.from('auge_tags_calculadas').update({ formula }).eq('cd_tag', cdTag);
+      }
+      return new Response(JSON.stringify({ ok: !!formula, cdTag, formula }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
 
 
 
