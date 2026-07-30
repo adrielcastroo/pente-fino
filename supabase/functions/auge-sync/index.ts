@@ -4015,15 +4015,16 @@ Deno.serve(async (req) => {
       }
 
       await admin.from('auge_sync_runs').insert({
-        status: resultados.every((r) => r.ok) ? 'success' : 'error',
+        status: resultados.every((r) => r.ok) && !naoProcessados.length ? 'success' : 'error',
         triggered_by: triggeredBy, entidade: 'transferencias',
         finished_at: new Date().toISOString(),
-        detalhes: { action, idLogistica, desejado, resultados },
+        detalhes: { action, idLogistica, desejado, resultados, nao_processados: naoProcessados },
       });
 
       return new Response(JSON.stringify({
         ok: resultados.every((r) => r.ok),
         idLogistica, desejado, resultados,
+        nao_processados: naoProcessados,
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
