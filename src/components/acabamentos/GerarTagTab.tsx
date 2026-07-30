@@ -1253,10 +1253,10 @@ export default function GerarTagTab() {
 
 
       <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-4 items-start">
-        {/* Bloco esquerdo: TAGs recomendadas */}
+        {/* Bloco esquerdo: TAGs necessárias */}
         <Card className="p-3 space-y-2">
           <div className="text-[10px] uppercase text-muted-foreground flex items-center gap-1">
-            <TagIcon className="h-3 w-3" /> TAGs recomendadas
+            <TagIcon className="h-3 w-3" /> TAGs necessárias
             <Badge variant="outline" className="text-[9px]">{recomendadas.length}</Badge>
           </div>
           <p className="text-[10px] text-muted-foreground">
