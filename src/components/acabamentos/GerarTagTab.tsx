@@ -229,9 +229,11 @@ interface TagCalculadaSel {
 function TagCalculadaCell({
   valor,
   onChange,
+  compacto = false,
 }: {
   valor: string;
-  onChange: (v: string) => void;
+  onChange: (v: TagCalculadaSel) => void;
+  compacto?: boolean;
 }) {
   const [busca, setBusca] = useState('');
   const [aberto, setAberto] = useState(false);
@@ -250,42 +252,35 @@ function TagCalculadaCell({
     staleTime: 60 * 1000,
     queryFn: async () => {
       const seen = new Set<string>();
-      const out: Array<{ valor: string; cfg: string }> = [];
-      const push = (valor: string, cfg: string) => {
-        const v = String(valor ?? '').trim();
+      const out: Array<{ valor: string; formula: string; descricao: string }> = [];
+      const push = (valorRaw: unknown, formulaRaw: unknown, descricaoRaw: unknown) => {
+        const v = String(valorRaw ?? '').trim();
         if (!v || seen.has(v)) return;
         seen.add(v);
-        out.push({ valor: v, cfg });
+        out.push({
+          valor: v,
+          formula: String(formulaRaw ?? '').trim(),
+          descricao: String(descricaoRaw ?? '').trim(),
+        });
       };
 
-      // 1) PRIORIDADE: coluna "Nome" do espelho auge_tags_calculadas
-      //    (ex.: PHA25/16_Corda1_1). É a fonte oficial da TAG calculada.
+      // 1) Espelho auge_tags_calculadas: busca simultânea por NOME, DESCRIÇÃO
+      //    e FÓRMULA (não apenas fallback) — o usuário pode procurar por
+      //    qualquer uma das três colunas, como faz na grade do Auge.
       if (padrao) {
+        const cols = ['nome', 'descricao', 'formula', 'nm_tag'];
         const { data } = await (supabase as any)
           .from('auge_tags_calculadas')
           .select('nome, descricao, formula, nm_tag')
-          .not('nome', 'is', null)
-          .ilike('nome', padrao)
+          .or(cols.map((c) => `${c}.ilike.${padrao}`).join(','))
           .order('nome', { ascending: true })
           .limit(200);
         for (const r of (data ?? []) as any[]) {
-          push(r.nome, r.formula ?? '');
+          push(r.nome ?? r.nm_tag ?? r.descricao, r.formula, r.descricao);
         }
       }
 
-      // 2) FALLBACK: descrição do espelho (texto completo "FORMULA\NOME").
-      if (out.length === 0 && padrao) {
-        const { data } = await (supabase as any)
-          .from('auge_tags_calculadas')
-          .select('nome, descricao, nm_tag')
-          .or(`descricao.ilike.${padrao},nm_tag.ilike.${padrao}`)
-          .limit(200);
-        for (const r of (data ?? []) as any[]) {
-          push(r.nome ?? r.descricao ?? r.nm_tag, r.descricao ?? r.nm_tag ?? '');
-        }
-      }
-
-      // 3) Fallback: nomes já sincronizados nos acabamentos.
+      // 2) Fallback: nomes já sincronizados nos acabamentos.
       if (out.length === 0 && padrao) {
         const { data } = await (supabase as any)
           .from('auge_acabamentos')
@@ -294,10 +289,10 @@ function TagCalculadaCell({
           .ilike('ds_tag_calculada', padrao)
           .order('ds_tag_calculada', { ascending: true })
           .limit(200);
-        for (const r of (data ?? []) as any[]) push(r.ds_tag_calculada, r.nm_acabamento ?? '');
+        for (const r of (data ?? []) as any[]) push(r.ds_tag_calculada, '', r.nm_acabamento ?? '');
       }
 
-      // 4) Busca ao vivo no Auge (caso o espelho ainda não esteja sincronizado).
+      // 3) Busca ao vivo no Auge (caso o espelho ainda não esteja sincronizado).
       if (out.length === 0) {
         try {
           const { data: fn } = await supabase.functions.invoke('auge-sync?action=tag_calculada_select', {
@@ -313,12 +308,12 @@ function TagCalculadaCell({
             const nome = idx >= 0 ? raw.slice(idx + 1).trim() : raw;
             const formula = idx >= 0 ? raw.slice(0, idx).trim() : '';
             if (alvo && !nome.toLowerCase().includes(alvo) && !raw.toLowerCase().includes(alvo)) continue;
-            push(nome || raw, formula);
+            push(nome || raw, formula, raw);
           }
         } catch { /* segue para o fallback local */ }
       }
 
-      // 5) Fallback: TAGs calculadas já vinculadas em TAG Custom.
+      // 4) Fallback: TAGs calculadas já vinculadas em TAG Custom.
       if (out.length === 0 && padrao) {
         const { data } = await (supabase as any)
           .from('auge_tag_custom')
@@ -326,7 +321,7 @@ function TagCalculadaCell({
           .or(`ds_tag_calculada.ilike.${padrao},cd_tag_calculada.ilike.${padrao}`)
           .limit(200);
         for (const r of (data ?? []) as any[]) {
-          push(r.ds_tag_calculada ?? r.cd_tag_calculada, r.nm_configuracao ?? '');
+          push(r.ds_tag_calculada ?? r.cd_tag_calculada, '', r.nm_configuracao ?? '');
         }
       }
 
@@ -360,7 +355,7 @@ function TagCalculadaCell({
           autoFocus={aberto}
           onFocus={() => setAberto(true)}
           onChange={(e) => { setBusca(e.target.value); setAberto(true); }}
-          placeholder="Buscar TAG calculada (use * como curinga)"
+          placeholder={compacto ? 'Nome, descrição ou fórmula' : 'Buscar por nome, descrição ou fórmula (use * como curinga)'}
           className="h-8 pl-7 text-[11px] font-mono"
         />
       </div>
@@ -378,7 +373,7 @@ function TagCalculadaCell({
                 Nenhuma TAG calculada encontrada. Tente <code className="font-mono">*termo*</code>.
               </p>
               <button
-                onClick={() => { onChange(termo.replace(/\*/g, '').trim()); setAberto(false); }}
+                onClick={() => { onChange({ valor: termo.replace(/\*/g, '').trim(), formula: '' }); setAberto(false); }}
                 className="text-[10px] text-primary hover:underline"
               >
                 Usar “{termo.replace(/\*/g, '').trim()}” como texto livre
@@ -389,11 +384,16 @@ function TagCalculadaCell({
           {opcoes.map((o) => (
             <button
               key={o.valor}
-              onClick={() => { onChange(o.valor); setAberto(false); }}
+              onClick={() => { onChange({ valor: o.valor, formula: o.formula }); setAberto(false); }}
               className="w-full text-left px-2 py-1 hover:bg-muted/60 transition"
             >
               <div className="font-mono text-[11px] break-all">{o.valor}</div>
-              {o.cfg && <div className="text-[9px] text-muted-foreground truncate">{o.cfg}</div>}
+              {o.formula && (
+                <div className="text-[9px] text-muted-foreground font-mono truncate">ƒ {o.formula}</div>
+              )}
+              {!o.formula && o.descricao && (
+                <div className="text-[9px] text-muted-foreground truncate">{o.descricao}</div>
+              )}
             </button>
           ))}
         </div>
@@ -406,6 +406,7 @@ function TagCalculadaCell({
     </div>
   );
 }
+
 
 // ============================================================
 // Busca de Configuração (equivale ao campo "Configuração" do Auge)
