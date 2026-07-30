@@ -512,12 +512,19 @@ function extractFormulaFromText(text: string): string {
   return '';
 }
 
-async function fetchTagFormulaCompleta(
+function extractInputValue(html: string, id: string): string {
+  const re = new RegExp(`<(?:input|textarea)[^>]*id=["']${id}["'][^>]*value=["']([^"']*)["']`, 'i');
+  const m = html.match(re);
+  return m ? m[1].replace(/&quot;/g, '"').replace(/&amp;/g, '&').trim() : '';
+}
+
+async function fetchTagModal(
   auth: { jar: Jar; csrf: string; apiToken: string | null },
   cdTag: string,
-): Promise<string> {
+): Promise<{ nome: string; descricao: string; formula: string }> {
+  const vazio = { nome: '', descricao: '', formula: '' };
   const cd = String(cdTag ?? '').trim();
-  if (!cd) return '';
+  if (!cd) return vazio;
   const headers: Record<string, string> = {
     'Cookie': auth.jar.header(),
     'X-Requested-With': 'XMLHttpRequest',
@@ -534,11 +541,23 @@ async function fetchTagFormulaCompleta(
       { headers, signal: AbortSignal.timeout(10000) },
     );
     auth.jar.ingest(res);
-    if (!res.ok) { await res.body?.cancel(); return ''; }
-    return extractFormulaFromText(await res.text());
+    if (!res.ok) { await res.body?.cancel(); return vazio; }
+    const html = await res.text();
+    return {
+      nome: extractInputValue(html, 'nmTag'),
+      descricao: extractInputValue(html, 'dsTag'),
+      formula: extractFormulaFromText(html),
+    };
   } catch {
-    return '';
+    return vazio;
   }
+}
+
+async function fetchTagFormulaCompleta(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+  cdTag: string,
+): Promise<string> {
+  return (await fetchTagModal(auth, cdTag)).formula;
 }
 
 
@@ -4420,11 +4439,18 @@ Deno.serve(async (req) => {
           });
         }
 
-        const formula = await fetchTagFormulaCompleta(auth, cdTag);
-        if (formula) {
-          await admin.from('auge_tags_calculadas').update({ formula }).eq('cd_tag', cdTag);
+        const modal = await fetchTagModal(auth, cdTag);
+        const formula = modal.formula;
+        // Auto-correção: além da fórmula, alinha nome/descrição com o Auge,
+        // evitando desalinhamento de colunas vindo da grade.
+        const patch: Record<string, string> = {};
+        if (formula) patch.formula = formula;
+        if (modal.nome) { patch.nome = modal.nome; patch.nm_tag = modal.nome; }
+        if (modal.descricao) patch.descricao = modal.descricao;
+        if (Object.keys(patch).length) {
+          await admin.from('auge_tags_calculadas').update(patch).eq('cd_tag', cdTag);
         }
-        return new Response(JSON.stringify({ ok: !!formula, cdTag, formula }), {
+        return new Response(JSON.stringify({ ok: !!formula, cdTag, ...modal }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       } catch (e) {
