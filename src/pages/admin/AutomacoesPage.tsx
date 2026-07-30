@@ -600,6 +600,9 @@ export default function AutomacoesPage() {
             <TabsTrigger value="entrega-apos" className="gap-2">
               <CalendarClock className="h-4 w-4" /> Entrega Após
             </TabsTrigger>
+            <TabsTrigger value="processo-transferencia" className="gap-2">
+              <Truck className="h-4 w-4" /> Processo de Transferência
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="necessidade" className="mt-0 space-y-4">
             <AugeAccountCard />
@@ -608,6 +611,9 @@ export default function AutomacoesPage() {
           </TabsContent>
           <TabsContent value="entrega-apos" className="mt-0">
             <EntregaAposCard />
+          </TabsContent>
+          <TabsContent value="processo-transferencia" className="mt-0">
+            <ProcessoTransferenciaCard />
           </TabsContent>
         </Tabs>
       </motion.div>
