@@ -4053,27 +4053,71 @@ Deno.serve(async (req) => {
       if (!descricao) throw new Error('Descrição da TAG Custom é obrigatória.');
       if (!itens.length) throw new Error('Inclua ao menos 1 TAG customizada.');
 
+      // Resolve o CÓDIGO da TAG Calculada a partir do nome/descrição informado.
+      // O Auge grava por `cdTagCalculada` (id numérico), não pelo texto.
+      const nomesCalculadas = Array.from(
+        new Set(
+          itens
+            .map((it) => String(it?.dsTagCalculada ?? '').trim())
+            .filter((v) => v.length > 0),
+        ),
+      );
+      const mapaCalculadas = new Map<string, string>();
+      if (nomesCalculadas.length) {
+        const { data: tagsCalc } = await admin
+          .from('auge_tags_calculadas')
+          .select('cd_tag, nm_tag, nome, descricao')
+          .or(
+            nomesCalculadas
+              .map((n) => `nm_tag.eq.${n},nome.eq.${n},descricao.eq.${n}`)
+              .join(','),
+          );
+        for (const t of (tagsCalc ?? []) as any[]) {
+          for (const key of [t.nm_tag, t.nome, t.descricao]) {
+            const k = String(key ?? '').trim().toLowerCase();
+            if (k && !mapaCalculadas.has(k)) mapaCalculadas.set(k, String(t.cd_tag));
+          }
+        }
+      }
+
       const results: Array<{ tag: string; calculada: string; ok: boolean; erro?: string; auge?: any }> = [];
       for (const it of itens) {
-        // Mapa de campos: Configuração -> cdConfiguracao | TAG -> dsTagCustomizada | TAG Calculada -> dsTagCalculada
+        // Mapa de campos: Configuração -> cdConfiguracao | TAG -> dsTagCustomizada | TAG Calculada -> cdTagCalculada
         const dsTagCustomizada = String(it?.dsTagCustomizada ?? '').trim();
         const dsTagCalculada = String(it?.dsTagCalculada ?? '').trim();
-        // No Auge "Tag Calculada" e "Texto Livre" são mutuamente exclusivos.
-        const dsTagTexto = dsTagCalculada ? '' : String(it?.dsTagTexto ?? dsTagCustomizada).trim();
         if (!dsTagCustomizada) continue;
+
+        // Aceita o código direto do cliente; senão resolve pelo nome espelhado.
+        const cdTagCalculada = String(it?.cdTagCalculada ?? '').trim()
+          || (dsTagCalculada ? (mapaCalculadas.get(dsTagCalculada.toLowerCase()) ?? '') : '');
+
+        if (dsTagCalculada && !cdTagCalculada) {
+          results.push({
+            tag: dsTagCustomizada,
+            calculada: dsTagCalculada,
+            ok: false,
+            erro: `TAG Calculada "${dsTagCalculada}" não encontrada no espelho local. Rode "Sincronizar TAGs calculadas" e tente novamente.`,
+          });
+          continue;
+        }
+
+        // No Auge "Tag Calculada" e "Texto Livre" são mutuamente exclusivos.
+        const dsTextoLivre = cdTagCalculada ? '' : String(it?.dsTagTexto ?? dsTagCustomizada).trim();
+
         try {
           const auge = await saveTagCustomizada(auth, {
             cdConfiguracao,
             cdTagCustomizada: String(it?.cdTagCustomizada ?? '').trim(),
             dsTagCustomizada,
-            dsTagCalculada,
-            dsTagTexto,
+            cdTagCalculada,
+            dsTextoLivre,
           });
           results.push({ tag: dsTagCustomizada, calculada: dsTagCalculada, ok: true, auge });
         } catch (e) {
           results.push({ tag: dsTagCustomizada, calculada: dsTagCalculada, ok: false, erro: getErrorMessage(e) });
         }
       }
+
 
       // Estado final no Auge (o que o usuário vê na tela manterTagCustomizada).
       let augeRows: any[] = [];
