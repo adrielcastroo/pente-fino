@@ -2505,6 +2505,7 @@ async function logisticaFolhaTransferencia(
   auth: { jar: Jar; csrf: string; apiToken: string | null },
   cdMovEstoqueERP: string,
   idLogistica: 1 | 2,
+  cdTransferenciaEstoque = '',
 ): Promise<{ marcado: boolean; dtAtualizacao: string | null; usuario: string | null }> {
   if (!cdMovEstoqueERP) throw new Error('cdMovEstoqueERP é obrigatório.');
   // O Auge só aceita o código numérico interno cdMovEstoqueERP.
@@ -2515,6 +2516,9 @@ async function logisticaFolhaTransferencia(
   }
   const body = new URLSearchParams();
   body.set('idAcao', '5');
+  // O JavaScript oficial do Auge envia os dois identificadores. O endpoint pode
+  // responder `ok` sem persistir a alteração quando o Nº Portal é omitido.
+  body.set('cdMovivimentacao', cdTransferenciaEstoque);
   body.set('cdMovEstoqueERP', cdMovEstoqueERP);
   body.set('idLogistica', String(idLogistica));
   const j = await postCtlTransferencia(auth, body);
@@ -4162,12 +4166,16 @@ Deno.serve(async (req) => {
         let recebido = estado.recebido;
         try {
           if (!entregue) {
-            const retorno = await logisticaFolhaTransferencia(auth, estado.cdMovEstoqueERP, 1);
+            const retorno = await logisticaFolhaTransferencia(
+              auth, estado.cdMovEstoqueERP, 1, estado.nrPortal ?? '',
+            );
             entregue = retorno.marcado;
             if (entregue) caixasMarcadas.push('Entregue folha de transf. p/ logística');
           }
           if (!recebido) {
-            const retorno = await logisticaFolhaTransferencia(auth, estado.cdMovEstoqueERP, 2);
+            const retorno = await logisticaFolhaTransferencia(
+              auth, estado.cdMovEstoqueERP, 2, estado.nrPortal ?? '',
+            );
             recebido = retorno.marcado;
             if (recebido) caixasMarcadas.push('Receber folha de transf. da logística');
           }
