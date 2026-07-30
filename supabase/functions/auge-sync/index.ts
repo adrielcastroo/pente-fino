@@ -5216,10 +5216,21 @@ Deno.serve(async (req) => {
     // -------------- LISTAR CONSULTAS DISPONÍVEIS (Gerador de Consultas) ------
     if (action === 'listar_consultas') {
       const itens = await listarConsultasAuge(auth);
-      return new Response(JSON.stringify({ ok: true, total: itens.length, data: itens }), {
+      let debug: string | undefined;
+      if (!itens.length && url.searchParams.get('debug') === '1') {
+        const res = await fetch(`${AUGE_BASE_URL}/l.unilux/modTI/gerirConsulta.php`, {
+          headers: { 'Cookie': auth.jar.header(), 'User-Agent': UA, 'Accept': 'text/html' },
+        });
+        auth.jar.ingest(res);
+        const html = await res.text();
+        const i = html.toLowerCase().indexOf('consulta');
+        debug = `len=${html.length}\n` + html.slice(Math.max(0, i - 500), i + 6000);
+      }
+      return new Response(JSON.stringify({ ok: true, total: itens.length, data: itens, debug }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
 
     // -------------- RELATÓRIO DE ANÁLISE DE COMPRA (sem informar ID) --------
     // O app não deve pedir o ID da consulta: resolvemos "Análise de compra V5"
