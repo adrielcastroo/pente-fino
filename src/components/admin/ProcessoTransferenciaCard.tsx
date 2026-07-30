@@ -658,6 +658,7 @@ export default function ProcessoTransferenciaCard() {
       toast.error(e instanceof Error ? e.message : 'Falha ao aplicar etapa.');
     } finally {
       setAplicando(null);
+      setProgresso(null);
     }
   };
 
