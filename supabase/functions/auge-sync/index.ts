@@ -4252,21 +4252,42 @@ Deno.serve(async (req) => {
       );
       const mapaCalculadas = new Map<string, string>();
       if (nomesCalculadas.length) {
-        const { data: tagsCalc } = await admin
-          .from('auge_tags_calculadas')
-          .select('cd_tag, nm_tag, nome, descricao')
-          .or(
-            nomesCalculadas
-              .map((n) => `nm_tag.eq.${n},nome.eq.${n},descricao.eq.${n}`)
-              .join(','),
-          );
-        for (const t of (tagsCalc ?? []) as any[]) {
-          for (const key of [t.nm_tag, t.nome, t.descricao]) {
-            const k = String(key ?? '').trim().toLowerCase();
-            if (k && !mapaCalculadas.has(k)) mapaCalculadas.set(k, String(t.cd_tag));
+        // ATENÇÃO: não usar `.or("nm_tag.eq.<valor>,...")` aqui. O PostgREST
+        // separa as condições por vírgula, e nomes de TAG calculada são
+        // fórmulas que contêm vírgula decimal (ex.: "[LAR]-0,004"), o que
+        // quebrava o filtro e fazia toda busca retornar vazio.
+        // `.in()` faz o quoting/escaping correto de cada valor.
+        for (const coluna of ['nm_tag', 'nome', 'descricao'] as const) {
+          const { data: tagsCalc } = await admin
+            .from('auge_tags_calculadas')
+            .select('cd_tag, nm_tag, nome, descricao')
+            .in(coluna, nomesCalculadas);
+          for (const t of (tagsCalc ?? []) as any[]) {
+            for (const key of [t.nm_tag, t.nome, t.descricao]) {
+              const k = String(key ?? '').trim().toLowerCase();
+              if (k && !mapaCalculadas.has(k)) mapaCalculadas.set(k, String(t.cd_tag));
+            }
           }
         }
+
+        // Fallback case-insensitive: o `.in()` é sensível a maiúsculas e o
+        // Auge não normaliza os nomes das fórmulas.
+        const faltantes = nomesCalculadas.filter((n) => !mapaCalculadas.has(n.toLowerCase()));
+        for (const nome of faltantes) {
+          const { data: alt } = await admin
+            .from('auge_tags_calculadas')
+            .select('cd_tag, nm_tag, nome, descricao')
+            .or(
+              ['nm_tag', 'nome', 'descricao']
+                .map((c) => `${c}.ilike.${JSON.stringify(nome)}`)
+                .join(','),
+            )
+            .limit(1);
+          const t = (alt ?? [])[0] as any;
+          if (t) mapaCalculadas.set(nome.toLowerCase(), String(t.cd_tag));
+        }
       }
+
 
       const results: Array<{
         tag: string;

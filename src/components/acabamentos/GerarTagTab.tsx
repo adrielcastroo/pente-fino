@@ -178,6 +178,12 @@ interface LinhaTag {
   formula: string;
   /** Código da linha no Auge — quando presente, a gravação sobrescreve. */
   cdTagCustomizada?: string;
+  /**
+   * Código da TAG calculada no Auge (`cd_tag`). Quando o usuário escolhe a
+   * opção na lista já temos o código: enviá-lo evita que o backend precise
+   * reencontrar a TAG pelo nome (fórmulas com vírgula quebravam essa busca).
+   */
+  cdTagCalculada?: string;
 }
 
 interface ResultadoAuge {
@@ -315,7 +321,9 @@ function TagCalculadaCell({
         const { data } = await (supabase as any)
           .from('auge_tags_calculadas')
           .select('cd_tag, nome, descricao, formula, nm_tag')
-          .or(cols.map((c) => `${c}.ilike.${padrao}`).join(','))
+          // O valor precisa ir entre aspas: fórmulas têm vírgula decimal
+          // ("[LAR]-0,004") e o PostgREST usa vírgula como separador do `or`.
+          .or(cols.map((c) => `${c}.ilike.${JSON.stringify(padrao)}`).join(','))
           .order('nome', { ascending: true })
           .limit(200);
         for (const r of (data ?? []) as any[]) {
@@ -361,10 +369,12 @@ function TagCalculadaCell({
         const { data } = await (supabase as any)
           .from('auge_tag_custom')
           .select('ds_tag_calculada, cd_tag_calculada, nm_configuracao')
-          .or(`ds_tag_calculada.ilike.${padrao},cd_tag_calculada.ilike.${padrao}`)
+          .or(
+            `ds_tag_calculada.ilike.${JSON.stringify(padrao)},cd_tag_calculada.ilike.${JSON.stringify(padrao)}`,
+          )
           .limit(200);
         for (const r of (data ?? []) as any[]) {
-          push(r.ds_tag_calculada ?? r.cd_tag_calculada, '', r.nm_configuracao ?? '');
+          push(r.ds_tag_calculada ?? r.cd_tag_calculada, '', r.nm_configuracao ?? '', r.cd_tag_calculada);
         }
       }
 
@@ -1012,7 +1022,9 @@ export default function GerarTagTab() {
 
   const setCalculada = (id: string, sel: TagCalculadaSel) => {
     setLinhas((prev) => prev.map((l) => (
-      l.id === id ? { ...l, calculada: sel.valor, formula: sel.formula } : l
+      l.id === id
+        ? { ...l, calculada: sel.valor, formula: sel.formula, cdTagCalculada: sel.cdTag ?? '' }
+        : l
     )));
   };
 
@@ -1069,6 +1081,8 @@ export default function GerarTagTab() {
               dsTagCustomizada: l.valor,
               // TAG Calculada (Pente Fino) -> Tag Calculada (Auge)
               dsTagCalculada: calculada,
+              // Código já resolvido na busca — dispensa o lookup por nome.
+              cdTagCalculada: l.cdTagCalculada ?? '',
               dsFormula: l.formula ?? '',
               // Quando a linha já existe no Auge, sobrescreve em vez de duplicar.
               cdTagCustomizada: l.cdTagCustomizada ?? '',
@@ -1113,6 +1127,7 @@ export default function GerarTagTab() {
           cdTagCustomizada: String(r?.cdTagCustomizada ?? ''),
           dsTagCustomizada,
           dsTagCalculada: calculada,
+          cdTagCalculada: edicao.cdTag ?? '',
           dsFormula: edicao.formula ?? '',
           dsTagTexto: calculada ? '' : dsTagCustomizada,
         };
