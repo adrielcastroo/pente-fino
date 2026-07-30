@@ -17,6 +17,8 @@ import {
   Search,
   Sparkles,
   Pencil,
+  History,
+
 
 
 } from 'lucide-react';
