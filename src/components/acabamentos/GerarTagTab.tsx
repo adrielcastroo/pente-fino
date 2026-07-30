@@ -663,11 +663,13 @@ export default function GerarTagTab() {
 
 
   // Estado da busca no campo Configuração (para indicar "Nova TAG Custom").
-  const [cfgSearch, setCfgSearch] = useState<{ termo: string; hasResults: boolean; isSearching: boolean }>({
+  const [cfgSearch, setCfgSearch] = useState<{ termo: string; hasResults: boolean; isSearching: boolean; pesquisou: boolean }>({
     termo: '',
     hasResults: false,
     isSearching: false,
+    pesquisou: false,
   });
+
 
   // O texto da CONFIGURAÇÃO (não o nome da Tag) é o único driver das análises:
   // recomendações e detecção do padrão obrigatório.
