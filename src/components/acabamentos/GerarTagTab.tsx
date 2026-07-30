@@ -1018,7 +1018,9 @@ export default function GerarTagTab() {
 
   const setCalculada = (id: string, sel: TagCalculadaSel) => {
     setLinhas((prev) => prev.map((l) => (
-      l.id === id ? { ...l, calculada: sel.valor, formula: sel.formula } : l
+      l.id === id
+        ? { ...l, calculada: sel.valor, formula: sel.formula, cdTagCalculada: sel.cdTag ?? '' }
+        : l
     )));
   };
 
