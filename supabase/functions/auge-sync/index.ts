@@ -5348,25 +5348,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    // -------------- DEBUG: JS da tela de consultas --------------------------
-    if (action === 'debug_consulta_js') {
-      const h = { 'Cookie': auth.jar.header(), 'User-Agent': UA, 'Accept': '*/*' };
-      const page = await fetch(`${AUGE_BASE_URL}/l.unilux/modTI/gerirConsulta.php`, { headers: h });
-      auth.jar.ingest(page);
-      const html = await page.text();
-      const scripts = Array.from(html.matchAll(/<script[^>]+src=["']([^"']+)["']/gi)).map((m) => m[1]);
-      // O ajax de resultado fica no <script> inline da própria página.
-      const inline = Array.from(html.matchAll(/<script(?![^>]*src=)[^>]*>([\s\S]*?)<\/script>/gi))
-        .map((m) => m[1])
-        .filter((s) => /Resultado|ajax|\.php/i.test(s))
-        .join('\n/* --- */\n');
-      const i = inline.search(/Resultado/i);
-      const js = `inlineLen=${inline.length}\n` + inline.slice(Math.max(0, i - 2000), i + 4000);
 
-      return new Response(JSON.stringify({ ok: true, scripts, js }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+
 
     // -------------- LISTAR CONSULTAS DISPONÍVEIS (Gerador de Consultas) ------
     if (action === 'listar_consultas') {
