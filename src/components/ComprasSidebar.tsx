@@ -1,5 +1,6 @@
 import { memo } from 'react';
-import { ClipboardList, Sparkles, FileSpreadsheet, Users } from 'lucide-react';
+import { ClipboardList, Sparkles, FileSpreadsheet, Users, TrendingDown } from 'lucide-react';
+
 import ModuleSidebar, { type ModuleSidebarConfig } from '@/components/ModuleSidebar';
 
 export const COMPRAS_NAV: ModuleSidebarConfig = {
