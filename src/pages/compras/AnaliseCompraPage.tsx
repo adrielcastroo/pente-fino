@@ -130,7 +130,7 @@ export default function AnaliseCompraPage() {
               <Download className="w-4 h-4 mr-2" />
               Exportar XLSX
             </Button>
-            <Button size="sm" onClick={() => gerar.mutate()} disabled={carregando}>
+            <Button size="sm" onClick={() => gerar.mutate(undefined)} disabled={carregando}>
               {carregando ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               ) : resultado.rows.length ? (
@@ -197,7 +197,7 @@ export default function AnaliseCompraPage() {
               {ANALISE_COMPRA_PRESETS.map((p) => p.label).join(', ')} são aplicados
               automaticamente.
             </p>
-            <Button onClick={() => gerar.mutate()} disabled={carregando}>
+            <Button onClick={() => gerar.mutate(undefined)} disabled={carregando}>
               <FileSpreadsheet className="w-4 h-4 mr-2" />
               Gerar relatório
             </Button>
