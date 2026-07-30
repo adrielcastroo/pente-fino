@@ -1628,35 +1628,17 @@ export default function GerarTagTab() {
                 {linhas.length} TAG(s)
               </span>
             </div>
-            <div className="flex items-center gap-1.5">
+            {linhas.length > 0 && (
               <Button
                 size="sm"
-                variant={addManual ? 'secondary' : 'outline'}
-                className="h-7 px-2 text-[10px] gap-1"
-                onClick={() => setAddManual((v) => !v)}
+                variant="ghost"
+                className="h-7 px-2 text-[10px]"
+                onClick={() => { setLinhas([]); setResultado(null); }}
               >
-                <Plus className="h-3 w-3" /> Adicionar TAG Configurada
+                Limpar
               </Button>
-              {linhas.length > 0 && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-7 px-2 text-[10px]"
-                  onClick={() => { setLinhas([]); setResultado(null); }}
-                >
-                  Limpar
-                </Button>
-              )}
-            </div>
+            )}
           </div>
-
-          {addManual && (
-            <TagConfiguradaSearch
-              onPick={(o) => { adicionarTagConfiguradaManual(o); setAddManual(false); }}
-            />
-          )}
-
-
 
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
@@ -1705,10 +1687,34 @@ export default function GerarTagTab() {
                     </tr>
                   );
                 })}
-                {linhas.length === 0 && (
+                {linhas.length === 0 && !addManual && (
                   <tr>
                     <td colSpan={4} className="p-6 text-center text-muted-foreground text-[11px]">
                       Nenhuma TAG adicionada à composição.
+                    </td>
+                  </tr>
+                )}
+                {addManual ? (
+                  <tr className="border-t align-top bg-muted/20">
+                    <td colSpan={4} className="p-2">
+                      <TagConfiguradaSearch
+                        inline
+                        onPick={(o) => { adicionarTagConfiguradaManual(o); setAddManual(false); }}
+                        onCancel={() => setAddManual(false)}
+                      />
+                    </td>
+                  </tr>
+                ) : (
+                  <tr className="border-t">
+                    <td colSpan={4} className="p-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 px-2 text-[10px] gap-1"
+                        onClick={() => setAddManual(true)}
+                      >
+                        <Plus className="h-3 w-3" /> Adicionar TAG Configurada
+                      </Button>
                     </td>
                   </tr>
                 )}
