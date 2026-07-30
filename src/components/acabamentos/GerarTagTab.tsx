@@ -1127,6 +1127,7 @@ export default function GerarTagTab() {
           cdTagCustomizada: String(r?.cdTagCustomizada ?? ''),
           dsTagCustomizada,
           dsTagCalculada: calculada,
+          cdTagCalculada: edicao.cdTag ?? '',
           dsFormula: edicao.formula ?? '',
           dsTagTexto: calculada ? '' : dsTagCustomizada,
         };
