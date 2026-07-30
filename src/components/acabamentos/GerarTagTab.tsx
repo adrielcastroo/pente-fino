@@ -178,6 +178,12 @@ interface LinhaTag {
   formula: string;
   /** Código da linha no Auge — quando presente, a gravação sobrescreve. */
   cdTagCustomizada?: string;
+  /**
+   * Código da TAG calculada no Auge (`cd_tag`). Quando o usuário escolhe a
+   * opção na lista já temos o código: enviá-lo evita que o backend precise
+   * reencontrar a TAG pelo nome (fórmulas com vírgula quebravam essa busca).
+   */
+  cdTagCalculada?: string;
 }
 
 interface ResultadoAuge {
