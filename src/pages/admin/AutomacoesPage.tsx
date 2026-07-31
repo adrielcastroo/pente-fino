@@ -126,7 +126,25 @@ function normalizeData(v: string): string | null {
   return `${dd}/${mm}/${yy}`;
 }
 
+/** Kit (versão com forro/dupla camada) vinculado a um tecido base. */
+type KitVinculado = {
+  kit_codigo: string;
+  kit_descricao: string | null;
+  confirmado: boolean;
+};
+
+/** Resumo da execução da Entrega Após aplicada a um kit vinculado. */
+type KitExecResumo = {
+  kit_codigo: string;
+  kit_descricao: string | null;
+  sucesso: number;
+  ignoradas: number;
+  falha: number;
+  erro?: string;
+};
+
 function EntregaAposCard() {
+
   const [codigoInput, setCodigoInput] = useState('');
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewRows, setPreviewRows] = useState<PreviewRow[] | null>(null);
