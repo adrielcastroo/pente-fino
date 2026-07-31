@@ -38,6 +38,10 @@ export function PedidoDetailDialog({ pedido, open, onOpenChange }: PedidoDetailD
 
   const [titulo, setTitulo] = useState('');
   const [descricao, setDescricao] = useState('');
+  const [fornecedor, setFornecedor] = useState('');
+  const [numero, setNumero] = useState('');
+  const [previsao, setPrevisao] = useState('');
+  const [status, setStatus] = useState<ComprasPedidoStatus>('pendente');
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const [novoComentario, setNovoComentario] = useState('');
@@ -64,6 +68,10 @@ export function PedidoDetailDialog({ pedido, open, onOpenChange }: PedidoDetailD
     dirtyRef.current = false;
     setTitulo(pedido.titulo ?? '');
     setDescricao(pedido.descricao ?? '');
+    setFornecedor(pedido.fornecedor ?? '');
+    setNumero(pedido.numero ?? '');
+    setPrevisao(pedido.previsao ? String(pedido.previsao).slice(0, 10) : '');
+    setStatus(pedido.status);
     setSavedAt(null);
   }, [pedido?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -73,7 +81,17 @@ export function PedidoDetailDialog({ pedido, open, onOpenChange }: PedidoDetailD
     const t = setTimeout(async () => {
       setSaving(true);
       try {
-        await updatePedido.mutateAsync({ id: pedidoId, patch: { titulo: titulo || null, descricao: descricao || null } });
+        await updatePedido.mutateAsync({
+          id: pedidoId,
+          patch: {
+            titulo: titulo || null,
+            descricao: descricao || null,
+            fornecedor: fornecedor.trim() || '—',
+            numero: numero.trim() || pedido?.numero || '',
+            previsao: previsao || null,
+            status,
+          },
+        });
         setSavedAt(Date.now());
       } catch (err) {
         toast.error(`Não foi possível salvar: ${(err as Error).message}`);
@@ -82,7 +100,8 @@ export function PedidoDetailDialog({ pedido, open, onOpenChange }: PedidoDetailD
       }
     }, 700);
     return () => clearTimeout(t);
-  }, [titulo, descricao, pedidoId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [titulo, descricao, fornecedor, numero, previsao, status, pedidoId]); // eslint-disable-line react-hooks/exhaustive-deps
+
 
   async function handleUpload(files: FileList | null) {
     if (!files?.length) return;
