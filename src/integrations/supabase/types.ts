@@ -1180,6 +1180,45 @@ export type Database = {
         }
         Relationships: []
       }
+      compras_saldo_baixo_snapshots: {
+        Row: {
+          arquivo_nome: string | null
+          columns: Json
+          created_at: string
+          created_by: string | null
+          id: string
+          origem: string | null
+          referencia: string
+          rows: Json
+          total_linhas: number
+          updated_at: string
+        }
+        Insert: {
+          arquivo_nome?: string | null
+          columns?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          origem?: string | null
+          referencia?: string
+          rows?: Json
+          total_linhas?: number
+          updated_at?: string
+        }
+        Update: {
+          arquivo_nome?: string | null
+          columns?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          origem?: string | null
+          referencia?: string
+          rows?: Json
+          total_linhas?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       compras_starcolor_ops: {
         Row: {
           created_at: string

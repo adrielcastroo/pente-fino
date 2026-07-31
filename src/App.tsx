@@ -50,6 +50,7 @@ const ComprasStarcolorPage = lazy(() => import("@/pages/compras/StarcolorPage"))
 const ComprasRomaneiosStarcolorPage = lazy(() => import("@/pages/compras/RomaneiosStarcolorPage"));
 const ComprasRomaneioStarcolorEditorPage = lazy(() => import("@/pages/compras/RomaneioStarcolorEditorPage"));
 const ComprasAnaliseCompraPage = lazy(() => import("@/pages/compras/AnaliseCompraPage"));
+const ComprasSaldoBaixoHistoricoPage = lazy(() => import("@/pages/compras/SaldoBaixoHistoricoPage"));
 
 
 const EntradasPage = lazy(() => import("@/pages/EntradasPage"));
@@ -280,6 +281,8 @@ const App = () => (
                   <Route path="acompanhamentos/starcolor/romaneios/novo" element={<ComprasRomaneioStarcolorEditorPage />} />
                   <Route path="acompanhamentos/starcolor/romaneios/:id" element={<ComprasRomaneioStarcolorEditorPage />} />
                   <Route path="analise-compra" element={<ComprasAnaliseCompraPage />} />
+                  <Route path="analise-compra/historico" element={<ComprasSaldoBaixoHistoricoPage />} />
+
                   <Route path="configuracoes" element={<SettingsPage />} />
 
                   </Route>

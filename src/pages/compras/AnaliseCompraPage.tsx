@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { AlertTriangle, Download, FileSpreadsheet, Loader2, RefreshCw } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { AlertTriangle, Download, FileSpreadsheet, History, Loader2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { PageShell, PageHeader } from '@/components/compras/ui';
@@ -17,6 +18,18 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import AnaliseCompraTable from '@/components/compras/AnaliseCompraTable';
+import SaldoBaixoDiffTable from '@/components/compras/SaldoBaixoDiffTable';
+import {
+  useSaldoBaixoSnapshots,
+  useSaveSaldoBaixoSnapshot,
+  type SaldoBaixoSnapshot,
+} from '@/hooks/compras/useSaldoBaixoSnapshots';
+import {
+  DIFF_LABELS,
+  diffSnapshots,
+  exportDiffXLSX,
+  type DiffStatus,
+} from '@/lib/compras/saldoBaixoDiff';
 import {
   ANALISE_COMPRA_PRESETS,
   applyFilters,
@@ -25,6 +38,9 @@ import {
   OP_LABELS,
   type NormalizedResult,
 } from '@/lib/compras/analiseCompra';
+
+const DIFF_FILTROS: (DiffStatus | 'todos')[] = ['todos', 'novo', 'alterado', 'removido', 'igual'];
+
 
 interface ConsultaOption {
   id: string;
@@ -50,6 +66,14 @@ export default function AnaliseCompraPage() {
   const [idConsulta, setIdConsulta] = useState<string>(
     () => localStorage.getItem(STORAGE_KEY) ?? '',
   );
+  // Planilha usada como base de comparação (última salva antes desta geração).
+  const [baseline, setBaseline] = useState<SaldoBaixoSnapshot | null>(null);
+  const [diffFiltro, setDiffFiltro] = useState<DiffStatus | 'todos'>('todos');
+
+  const { data: snapshots = [] } = useSaldoBaixoSnapshots(10);
+  const salvarSnapshot = useSaveSaldoBaixoSnapshot();
+
+
 
   const gerar = useMutation({
     mutationFn: async (forcarId?: string) => {
@@ -93,8 +117,31 @@ export default function AnaliseCompraPage() {
       setOrigem(data?.consulta?.nome ?? null);
       setDisponiveis(data?.disponiveis ?? []);
       setAviso(null);
-      if (!result.rows.length) toast.warning('O relatório retornou sem linhas.');
-      else toast.success(`${result.rows.length} linhas carregadas.`);
+      if (!result.rows.length) {
+        toast.warning('O relatório retornou sem linhas.');
+        return;
+      }
+      toast.success(`${result.rows.length} linhas carregadas.`);
+
+      // A comparação usa a última planilha salva ANTES desta geração.
+      setBaseline(snapshots[0] ?? null);
+      salvarSnapshot.mutate(
+        {
+          columns: result.columns,
+          rows: result.rows,
+          origem: data?.consulta?.nome ?? 'Auge',
+        },
+        {
+          onSuccess: () => toast.success('Planilha salva no histórico.'),
+          onError: (err) =>
+            toast.error(
+              err instanceof Error
+                ? `Não foi possível salvar no histórico: ${err.message}`
+                : 'Não foi possível salvar no histórico.',
+            ),
+        },
+      );
+
     },
     onError: (e: unknown) => {
       const msg = e instanceof Error ? e.message : 'Erro ao gerar o relatório.';
@@ -118,6 +165,21 @@ export default function AnaliseCompraPage() {
     [resultado.rows],
   );
 
+  const diff = useMemo(
+    () =>
+      resultado.columns.length
+        ? diffSnapshots(
+            resultado,
+            baseline ? { columns: baseline.columns, rows: baseline.rows } : null,
+          )
+        : null,
+    [resultado, baseline],
+  );
+
+  const diffLinhas = useMemo(() => {
+    if (!diff) return [];
+    return diffFiltro === 'todos' ? diff.rows : diff.rows.filter((r) => r.status === diffFiltro);
+  }, [diff, diffFiltro]);
 
   const exportar = () => {
     if (!resultado.columns.length) return;
@@ -128,6 +190,7 @@ export default function AnaliseCompraPage() {
 
   const carregando = gerar.isPending;
 
+
   return (
     <PageShell>
       <PageHeader
@@ -136,6 +199,14 @@ export default function AnaliseCompraPage() {
         backTo="/compras/acompanhamentos"
         actions={
           <div className="flex flex-wrap items-center gap-2">
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/compras/analise-compra/historico">
+                <span className="flex items-center">
+                  <History className="w-4 h-4 mr-2" />
+                  Histórico
+                </span>
+              </Link>
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -145,6 +216,7 @@ export default function AnaliseCompraPage() {
               <Download className="w-4 h-4 mr-2" />
               Exportar XLSX
             </Button>
+
             <Button size="sm" onClick={() => gerar.mutate(undefined)} disabled={carregando}>
               {carregando ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -208,7 +280,51 @@ export default function AnaliseCompraPage() {
                 </Badge>
               </TabsTrigger>
             ))}
+            <TabsTrigger value="comparacao" className="gap-2">
+              Comparação
+              <Badge variant="secondary" className="text-[10px] px-1.5">
+                {diff ? diff.totais.novo + diff.totais.alterado + diff.totais.removido : 0}
+              </Badge>
+            </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="comparacao" className="space-y-3 mt-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-[11px] text-muted-foreground">
+                {baseline
+                  ? `Comparando com a planilha de ${new Date(`${baseline.referencia}T12:00:00`).toLocaleDateString('pt-BR')}.`
+                  : 'Não há planilha anterior no histórico — todos os itens aparecem como novos.'}
+              </p>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8 text-[11px] ml-auto"
+                disabled={!diff?.rows.length}
+                onClick={() => diff && exportDiffXLSX(diff)}
+              >
+                <Download className="w-3.5 h-3.5 mr-1.5" />
+                Exportar comparação
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {DIFF_FILTROS.map((f) => (
+                <Button
+                  key={f}
+                  size="sm"
+                  variant={diffFiltro === f ? 'default' : 'outline'}
+                  className="h-8 text-[11px]"
+                  onClick={() => setDiffFiltro(f)}
+                >
+                  {DIFF_LABELS[f]}
+                  <Badge variant="secondary" className="ml-1.5 text-[10px] px-1.5">
+                    {f === 'todos' ? (diff?.rows.length ?? 0) : (diff?.totais[f] ?? 0)}
+                  </Badge>
+                </Button>
+              ))}
+            </div>
+            <SaldoBaixoDiffTable columns={resultado.columns} rows={diffLinhas} />
+          </TabsContent>
+
 
           {blocos.map((b) => (
             <TabsContent key={b.key} value={b.key} className="space-y-3 mt-4">
