@@ -188,10 +188,10 @@ function EntregaAposCard() {
    * usuário pode digitar TE123456, TE.123.456 ou te-123-456 e a planilha
    * importada pode ter gravado qualquer uma dessas formas.
    */
-  const carregarKits = async (codigo: string) => {
+  const carregarKits = async (codigo: string): Promise<KitVinculado[]> => {
     const raw = (v: string | null | undefined) => (v ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '');
     const alvo = raw(codigo);
-    if (!alvo) { setKitsVinculados([]); return; }
+    if (!alvo) { setKitsVinculados([]); return []; }
     try {
       const { data, error } = await supabase
         .from('tecido_kit_vinculos')
@@ -213,13 +213,21 @@ function EntregaAposCard() {
           });
         }
       }
-      setKitsVinculados([...encontrados.values()]);
+      const lista = [...encontrados.values()];
+      setKitsVinculados(lista);
+      return lista;
     } catch {
       setKitsVinculados([]);
+      return [];
     }
   };
 
 
+  /**
+   * Busca unificada: consulta os acabamentos do item pesquisado e, quando ele é
+   * um tecido que possui kits com forro vinculados, agrega também os
+   * acabamentos desses kits — como se o usuário tivesse pesquisado cada kit.
+   */
   const runPreview = async () => {
     if (!codigoNormalizado) {
       toast.error('Informe um código de item.');
@@ -235,16 +243,41 @@ function EntregaAposCard() {
         setPreviewCodigo(null);
         return;
       }
-      setPreviewRows(resp.rows ?? []);
+
+      const base: PreviewRow[] = (resp.rows ?? []).map((r: PreviewRow) => ({
+        ...r,
+        origem_codigo: codigoNormalizado,
+        origem_kit: false,
+      }));
+
+      const kits = await carregarKits(codigoNormalizado);
+      const linhasKits: PreviewRow[] = [];
+      for (const kit of kits) {
+        try {
+          const rk = await callAugeEntregaApos({ codigo_item: kit.kit_codigo, acao: 'preview' });
+          if (!rk?.ok) continue;
+          for (const r of (rk.rows ?? []) as PreviewRow[]) {
+            linhasKits.push({ ...r, origem_codigo: kit.kit_codigo, origem_kit: true });
+          }
+        } catch {
+          // Um kit indisponível não deve invalidar a consulta do tecido.
+        }
+      }
+
+      const todas = [...base, ...linhasKits];
+      setPreviewRows(todas);
       setPreviewCodigo(codigoNormalizado);
-      await carregarKits(codigoNormalizado);
-      if ((resp.rows ?? []).length === 0) toast.info('Nenhum acabamento vinculado a este item.');
+      if (todas.length === 0) toast.info('Nenhum acabamento vinculado a este item.');
+      else if (linhasKits.length > 0) {
+        toast.success(`${base.length} acabamento(s) do item + ${linhasKits.length} de ${kits.length} kit(s) com forro.`);
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Erro inesperado.');
     } finally {
       setPreviewLoading(false);
     }
   };
+
 
 
   const runExecute = async () => {
