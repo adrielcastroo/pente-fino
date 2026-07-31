@@ -14,6 +14,8 @@ import {
   sugerirTecidos,
   SCORE_AUTO,
 } from '@/lib/tecido-kit-match';
+import ImportKitsVinculosDialog from '@/components/admin/ImportKitsVinculosDialog';
+
 
 export interface VinculoRow {
   kit_codigo: string;
