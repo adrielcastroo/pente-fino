@@ -137,10 +137,15 @@ function KanbanColumn({ status, label, pedidos, onOpen }: ColumnProps) {
   );
 }
 
+type Visao = 'kanban' | 'lista';
+
 export default function AcompanhamentosPage() {
   const [search, setSearch] = useState('');
   const [activeId, setActiveId] = useState<string | null>(null);
   const [detalhe, setDetalhe] = useState<ComprasPedidoCard | null>(null);
+  const [visao, setVisao] = useState<Visao>('kanban');
+  const [novaAberta, setNovaAberta] = useState(false);
+
 
   const { data: pedidos = [], isLoading, isError, error } = useComprasKanbanPedidos();
   const updatePedido = useUpdatePedido();
