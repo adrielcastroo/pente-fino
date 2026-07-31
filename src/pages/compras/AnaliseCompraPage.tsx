@@ -280,7 +280,6 @@ export default function AnaliseCompraPage() {
                 </Badge>
               </TabsTrigger>
             ))}
-            ))}
             <TabsTrigger value="comparacao" className="gap-2">
               Comparação
               <Badge variant="secondary" className="text-[10px] px-1.5">
