@@ -177,18 +177,43 @@ function EntregaAposCard() {
     (precisaData ? !!dataNormalizada : true) &&
     (previewRows?.length ?? 0) > 0;
 
+  /**
+   * Localiza os kits vinculados ao item consultado.
+   * A comparação é feita sobre o código "cru" (só letras/números) porque o
+   * usuário pode digitar TE123456, TE.123.456 ou te-123-456 e a planilha
+   * importada pode ter gravado qualquer uma dessas formas.
+   */
   const carregarKits = async (codigo: string) => {
+    const raw = (v: string | null | undefined) => (v ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const alvo = raw(codigo);
+    if (!alvo) { setKitsVinculados([]); return; }
     try {
       const { data, error } = await supabase
         .from('tecido_kit_vinculos')
-        .select('kit_codigo, kit_descricao, confirmado')
-        .eq('tecido_codigo', codigo);
+        .select('kit_codigo, kit_descricao, tecido_codigo, confirmado')
+        .not('tecido_codigo', 'is', null)
+        .limit(20000);
       if (error) throw error;
-      setKitsVinculados((data ?? []) as KitVinculado[]);
+
+      const encontrados = new Map<string, KitVinculado>();
+      for (const row of data ?? []) {
+        if (raw(row.tecido_codigo) !== alvo) continue;
+        const kitRaw = raw(row.kit_codigo);
+        if (!kitRaw || kitRaw === alvo) continue; // nunca reprocessa o próprio item
+        if (!encontrados.has(kitRaw)) {
+          encontrados.set(kitRaw, {
+            kit_codigo: row.kit_codigo,
+            kit_descricao: row.kit_descricao,
+            confirmado: !!row.confirmado,
+          });
+        }
+      }
+      setKitsVinculados([...encontrados.values()]);
     } catch {
       setKitsVinculados([]);
     }
   };
+
 
   const runPreview = async () => {
     if (!codigoNormalizado) {
