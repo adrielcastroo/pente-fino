@@ -281,6 +281,8 @@ const App = () => (
                   <Route path="acompanhamentos/starcolor/romaneios/novo" element={<ComprasRomaneioStarcolorEditorPage />} />
                   <Route path="acompanhamentos/starcolor/romaneios/:id" element={<ComprasRomaneioStarcolorEditorPage />} />
                   <Route path="analise-compra" element={<ComprasAnaliseCompraPage />} />
+                  <Route path="analise-compra/historico" element={<ComprasSaldoBaixoHistoricoPage />} />
+
                   <Route path="configuracoes" element={<SettingsPage />} />
 
                   </Route>
