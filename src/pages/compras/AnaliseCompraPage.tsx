@@ -117,8 +117,31 @@ export default function AnaliseCompraPage() {
       setOrigem(data?.consulta?.nome ?? null);
       setDisponiveis(data?.disponiveis ?? []);
       setAviso(null);
-      if (!result.rows.length) toast.warning('O relatório retornou sem linhas.');
-      else toast.success(`${result.rows.length} linhas carregadas.`);
+      if (!result.rows.length) {
+        toast.warning('O relatório retornou sem linhas.');
+        return;
+      }
+      toast.success(`${result.rows.length} linhas carregadas.`);
+
+      // A comparação usa a última planilha salva ANTES desta geração.
+      setBaseline(snapshots[0] ?? null);
+      salvarSnapshot.mutate(
+        {
+          columns: result.columns,
+          rows: result.rows,
+          origem: data?.consulta?.nome ?? 'Auge',
+        },
+        {
+          onSuccess: () => toast.success('Planilha salva no histórico.'),
+          onError: (err) =>
+            toast.error(
+              err instanceof Error
+                ? `Não foi possível salvar no histórico: ${err.message}`
+                : 'Não foi possível salvar no histórico.',
+            ),
+        },
+      );
+
     },
     onError: (e: unknown) => {
       const msg = e instanceof Error ? e.message : 'Erro ao gerar o relatório.';
