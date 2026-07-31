@@ -39,6 +39,7 @@ export default function AnaliseCompraPage() {
   const [atual, setAtual] = useState<PlanilhaImportada | null>(null);
   const [preset, setPreset] = useState(ANALISE_COMPRA_PRESETS[0].key);
   const [diffFiltro, setDiffFiltro] = useState<DiffStatus | 'todos'>('todos');
+  const [verComparacao, setVerComparacao] = useState(false);
 
   const salvarSnapshot = useSaveSaldoBaixoSnapshot();
 
