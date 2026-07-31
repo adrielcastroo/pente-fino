@@ -13,11 +13,14 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { PageShell, PageHeader } from '@/components/expedicao/ui';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { CalendarClock, Loader2, PlayCircle, Search, Sparkles, CheckCircle2, XCircle, MinusCircle, ExternalLink, ArrowRight, Type, Plus, Boxes, Truck } from 'lucide-react';
+import { CalendarClock, Loader2, PlayCircle, Search, Sparkles, CheckCircle2, XCircle, MinusCircle, ExternalLink, ArrowRight, Type, Plus, Boxes, Truck, Layers } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import NecessidadeCard from '@/components/admin/NecessidadeCard';
 import NecessidadeCronCard from '@/components/admin/NecessidadeCronCard';
+import KitsForroCard from '@/components/admin/KitsForroCard';
 
 import ProcessoTransferenciaCard from '@/components/admin/ProcessoTransferenciaCard';
+
 
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
