@@ -8,18 +8,25 @@ import {
 } from '@dnd-kit/sortable';
 import { useDroppable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { CalendarDays, Loader2, MessageSquare } from 'lucide-react';
+import { CalendarDays, Columns3, List, Loader2, MessageSquare, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageShell, PageHeader } from '@/components/compras/ui';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 import PedidoDetailDialog from '@/components/compras/PedidoDetailDialog';
+import NovaTarefaDialog from '@/components/compras/NovaTarefaDialog';
 import {
   KANBAN_COLUNAS, useComprasKanbanPedidos, useUpdatePedido,
   type ComprasPedidoCard,
 } from '@/hooks/compras/useComprasKanban';
 import type { ComprasPedidoStatus } from '@/hooks/compras/useComprasPedidos';
+
 
 function formatDate(iso: string | null) {
   if (!iso) return null;
@@ -130,10 +137,15 @@ function KanbanColumn({ status, label, pedidos, onOpen }: ColumnProps) {
   );
 }
 
+type Visao = 'kanban' | 'lista';
+
 export default function AcompanhamentosPage() {
   const [search, setSearch] = useState('');
   const [activeId, setActiveId] = useState<string | null>(null);
   const [detalhe, setDetalhe] = useState<ComprasPedidoCard | null>(null);
+  const [visao, setVisao] = useState<Visao>('kanban');
+  const [novaAberta, setNovaAberta] = useState(false);
+
 
   const { data: pedidos = [], isLoading, isError, error } = useComprasKanbanPedidos();
   const updatePedido = useUpdatePedido();
@@ -207,10 +219,12 @@ export default function AcompanhamentosPage() {
     <PageShell>
       <PageHeader
         title="Acompanhamentos"
-        subtitle="Quadro kanban dos pedidos de compra — arraste para mudar o status"
+        subtitle={visao === 'kanban'
+          ? 'Quadro kanban dos pedidos de compra — arraste para mudar o status'
+          : 'Lista de tarefas de acompanhamento de compras'}
       />
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -218,13 +232,35 @@ export default function AcompanhamentosPage() {
           className="max-w-sm"
         />
         {isLoading && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" aria-hidden />}
+
+        <div className="flex items-center gap-2 ml-auto">
+          <ToggleGroup
+            type="single"
+            value={visao}
+            onValueChange={(v) => { if (v) setVisao(v as Visao); }}
+            className="rounded-md border border-border p-0.5"
+          >
+            <ToggleGroupItem value="kanban" aria-label="Ver como kanban" className="h-8 px-2">
+              <Columns3 className="w-4 h-4 sm:mr-1" />
+              <span className="hidden sm:inline text-xs">Kanban</span>
+            </ToggleGroupItem>
+            <ToggleGroupItem value="lista" aria-label="Ver como lista" className="h-8 px-2">
+              <List className="w-4 h-4 sm:mr-1" />
+              <span className="hidden sm:inline text-xs">Lista</span>
+            </ToggleGroupItem>
+          </ToggleGroup>
+
+          <Button onClick={() => setNovaAberta(true)}>
+            <Plus className="w-4 h-4 mr-1" /> Nova tarefa
+          </Button>
+        </div>
       </div>
 
       {isError ? (
         <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">
           Erro ao carregar pedidos: {(error as Error)?.message ?? 'desconhecido'}
         </div>
-      ) : (
+      ) : visao === 'kanban' ? (
         <DndContext
           sensors={sensors}
           collisionDetection={closestCorners}
@@ -252,20 +288,66 @@ export default function AcompanhamentosPage() {
             )}
           </DragOverlay>
         </DndContext>
+      ) : (
+        <div className="rounded-lg border border-border bg-card overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Tarefa</TableHead>
+                <TableHead className="hidden sm:table-cell">Número</TableHead>
+                <TableHead className="hidden md:table-cell">Fornecedor</TableHead>
+                <TableHead className="hidden lg:table-cell">Previsão</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filtrados.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="h-24 text-center text-sm text-muted-foreground">
+                    Nenhuma tarefa encontrada.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filtrados.map((p) => (
+                  <TableRow
+                    key={p.id}
+                    className="cursor-pointer"
+                    onClick={() => setDetalhe(p)}
+                  >
+                    <TableCell className="font-medium max-w-[320px] truncate">
+                      {p.titulo?.trim() || p.fornecedor}
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell font-mono text-xs">{p.numero}</TableCell>
+                    <TableCell className="hidden md:table-cell">{p.fornecedor}</TableCell>
+                    <TableCell className="hidden lg:table-cell">{formatDate(p.previsao) ?? '—'}</TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">
+                        {KANBAN_COLUNAS.find(c => c.status === p.status)?.label ?? p.status}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
       )}
 
-      {!isLoading && filtrados.length === 0 && (
+      {!isLoading && visao === 'kanban' && filtrados.length === 0 && (
         <p className="text-sm text-muted-foreground inline-flex items-center gap-2">
           <MessageSquare className="w-4 h-4 opacity-50" aria-hidden />
           Nenhum pedido em acompanhamento.
         </p>
       )}
 
+      <NovaTarefaDialog open={novaAberta} onOpenChange={setNovaAberta} />
+
       <PedidoDetailDialog
         pedido={detalheAtual}
         open={!!detalhe}
         onOpenChange={(v) => { if (!v) setDetalhe(null); }}
       />
+
     </PageShell>
   );
 }

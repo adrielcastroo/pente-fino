@@ -118,6 +118,52 @@ export function useUpdatePedido() {
   });
 }
 
+export interface NovaTarefaInput {
+  titulo: string;
+  fornecedor: string;
+  numero?: string;
+  descricao?: string;
+  previsao?: string | null;
+  status?: ComprasPedidoStatus;
+}
+
+/** Cria uma nova tarefa/pedido de acompanhamento no topo da coluna escolhida. */
+export function useCreatePedido() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: NovaTarefaInput) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Sessão expirada. Faça login novamente.');
+
+      const numero = input.numero?.trim()
+        || `TSK-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(Math.random() * 9000 + 1000)}`;
+
+      const { data, error } = await (supabase as any)
+        .from('compras_pedidos')
+        .insert({
+          numero,
+          fornecedor: input.fornecedor.trim() || '—',
+          titulo: input.titulo.trim(),
+          descricao: input.descricao?.trim() || null,
+          previsao: input.previsao || null,
+          status: input.status ?? 'pendente',
+          ordem: -Date.now() / 1000,
+          created_by: user.id,
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      return data as ComprasPedidoCard;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [...PEDIDOS_KEY] });
+      qc.invalidateQueries({ queryKey: ['compras', 'pedidos'] });
+    },
+  });
+}
+
+
+
 /* ------------------------------- Comentários ------------------------------ */
 
 export function useComentarios(pedidoId: string | null) {
