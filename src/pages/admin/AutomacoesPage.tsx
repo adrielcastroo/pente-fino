@@ -399,7 +399,56 @@ function EntregaAposCard() {
           </div>
         )}
 
+        {/* Kits com forro vinculados ao tecido */}
+        {previewRows && previewRows.length > 0 && (
+          <div className="rounded-md border bg-muted/20 p-3">
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <Layers className="h-4 w-4 text-primary" />
+              <span className="font-medium">Kits com forro vinculados</span>
+              <Badge variant="outline">{kitsVinculados.length}</Badge>
+              {kitsVinculados.length > 0 && (
+                <label className="ml-auto flex cursor-pointer items-center gap-2">
+                  <Checkbox checked={aplicarKits} onCheckedChange={(v) => setAplicarKits(v === true)} />
+                  <span>Aplicar a mesma ação nos kits</span>
+                </label>
+              )}
+            </div>
+            {kitsVinculados.length === 0 ? (
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                Nenhum kit vinculado a este tecido. Configure os vínculos na aba “Kits com Forro”.
+              </p>
+            ) : (
+              <ul className="mt-2 space-y-1 text-[11px]">
+                {kitsVinculados.map((k) => (
+                  <li key={k.kit_codigo} className="flex flex-wrap items-center gap-2">
+                    <span className="font-mono">{k.kit_codigo}</span>
+                    <span className="text-muted-foreground">{k.kit_descricao}</span>
+                    {!k.confirmado && <Badge variant="outline" className="px-1.5 py-0 text-[10px]">sugerido</Badge>}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {kitsResultado.length > 0 && (
+              <div className="mt-3 space-y-1 border-t pt-2 text-[11px]">
+                {kitsResultado.map((r) => (
+                  <div key={r.kit_codigo} className="flex flex-wrap items-center gap-2">
+                    <span className="font-mono">{r.kit_codigo}</span>
+                    {r.erro ? (
+                      <span className="text-destructive">{r.erro}</span>
+                    ) : (
+                      <span className="text-muted-foreground">
+                        {r.sucesso} sucesso · {r.ignoradas} ignoradas · {r.falha} falha(s)
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Passo 2 · Ação */}
+
         {previewRows && previewRows.length > 0 && (
           <div className="grid gap-3 sm:grid-cols-[200px_1fr_auto] items-end">
             <div className="grid gap-1.5">
