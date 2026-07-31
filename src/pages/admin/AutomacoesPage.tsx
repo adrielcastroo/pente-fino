@@ -144,12 +144,30 @@ function EntregaAposCard() {
 
   const [execProgress, setExecProgress] = useState(0);
 
+  /** Kits (versão com forro/dupla camada) vinculados ao tecido consultado. */
+  const [kitsVinculados, setKitsVinculados] = useState<KitVinculado[]>([]);
+  const [aplicarKits, setAplicarKits] = useState(true);
+  const [kitsResultado, setKitsResultado] = useState<KitExecResumo[]>([]);
+
   const canPreview = !!codigoNormalizado && !previewLoading;
   const canExecute =
     !!previewCodigo &&
     !execLoading &&
     (precisaData ? !!dataNormalizada : true) &&
     (previewRows?.length ?? 0) > 0;
+
+  const carregarKits = async (codigo: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('tecido_kit_vinculos')
+        .select('kit_codigo, kit_descricao, confirmado')
+        .eq('tecido_codigo', codigo);
+      if (error) throw error;
+      setKitsVinculados((data ?? []) as KitVinculado[]);
+    } catch {
+      setKitsVinculados([]);
+    }
+  };
 
   const runPreview = async () => {
     if (!codigoNormalizado) {
@@ -168,6 +186,7 @@ function EntregaAposCard() {
       }
       setPreviewRows(resp.rows ?? []);
       setPreviewCodigo(codigoNormalizado);
+      await carregarKits(codigoNormalizado);
       if ((resp.rows ?? []).length === 0) toast.info('Nenhum acabamento vinculado a este item.');
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Erro inesperado.');
@@ -175,6 +194,7 @@ function EntregaAposCard() {
       setPreviewLoading(false);
     }
   };
+
 
   const runExecute = async () => {
     if (!previewCodigo) return;
