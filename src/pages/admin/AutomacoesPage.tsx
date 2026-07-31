@@ -66,7 +66,12 @@ type PreviewRow = {
   descricao_reduzida: string;
   entrega_apos_atual: string | null;
   cancelado: boolean;
+  /** Código do item que originou a linha (o tecido pesquisado ou um kit vinculado). */
+  origem_codigo?: string;
+  /** Verdadeiro quando a linha veio de um kit com forro vinculado ao tecido. */
+  origem_kit?: boolean;
 };
+
 
 type ExecResult = {
   status: 'ok' | 'erro' | 'ignorada';
