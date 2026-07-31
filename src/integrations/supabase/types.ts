@@ -1138,43 +1138,128 @@ export type Database = {
         }
         Relationships: []
       }
+      compras_pedido_anexos: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string
+          id: string
+          mime_type: string | null
+          pedido_id: string
+          size_bytes: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path: string
+          id?: string
+          mime_type?: string | null
+          pedido_id: string
+          size_bytes?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          id?: string
+          mime_type?: string | null
+          pedido_id?: string
+          size_bytes?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compras_pedido_anexos_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "compras_pedidos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      compras_pedido_comentarios: {
+        Row: {
+          conteudo: string
+          created_at: string
+          id: string
+          pedido_id: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          conteudo: string
+          created_at?: string
+          id?: string
+          pedido_id: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          conteudo?: string
+          created_at?: string
+          id?: string
+          pedido_id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compras_pedido_comentarios_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "compras_pedidos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       compras_pedidos: {
         Row: {
           created_at: string
           created_by: string | null
+          descricao: string | null
           fornecedor: string
           id: string
           itens: number
           numero: string
           observacao: string | null
+          ordem: number
           previsao: string | null
           status: Database["public"]["Enums"]["compras_pedido_status"]
+          titulo: string | null
           updated_at: string
           valor_total: number | null
         }
         Insert: {
           created_at?: string
           created_by?: string | null
+          descricao?: string | null
           fornecedor: string
           id?: string
           itens?: number
           numero: string
           observacao?: string | null
+          ordem?: number
           previsao?: string | null
           status?: Database["public"]["Enums"]["compras_pedido_status"]
+          titulo?: string | null
           updated_at?: string
           valor_total?: number | null
         }
         Update: {
           created_at?: string
           created_by?: string | null
+          descricao?: string | null
           fornecedor?: string
           id?: string
           itens?: number
           numero?: string
           observacao?: string | null
+          ordem?: number
           previsao?: string | null
           status?: Database["public"]["Enums"]["compras_pedido_status"]
+          titulo?: string | null
           updated_at?: string
           valor_total?: number | null
         }
