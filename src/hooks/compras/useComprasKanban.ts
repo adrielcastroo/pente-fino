@@ -237,7 +237,27 @@ export function useAnexos(pedidoId: string | null) {
   });
 }
 
+/** Envia um arquivo para o bucket e registra o anexo do pedido informado. */
+export async function uploadAnexoParaPedido(pedidoId: string, file: File) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Sessão expirada. Faça login novamente.');
+  const safeName = file.name.replace(/[^\w.\-]+/g, '_');
+  const path = `${pedidoId}/${crypto.randomUUID()}-${safeName}`;
+  const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, file);
+  if (upErr) throw upErr;
+  const { error } = await (supabase as any).from('compras_pedido_anexos').insert({
+    pedido_id: pedidoId,
+    user_id: user.id,
+    file_name: file.name,
+    file_path: path,
+    mime_type: file.type || null,
+    size_bytes: file.size,
+  });
+  if (error) throw error;
+}
+
 export function useUploadAnexo(pedidoId: string | null) {
+
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (file: File) => {
