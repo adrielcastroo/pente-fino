@@ -199,6 +199,14 @@ export default function AnaliseCompraPage() {
         backTo="/compras/acompanhamentos"
         actions={
           <div className="flex flex-wrap items-center gap-2">
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/compras/analise-compra/historico">
+                <span className="flex items-center">
+                  <History className="w-4 h-4 mr-2" />
+                  Histórico
+                </span>
+              </Link>
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -208,6 +216,7 @@ export default function AnaliseCompraPage() {
               <Download className="w-4 h-4 mr-2" />
               Exportar XLSX
             </Button>
+
             <Button size="sm" onClick={() => gerar.mutate(undefined)} disabled={carregando}>
               {carregando ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
