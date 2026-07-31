@@ -728,6 +728,9 @@ export default function AutomacoesPage() {
             <TabsTrigger value="entrega-apos" className="gap-2">
               <CalendarClock className="h-4 w-4" /> Entrega Após
             </TabsTrigger>
+            <TabsTrigger value="kits-forro" className="gap-2">
+              <Layers className="h-4 w-4" /> Kits com Forro
+            </TabsTrigger>
             <TabsTrigger value="processo-transferencia" className="gap-2">
               <Truck className="h-4 w-4" /> Processo de Transferência
             </TabsTrigger>
@@ -740,9 +743,13 @@ export default function AutomacoesPage() {
           <TabsContent value="entrega-apos" className="mt-0">
             <EntregaAposCard />
           </TabsContent>
+          <TabsContent value="kits-forro" className="mt-0">
+            <KitsForroCard />
+          </TabsContent>
           <TabsContent value="processo-transferencia" className="mt-0">
             <ProcessoTransferenciaCard />
           </TabsContent>
+
         </Tabs>
       </motion.div>
 
