@@ -86,9 +86,13 @@ export function useComprasKanbanPedidos() {
 export interface PedidoPatch {
   titulo?: string | null;
   descricao?: string | null;
+  fornecedor?: string;
+  numero?: string;
+  previsao?: string | null;
   status?: ComprasPedidoStatus;
   ordem?: number;
 }
+
 
 export function useUpdatePedido() {
   const qc = useQueryClient();
