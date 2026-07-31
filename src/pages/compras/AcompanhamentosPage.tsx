@@ -8,18 +8,25 @@ import {
 } from '@dnd-kit/sortable';
 import { useDroppable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { CalendarDays, Loader2, MessageSquare } from 'lucide-react';
+import { CalendarDays, Columns3, List, Loader2, MessageSquare, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageShell, PageHeader } from '@/components/compras/ui';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 import PedidoDetailDialog from '@/components/compras/PedidoDetailDialog';
+import NovaTarefaDialog from '@/components/compras/NovaTarefaDialog';
 import {
   KANBAN_COLUNAS, useComprasKanbanPedidos, useUpdatePedido,
   type ComprasPedidoCard,
 } from '@/hooks/compras/useComprasKanban';
 import type { ComprasPedidoStatus } from '@/hooks/compras/useComprasPedidos';
+
 
 function formatDate(iso: string | null) {
   if (!iso) return null;
