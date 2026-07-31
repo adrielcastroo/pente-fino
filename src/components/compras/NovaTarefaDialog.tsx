@@ -161,15 +161,55 @@ export function NovaTarefaDialog({ open, onOpenChange, statusInicial = 'pendente
               placeholder="Detalhes da tarefa…"
             />
           </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Anexos</Label>
+              <Button type="button" variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
+                <Paperclip className="w-4 h-4 mr-1" />
+                Anexar
+              </Button>
+              <input
+                ref={fileRef}
+                type="file"
+                multiple
+                className="hidden"
+                onChange={(e) => adicionarArquivos(e.target.files)}
+              />
+            </div>
+            {arquivos.length === 0 ? (
+              <p className="text-xs text-muted-foreground">Nenhum documento anexado.</p>
+            ) : (
+              <ul className="space-y-1">
+                {arquivos.map((f, i) => (
+                  <li key={`${f.name}-${i}`} className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-2 py-1.5">
+                    <Paperclip className="w-3.5 h-3.5 text-muted-foreground shrink-0" aria-hidden />
+                    <span className="text-xs truncate flex-1">{f.name}</span>
+                    <span className="text-[11px] text-muted-foreground hidden sm:inline">{formatSize(f.size)}</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      aria-label={`Remover ${f.name}`}
+                      onClick={() => setArquivos((prev) => prev.filter((_, idx) => idx !== i))}
+                    >
+                      <X className="w-3.5 h-3.5 text-destructive" />
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={handleSubmit} disabled={createPedido.isPending}>
-            {createPedido.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+          <Button onClick={handleSubmit} disabled={enviando || createPedido.isPending}>
+            {(enviando || createPedido.isPending) && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             Criar tarefa
           </Button>
         </DialogFooter>
+
       </DialogContent>
     </Dialog>
   );
