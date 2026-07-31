@@ -173,6 +173,50 @@ export function PedidoDetailDialog({ pedido, open, onOpenChange }: PedidoDetailD
               onChange={(e) => { dirtyRef.current = true; setTitulo(e.target.value); }}
             />
           </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="pedido-fornecedor" className="text-xs font-medium text-muted-foreground">Fornecedor</Label>
+              <Input
+                id="pedido-fornecedor"
+                value={fornecedor}
+                placeholder="Opcional"
+                onChange={(e) => { dirtyRef.current = true; setFornecedor(e.target.value); }}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="pedido-numero" className="text-xs font-medium text-muted-foreground">Número</Label>
+              <Input
+                id="pedido-numero"
+                value={numero}
+                onChange={(e) => { dirtyRef.current = true; setNumero(e.target.value); }}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="pedido-previsao" className="text-xs font-medium text-muted-foreground">Previsão</Label>
+              <Input
+                id="pedido-previsao"
+                type="date"
+                value={previsao}
+                onChange={(e) => { dirtyRef.current = true; setPrevisao(e.target.value); }}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="pedido-status" className="text-xs font-medium text-muted-foreground">Coluna</Label>
+              <Select
+                value={status}
+                onValueChange={(v) => { dirtyRef.current = true; setStatus(v as ComprasPedidoStatus); }}
+              >
+                <SelectTrigger id="pedido-status"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {KANBAN_COLUNAS.map((c) => (
+                    <SelectItem key={c.status} value={c.status}>{c.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
           <div className="space-y-1.5">
             <label htmlFor="pedido-desc" className="text-xs font-medium text-muted-foreground">Descrição detalhada</label>
             <Textarea
