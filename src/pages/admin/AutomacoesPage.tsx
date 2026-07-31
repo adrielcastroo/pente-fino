@@ -222,6 +222,7 @@ function EntregaAposCard() {
     }
     setExecLoading(true);
     setResult(null);
+    setKitsResultado([]);
     setExecProgress(8);
     // Simulação de progresso enquanto o backend processa em lote
     const progressTimer = setInterval(() => {
@@ -239,8 +240,44 @@ function EntregaAposCard() {
       }
       setResult(resp as ExecPayload);
       toast.success(`Concluído: ${resp.sucesso} sucesso · ${resp.ignoradas} ignoradas · ${resp.falha} falha(s).`);
+
+      // Propaga a mesma ação para os kits com forro vinculados a este tecido.
+      if (aplicarKits && kitsVinculados.length > 0) {
+        const resumos: KitExecResumo[] = [];
+        for (const kit of kitsVinculados) {
+          try {
+            const r = await callAugeEntregaApos({
+              codigo_item: kit.kit_codigo,
+              acao,
+              nova_data: precisaData ? dataNormalizada : null,
+            });
+            resumos.push({
+              kit_codigo: kit.kit_codigo,
+              kit_descricao: kit.kit_descricao,
+              sucesso: r?.sucesso ?? 0,
+              ignoradas: r?.ignoradas ?? 0,
+              falha: r?.falha ?? 0,
+              erro: r?.ok === false ? (r?.error ?? 'Falha desconhecida.') : undefined,
+            });
+          } catch (err) {
+            resumos.push({
+              kit_codigo: kit.kit_codigo,
+              kit_descricao: kit.kit_descricao,
+              sucesso: 0,
+              ignoradas: 0,
+              falha: 0,
+              erro: err instanceof Error ? err.message : 'Erro inesperado.',
+            });
+          }
+          setKitsResultado([...resumos]);
+        }
+        const okKits = resumos.filter((r) => !r.erro && r.falha === 0).length;
+        toast.success(`Kits com forro: ${okKits}/${resumos.length} atualizados.`);
+      }
+
       // Refresh preview para refletir mudanças
       await runPreview();
+
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Erro inesperado.');
     } finally {
