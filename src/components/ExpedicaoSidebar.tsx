@@ -26,6 +26,7 @@ import { useExpedicaoAlertCounts } from '@/hooks/expedicao/useExpedicaoAlertCoun
 export const EXPEDICAO_NAV: ModuleSidebarConfig = {
   moduleLabel: 'EXPEDIÇÃO',
   homePath: '/expedicao/operacao',
+  teamsPath: '/expedicao/equipes',
   settingsPath: '/expedicao/configuracoes',
   groups: [
     {
@@ -61,7 +62,6 @@ export const EXPEDICAO_NAV: ModuleSidebarConfig = {
       items: [
         { key: 'historico', label: 'Histórico', icon: History, path: '/expedicao/historico' },
         { key: 'relatorios', label: 'Relatórios', icon: FileDown, path: '/expedicao/relatorios' },
-        { key: 'equipes', label: 'Equipes', icon: Users, path: '/equipes', minRole: 'supervisor' },
       ],
     },
   ],
