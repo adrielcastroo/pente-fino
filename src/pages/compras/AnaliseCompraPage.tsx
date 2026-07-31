@@ -66,6 +66,14 @@ export default function AnaliseCompraPage() {
   const [idConsulta, setIdConsulta] = useState<string>(
     () => localStorage.getItem(STORAGE_KEY) ?? '',
   );
+  // Planilha usada como base de comparação (última salva antes desta geração).
+  const [baseline, setBaseline] = useState<SaldoBaixoSnapshot | null>(null);
+  const [diffFiltro, setDiffFiltro] = useState<DiffStatus | 'todos'>('todos');
+
+  const { data: snapshots = [] } = useSaldoBaixoSnapshots(10);
+  const salvarSnapshot = useSaveSaldoBaixoSnapshot();
+
+
 
   const gerar = useMutation({
     mutationFn: async (forcarId?: string) => {
