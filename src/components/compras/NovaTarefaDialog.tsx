@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { Loader2, Paperclip, X } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
@@ -11,13 +11,19 @@ import { Button } from '@/components/ui/button';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { KANBAN_COLUNAS, useCreatePedido } from '@/hooks/compras/useComprasKanban';
+import { KANBAN_COLUNAS, useCreatePedido, uploadAnexoParaPedido } from '@/hooks/compras/useComprasKanban';
 import type { ComprasPedidoStatus } from '@/hooks/compras/useComprasPedidos';
 
 interface NovaTarefaDialogProps {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   statusInicial?: ComprasPedidoStatus;
+}
+
+function formatSize(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
 export function NovaTarefaDialog({ open, onOpenChange, statusInicial = 'pendente' }: NovaTarefaDialogProps) {
@@ -27,12 +33,29 @@ export function NovaTarefaDialog({ open, onOpenChange, statusInicial = 'pendente
   const [descricao, setDescricao] = useState('');
   const [previsao, setPrevisao] = useState('');
   const [status, setStatus] = useState<ComprasPedidoStatus>(statusInicial);
+  const [arquivos, setArquivos] = useState<File[]>([]);
+  const [enviando, setEnviando] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const createPedido = useCreatePedido();
 
   function reset() {
     setTitulo(''); setFornecedor(''); setNumero(''); setDescricao(''); setPrevisao('');
-    setStatus(statusInicial);
+    setStatus(statusInicial); setArquivos([]);
+    if (fileRef.current) fileRef.current.value = '';
+  }
+
+  function adicionarArquivos(list: FileList | null) {
+    if (!list?.length) return;
+    const validos = Array.from(list).filter((f) => {
+      if (f.size > 20 * 1024 * 1024) {
+        toast.error(`"${f.name}" excede 20 MB.`);
+        return false;
+      }
+      return true;
+    });
+    setArquivos((prev) => [...prev, ...validos]);
+    if (fileRef.current) fileRef.current.value = '';
   }
 
   async function handleSubmit() {
@@ -40,17 +63,28 @@ export function NovaTarefaDialog({ open, onOpenChange, statusInicial = 'pendente
       toast.error('Informe um título para a tarefa.');
       return;
     }
+    setEnviando(true);
     try {
-      await createPedido.mutateAsync({
+      const criado = await createPedido.mutateAsync({
         titulo, fornecedor, numero, descricao, previsao: previsao || null, status,
       });
+      for (const file of arquivos) {
+        try {
+          await uploadAnexoParaPedido(criado.id, file);
+        } catch (err) {
+          toast.error(`Falha ao anexar "${file.name}": ${(err as Error).message}`);
+        }
+      }
       toast.success('Tarefa criada.');
       reset();
       onOpenChange(false);
     } catch (err) {
       toast.error(`Não foi possível criar a tarefa: ${(err as Error).message}`);
+    } finally {
+      setEnviando(false);
     }
   }
+
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v); }}>
