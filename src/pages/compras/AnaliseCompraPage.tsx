@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Download, History, Save } from 'lucide-react';
+import { Download, Eye, History, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageShell, PageHeader } from '@/components/compras/ui';
 import { Button } from '@/components/ui/button';
