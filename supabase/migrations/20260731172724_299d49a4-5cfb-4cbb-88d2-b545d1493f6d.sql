@@ -1,0 +1,3 @@
+CREATE POLICY "compras_anexos_select" ON storage.objects FOR SELECT TO authenticated USING (bucket_id = 'compras-anexos');
+CREATE POLICY "compras_anexos_insert" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'compras-anexos' AND owner = auth.uid());
+CREATE POLICY "compras_anexos_delete" ON storage.objects FOR DELETE TO authenticated USING (bucket_id = 'compras-anexos' AND owner = auth.uid());
