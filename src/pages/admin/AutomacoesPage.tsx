@@ -200,6 +200,20 @@ function EntregaAposCard() {
         .limit(20000);
       if (error) throw error;
 
+      const linhas = data ?? [];
+
+      /**
+       * Quantos kits apontam para cada matéria-prima. Tecidos de forro (ex.:
+       * o forro branco usado por dezenas de kits) aparecem em muitas linhas —
+       * nesse caso a direção tecido→kits não representa "versão com forro do
+       * mesmo tecido" e não pode ser expandida, senão a consulta explode.
+       */
+      const kitsPorTecido = new Map<string, number>();
+      for (const row of linhas) {
+        const t = raw(row.tecido_codigo);
+        if (t) kitsPorTecido.set(t, (kitsPorTecido.get(t) ?? 0) + 1);
+      }
+
       const encontrados = new Map<string, KitVinculado>();
       const push = (codigoRel: string | null, descricao: string | null, confirmado: boolean) => {
         const key = raw(codigoRel);
@@ -207,12 +221,26 @@ function EntregaAposCard() {
         encontrados.set(key, { kit_codigo: codigoRel as string, kit_descricao: descricao, confirmado });
       };
 
-      for (const row of data ?? []) {
+      let compartilhado = false;
+      for (const row of linhas) {
         const kitRaw = raw(row.kit_codigo);
         const tecRaw = raw(row.tecido_codigo);
-        if (tecRaw === alvo) push(row.kit_codigo, row.kit_descricao, !!row.confirmado);
-        else if (kitRaw === alvo) push(row.tecido_codigo, row.tecido_descricao ?? null, !!row.confirmado);
+        if (tecRaw === alvo) {
+          // Só expande quando o tecido pertence a um único kit (relação 1:1).
+          if ((kitsPorTecido.get(tecRaw) ?? 0) > 1) { compartilhado = true; continue; }
+          push(row.kit_codigo, row.kit_descricao, !!row.confirmado);
+        } else if (kitRaw === alvo) {
+          push(row.tecido_codigo, row.tecido_descricao ?? null, !!row.confirmado);
+        }
       }
+
+      if (compartilhado && encontrados.size === 0) {
+        toast.info(
+          `${codigo} está vinculado como matéria-prima de ${kitsPorTecido.get(alvo)} kits (provável tecido de forro). ` +
+            'A expansão automática foi ignorada — ajuste os vínculos em "Kits com Forro".',
+        );
+      }
+
       const lista = [...encontrados.values()];
       setKitsVinculados(lista);
       return lista;
@@ -221,6 +249,7 @@ function EntregaAposCard() {
       return [];
     }
   };
+
 
 
 
