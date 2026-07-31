@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Download, Eye, History, Save } from 'lucide-react';
+import { Download, Eye, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageShell, PageHeader } from '@/components/compras/ui';
 import { Button } from '@/components/ui/button';
@@ -16,6 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import AnaliseCompraTable from '@/components/compras/AnaliseCompraTable';
 import SaldoBaixoDiffTable from '@/components/compras/SaldoBaixoDiffTable';
+import SaldoBaixoHistoricoTab from '@/components/compras/SaldoBaixoHistoricoTab';
 import PlanilhaDropzone, {
   type PlanilhaImportada,
 } from '@/components/compras/PlanilhaDropzone';
@@ -116,14 +116,6 @@ export default function AnaliseCompraPage() {
         backTo="/compras/acompanhamentos"
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/compras/analise-compra/historico">
-                <span className="flex items-center">
-                  <History className="mr-2 h-4 w-4" />
-                  Histórico
-                </span>
-              </Link>
-            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -146,6 +138,17 @@ export default function AnaliseCompraPage() {
         }
       />
 
+      <Tabs defaultValue="analise" className="w-full space-y-4">
+        <TabsList>
+          <TabsTrigger value="analise">Análise</TabsTrigger>
+          <TabsTrigger value="historico">Histórico</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="historico" className="mt-0">
+          <SaldoBaixoHistoricoTab />
+        </TabsContent>
+
+        <TabsContent value="analise" className="mt-0 space-y-4">
       <Card>
         <CardContent className="grid grid-cols-1 gap-4 py-4 md:grid-cols-2">
           <PlanilhaDropzone
@@ -238,6 +241,9 @@ export default function AnaliseCompraPage() {
           </CardContent>
         </Card>
       )}
+
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={verComparacao} onOpenChange={setVerComparacao}>
         <DialogContent className="sm:max-w-[min(1400px,calc(100vw-3rem))]">

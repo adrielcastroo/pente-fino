@@ -1,10 +1,10 @@
 import { NavLink } from 'react-router-dom';
-import { ClipboardList, Sparkles } from 'lucide-react';
+import { ClipboardList, TrendingDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const TABS = [
   { path: '/compras/acompanhamentos', label: 'Acompanh.', icon: ClipboardList, exact: true },
-  { path: '/compras/acompanhamentos/starcolor', label: 'Starcolor', icon: Sparkles, exact: false },
+  { path: '/compras/analise-compra', label: 'Análise', icon: TrendingDown, exact: false },
 ] as const;
 
 export default function ComprasBottomTabBar() {

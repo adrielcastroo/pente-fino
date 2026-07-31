@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { ClipboardList, Sparkles, FileSpreadsheet, Users, TrendingDown, History } from 'lucide-react';
+import { ClipboardList, TrendingDown } from 'lucide-react';
 
 import ModuleSidebar, { type ModuleSidebarConfig } from '@/components/ModuleSidebar';
 
@@ -7,24 +7,13 @@ export const COMPRAS_NAV: ModuleSidebarConfig = {
   moduleLabel: 'COMPRAS',
   homePath: '/compras/acompanhamentos',
   settingsPath: '/compras/configuracoes',
+  teamsPath: '/compras/equipes',
   groups: [
     {
       label: 'Operação',
       items: [
         { key: 'acompanhamentos', label: 'Acompanhamentos', icon: ClipboardList, path: '/compras/acompanhamentos' },
-        { key: 'starcolor', label: 'Starcolor', icon: Sparkles, path: '/compras/acompanhamentos/starcolor' },
-        { key: 'starcolor-romaneios', label: 'Romaneios', icon: FileSpreadsheet, path: '/compras/acompanhamentos/starcolor/romaneios' },
         { key: 'analise-compra', label: 'Análise de Compra', icon: TrendingDown, path: '/compras/analise-compra' },
-        { key: 'saldo-baixo-historico', label: 'Histórico de Planilhas', icon: History, path: '/compras/analise-compra/historico' },
-
-      ],
-    },
-
-    {
-      label: 'Admin',
-      minRole: 'supervisor',
-      items: [
-        { key: 'equipes', label: 'Equipes', icon: Users, path: '/equipes', minRole: 'supervisor' },
       ],
     },
   ],

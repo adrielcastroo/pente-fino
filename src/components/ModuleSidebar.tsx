@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Settings, LogOut, ArrowLeftRight, type LucideIcon } from 'lucide-react';
+import { Settings, LogOut, ArrowLeftRight, Users, type LucideIcon } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -44,6 +44,8 @@ export type ModuleSidebarConfig = {
   homePath: string;
   /** Rota das configurações no footer. */
   settingsPath: string;
+  /** Rota da página de Equipes do módulo (footer, acima de Configurações). */
+  teamsPath?: string;
   groups: ModuleSidebarGroup[];
 };
 
@@ -86,6 +88,8 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
     location.pathname === path || (path !== '/' && location.pathname.startsWith(path + '/'));
 
   const settingsActive = isItemActive(config.settingsPath);
+  const teamsActive = config.teamsPath ? isItemActive(config.teamsPath) : false;
+  const showTeams = Boolean(config.teamsPath) && atLeast(role, 'supervisor');
 
   // Prefetch em idle das rotas visíveis — navegação passa a ser instantânea
   // após o primeiro segundo de idle da aplicação.
@@ -213,6 +217,37 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
 
       <SidebarFooter className={cn('overflow-hidden border-t border-border/30 py-3', isIconCollapsed ? 'px-0' : 'px-3')}>
         <SidebarMenu className={cn('gap-0.5', isIconCollapsed && 'items-center')}>
+          {showTeams && (
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                size="lg"
+                onClick={() => handleNavigate(config.teamsPath!)}
+                isActive={teamsActive}
+                tooltip="Equipes"
+                aria-label="Abrir Equipes"
+                className={cn(
+                  'relative h-10 rounded-md transition-colors duration-150',
+                  isIconCollapsed && '!size-10 !p-0 justify-center',
+                  teamsActive
+                    ? 'font-bold text-primary'
+                    : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
+                )}
+              >
+                {teamsActive && !isIconCollapsed && (
+                  <div className="pointer-events-none absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-primary" />
+                )}
+                <div className="flex h-5 w-5 shrink-0 items-center justify-center">
+                  <Users className="h-[18px] w-[18px]" />
+                </div>
+                {!isIconCollapsed && (
+                  <span className="min-w-0 flex-1 truncate text-left text-xs font-medium">
+                    Equipes
+                  </span>
+                )}
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
+
           <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"

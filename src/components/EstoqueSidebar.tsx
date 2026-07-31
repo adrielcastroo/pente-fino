@@ -16,7 +16,7 @@ import {
   Palette,
   BookOpen,
   Workflow,
-  Users,
+
 
 
 } from 'lucide-react';
@@ -35,6 +35,7 @@ const EstoqueSidebar = memo(() => {
     () => ({
       moduleLabel: 'ESTOQUE',
       homePath: '/estoque/operacao',
+      teamsPath: '/estoque/equipes',
       settingsPath: '/estoque/configuracoes',
       groups: [
         {
@@ -66,7 +67,6 @@ const EstoqueSidebar = memo(() => {
           minRole: 'supervisor',
           items: [
             { key: 'cadastros', label: 'Cadastros', icon: ClipboardList, path: '/estoque/cadastros', minRole: 'supervisor' },
-            { key: 'equipes', label: 'Equipes', icon: Users, path: '/equipes', minRole: 'supervisor' },
             { key: 'auditoria', label: 'Auditoria', icon: ShieldAlert, path: '/estoque/auditoria', minRole: 'gerente' },
             { key: 'admin', label: 'Painel Admin', icon: ShieldCheck, path: '/admin', minRole: 'admin' },
             { key: 'automacoes', label: 'Automações', icon: Workflow, path: '/admin/automacoes', minRole: 'admin' },

@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Download, GitCompare, Loader2, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { PageShell, PageHeader } from '@/components/compras/ui';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,7 +15,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import {
   useClearSaldoBaixoSnapshots,
   useDeleteSaldoBaixoSnapshot,
@@ -38,12 +36,10 @@ const fmtData = (iso: string) =>
   new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
 
 /**
- * Histórico das planilhas de Saldo Baixo importadas/geradas, com comparação
- * entre a planilha selecionada e a imediatamente anterior.
+ * Histórico das planilhas de Saldo Baixo — renderizado como aba dentro da
+ * página de Análise. Compara a planilha selecionada com a imediatamente anterior.
  */
-export default function SaldoBaixoHistoricoPage() {
-  useDocumentTitle('Histórico — Análise de Saldo Baixo');
-
+export default function SaldoBaixoHistoricoTab() {
   const { data: snapshots = [], isLoading } = useSaldoBaixoSnapshots();
   const remover = useDeleteSaldoBaixoSnapshot();
   const limpar = useClearSaldoBaixoSnapshots();
@@ -86,38 +82,31 @@ export default function SaldoBaixoHistoricoPage() {
     );
 
   return (
-    <PageShell>
-      <PageHeader
-        title="Histórico de planilhas"
-        subtitle="Análise de Saldo Baixo — comparação entre o dia anterior e o dia atual"
-        backTo="/compras/analise-compra"
-        actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!diff?.rows.length}
-              onClick={() => diff && exportDiffXLSX(diff)}
-            >
-              <GitCompare className="w-4 h-4 mr-2" />
-              Exportar comparação
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              disabled={!snapshots.length || limpar.isPending}
-              onClick={() => setConfirmarLimpeza(true)}
-            >
-              {limpar.isPending ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Trash2 className="w-4 h-4 mr-2" />
-              )}
-              Limpar histórico
-            </Button>
-          </div>
-        }
-      />
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={!diff?.rows.length}
+          onClick={() => diff && exportDiffXLSX(diff)}
+        >
+          <GitCompare className="mr-2 h-4 w-4" />
+          Exportar comparação
+        </Button>
+        <Button
+          variant="destructive"
+          size="sm"
+          disabled={!snapshots.length || limpar.isPending}
+          onClick={() => setConfirmarLimpeza(true)}
+        >
+          {limpar.isPending ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Trash2 className="mr-2 h-4 w-4" />
+          )}
+          Limpar histórico
+        </Button>
+      </div>
 
       {isLoading && (
         <div className="space-y-2">
@@ -129,7 +118,8 @@ export default function SaldoBaixoHistoricoPage() {
       {!isLoading && !snapshots.length && (
         <Card>
           <CardContent className="py-12 text-center text-sm text-muted-foreground">
-            Nenhuma planilha no histórico. Gere um relatório em “Análise de Compra” para começar.
+            Nenhuma planilha no histórico. Importe e salve uma planilha na aba “Análise” para
+            começar.
           </CardContent>
         </Card>
       )}
@@ -149,17 +139,17 @@ export default function SaldoBaixoHistoricoPage() {
                   (atual?.id === s.id ? 'border-primary' : 'hover:border-muted-foreground/40')
                 }
               >
-                <CardContent className="py-3 space-y-2">
+                <CardContent className="space-y-2 py-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="text-sm font-medium truncate">
+                      <p className="truncate text-sm font-medium">
                         {new Date(`${s.referencia}T12:00:00`).toLocaleDateString('pt-BR')}
                       </p>
-                      <p className="text-[11px] text-muted-foreground truncate">
+                      <p className="truncate text-[11px] text-muted-foreground">
                         {fmtData(s.created_at)} · {s.origem ?? 'Auge'}
                       </p>
                     </div>
-                    <Badge variant="secondary" className="text-[10px] shrink-0">
+                    <Badge variant="secondary" className="shrink-0 text-[10px]">
                       {s.total_linhas} linhas
                     </Badge>
                   </div>
@@ -173,7 +163,7 @@ export default function SaldoBaixoHistoricoPage() {
                         baixar(s);
                       }}
                     >
-                      <Download className="w-3.5 h-3.5 mr-1.5" />
+                      <Download className="mr-1.5 h-3.5 w-3.5" />
                       Baixar
                     </Button>
                     <Button
@@ -192,7 +182,7 @@ export default function SaldoBaixoHistoricoPage() {
                         });
                       }}
                     >
-                      <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+                      <Trash2 className="mr-1.5 h-3.5 w-3.5" />
                       Remover
                     </Button>
                   </div>
@@ -203,7 +193,7 @@ export default function SaldoBaixoHistoricoPage() {
 
           {diff && (
             <Card>
-              <CardContent className="py-4 space-y-3">
+              <CardContent className="space-y-3 py-4">
                 <p className="text-[11px] text-muted-foreground">
                   Comparando{' '}
                   <strong>
@@ -226,7 +216,7 @@ export default function SaldoBaixoHistoricoPage() {
                       onClick={() => setFiltro(f)}
                     >
                       {DIFF_LABELS[f]}
-                      <Badge variant="secondary" className="ml-1.5 text-[10px] px-1.5">
+                      <Badge variant="secondary" className="ml-1.5 px-1.5 text-[10px]">
                         {f === 'todos' ? diff.rows.length : diff.totais[f]}
                       </Badge>
                     </Button>
@@ -267,6 +257,6 @@ export default function SaldoBaixoHistoricoPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </PageShell>
+    </div>
   );
 }

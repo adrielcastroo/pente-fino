@@ -29,6 +29,7 @@ export const PAGE_REGISTRY: PageEntry[] = [
   // Estoque — Admin
   { key: 'estoque.cadastros', label: 'Cadastros', module: 'estoque', path: '/estoque/cadastros' },
   { key: 'estoque.auditoria', label: 'Auditoria', module: 'estoque', path: '/estoque/auditoria' },
+  { key: 'estoque.equipes', label: 'Equipes', module: 'estoque', path: '/estoque/equipes' },
 
   // Expedição
   { key: 'expedicao.operacao', label: 'Início', module: 'expedicao', path: '/expedicao/operacao' },
@@ -42,13 +43,12 @@ export const PAGE_REGISTRY: PageEntry[] = [
   { key: 'expedicao.etiquetas', label: 'Etiquetas', module: 'expedicao', path: '/expedicao/etiquetas' },
   { key: 'expedicao.historico', label: 'Histórico', module: 'expedicao', path: '/expedicao/historico' },
   { key: 'expedicao.relatorios', label: 'Relatórios', module: 'expedicao', path: '/expedicao/relatorios' },
+  { key: 'expedicao.equipes', label: 'Equipes', module: 'expedicao', path: '/expedicao/equipes' },
 
   // Compras
   { key: 'compras.acompanhamentos', label: 'Acompanhamentos', module: 'compras', path: '/compras/acompanhamentos' },
-  { key: 'compras.starcolor', label: 'Starcolor', module: 'compras', path: '/compras/acompanhamentos/starcolor' },
-  { key: 'compras.starcolor.romaneios', label: 'Romaneios Starcolor', module: 'compras', path: '/compras/acompanhamentos/starcolor/romaneios' },
   { key: 'compras.analise', label: 'Análise de Compra', module: 'compras', path: '/compras/analise-compra' },
-  { key: 'compras.analise.historico', label: 'Histórico de Planilhas', module: 'compras', path: '/compras/analise-compra/historico' },
+  { key: 'compras.equipes', label: 'Equipes', module: 'compras', path: '/compras/equipes' },
 
 ];
 
