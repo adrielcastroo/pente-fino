@@ -280,7 +280,52 @@ export default function AnaliseCompraPage() {
                 </Badge>
               </TabsTrigger>
             ))}
+            ))}
+            <TabsTrigger value="comparacao" className="gap-2">
+              Comparação
+              <Badge variant="secondary" className="text-[10px] px-1.5">
+                {diff ? diff.totais.novo + diff.totais.alterado + diff.totais.removido : 0}
+              </Badge>
+            </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="comparacao" className="space-y-3 mt-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-[11px] text-muted-foreground">
+                {baseline
+                  ? `Comparando com a planilha de ${new Date(`${baseline.referencia}T12:00:00`).toLocaleDateString('pt-BR')}.`
+                  : 'Não há planilha anterior no histórico — todos os itens aparecem como novos.'}
+              </p>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8 text-[11px] ml-auto"
+                disabled={!diff?.rows.length}
+                onClick={() => diff && exportDiffXLSX(diff)}
+              >
+                <Download className="w-3.5 h-3.5 mr-1.5" />
+                Exportar comparação
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {DIFF_FILTROS.map((f) => (
+                <Button
+                  key={f}
+                  size="sm"
+                  variant={diffFiltro === f ? 'default' : 'outline'}
+                  className="h-8 text-[11px]"
+                  onClick={() => setDiffFiltro(f)}
+                >
+                  {DIFF_LABELS[f]}
+                  <Badge variant="secondary" className="ml-1.5 text-[10px] px-1.5">
+                    {f === 'todos' ? (diff?.rows.length ?? 0) : (diff?.totais[f] ?? 0)}
+                  </Badge>
+                </Button>
+              ))}
+            </div>
+            <SaldoBaixoDiffTable columns={resultado.columns} rows={diffLinhas} />
+          </TabsContent>
+
 
           {blocos.map((b) => (
             <TabsContent key={b.key} value={b.key} className="space-y-3 mt-4">
