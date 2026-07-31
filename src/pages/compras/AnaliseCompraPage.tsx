@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { AlertTriangle, Download, FileSpreadsheet, Loader2, RefreshCw } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { AlertTriangle, Download, FileSpreadsheet, History, Loader2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { PageShell, PageHeader } from '@/components/compras/ui';
@@ -17,6 +18,18 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import AnaliseCompraTable from '@/components/compras/AnaliseCompraTable';
+import SaldoBaixoDiffTable from '@/components/compras/SaldoBaixoDiffTable';
+import {
+  useSaldoBaixoSnapshots,
+  useSaveSaldoBaixoSnapshot,
+  type SaldoBaixoSnapshot,
+} from '@/hooks/compras/useSaldoBaixoSnapshots';
+import {
+  DIFF_LABELS,
+  diffSnapshots,
+  exportDiffXLSX,
+  type DiffStatus,
+} from '@/lib/compras/saldoBaixoDiff';
 import {
   ANALISE_COMPRA_PRESETS,
   applyFilters,
@@ -25,6 +38,9 @@ import {
   OP_LABELS,
   type NormalizedResult,
 } from '@/lib/compras/analiseCompra';
+
+const DIFF_FILTROS: (DiffStatus | 'todos')[] = ['todos', 'novo', 'alterado', 'removido', 'igual'];
+
 
 interface ConsultaOption {
   id: string;
