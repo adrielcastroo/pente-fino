@@ -165,6 +165,21 @@ export default function AnaliseCompraPage() {
     [resultado.rows],
   );
 
+  const diff = useMemo(
+    () =>
+      resultado.columns.length
+        ? diffSnapshots(
+            resultado,
+            baseline ? { columns: baseline.columns, rows: baseline.rows } : null,
+          )
+        : null,
+    [resultado, baseline],
+  );
+
+  const diffLinhas = useMemo(() => {
+    if (!diff) return [];
+    return diffFiltro === 'todos' ? diff.rows : diff.rows.filter((r) => r.status === diffFiltro);
+  }, [diff, diffFiltro]);
 
   const exportar = () => {
     if (!resultado.columns.length) return;
@@ -174,6 +189,7 @@ export default function AnaliseCompraPage() {
   };
 
   const carregando = gerar.isPending;
+
 
   return (
     <PageShell>
