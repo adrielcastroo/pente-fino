@@ -3,15 +3,22 @@ import { Check, Loader2, Paperclip, Send, Trash2, Download, User2 } from 'lucide
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
+import {
+  KANBAN_COLUNAS,
   useAddComentario, useAnexos, useComentarios, useDeleteAnexo, useDeleteComentario,
   useProfilesMap, useUploadAnexo, useUpdatePedido, baixarAnexo,
   type ComprasPedidoCard,
 } from '@/hooks/compras/useComprasKanban';
+import type { ComprasPedidoStatus } from '@/hooks/compras/useComprasPedidos';
+
 
 interface PedidoDetailDialogProps {
   pedido: ComprasPedidoCard | null;
