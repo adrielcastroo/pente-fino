@@ -231,6 +231,51 @@ export default function AnaliseCompraPage() {
           </CardContent>
         </Card>
       )}
+
+      <Dialog open={verComparacao} onOpenChange={setVerComparacao}>
+        <DialogContent className="sm:max-w-[min(1400px,calc(100vw-3rem))]">
+          <DialogHeader>
+            <DialogTitle>Comparação de planilhas</DialogTitle>
+            <DialogDescription>
+              {anterior
+                ? `${atual?.arquivoNome} × ${anterior.arquivoNome}`
+                : 'Sem planilha do dia anterior — todos os itens são considerados novos.'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex flex-wrap gap-1.5">
+            {DIFF_FILTROS.map((f) => (
+              <Button
+                key={f}
+                size="sm"
+                variant={diffFiltro === f ? 'default' : 'outline'}
+                className="h-8 text-[11px]"
+                onClick={() => setDiffFiltro(f)}
+              >
+                {DIFF_LABELS[f]}
+                <Badge variant="secondary" className="ml-1.5 px-1.5 text-[10px]">
+                  {f === 'todos' ? (diff?.rows.length ?? 0) : (diff?.totais[f] ?? 0)}
+                </Badge>
+              </Button>
+            ))}
+            <Button
+              size="sm"
+              variant="outline"
+              className="ml-auto h-8 text-[11px]"
+              disabled={!diff?.rows.length}
+              onClick={() => diff && exportDiffXLSX(diff)}
+            >
+              <Download className="mr-1.5 h-3.5 w-3.5" />
+              Exportar
+            </Button>
+          </div>
+
+          <div className="max-h-[65vh] overflow-auto">
+            <SaldoBaixoDiffTable columns={resultado.columns} rows={diffLinhas} />
+          </div>
+        </DialogContent>
+      </Dialog>
     </PageShell>
+
   );
 }
