@@ -1,12 +1,19 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Download, History, Save } from 'lucide-react';
+import { Download, Eye, History, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageShell, PageHeader } from '@/components/compras/ui';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import AnaliseCompraTable from '@/components/compras/AnaliseCompraTable';
 import SaldoBaixoDiffTable from '@/components/compras/SaldoBaixoDiffTable';
 import PlanilhaDropzone, {
@@ -39,6 +46,7 @@ export default function AnaliseCompraPage() {
   const [atual, setAtual] = useState<PlanilhaImportada | null>(null);
   const [preset, setPreset] = useState(ANALISE_COMPRA_PRESETS[0].key);
   const [diffFiltro, setDiffFiltro] = useState<DiffStatus | 'todos'>('todos');
+  const [verComparacao, setVerComparacao] = useState(false);
 
   const salvarSnapshot = useSaveSaldoBaixoSnapshot();
 
@@ -161,57 +169,43 @@ export default function AnaliseCompraPage() {
         <Tabs value={preset} onValueChange={setPreset} className="w-full">
           <TabsList className="w-full justify-start overflow-x-auto">
             {blocos.map((b) => (
-              <TabsTrigger key={b.key} value={b.key} className="gap-2">
+              <TabsTrigger key={b.key} value={b.key}>
                 {b.label}
-                <Badge variant="secondary" className="px-1.5 text-[10px]">
-                  {b.rows.length}
-                </Badge>
               </TabsTrigger>
             ))}
-            <TabsTrigger value="comparacao" className="gap-2">
-              Comparação
-              <Badge variant="secondary" className="px-1.5 text-[10px]">
-                {diff ? diff.totais.novo + diff.totais.alterado + diff.totais.removido : 0}
-              </Badge>
-            </TabsTrigger>
+            <TabsTrigger value="comparacao">Comparação</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="comparacao" className="mt-4 space-y-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="text-[11px] text-muted-foreground">
-                {anterior
-                  ? `Comparando com “${anterior.arquivoNome}”.`
-                  : 'Importe a planilha do dia anterior — sem ela todos os itens aparecem como novos.'}
-              </p>
-              <Button
-                size="sm"
-                variant="outline"
-                className="ml-auto h-8 text-[11px]"
-                disabled={!diff?.rows.length}
-                onClick={() => diff && exportDiffXLSX(diff)}
-              >
-                <Download className="mr-1.5 h-3.5 w-3.5" />
-                Exportar comparação
-              </Button>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {DIFF_FILTROS.map((f) => (
-                <Button
-                  key={f}
-                  size="sm"
-                  variant={diffFiltro === f ? 'default' : 'outline'}
-                  className="h-8 text-[11px]"
-                  onClick={() => setDiffFiltro(f)}
-                >
-                  {DIFF_LABELS[f]}
-                  <Badge variant="secondary" className="ml-1.5 px-1.5 text-[10px]">
-                    {f === 'todos' ? (diff?.rows.length ?? 0) : (diff?.totais[f] ?? 0)}
-                  </Badge>
-                </Button>
-              ))}
-            </div>
-            <SaldoBaixoDiffTable columns={resultado.columns} rows={diffLinhas} />
+          <TabsContent value="comparacao" className="mt-4">
+            <Card>
+              <CardContent className="flex flex-col gap-3 py-5 sm:flex-row sm:items-center sm:justify-between">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">Arquivo de comparação gerado</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {anterior
+                      ? `${atual?.arquivoNome} × ${anterior.arquivoNome}`
+                      : 'Importe a planilha do dia anterior — sem ela todos os itens aparecem como novos.'}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button size="sm" onClick={() => setVerComparacao(true)} disabled={!diff?.rows.length}>
+                    <Eye className="mr-2 h-4 w-4" />
+                    Ver
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={!diff?.rows.length}
+                    onClick={() => diff && exportDiffXLSX(diff)}
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Baixar
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
+
 
           {blocos.map((b) => (
             <TabsContent key={b.key} value={b.key} className="mt-4 space-y-3">
@@ -244,6 +238,51 @@ export default function AnaliseCompraPage() {
           </CardContent>
         </Card>
       )}
+
+      <Dialog open={verComparacao} onOpenChange={setVerComparacao}>
+        <DialogContent className="sm:max-w-[min(1400px,calc(100vw-3rem))]">
+          <DialogHeader>
+            <DialogTitle>Comparação de planilhas</DialogTitle>
+            <DialogDescription>
+              {anterior
+                ? `${atual?.arquivoNome} × ${anterior.arquivoNome}`
+                : 'Sem planilha do dia anterior — todos os itens são considerados novos.'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex flex-wrap gap-1.5">
+            {DIFF_FILTROS.map((f) => (
+              <Button
+                key={f}
+                size="sm"
+                variant={diffFiltro === f ? 'default' : 'outline'}
+                className="h-8 text-[11px]"
+                onClick={() => setDiffFiltro(f)}
+              >
+                {DIFF_LABELS[f]}
+                <Badge variant="secondary" className="ml-1.5 px-1.5 text-[10px]">
+                  {f === 'todos' ? (diff?.rows.length ?? 0) : (diff?.totais[f] ?? 0)}
+                </Badge>
+              </Button>
+            ))}
+            <Button
+              size="sm"
+              variant="outline"
+              className="ml-auto h-8 text-[11px]"
+              disabled={!diff?.rows.length}
+              onClick={() => diff && exportDiffXLSX(diff)}
+            >
+              <Download className="mr-1.5 h-3.5 w-3.5" />
+              Exportar
+            </Button>
+          </div>
+
+          <div className="max-h-[65vh] overflow-auto">
+            <SaldoBaixoDiffTable columns={resultado.columns} rows={diffLinhas} />
+          </div>
+        </DialogContent>
+      </Dialog>
     </PageShell>
+
   );
 }
