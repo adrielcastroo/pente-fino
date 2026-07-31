@@ -3765,6 +3765,51 @@ export type Database = {
         }
         Relationships: []
       }
+      tecido_kit_vinculos: {
+        Row: {
+          confirmado: boolean
+          created_at: string
+          created_by: string | null
+          id: string
+          kit_codigo: string
+          kit_descricao: string | null
+          origem: string
+          score: number | null
+          tecido_codigo: string | null
+          tecido_descricao: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          confirmado?: boolean
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kit_codigo: string
+          kit_descricao?: string | null
+          origem?: string
+          score?: number | null
+          tecido_codigo?: string | null
+          tecido_descricao?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          confirmado?: boolean
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kit_codigo?: string
+          kit_descricao?: string | null
+          origem?: string
+          score?: number | null
+          tecido_codigo?: string | null
+          tecido_descricao?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       tecidos_sem_espaco: {
         Row: {
           auge_cd_deposito: string | null

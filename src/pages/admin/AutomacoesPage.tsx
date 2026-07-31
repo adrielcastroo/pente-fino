@@ -13,11 +13,14 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { PageShell, PageHeader } from '@/components/expedicao/ui';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { CalendarClock, Loader2, PlayCircle, Search, Sparkles, CheckCircle2, XCircle, MinusCircle, ExternalLink, ArrowRight, Type, Plus, Boxes, Truck } from 'lucide-react';
+import { CalendarClock, Loader2, PlayCircle, Search, Sparkles, CheckCircle2, XCircle, MinusCircle, ExternalLink, ArrowRight, Type, Plus, Boxes, Truck, Layers } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import NecessidadeCard from '@/components/admin/NecessidadeCard';
 import NecessidadeCronCard from '@/components/admin/NecessidadeCronCard';
+import KitsForroCard from '@/components/admin/KitsForroCard';
 
 import ProcessoTransferenciaCard from '@/components/admin/ProcessoTransferenciaCard';
+
 
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
@@ -126,7 +129,25 @@ function normalizeData(v: string): string | null {
   return `${dd}/${mm}/${yy}`;
 }
 
+/** Kit (versão com forro/dupla camada) vinculado a um tecido base. */
+type KitVinculado = {
+  kit_codigo: string;
+  kit_descricao: string | null;
+  confirmado: boolean;
+};
+
+/** Resumo da execução da Entrega Após aplicada a um kit vinculado. */
+type KitExecResumo = {
+  kit_codigo: string;
+  kit_descricao: string | null;
+  sucesso: number;
+  ignoradas: number;
+  falha: number;
+  erro?: string;
+};
+
 function EntregaAposCard() {
+
   const [codigoInput, setCodigoInput] = useState('');
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewRows, setPreviewRows] = useState<PreviewRow[] | null>(null);
@@ -144,12 +165,30 @@ function EntregaAposCard() {
 
   const [execProgress, setExecProgress] = useState(0);
 
+  /** Kits (versão com forro/dupla camada) vinculados ao tecido consultado. */
+  const [kitsVinculados, setKitsVinculados] = useState<KitVinculado[]>([]);
+  const [aplicarKits, setAplicarKits] = useState(true);
+  const [kitsResultado, setKitsResultado] = useState<KitExecResumo[]>([]);
+
   const canPreview = !!codigoNormalizado && !previewLoading;
   const canExecute =
     !!previewCodigo &&
     !execLoading &&
     (precisaData ? !!dataNormalizada : true) &&
     (previewRows?.length ?? 0) > 0;
+
+  const carregarKits = async (codigo: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('tecido_kit_vinculos')
+        .select('kit_codigo, kit_descricao, confirmado')
+        .eq('tecido_codigo', codigo);
+      if (error) throw error;
+      setKitsVinculados((data ?? []) as KitVinculado[]);
+    } catch {
+      setKitsVinculados([]);
+    }
+  };
 
   const runPreview = async () => {
     if (!codigoNormalizado) {
@@ -168,6 +207,7 @@ function EntregaAposCard() {
       }
       setPreviewRows(resp.rows ?? []);
       setPreviewCodigo(codigoNormalizado);
+      await carregarKits(codigoNormalizado);
       if ((resp.rows ?? []).length === 0) toast.info('Nenhum acabamento vinculado a este item.');
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Erro inesperado.');
@@ -175,6 +215,7 @@ function EntregaAposCard() {
       setPreviewLoading(false);
     }
   };
+
 
   const runExecute = async () => {
     if (!previewCodigo) return;
@@ -184,6 +225,7 @@ function EntregaAposCard() {
     }
     setExecLoading(true);
     setResult(null);
+    setKitsResultado([]);
     setExecProgress(8);
     // Simulação de progresso enquanto o backend processa em lote
     const progressTimer = setInterval(() => {
@@ -201,8 +243,44 @@ function EntregaAposCard() {
       }
       setResult(resp as ExecPayload);
       toast.success(`Concluído: ${resp.sucesso} sucesso · ${resp.ignoradas} ignoradas · ${resp.falha} falha(s).`);
+
+      // Propaga a mesma ação para os kits com forro vinculados a este tecido.
+      if (aplicarKits && kitsVinculados.length > 0) {
+        const resumos: KitExecResumo[] = [];
+        for (const kit of kitsVinculados) {
+          try {
+            const r = await callAugeEntregaApos({
+              codigo_item: kit.kit_codigo,
+              acao,
+              nova_data: precisaData ? dataNormalizada : null,
+            });
+            resumos.push({
+              kit_codigo: kit.kit_codigo,
+              kit_descricao: kit.kit_descricao,
+              sucesso: r?.sucesso ?? 0,
+              ignoradas: r?.ignoradas ?? 0,
+              falha: r?.falha ?? 0,
+              erro: r?.ok === false ? (r?.error ?? 'Falha desconhecida.') : undefined,
+            });
+          } catch (err) {
+            resumos.push({
+              kit_codigo: kit.kit_codigo,
+              kit_descricao: kit.kit_descricao,
+              sucesso: 0,
+              ignoradas: 0,
+              falha: 0,
+              erro: err instanceof Error ? err.message : 'Erro inesperado.',
+            });
+          }
+          setKitsResultado([...resumos]);
+        }
+        const okKits = resumos.filter((r) => !r.erro && r.falha === 0).length;
+        toast.success(`Kits com forro: ${okKits}/${resumos.length} atualizados.`);
+      }
+
       // Refresh preview para refletir mudanças
       await runPreview();
+
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Erro inesperado.');
     } finally {
@@ -324,7 +402,56 @@ function EntregaAposCard() {
           </div>
         )}
 
+        {/* Kits com forro vinculados ao tecido */}
+        {previewRows && previewRows.length > 0 && (
+          <div className="rounded-md border bg-muted/20 p-3">
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <Layers className="h-4 w-4 text-primary" />
+              <span className="font-medium">Kits com forro vinculados</span>
+              <Badge variant="outline">{kitsVinculados.length}</Badge>
+              {kitsVinculados.length > 0 && (
+                <label className="ml-auto flex cursor-pointer items-center gap-2">
+                  <Checkbox checked={aplicarKits} onCheckedChange={(v) => setAplicarKits(v === true)} />
+                  <span>Aplicar a mesma ação nos kits</span>
+                </label>
+              )}
+            </div>
+            {kitsVinculados.length === 0 ? (
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                Nenhum kit vinculado a este tecido. Configure os vínculos na aba “Kits com Forro”.
+              </p>
+            ) : (
+              <ul className="mt-2 space-y-1 text-[11px]">
+                {kitsVinculados.map((k) => (
+                  <li key={k.kit_codigo} className="flex flex-wrap items-center gap-2">
+                    <span className="font-mono">{k.kit_codigo}</span>
+                    <span className="text-muted-foreground">{k.kit_descricao}</span>
+                    {!k.confirmado && <Badge variant="outline" className="px-1.5 py-0 text-[10px]">sugerido</Badge>}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {kitsResultado.length > 0 && (
+              <div className="mt-3 space-y-1 border-t pt-2 text-[11px]">
+                {kitsResultado.map((r) => (
+                  <div key={r.kit_codigo} className="flex flex-wrap items-center gap-2">
+                    <span className="font-mono">{r.kit_codigo}</span>
+                    {r.erro ? (
+                      <span className="text-destructive">{r.erro}</span>
+                    ) : (
+                      <span className="text-muted-foreground">
+                        {r.sucesso} sucesso · {r.ignoradas} ignoradas · {r.falha} falha(s)
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Passo 2 · Ação */}
+
         {previewRows && previewRows.length > 0 && (
           <div className="grid gap-3 sm:grid-cols-[200px_1fr_auto] items-end">
             <div className="grid gap-1.5">
@@ -601,6 +728,9 @@ export default function AutomacoesPage() {
             <TabsTrigger value="entrega-apos" className="gap-2">
               <CalendarClock className="h-4 w-4" /> Entrega Após
             </TabsTrigger>
+            <TabsTrigger value="kits-forro" className="gap-2">
+              <Layers className="h-4 w-4" /> Kits com Forro
+            </TabsTrigger>
             <TabsTrigger value="processo-transferencia" className="gap-2">
               <Truck className="h-4 w-4" /> Processo de Transferência
             </TabsTrigger>
@@ -613,9 +743,13 @@ export default function AutomacoesPage() {
           <TabsContent value="entrega-apos" className="mt-0">
             <EntregaAposCard />
           </TabsContent>
+          <TabsContent value="kits-forro" className="mt-0">
+            <KitsForroCard />
+          </TabsContent>
           <TabsContent value="processo-transferencia" className="mt-0">
             <ProcessoTransferenciaCard />
           </TabsContent>
+
         </Tabs>
       </motion.div>
 
