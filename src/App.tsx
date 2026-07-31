@@ -50,6 +50,7 @@ const ComprasStarcolorPage = lazy(() => import("@/pages/compras/StarcolorPage"))
 const ComprasRomaneiosStarcolorPage = lazy(() => import("@/pages/compras/RomaneiosStarcolorPage"));
 const ComprasRomaneioStarcolorEditorPage = lazy(() => import("@/pages/compras/RomaneioStarcolorEditorPage"));
 const ComprasAnaliseCompraPage = lazy(() => import("@/pages/compras/AnaliseCompraPage"));
+const ComprasSaldoBaixoHistoricoPage = lazy(() => import("@/pages/compras/SaldoBaixoHistoricoPage"));
 
 
 const EntradasPage = lazy(() => import("@/pages/EntradasPage"));
