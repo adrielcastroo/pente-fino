@@ -66,7 +66,12 @@ type PreviewRow = {
   descricao_reduzida: string;
   entrega_apos_atual: string | null;
   cancelado: boolean;
+  /** Código do item que originou a linha (o tecido pesquisado ou um kit vinculado). */
+  origem_codigo?: string;
+  /** Verdadeiro quando a linha veio de um kit com forro vinculado ao tecido. */
+  origem_kit?: boolean;
 };
+
 
 type ExecResult = {
   status: 'ok' | 'erro' | 'ignorada';
@@ -183,10 +188,10 @@ function EntregaAposCard() {
    * usuário pode digitar TE123456, TE.123.456 ou te-123-456 e a planilha
    * importada pode ter gravado qualquer uma dessas formas.
    */
-  const carregarKits = async (codigo: string) => {
+  const carregarKits = async (codigo: string): Promise<KitVinculado[]> => {
     const raw = (v: string | null | undefined) => (v ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '');
     const alvo = raw(codigo);
-    if (!alvo) { setKitsVinculados([]); return; }
+    if (!alvo) { setKitsVinculados([]); return []; }
     try {
       const { data, error } = await supabase
         .from('tecido_kit_vinculos')
@@ -208,13 +213,21 @@ function EntregaAposCard() {
           });
         }
       }
-      setKitsVinculados([...encontrados.values()]);
+      const lista = [...encontrados.values()];
+      setKitsVinculados(lista);
+      return lista;
     } catch {
       setKitsVinculados([]);
+      return [];
     }
   };
 
 
+  /**
+   * Busca unificada: consulta os acabamentos do item pesquisado e, quando ele é
+   * um tecido que possui kits com forro vinculados, agrega também os
+   * acabamentos desses kits — como se o usuário tivesse pesquisado cada kit.
+   */
   const runPreview = async () => {
     if (!codigoNormalizado) {
       toast.error('Informe um código de item.');
@@ -230,16 +243,41 @@ function EntregaAposCard() {
         setPreviewCodigo(null);
         return;
       }
-      setPreviewRows(resp.rows ?? []);
+
+      const base: PreviewRow[] = (resp.rows ?? []).map((r: PreviewRow) => ({
+        ...r,
+        origem_codigo: codigoNormalizado,
+        origem_kit: false,
+      }));
+
+      const kits = await carregarKits(codigoNormalizado);
+      const linhasKits: PreviewRow[] = [];
+      for (const kit of kits) {
+        try {
+          const rk = await callAugeEntregaApos({ codigo_item: kit.kit_codigo, acao: 'preview' });
+          if (!rk?.ok) continue;
+          for (const r of (rk.rows ?? []) as PreviewRow[]) {
+            linhasKits.push({ ...r, origem_codigo: kit.kit_codigo, origem_kit: true });
+          }
+        } catch {
+          // Um kit indisponível não deve invalidar a consulta do tecido.
+        }
+      }
+
+      const todas = [...base, ...linhasKits];
+      setPreviewRows(todas);
       setPreviewCodigo(codigoNormalizado);
-      await carregarKits(codigoNormalizado);
-      if ((resp.rows ?? []).length === 0) toast.info('Nenhum acabamento vinculado a este item.');
+      if (todas.length === 0) toast.info('Nenhum acabamento vinculado a este item.');
+      else if (linhasKits.length > 0) {
+        toast.success(`${base.length} acabamento(s) do item + ${linhasKits.length} de ${kits.length} kit(s) com forro.`);
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Erro inesperado.');
     } finally {
       setPreviewLoading(false);
     }
   };
+
 
 
   const runExecute = async () => {
@@ -369,15 +407,21 @@ function EntregaAposCard() {
         {previewLoading && <Skeleton className="h-40 w-full" />}
         {!previewLoading && previewRows && (
           <div className="rounded-md border">
-            <div className="flex items-center justify-between border-b bg-muted/30 px-3 py-2 text-xs">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b bg-muted/30 px-3 py-2 text-xs">
               <span className="font-medium">
                 Item <span className="font-mono">{previewCodigo}</span> — {previewRows.length} acabamento(s)
               </span>
+              {previewRows.some((r) => r.origem_kit) && (
+                <span className="text-muted-foreground">
+                  Inclui {previewRows.filter((r) => r.origem_kit).length} acabamento(s) de kits com forro
+                </span>
+              )}
             </div>
             <div className="max-h-[420px] overflow-auto">
               <table className="w-full text-xs">
                 <thead className="bg-card text-muted-foreground sticky top-0 z-10 shadow-[0_1px_0_0_hsl(var(--border))]">
                   <tr>
+                    <th className="px-3 py-2 text-left font-medium bg-card">Item</th>
                     <th className="px-3 py-2 text-left font-medium bg-card">Chave</th>
                     <th className="px-3 py-2 text-left font-medium bg-card">Acabamento</th>
                     <th className="px-3 py-2 text-left font-medium bg-card">Descrição atual</th>
@@ -392,11 +436,19 @@ function EntregaAposCard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {previewRows.map((r) => {
+                  {previewRows.map((r, i) => {
                     const novaDesc = mostraPreview ? previewDescricao(r.descricao_atual, acao, dataNormalizada) : '';
                     const novaRed = mostraPreview ? previewReduzida(r.descricao_reduzida, acao, dataNormalizada) : '';
                     return (
-                      <tr key={r.cd_acabamento_item} className={r.cancelado ? 'opacity-50' : ''}>
+                      <tr key={`${r.origem_codigo ?? ''}-${r.cd_acabamento_item}-${i}`} className={r.cancelado ? 'opacity-50' : ''}>
+                        <td className="px-3 py-2">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-mono">{r.origem_codigo ?? previewCodigo}</span>
+                            {r.origem_kit && (
+                              <Badge variant="outline" className="px-1.5 py-0 text-[10px]">kit</Badge>
+                            )}
+                          </div>
+                        </td>
                         <td className="px-3 py-2 font-mono">{r.chave_acabamento}</td>
                         <td className="px-3 py-2">{r.nm_acabamento}</td>
                         <td className="px-3 py-2">{r.descricao_atual}</td>
@@ -419,7 +471,8 @@ function EntregaAposCard() {
                     );
                   })}
                   {previewRows.length === 0 && (
-                    <tr><td colSpan={mostraPreview ? 7 : 5} className="px-3 py-6 text-center text-muted-foreground">Sem acabamentos vinculados.</td></tr>
+                    <tr><td colSpan={mostraPreview ? 8 : 6} className="px-3 py-6 text-center text-muted-foreground">Sem acabamentos vinculados.</td></tr>
+
                   )}
                 </tbody>
               </table>
