@@ -12,7 +12,7 @@ import {
   FileDown,
   Tag,
   ShieldCheck,
-  Users,
+
 
 } from 'lucide-react';
 import ModuleSidebar, { type ModuleSidebarConfig } from '@/components/ModuleSidebar';
