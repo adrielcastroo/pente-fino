@@ -185,10 +185,12 @@ export default function KitsForroCard() {
               className="h-10 pl-8"
             />
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            <ImportKitsVinculosDialog onImported={() => void recarregar()} />
             <Button variant="outline" onClick={() => void recarregar()} disabled={loading} className="h-10 gap-2">
               <RefreshCw className={loading ? 'h-4 w-4 animate-spin' : 'h-4 w-4'} /> Recarregar
             </Button>
+
             <Button onClick={() => void aplicarSugestoesAutomaticas()} disabled={loading || salvando === '__lote__'} className="h-10 gap-2">
               {salvando === '__lote__' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />}
               Sugerir vínculos
