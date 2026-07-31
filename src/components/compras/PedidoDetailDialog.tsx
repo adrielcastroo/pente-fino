@@ -3,15 +3,22 @@ import { Check, Loader2, Paperclip, Send, Trash2, Download, User2 } from 'lucide
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
+import {
+  KANBAN_COLUNAS,
   useAddComentario, useAnexos, useComentarios, useDeleteAnexo, useDeleteComentario,
   useProfilesMap, useUploadAnexo, useUpdatePedido, baixarAnexo,
   type ComprasPedidoCard,
 } from '@/hooks/compras/useComprasKanban';
+import type { ComprasPedidoStatus } from '@/hooks/compras/useComprasPedidos';
+
 
 interface PedidoDetailDialogProps {
   pedido: ComprasPedidoCard | null;
@@ -38,6 +45,10 @@ export function PedidoDetailDialog({ pedido, open, onOpenChange }: PedidoDetailD
 
   const [titulo, setTitulo] = useState('');
   const [descricao, setDescricao] = useState('');
+  const [fornecedor, setFornecedor] = useState('');
+  const [numero, setNumero] = useState('');
+  const [previsao, setPrevisao] = useState('');
+  const [status, setStatus] = useState<ComprasPedidoStatus>('pendente');
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const [novoComentario, setNovoComentario] = useState('');
@@ -64,6 +75,10 @@ export function PedidoDetailDialog({ pedido, open, onOpenChange }: PedidoDetailD
     dirtyRef.current = false;
     setTitulo(pedido.titulo ?? '');
     setDescricao(pedido.descricao ?? '');
+    setFornecedor(pedido.fornecedor ?? '');
+    setNumero(pedido.numero ?? '');
+    setPrevisao(pedido.previsao ? String(pedido.previsao).slice(0, 10) : '');
+    setStatus(pedido.status);
     setSavedAt(null);
   }, [pedido?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -73,7 +88,17 @@ export function PedidoDetailDialog({ pedido, open, onOpenChange }: PedidoDetailD
     const t = setTimeout(async () => {
       setSaving(true);
       try {
-        await updatePedido.mutateAsync({ id: pedidoId, patch: { titulo: titulo || null, descricao: descricao || null } });
+        await updatePedido.mutateAsync({
+          id: pedidoId,
+          patch: {
+            titulo: titulo || null,
+            descricao: descricao || null,
+            fornecedor: fornecedor.trim() || '—',
+            numero: numero.trim() || pedido?.numero || '',
+            previsao: previsao || null,
+            status,
+          },
+        });
         setSavedAt(Date.now());
       } catch (err) {
         toast.error(`Não foi possível salvar: ${(err as Error).message}`);
@@ -82,7 +107,8 @@ export function PedidoDetailDialog({ pedido, open, onOpenChange }: PedidoDetailD
       }
     }, 700);
     return () => clearTimeout(t);
-  }, [titulo, descricao, pedidoId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [titulo, descricao, fornecedor, numero, previsao, status, pedidoId]); // eslint-disable-line react-hooks/exhaustive-deps
+
 
   async function handleUpload(files: FileList | null) {
     if (!files?.length) return;
@@ -147,6 +173,50 @@ export function PedidoDetailDialog({ pedido, open, onOpenChange }: PedidoDetailD
               onChange={(e) => { dirtyRef.current = true; setTitulo(e.target.value); }}
             />
           </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="pedido-fornecedor" className="text-xs font-medium text-muted-foreground">Fornecedor</Label>
+              <Input
+                id="pedido-fornecedor"
+                value={fornecedor}
+                placeholder="Opcional"
+                onChange={(e) => { dirtyRef.current = true; setFornecedor(e.target.value); }}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="pedido-numero" className="text-xs font-medium text-muted-foreground">Número</Label>
+              <Input
+                id="pedido-numero"
+                value={numero}
+                onChange={(e) => { dirtyRef.current = true; setNumero(e.target.value); }}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="pedido-previsao" className="text-xs font-medium text-muted-foreground">Previsão</Label>
+              <Input
+                id="pedido-previsao"
+                type="date"
+                value={previsao}
+                onChange={(e) => { dirtyRef.current = true; setPrevisao(e.target.value); }}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="pedido-status" className="text-xs font-medium text-muted-foreground">Coluna</Label>
+              <Select
+                value={status}
+                onValueChange={(v) => { dirtyRef.current = true; setStatus(v as ComprasPedidoStatus); }}
+              >
+                <SelectTrigger id="pedido-status"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {KANBAN_COLUNAS.map((c) => (
+                    <SelectItem key={c.status} value={c.status}>{c.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
           <div className="space-y-1.5">
             <label htmlFor="pedido-desc" className="text-xs font-medium text-muted-foreground">Descrição detalhada</label>
             <Textarea
