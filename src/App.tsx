@@ -46,11 +46,7 @@ const ExpedicaoDoubleCheckPage = lazy(() => import("@/pages/expedicao/DoubleChec
 const EtiquetasPage = ExpedicaoEtiquetasPage; // alias compartilhado entre módulos
 const ComprasLayout = lazy(() => import("@/components/compras/ComprasLayout"));
 const ComprasAcompanhamentosPage = lazy(() => import("@/pages/compras/AcompanhamentosPage"));
-const ComprasStarcolorPage = lazy(() => import("@/pages/compras/StarcolorPage"));
-const ComprasRomaneiosStarcolorPage = lazy(() => import("@/pages/compras/RomaneiosStarcolorPage"));
-const ComprasRomaneioStarcolorEditorPage = lazy(() => import("@/pages/compras/RomaneioStarcolorEditorPage"));
 const ComprasAnaliseCompraPage = lazy(() => import("@/pages/compras/AnaliseCompraPage"));
-const ComprasSaldoBaixoHistoricoPage = lazy(() => import("@/pages/compras/SaldoBaixoHistoricoPage"));
 
 
 const EntradasPage = lazy(() => import("@/pages/EntradasPage"));
@@ -192,6 +188,7 @@ const App = () => (
                  
                   <Route path="/estoque/auge" element={<Navigate to="/estoque/cadastros" replace />} />
                   <Route path="/estoque/transferencias" element={<TransferenciasPage />} />
+                  <Route path="/estoque/equipes" element={<RequireRole role="supervisor" fallback={<Navigate to="/estoque/operacao" replace />}><EquipesPage /></RequireRole>} />
                   <Route path="/transferencias" element={<Navigate to="/estoque/transferencias" replace />} />
                   <Route path="/estoque/etiquetas" element={<Navigate to="/expedicao/etiquetas" replace />} />
 
@@ -252,6 +249,7 @@ const App = () => (
                   <Route path="carrinhos" element={<ExpedicaoCarrinhosPage />} />
                   <Route path="historico" element={<ExpedicaoHistoricoPage />} />
                   <Route path="relatorios" element={<ExpedicaoRelatoriosPage />} />
+                  <Route path="equipes" element={<RequireRole role="supervisor" fallback={<Navigate to="/expedicao/operacao" replace />}><EquipesPage /></RequireRole>} />
                   <Route path="configuracoes" element={<SettingsPage />} />
                   <Route path="etiquetas" element={<ExpedicaoEtiquetasPage />} />
                   <Route path="etiquetas/nova" element={<Navigate to="/expedicao/etiquetas" replace />} />
@@ -276,12 +274,12 @@ const App = () => (
                   <Route index element={<Navigate to="/compras/acompanhamentos" replace />} />
                   <Route path="acompanhamentos" element={<ComprasAcompanhamentosPage />} />
 
-                  <Route path="acompanhamentos/starcolor" element={<ComprasStarcolorPage />} />
-                  <Route path="acompanhamentos/starcolor/romaneios" element={<ComprasRomaneiosStarcolorPage />} />
-                  <Route path="acompanhamentos/starcolor/romaneios/novo" element={<ComprasRomaneioStarcolorEditorPage />} />
-                  <Route path="acompanhamentos/starcolor/romaneios/:id" element={<ComprasRomaneioStarcolorEditorPage />} />
                   <Route path="analise-compra" element={<ComprasAnaliseCompraPage />} />
-                  <Route path="analise-compra/historico" element={<ComprasSaldoBaixoHistoricoPage />} />
+                  <Route path="equipes" element={<RequireRole role="supervisor" fallback={<Navigate to="/compras/acompanhamentos" replace />}><EquipesPage /></RequireRole>} />
+
+                  {/* Redirects legados — Starcolor removido, histórico virou aba */}
+                  <Route path="acompanhamentos/starcolor/*" element={<Navigate to="/compras/acompanhamentos" replace />} />
+                  <Route path="analise-compra/historico" element={<Navigate to="/compras/analise-compra" replace />} />
 
                   <Route path="configuracoes" element={<SettingsPage />} />
 

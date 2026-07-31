@@ -40,7 +40,7 @@ const registry: Record<string, Loader> = {
   '/expedicao/double-check': () => import('@/pages/expedicao/DoubleCheckPage'),
   // Compras
   '/compras/acompanhamentos': () => import('@/pages/compras/AcompanhamentosPage'),
-  '/compras/acompanhamentos/starcolor': () => import('@/pages/compras/StarcolorPage'),
+  '/compras/analise-compra': () => import('@/pages/compras/AnaliseCompraPage'),
   // Admin
   '/admin': () => import('@/pages/admin/AdminPanelPage'),
 };
