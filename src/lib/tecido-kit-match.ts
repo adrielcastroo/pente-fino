@@ -53,7 +53,7 @@ export function tokenizar(valor: string): string[] {
     .filter((t) => !/^\d{1,2}$/.test(t))
     // códigos internos que aparecem no meio da descrição
     .filter((t) => !/^\d{4,}$/.test(t))
-    .filter((t) => t.length > 1 || /^\d$/.test(t) === false);
+    .filter((t) => t.length > 1);
 }
 
 /** Separa o nome do kit em "núcleo do tecido" e "forro". */
