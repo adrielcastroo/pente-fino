@@ -1284,13 +1284,26 @@ export default function EstoquePage() {
                     </div>
                   </div>
 
+                  {/* Analytics de tecidos — top ocupação e giro */}
+                  {selectedStat === 'ocupado' && (
+                    <TopTecidosBlocks posicoes={allPosicoes as any} describeItem={describeItem} />
+                  )}
+
                   {/* Detailed Summary Cards */}
                   <div>
                     <h4 className="text-xs font-semibold text-foreground mb-2">Resumo por estrutura</h4>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       {tecBreakdown.map((t) => (
-                        <div key={t.tec} className="bg-card border border-border rounded-md p-3 hover:border-primary/40 transition-colors">
-                          <div className="text-[10px] font-medium text-muted-foreground mb-1">{t.tec}</div>
+                        <button
+                          key={t.tec}
+                          type="button"
+                          onClick={() => setDrillTec(t.tec)}
+                          className="text-left bg-card border border-border rounded-md p-3 hover:border-primary/40 hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] font-medium text-muted-foreground">{t.tec}</span>
+                            <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                          </div>
                           <div className="text-xl font-semibold text-foreground tabular-nums leading-none mb-2">{t.value.toLocaleString('pt-BR')}</div>
                           <div className="flex items-center gap-2">
                             <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden">
@@ -1298,7 +1311,7 @@ export default function EstoquePage() {
                             </div>
                             <div className="text-[10px] font-medium text-muted-foreground tabular-nums">{t.percent}%</div>
                           </div>
-                        </div>
+                        </button>
                       ))}
                     </div>
                   </div>
@@ -1306,8 +1319,77 @@ export default function EstoquePage() {
               </>
             );
           })()}
+
+          {/* ===== DRILL-DOWN: itens da estrutura selecionada ===== */}
+          {drillTec && (() => {
+            const itens = (allPosicoes as any[])
+              .filter(p => p.estrutura === drillTec && p.status !== 'saida' && (p.item || '').trim())
+              .sort((a, b) => `${a.coluna}${a.nivel}`.localeCompare(`${b.coluna}${b.nivel}`));
+            return (
+              <div className="absolute inset-0 z-20 bg-card flex flex-col">
+                <div className="px-5 sm:px-6 py-4 border-b border-border flex items-center gap-3 pr-10">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 shrink-0"
+                    onClick={() => setDrillTec(null)}
+                    aria-label="Voltar"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                  </Button>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-base font-semibold tracking-tight leading-tight">Estrutura {drillTec}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
+                      <span className="tabular-nums font-medium text-foreground">{itens.length}</span> tecidos posicionados
+                    </div>
+                  </div>
+                </div>
+                <div className="flex-1 overflow-y-auto bg-background/40">
+                  {itens.length === 0 ? (
+                    <div className="py-16 text-center text-xs text-muted-foreground">Nenhum tecido nesta estrutura.</div>
+                  ) : (
+                    <table className="w-full text-xs">
+                      <thead className="sticky top-0 bg-card border-b border-border">
+                        <tr className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                          <th className="text-left font-semibold px-4 py-2">Tecido</th>
+                          <th className="text-left font-semibold px-4 py-2">Lote</th>
+                          <th className="text-left font-semibold px-4 py-2 hidden sm:table-cell">Endereço</th>
+                          <th className="text-right font-semibold px-4 py-2">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {itens.map((p) => {
+                          const stCfg = STATUS_CONFIG[p.status];
+                          return (
+                            <tr key={p.id} className="border-b border-border/50 hover:bg-muted/30">
+                              <td className="px-4 py-2 max-w-[240px]">
+                                <div className="font-medium text-foreground truncate">{describeItem(p.item) || p.item}</div>
+                                {describeItem(p.item) !== p.item && (
+                                  <div className="font-mono text-[10px] text-muted-foreground truncate">{p.item}</div>
+                                )}
+                              </td>
+                              <td className="px-4 py-2 font-mono text-[11px] text-muted-foreground">{p.lote || p.lote_sistema || '—'}</td>
+                              <td className="px-4 py-2 font-mono text-[11px] text-muted-foreground hidden sm:table-cell">
+                                {p.endereco || `${p.estrutura}.${p.coluna}.N${String(p.nivel).padStart(2, '0')}`}
+                              </td>
+                              <td className="px-4 py-2 text-right">
+                                <Badge variant="outline" className={cn('text-[9px] uppercase tracking-wider', stCfg?.color)}>
+                                  {stCfg?.label || p.status}
+                                </Badge>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
         </DialogContent>
       </Dialog>
+
 
 
       {/* Confirmação Dar Saída */}
