@@ -179,6 +179,18 @@ export default function CadastrosPage() {
     [itens],
   );
 
+  /** Cinco edições mais recentes — alimenta o bloco de auditoria do topo. */
+  const ultimasEdicoes = useMemo(
+    () =>
+      itens
+        .filter((i) => !!i.last_edited_at)
+        .sort((a, b) => new Date(b.last_edited_at!).getTime() - new Date(a.last_edited_at!).getTime())
+        .slice(0, 5),
+    [itens],
+  );
+
+
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     let out = itens;
