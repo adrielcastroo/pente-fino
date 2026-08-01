@@ -668,29 +668,6 @@ export default function CadastrosPage() {
                           <TableCell className="text-xs text-muted-foreground">
                             {new Date(item.updated_at).toLocaleDateString('pt-BR')}
                           </TableCell>
-                          <TableCell className="text-center">
-                            {wasEdited ? (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Badge variant="outline" className="gap-1 border-amber-500/30 bg-amber-500/5 text-warning dark:text-warning font-medium text-[10px] cursor-help">
-                                    <History className="w-3 h-3" />
-                                    editado
-                                  </Badge>
-                                </TooltipTrigger>
-                                <TooltipContent side="top" className="max-w-xs text-xs">
-                                  <div className="font-semibold">{item.updated_by_name || 'Usuário'}</div>
-                                  <div className="text-muted-foreground">
-                                    alterou <span className="font-medium text-foreground">{fieldLabel(lf) || '—'}</span>
-                                  </div>
-                                  <div className="text-muted-foreground mt-1">
-                                    {item.last_edited_at ? new Date(item.last_edited_at).toLocaleString('pt-BR') : ''}
-                                  </div>
-                                </TooltipContent>
-                              </Tooltip>
-                            ) : (
-                              <span className="text-muted-foreground/40 text-[10px]">—</span>
-                            )}
-                          </TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-1">
                               <Button size="icon" variant="ghost" className="h-10 w-10 lg:h-9 lg:w-9" onClick={() => handleEdit(item)} aria-label="Editar item">
