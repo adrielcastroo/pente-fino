@@ -159,6 +159,11 @@ export default function N8nMonitorPage() {
         <Button size="sm" onClick={saveConfig}>Salvar e testar</Button>
       </Card>
 
+      {/* Testador de etiquetas */}
+      <N8nEtiquetaTester defaultUrl={webhookOverride} />
+
+
+
       {/* Status + Health */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <StatusCard
