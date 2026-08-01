@@ -1015,11 +1015,15 @@ function SilentPrintPanel() {
     try {
       if (v) localStorage.setItem(SILENT_PRINT_KEY, 'true');
       else localStorage.removeItem(SILENT_PRINT_KEY);
+      const webhookUrl = localStorage.getItem('n8n_webhook_url');
+      saveGlobalSetting(GLOBAL_PRINT_CONFIG_KEY, { webhookUrl: webhookUrl || null, silentPrint: v })
+        .catch((e) => console.warn('[global-settings] impressão silenciosa', e));
       toast.success(v
         ? 'Impressão silenciosa habilitada — requer Chrome/Edge em modo kiosk-printing'
         : 'Impressão silenciosa desabilitada');
     } catch { /* noop */ }
   };
+
 
   const copyToClipboard = async (text: string, id: string) => {
     try {
