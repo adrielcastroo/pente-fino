@@ -121,10 +121,10 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
           </div>
           {!isIconCollapsed && (
           <div className="flex min-w-0 flex-col overflow-hidden">
-            <span className="text-sm font-bold leading-tight tracking-tight text-foreground truncate">
+            <span className="text-sm font-bold leading-tight tracking-tight text-sidebar-accent-foreground truncate">
               Pente Fino
             </span>
-            <span className="text-[9px] font-semibold uppercase tracking-[0.15em] text-muted-foreground truncate">
+            <span className="text-[9px] font-semibold uppercase tracking-[0.15em] text-sidebar-foreground/70 truncate">
               {config.moduleLabel}
             </span>
           </div>
@@ -138,7 +138,7 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
             {!isIconCollapsed && (
               <div
                 data-sidebar="module-group-label"
-                className="flex h-8 shrink-0 items-center px-2 text-[9px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/60"
+                className="flex h-8 shrink-0 items-center px-2 text-[9px] font-semibold uppercase tracking-[0.2em] text-sidebar-foreground/50"
               >
                 {group.label}
               </div>
@@ -166,7 +166,7 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
                           isIconCollapsed && '!size-10 !p-0 justify-center',
                           isActive
                             ? 'font-bold text-primary'
-                            : 'font-medium text-muted-foreground hover:bg-muted/50 hover:text-foreground',
+                            : 'font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
                         )}
                       >
                         {isActive && !isIconCollapsed && (
@@ -230,7 +230,7 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
                   isIconCollapsed && '!size-10 !p-0 justify-center',
                   teamsActive
                     ? 'font-bold text-primary'
-                    : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
+                    : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
                 )}
               >
                 {teamsActive && !isIconCollapsed && (
@@ -260,7 +260,7 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
                 isIconCollapsed && '!size-10 !p-0 justify-center',
                 settingsActive
                   ? 'font-bold text-primary'
-                  : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
+                  : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
               )}
             >
               {settingsActive && !isIconCollapsed && (
@@ -285,7 +285,7 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
                 tooltip="Trocar módulo"
                 aria-label="Trocar módulo"
                 className={cn(
-                  'h-10 rounded-md text-muted-foreground transition-colors duration-150 hover:bg-muted/50 hover:text-foreground',
+                  'h-10 rounded-md text-sidebar-foreground transition-colors duration-150 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
                   isIconCollapsed && '!size-10 !p-0 justify-center',
                 )}
               >
@@ -308,7 +308,7 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
               tooltip="Sair"
               aria-label="Sair da conta"
               className={cn(
-                'h-10 rounded-md text-muted-foreground transition-colors duration-150 hover:bg-destructive/10 hover:text-destructive',
+                'h-10 rounded-md text-sidebar-foreground transition-colors duration-150 hover:bg-destructive/10 hover:text-destructive',
                 isIconCollapsed && '!size-10 !p-0 justify-center',
               )}
             >
