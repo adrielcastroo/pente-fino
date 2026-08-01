@@ -114,10 +114,42 @@ export default function ReleasesPage() {
           <DialogContent>
             <DialogHeader><DialogTitle>Registrar nova release</DialogTitle></DialogHeader>
             <div className="space-y-3">
+              <div className="space-y-2">
+                <label className="text-xs font-semibold uppercase text-muted-foreground">
+                  Tamanho da atualização
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {(['patch', 'minor', 'major'] as const).map((b) => {
+                    const base = releases?.[0]?.version ?? form.version ?? '0.0.0';
+                    const next = applyBump(base, b);
+                    return (
+                      <Button
+                        key={b}
+                        type="button"
+                        size="sm"
+                        variant={form.version === next ? 'default' : 'outline'}
+                        className="flex-col h-auto py-2 gap-0.5"
+                        onClick={() => setForm({ ...form, version: next })}
+                        title={BUMP_META[b].description}
+                      >
+                        <span className="text-[10px] uppercase tracking-wider font-bold">{BUMP_META[b].label}</span>
+                        <span className="font-mono text-xs">v{next}</span>
+                      </Button>
+                    );
+                  })}
+                </div>
+                <p className="text-[10px] text-muted-foreground">
+                  Patch = correção · Minor = nova funcionalidade · Major = mudança ampla.
+                </p>
+              </div>
               <div>
                 <label className="text-xs font-semibold uppercase text-muted-foreground">Versão</label>
                 <Input value={form.version} onChange={(e) => setForm({ ...form, version: e.target.value })} placeholder="3.18.0" />
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  Codinome: <strong className="text-primary">{codenameFor(form.version)}</strong>
+                </p>
               </div>
+
               <div>
                 <label className="text-xs font-semibold uppercase text-muted-foreground">Notas</label>
                 <Textarea rows={5} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="- Correção X&#10;- Nova funcionalidade Y" />
