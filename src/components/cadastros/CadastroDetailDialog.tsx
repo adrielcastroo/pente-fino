@@ -1,13 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Package, Calendar, User, Pencil, ExternalLink, Ruler, Boxes, Tag } from 'lucide-react';
+import { Package, Calendar, User, Pencil, Ruler, Boxes, Tag, History } from 'lucide-react';
 import { formatDateBR } from '@/lib/app-utils';
 import type { ItemCadastro } from '@/services/itensCadastroService';
-import { useNavigate } from 'react-router-dom';
+import { ErpDialogHeader, ErpSection, ErpMeta, ErpItemHeadline } from '@/components/erp/ErpDialog';
 
 interface Props {
   item: ItemCadastro | null;
@@ -17,8 +16,6 @@ interface Props {
 }
 
 export default function CadastroDetailDialog({ item, open, onOpenChange, onEdit }: Props) {
-  const navigate = useNavigate();
-
   const { data: augeInfo } = useQuery({
     queryKey: ['cadastro-auge', item?.codigo_interno],
     enabled: open && !!item?.codigo_interno,
@@ -51,153 +48,106 @@ export default function CadastroDetailDialog({ item, open, onOpenChange, onEdit 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
-          <div className="flex items-center gap-2">
-            <Package className="w-4 h-4 text-primary" />
-            <DialogTitle>Detalhes do Item</DialogTitle>
-          </div>
-        </DialogHeader>
+      <DialogContent className="max-w-xl max-h-[85vh] overflow-y-auto">
+        <ErpDialogHeader
+          icon={Package}
+          title="Cadastro do item"
+          docs={[
+            { label: 'Código interno', value: item.codigo_interno, tone: 'primary' },
+            { label: 'Posições', value: String(posicoes) },
+          ]}
+        />
 
-        <div className="space-y-4">
-          {/* Header do item */}
-          <Card className="p-4 bg-muted/30 border-border">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Código interno</p>
-            <p className="font-mono font-semibold text-base text-foreground mt-0.5 break-all">
-              {item.codigo_interno}
-            </p>
-            <p className="text-sm text-foreground/90 mt-2 leading-snug">{item.descricao}</p>
-          </Card>
+        <div className="space-y-4 pt-3">
+          {/* Item em destaque */}
+          <ErpSection label="Item">
+            <ErpItemHeadline descricao={item.descricao} codigo={item.codigo_interno} />
+            <div className="grid grid-cols-3 gap-3 mt-3 pt-3 border-t border-border/60">
+              <ErpMeta icon={Ruler} label="Unidade" value={item.unidade || '—'} />
+              <ErpMeta
+                icon={Boxes}
+                label="Pacote fornecedor"
+                value={item.pacote_fornecedor != null ? String(item.pacote_fornecedor) : '—'}
+              />
+              <ErpMeta
+                icon={Boxes}
+                label="Pacote estocagem"
+                value={item.pacote_estocagem != null ? String(item.pacote_estocagem) : '—'}
+              />
+            </div>
+          </ErpSection>
 
           {/* Códigos de fornecedor */}
-          <div>
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-2 flex items-center gap-1.5">
-              <Tag className="w-3 h-3" /> Códigos de fornecedor
-            </p>
-            <Card className="p-3 border-border">
-              {codigos.length === 0 ? (
-                <p className="text-xs text-muted-foreground italic">— nenhum código cadastrado —</p>
-              ) : (
-                <div className="flex flex-wrap gap-1.5">
-                  {codigos.map((c, i) => (
-                    <Badge key={`${c}-${i}`} variant="outline" className="font-mono text-[11px]">
-                      {c}
-                    </Badge>
-                  ))}
-                </div>
-              )}
-            </Card>
-          </div>
+          <ErpSection label="Códigos de fornecedor" icon={Tag}>
+            {codigos.length === 0 ? (
+              <p className="text-xs text-muted-foreground italic">— nenhum código cadastrado —</p>
+            ) : (
+              <div className="flex flex-wrap gap-1.5">
+                {codigos.map((c, i) => (
+                  <Badge key={`${c}-${i}`} variant="outline" className="font-mono text-[11px]">
+                    {c}
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </ErpSection>
 
-          {/* Grid de metadados */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <MetaItem icon={Ruler} label="Unidade" value={item.unidade || '—'} />
-            <MetaItem
-              icon={Boxes}
-              label="Pacote fornecedor"
-              value={item.pacote_fornecedor != null ? String(item.pacote_fornecedor) : '—'}
-            />
-            <MetaItem
-              icon={Boxes}
-              label="Pacote estocagem"
-              value={item.pacote_estocagem != null ? String(item.pacote_estocagem) : '—'}
-            />
-            <MetaItem
-              icon={Package}
-              label="Posições em estoque"
-              value={String(posicoes)}
-            />
-          </div>
-
-          {/* Auge */}
+          {/* Vínculo Auge */}
           {augeInfo && (
-            <div>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-2">
-                Vínculo com Auge
-              </p>
-              <Card className="p-3 border-border">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm text-foreground/90 leading-snug">{augeInfo.descricao}</p>
-                    <div className="flex items-center gap-2 mt-2 flex-wrap">
-                      {augeInfo.unidade && (
-                        <Badge variant="outline" className="text-[10px]">UN: {augeInfo.unidade}</Badge>
-                      )}
-                      {augeInfo.categoria && (
-                        <Badge variant="outline" className="text-[10px]">{augeInfo.categoria}</Badge>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            </div>
+            <ErpSection label="Vínculo com Auge">
+              <p className="text-sm text-foreground/90 leading-snug">{augeInfo.descricao}</p>
+              <div className="flex items-center gap-2 mt-2 flex-wrap">
+                {augeInfo.unidade && (
+                  <Badge variant="outline" className="text-[10px]">UN: {augeInfo.unidade}</Badge>
+                )}
+                {augeInfo.categoria && (
+                  <Badge variant="outline" className="text-[10px]">{augeInfo.categoria}</Badge>
+                )}
+              </div>
+            </ErpSection>
           )}
 
           {/* Auditoria */}
-          <div className="grid grid-cols-2 gap-3">
-            <MetaItem
-              icon={Calendar}
-              label="Criado em"
-              value={item.created_at ? formatDateBR(item.created_at) : '—'}
-            />
-            <MetaItem
-              icon={Calendar}
-              label="Atualizado em"
-              value={item.updated_at ? formatDateBR(item.updated_at) : '—'}
-            />
-            {item.updated_by_name && (
-              <MetaItem
+          <ErpSection label="Histórico" icon={History}>
+            <div className="grid grid-cols-2 gap-3">
+              <ErpMeta
+                icon={Calendar}
+                label="Criado em"
+                value={item.created_at ? formatDateBR(item.created_at) : '—'}
+              />
+              <ErpMeta
+                icon={Calendar}
+                label="Atualizado em"
+                value={item.updated_at ? formatDateBR(item.updated_at) : '—'}
+              />
+              <ErpMeta
                 icon={User}
                 label="Última edição por"
-                value={item.updated_by_name}
+                value={item.updated_by_name || '—'}
               />
-            )}
-            {item.last_edited_field && (
-              <MetaItem
+              <ErpMeta
                 icon={Pencil}
                 label="Último campo"
-                value={item.last_edited_field}
+                value={item.last_edited_field || '—'}
               />
-            )}
-          </div>
+            </div>
+          </ErpSection>
 
-          {/* Ações */}
-          <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-border">
-            {onEdit && (
+          {onEdit && (
+            <div className="flex justify-end pt-1 border-t border-border">
               <Button
                 variant="default"
-                className="gap-1.5"
+                size="sm"
+                className="gap-1.5 mt-3"
                 onClick={() => { onOpenChange(false); onEdit(item); }}
               >
                 <Pencil className="w-4 h-4" />
                 Editar cadastro
               </Button>
-            )}
-            <Button
-              variant="outline"
-              className="gap-1.5"
-              onClick={() => {
-                onOpenChange(false);
-                navigate(`/estoque/mapa?item=${encodeURIComponent(item.descricao)}`);
-              }}
-            >
-              <ExternalLink className="w-4 h-4" />
-              Ver posições no mapa
-            </Button>
-          </div>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
-  );
-}
-
-function MetaItem({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
-  return (
-    <div className="space-y-1">
-      <p className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-semibold flex items-center gap-1">
-        <Icon className="w-3 h-3" /> {label}
-      </p>
-      <p className="text-sm font-semibold text-foreground truncate" title={value}>{value}</p>
-    </div>
   );
 }

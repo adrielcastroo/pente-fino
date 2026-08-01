@@ -1,16 +1,17 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
   Package, User, Calendar, DollarSign, ClipboardList, FileText,
-  Archive, AlertTriangle, ExternalLink, PackagePlus, PackageMinus,
+  AlertTriangle, ExternalLink, PackagePlus, PackageMinus, ArrowRight,
 } from 'lucide-react';
 import { formatDateBR } from '@/lib/app-utils';
+import { formatQty } from '@/lib/utils';
 import FichaItemDialog from './FichaItemDialog';
+import { ErpDialogHeader, ErpItemHeadline, ErpMeta, ErpSection } from '@/components/erp/ErpDialog';
 
 export interface MovimentacaoRow {
   id: string;
@@ -39,13 +40,6 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
-
-const SITUACAO_STYLE: Record<string, string> = {
-  '10': 'bg-amber-500/10 text-warning border-amber-500/30',
-  '20': 'bg-emerald-500/10 text-success border-emerald-500/30',
-  '8':  'bg-red-500/10 text-destructive border-red-500/30',
-  '30': 'bg-slate-500/10 text-slate-400 border-slate-500/30',
-};
 
 const brl = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
@@ -83,152 +77,92 @@ export default function MovimentacaoDetailDialog({ movimentacao, tipo, open, onO
 
   const isEntrada = tipo === 'entrada';
   const Icon = isEntrada ? PackagePlus : PackageMinus;
-  const titulo = isEntrada ? 'Detalhes da Entrada' : 'Detalhes da Saída';
-  const docPrincipal = movimentacao.cd_transferencia || movimentacao.documento || '—';
+  const titulo = isEntrada ? 'Entrada' : 'Saída';
 
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <div className="flex items-center gap-2">
-              <Icon className={`w-4 h-4 ${isEntrada ? 'text-success' : 'text-primary'}`} />
-              <DialogTitle>{titulo}</DialogTitle>
-            </div>
-          </DialogHeader>
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-hidden flex flex-col gap-3">
+          <ErpDialogHeader
+            icon={Icon}
+            title={titulo}
+            docs={[
+              { label: 'Nº Documento', value: movimentacao.cd_transferencia || movimentacao.documento, tone: 'primary' },
+              {
+                label: 'Nº Efetivação',
+                value: movimentacao.situacao === '20' ? movimentacao.documento : null,
+                tone: 'success',
+                hideWhenEmpty: true,
+              },
+            ]}
+          />
 
-          <div className="space-y-4">
-            {/* Documento + Situação */}
-            <Card className="p-4 bg-muted/30 border-border">
-              <div className="flex items-start justify-between gap-3 flex-wrap">
-                <div className="min-w-0">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Documento</p>
-                  <p className="font-mono font-semibold text-base text-foreground mt-0.5 break-all">{docPrincipal}</p>
-                  {movimentacao.documento && movimentacao.documento !== docPrincipal && (
-                    <p className="text-xs text-muted-foreground mt-0.5 font-mono">Doc.: {movimentacao.documento}</p>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  {movimentacao.documento_tipo && (
-                    <Badge variant="outline" className="text-[10px] uppercase tracking-wider">
-                      {movimentacao.documento_tipo}
-                    </Badge>
-                  )}
-                  <Badge
-                    className={`text-[10px] uppercase tracking-wider border ${
-                      SITUACAO_STYLE[movimentacao.situacao ?? ''] ?? 'bg-muted text-muted-foreground border-border'
-                    }`}
-                  >
-                    {movimentacao.ds_situacao || movimentacao.situacao || '—'}
-                  </Badge>
-                </div>
-              </div>
-            </Card>
+          <div className="space-y-3 overflow-auto pr-1">
+            {/* 1 — Observação */}
+            <ErpSection label="Observação" icon={FileText}>
+              <p className="text-sm text-foreground/90 leading-snug whitespace-pre-wrap">
+                {movimentacao.observacao || <span className="text-muted-foreground/60">Sem observação</span>}
+              </p>
+            </ErpSection>
 
-            {/* Produto */}
-            {cod && (
-              <div>
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-2 flex items-center gap-1.5">
-                  <Package className="w-3 h-3" /> Produto
-                </p>
-                <Card className="p-3 border-border">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <p className="font-mono text-sm font-semibold text-foreground">{cod}</p>
-                      {produto?.descricao && (
-                        <p className="text-sm text-foreground/90 mt-1 leading-snug">{produto.descricao}</p>
-                      )}
-                      <div className="flex items-center gap-2 mt-2 flex-wrap">
-                        {produto?.unidade && (
-                          <Badge variant="outline" className="text-[10px]">UN: {produto.unidade}</Badge>
-                        )}
-                        {produto?.categoria && (
-                          <Badge variant="outline" className="text-[10px]">{produto.categoria}</Badge>
-                        )}
-                      </div>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="shrink-0 h-8 gap-1.5"
-                      onClick={() => setFichaCodigo(cod)}
-                    >
-                      <ExternalLink className="w-3.5 h-3.5" />
-                      Ficha
-                    </Button>
+            {/* 2 — Item (descrição em destaque, depósito, quantidade) */}
+            <ErpSection label="Item" icon={Package} contentClassName="p-3 space-y-3">
+              <ErpItemHeadline descricao={produto?.descricao} codigo={cod} />
+
+              <div className="flex items-center gap-3 rounded-md border border-border/60 bg-muted/30 px-3 py-2">
+                <div className="min-w-0 flex-1">
+                  <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">
+                    {isEntrada ? 'Depósito de destino' : 'Depósito de origem'}
                   </div>
-                </Card>
+                  <div className="font-mono text-sm font-bold text-primary leading-tight">
+                    {deposito?.codigo ?? movimentacao.deposito ?? '—'}
+                  </div>
+                  <div className="text-[11px] text-foreground/80 truncate">{deposito?.nome ?? '—'}</div>
+                </div>
+                <ArrowRight className={`h-4 w-4 shrink-0 ${isEntrada ? 'text-success' : 'text-primary'}`} />
+                <div className="text-right shrink-0">
+                  <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Tipo</div>
+                  <div className="text-xs font-semibold">{movimentacao.documento_tipo || titulo}</div>
+                </div>
               </div>
-            )}
 
-            {/* Depósito */}
-            {movimentacao.deposito && (
-              <div>
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-2 flex items-center gap-1.5">
-                  <Archive className="w-3 h-3" /> Depósito
-                </p>
-                <Card className="p-3 border-border">
-                  <p className="text-sm font-semibold text-foreground">
-                    {deposito ? `${deposito.codigo} — ${deposito.nome}` : movimentacao.deposito}
-                  </p>
-                  {deposito?.localizacao && (
-                    <p className="text-xs text-muted-foreground mt-0.5">{deposito.localizacao}</p>
-                  )}
-                </Card>
+              <div className="flex items-end justify-between gap-3">
+                <div>
+                  <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">
+                    Quantidade
+                  </div>
+                  <div className="font-bold text-2xl tabular-nums text-primary leading-tight">
+                    {formatQty(movimentacao.quantidade ?? 0)}
+                    {produto?.unidade && (
+                      <span className="text-xs font-medium text-muted-foreground ml-1">{produto.unidade}</span>
+                    )}
+                  </div>
+                </div>
+                {cod && (
+                  <Button variant="outline" size="sm" className="h-8 gap-2" onClick={() => setFichaCodigo(cod)}>
+                    <ExternalLink className="w-3.5 h-3.5" /> Ficha completa
+                  </Button>
+                )}
               </div>
-            )}
+            </ErpSection>
 
-            {/* Grid de metadados */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <MetaItem
-                icon={ClipboardList}
-                label="Quantidade"
-                value={String(movimentacao.quantidade ?? 0)}
-              />
-              <MetaItem
-                icon={DollarSign}
-                label="Valor"
-                value={movimentacao.valor ? brl(Number(movimentacao.valor)) : '—'}
-              />
-              <MetaItem
+            {/* 3 — Documento */}
+            <ErpSection label="Documento" icon={ClipboardList} contentClassName="p-3 grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <ErpMeta icon={ClipboardList} label="Situação" value={movimentacao.ds_situacao || movimentacao.situacao || '—'} />
+              <ErpMeta
                 icon={Calendar}
                 label={isEntrada ? 'Data' : 'Criado em'}
                 value={movimentacao.data_movimento ? formatDateBR(movimentacao.data_movimento) : '—'}
               />
-              <MetaItem
-                icon={User}
-                label="Usuário"
-                value={movimentacao.usuario_criacao || '—'}
-              />
-              {!isEntrada && movimentacao.dt_efetivacao && (
-                <MetaItem
-                  icon={Calendar}
-                  label="Efetivada em"
-                  value={formatDateBR(movimentacao.dt_efetivacao)}
-                />
+              <ErpMeta icon={DollarSign} label="Valor" value={movimentacao.valor ? brl(Number(movimentacao.valor)) : '—'} />
+              <ErpMeta icon={User} label="Usuário" value={movimentacao.usuario_criacao || '—'} />
+              {movimentacao.dt_efetivacao && (
+                <ErpMeta icon={Calendar} label="Efetivada em" value={formatDateBR(movimentacao.dt_efetivacao)} />
               )}
-              {!isEntrada && movimentacao.usuario_efetivacao && (
-                <MetaItem
-                  icon={User}
-                  label="Usuário efetivação"
-                  value={movimentacao.usuario_efetivacao}
-                />
+              {movimentacao.usuario_efetivacao && (
+                <ErpMeta icon={User} label="Usuário efetivação" value={movimentacao.usuario_efetivacao} />
               )}
-            </div>
-
-            {/* Observação */}
-            {movimentacao.observacao && (
-              <div>
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-2 flex items-center gap-1.5">
-                  <FileText className="w-3 h-3" /> Observação
-                </p>
-                <Card className="p-3 border-border">
-                  <p className="text-sm text-foreground/90 leading-snug whitespace-pre-wrap">
-                    {movimentacao.observacao}
-                  </p>
-                </Card>
-              </div>
-            )}
+            </ErpSection>
 
             {/* Erro / mensagem efetivação */}
             {movimentacao.ds_efetivacao && (
@@ -236,20 +170,17 @@ export default function MovimentacaoDetailDialog({ movimentacao, tipo, open, onO
                 <div className="flex items-start gap-2">
                   <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-destructive" />
                   <div className="min-w-0">
-                    <p className="text-[10px] uppercase tracking-wider text-destructive font-semibold">
+                    <p className="text-[9px] uppercase tracking-wider text-destructive font-semibold">
                       Mensagem de efetivação
                     </p>
-                    <p className="text-sm text-destructive/90 mt-1 leading-snug">
-                      {movimentacao.ds_efetivacao}
-                    </p>
+                    <p className="text-sm text-destructive/90 mt-1 leading-snug">{movimentacao.ds_efetivacao}</p>
                   </div>
                 </div>
               </Card>
             )}
 
-            {/* Rodapé sync */}
             {movimentacao.synced_at && (
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 pt-2 border-t border-border">
+              <p className="text-[10px] text-muted-foreground/70 text-right">
                 Sincronizado em {formatDateBR(movimentacao.synced_at)}
                 {movimentacao.id_externo && <> · ID externo: <span className="font-mono">{movimentacao.id_externo}</span></>}
               </p>
@@ -260,16 +191,5 @@ export default function MovimentacaoDetailDialog({ movimentacao, tipo, open, onO
 
       <FichaItemDialog codigo={fichaCodigo} open={!!fichaCodigo} onOpenChange={(o) => !o && setFichaCodigo(null)} />
     </>
-  );
-}
-
-function MetaItem({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
-  return (
-    <div className="space-y-1">
-      <p className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-semibold flex items-center gap-1">
-        <Icon className="w-3 h-3" /> {label}
-      </p>
-      <p className="text-sm font-semibold text-foreground truncate" title={value}>{value}</p>
-    </div>
   );
 }

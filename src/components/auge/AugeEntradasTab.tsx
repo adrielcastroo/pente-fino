@@ -2,12 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, RefreshCw, Loader2, FileText, Clock, User, Archive, DollarSign, AlertTriangle, PackagePlus } from 'lucide-react';
+import { Search, FileText, Clock, User, DollarSign, AlertTriangle, PackagePlus } from 'lucide-react';
 import { formatDateBR } from '@/lib/app-utils';
+import FiltroColapsado from '@/components/erp/FiltroColapsado';
+import Paginacao from '@/components/erp/Paginacao';
 import MovimentacaoDetailDialog, { type MovimentacaoRow } from './MovimentacaoDetailDialog';
+
 
 interface AugeEntrada {
   id: string;
@@ -38,12 +39,14 @@ const SITUACAO_STYLE: Record<string, string> = {
 export default function AugeEntradasTab() {
   const [rows, setRows] = useState<AugeEntrada[]>([]);
   const [loading, setLoading] = useState(true);
-  const [syncing, setSyncing] = useState(false);
   const [search, setSearch] = useState('');
-  const [situacao, setSituacao] = useState<string>('todos');
-  const [pageSize, setPageSize] = useState(30);
+  const [situacao, setSituacao] = useState<string | null>(null);
+  const [usuario, setUsuario] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [lastSync, setLastSync] = useState<string | null>(null);
   const [detail, setDetail] = useState<MovimentacaoRow | null>(null);
+
 
   const load = async () => {
     setLoading(true);
@@ -64,34 +67,20 @@ export default function AugeEntradasTab() {
     }
   };
 
-  const sync = async () => {
-    setSyncing(true);
-    const t = toast.loading('Sincronizando entradas do Auge...');
-    try {
-      const { data, error } = await supabase.functions.invoke('auge-sync', {
-        body: {},
-        method: 'POST' as any,
-      });
-      if (error) throw error;
-      if (data?.ok === false) throw new Error(data.error || 'Falha na sincronização');
-      const ent = (data?.results ?? []).find((r: any) => r.entity === 'entradas');
-      if (ent?.error) throw new Error(ent.error);
-      toast.success(`${ent?.upserted ?? 0} entradas sincronizadas`, { id: t });
-      await load();
-    } catch (e: any) {
-      toast.error('Falha ao sincronizar: ' + (e.message || ''), { id: t });
-    } finally {
-      setSyncing(false);
-    }
-  };
-
   useEffect(() => { load(); }, []);
-  useEffect(() => { setPageSize(30); }, [search, situacao]);
+  useEffect(() => { setPage(1); }, [search, situacao, usuario, pageSize]);
+
+  const usuarios = useMemo(
+    () => Array.from(new Set(rows.map(r => r.usuario_criacao).filter(Boolean) as string[]))
+      .sort((a, b) => a.localeCompare(b, 'pt-BR')),
+    [rows],
+  );
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
     return rows.filter(r => {
-      if (situacao !== 'todos' && r.situacao !== situacao) return false;
+      if (situacao && r.situacao !== situacao) return false;
+      if (usuario && r.usuario_criacao !== usuario) return false;
       if (!q) return true;
       return (
         (r.documento || '').toLowerCase().includes(q) ||
@@ -102,9 +91,16 @@ export default function AugeEntradasTab() {
         (r.ds_situacao || '').toLowerCase().includes(q)
       );
     });
-  }, [rows, search, situacao]);
+  }, [rows, search, situacao, usuario]);
 
-  const visible = filtered.slice(0, pageSize);
+  // Renderiza apenas a página atual — as demais só montam ao navegar.
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const visible = useMemo(
+    () => filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+    [filtered, currentPage, pageSize],
+  );
+
 
   const stats = useMemo(() => {
     const total = rows.length;
@@ -130,17 +126,29 @@ export default function AugeEntradasTab() {
             className="pl-10 h-11 rounded-md border-border/40 bg-card/40 focus:bg-background font-bold text-xs sm:text-sm"
           />
         </div>
-        <Select value={situacao} onValueChange={setSituacao}>
-          <SelectTrigger className="w-full lg:w-[200px] h-11 rounded-md border-border/40 font-bold text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todas situações</SelectItem>
-            <SelectItem value="20">Efetivadas</SelectItem>
-            <SelectItem value="10">Em edição</SelectItem>
-            <SelectItem value="8">Pendentes (erro)</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <FiltroColapsado
+            label="Situação"
+            value={situacao}
+            onChange={setSituacao}
+            opcoes={[
+              { value: '20', label: 'Efetivadas', count: stats.efetivadas },
+              { value: '10', label: 'Em edição', count: stats.emEdicao },
+              { value: '8', label: 'Pendentes (erro)', count: stats.pendentes },
+            ]}
+          />
+          <FiltroColapsado
+            label="Usuário"
+            value={usuario}
+            onChange={setUsuario}
+            opcoes={usuarios.map(u => ({
+              value: u,
+              label: u,
+              count: rows.filter(r => r.usuario_criacao === u).length,
+            }))}
+          />
+        </div>
+
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -229,18 +237,16 @@ export default function AugeEntradasTab() {
               )}
             </div>
           ))}
-          {filtered.length > visible.length && (
-            <div className="flex flex-col items-center gap-2 py-4">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
-                Exibindo {visible.length} de {filtered.length}
-              </p>
-              <Button variant="outline" onClick={() => setPageSize(p => p + 30)} className="rounded-md font-semibold text-xs h-9 px-5">
-                Carregar mais
-              </Button>
-            </div>
-          )}
+          <Paginacao
+            total={filtered.length}
+            page={currentPage}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+          />
         </div>
       )}
+
 
       <MovimentacaoDetailDialog
         movimentacao={detail}

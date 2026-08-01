@@ -9,13 +9,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import {
   Plus, Search, Pencil, Trash2, Package, History,
-  ChevronLeft, ChevronRight, GitCompare, Sparkles,
+  ChevronLeft, ChevronRight, Sparkles,
   ArrowUp, ArrowDown, ArrowUpDown, Cloud, Loader2, Upload,
 } from 'lucide-react';
 import ItemFormDialog from '@/components/cadastros/ItemFormDialog';
 import ImportItensDialog from '@/components/cadastros/ImportItensDialog';
 import CadastroDetailDialog from '@/components/cadastros/CadastroDetailDialog';
-import AugeReconciliacaoTab from '@/components/auge/AugeReconciliacaoTab';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ItemCadastro } from '@/services/itensCadastroService';
 import { toast } from 'sonner';
@@ -178,6 +177,18 @@ export default function CadastrosPage() {
     () => itens.filter((i) => !!i.last_edited_at).length,
     [itens],
   );
+
+  /** Cinco edições mais recentes — alimenta o bloco de auditoria do topo. */
+  const ultimasEdicoes = useMemo(
+    () =>
+      itens
+        .filter((i) => !!i.last_edited_at)
+        .sort((a, b) => new Date(b.last_edited_at!).getTime() - new Date(a.last_edited_at!).getTime())
+        .slice(0, 5),
+    [itens],
+  );
+
+
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -345,10 +356,8 @@ export default function CadastrosPage() {
           <TabsTrigger value="interno" className="gap-2 flex-1 sm:flex-none">
             <Package className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">Cadastro interno</span>
           </TabsTrigger>
-          <TabsTrigger value="reconciliacao" className="gap-2 flex-1 sm:flex-none">
-            <GitCompare className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">Reconciliação</span>
-          </TabsTrigger>
         </TabsList>
+
 
         <TabsContent value="interno" className="flex-1 flex flex-col gap-3 sm:gap-4 overflow-hidden mt-0 min-w-0">
           <div className="flex flex-col md:flex-row md:items-center gap-2 sm:gap-3 min-w-0">
@@ -402,6 +411,40 @@ export default function CadastrosPage() {
               </div>
             </div>
           </div>
+
+          {/* Últimas edições — auditoria rápida, substitui a antiga coluna "Edição" */}
+          {ultimasEdicoes.length > 0 && (
+            <section
+              aria-label="Últimas edições"
+              className="rounded-lg border border-border/60 bg-card px-3 py-2.5 space-y-1.5"
+            >
+              <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground flex items-center gap-1.5">
+                <History className="h-3 w-3" /> Últimas edições
+              </p>
+              <div className="flex flex-col gap-1">
+                {ultimasEdicoes.map((it) => (
+                  <button
+                    key={it.id}
+                    type="button"
+                    onClick={() => setDetailItem(it)}
+                    className="flex flex-wrap items-center gap-x-2 gap-y-0.5 rounded-md px-2 py-1 text-left text-xs hover:bg-accent/40 transition-colors"
+                  >
+                    <span className="font-mono font-semibold text-primary shrink-0">{it.codigo_interno}</span>
+                    <span className="truncate max-w-[220px] text-foreground/80">{it.descricao}</span>
+                    <span className="text-muted-foreground">
+                      {it.updated_by_name || 'Usuário'} alterou{' '}
+                      <span className="font-medium text-foreground">{fieldLabel(it.last_edited_field) || '—'}</span>
+                    </span>
+                    <span className="text-muted-foreground/70 ml-auto shrink-0">
+                      {it.last_edited_at ? new Date(it.last_edited_at).toLocaleString('pt-BR') : '—'}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+
+
 
           {/* Auge inline hits — só quando há busca e itens do Auge fora do cadastro */}
           {search.trim().length >= 2 && fornFilter !== 'pendentes_auge' && augeHitsPendentes.length > 0 && (
@@ -586,25 +629,24 @@ export default function CadastrosPage() {
                       <SortableHead k="descricao">Descrição</SortableHead>
                       <SortableHead k="codigo_fornecedor" className="w-[200px]">Código fornecedor</SortableHead>
                       <SortableHead k="updated_at" className="w-[140px]">Atualizado</SortableHead>
-                      <TableHead className="w-[110px] text-center">Edição</TableHead>
                       <TableHead className="w-[100px] text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {isLoading && (
-                      <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Carregando...</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Carregando...</TableCell></TableRow>
                     )}
                     {!isLoading && filtered.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center text-muted-foreground py-12">
+                        <TableCell colSpan={6} className="text-center text-muted-foreground py-12">
                           {itens.length === 0 ? 'Nenhum item cadastrado. Sincronize via Auge no /admin.' : 'Nenhum resultado para a busca.'}
                         </TableCell>
                       </TableRow>
                     )}
                     {paged.map((item) => {
                       const lf = item.last_edited_field || null;
-                      const wasEdited = !!item.last_edited_at;
                       const editedCol = (k: string) => lf === k;
+
                       const isHighlight = item.id === highlightId;
                       const isSelected = selected.has(item.id);
                       return (
@@ -668,29 +710,6 @@ export default function CadastrosPage() {
                           <TableCell className="text-xs text-muted-foreground">
                             {new Date(item.updated_at).toLocaleDateString('pt-BR')}
                           </TableCell>
-                          <TableCell className="text-center">
-                            {wasEdited ? (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Badge variant="outline" className="gap-1 border-amber-500/30 bg-amber-500/5 text-warning dark:text-warning font-medium text-[10px] cursor-help">
-                                    <History className="w-3 h-3" />
-                                    editado
-                                  </Badge>
-                                </TooltipTrigger>
-                                <TooltipContent side="top" className="max-w-xs text-xs">
-                                  <div className="font-semibold">{item.updated_by_name || 'Usuário'}</div>
-                                  <div className="text-muted-foreground">
-                                    alterou <span className="font-medium text-foreground">{fieldLabel(lf) || '—'}</span>
-                                  </div>
-                                  <div className="text-muted-foreground mt-1">
-                                    {item.last_edited_at ? new Date(item.last_edited_at).toLocaleString('pt-BR') : ''}
-                                  </div>
-                                </TooltipContent>
-                              </Tooltip>
-                            ) : (
-                              <span className="text-muted-foreground/40 text-[10px]">—</span>
-                            )}
-                          </TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-1">
                               <Button size="icon" variant="ghost" className="h-10 w-10 lg:h-9 lg:w-9" onClick={() => handleEdit(item)} aria-label="Editar item">
@@ -746,9 +765,6 @@ export default function CadastrosPage() {
           )}
         </TabsContent>
 
-        <TabsContent value="reconciliacao" className="flex-1 overflow-hidden mt-0">
-          <AugeReconciliacaoTab />
-        </TabsContent>
       </Tabs>
 
       <ItemFormDialog open={formOpen} onOpenChange={setFormOpen} initial={editing} />

@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import FiltroColapsado from '@/components/erp/FiltroColapsado';
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
   DropdownMenuItem, DropdownMenuSeparator,
@@ -16,7 +16,7 @@ import { formatQty } from '@/lib/utils';
 import TransferenciaDetailDialog from './TransferenciaDetailDialog';
 import NovaTransferenciaDialog, { type TransfDialogInitial, type TransfDialogMode } from './NovaTransferenciaDialog';
 
-type Filtro = 'todos' | 'rascunho' | 'efetivada';
+type Filtro = 'rascunho' | 'efetivada';
 type SortDirection = 'asc' | 'desc';
 type SortKey = 'documento' | 'nr_efetivacao' | 'deposito' | 'codigo_produto' | 'descricao_produto' | 'quantidade' | 'usuario_criacao' | 'observacao' | 'data_movimento';
 
@@ -62,7 +62,7 @@ export default function AugeTransferenciasTab({
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [search, setSearch] = useState('');
-  const [filtro, setFiltro] = useState<Filtro>('todos');
+  const [filtro, setFiltro] = useState<Filtro | null>(null);
   const [detail, setDetail] = useState<any | null>(null);
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
@@ -322,11 +322,16 @@ export default function AugeTransferenciasTab({
             </Button>
           )}
         </div>
-        <ToggleGroup type="single" value={filtro} onValueChange={(v) => v && setFiltro(v as Filtro)} className="h-11 shrink-0">
-          <ToggleGroupItem value="todos" className="h-11 px-3 text-xs">Todos</ToggleGroupItem>
-          <ToggleGroupItem value="rascunho" className="h-11 px-3 text-xs">Rascunhos</ToggleGroupItem>
-          <ToggleGroupItem value="efetivada" className="h-11 px-3 text-xs">Efetivadas</ToggleGroupItem>
-        </ToggleGroup>
+        <FiltroColapsado
+          label="Filtro"
+          value={filtro}
+          onChange={(v) => setFiltro(v as Filtro | null)}
+          opcoes={[
+            { value: 'rascunho', label: 'Rascunhos', count: rows.filter(r => isRascunho(r) && !isEfetivada(r)).length },
+            { value: 'efetivada', label: 'Efetivadas', count: rows.filter(isEfetivada).length },
+          ]}
+        />
+
         <Button onClick={abrirNovo} variant="default" className="h-11 px-4 sm:px-5 gap-2 shrink-0">
           <Plus className="w-4 h-4" />
           <span className="hidden sm:inline">Nova</span>
