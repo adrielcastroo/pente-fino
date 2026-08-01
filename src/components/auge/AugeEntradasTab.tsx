@@ -237,18 +237,16 @@ export default function AugeEntradasTab() {
               )}
             </div>
           ))}
-          {filtered.length > visible.length && (
-            <div className="flex flex-col items-center gap-2 py-4">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
-                Exibindo {visible.length} de {filtered.length}
-              </p>
-              <Button variant="outline" onClick={() => setPageSize(p => p + 30)} className="rounded-md font-semibold text-xs h-9 px-5">
-                Carregar mais
-              </Button>
-            </div>
-          )}
+          <Paginacao
+            total={filtered.length}
+            page={currentPage}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+          />
         </div>
       )}
+
 
       <MovimentacaoDetailDialog
         movimentacao={detail}
