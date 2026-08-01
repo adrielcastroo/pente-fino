@@ -16,6 +16,8 @@ import {
   Send, Trash2, ExternalLink, XCircle, Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { N8nEtiquetaTester } from '@/components/admin/N8nEtiquetaTester';
+
 
 const POLL_MS = 15_000;
 
