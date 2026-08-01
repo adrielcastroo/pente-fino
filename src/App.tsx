@@ -174,6 +174,7 @@ const App = () => (
                   <Route path="/estoque/historico" element={<HistoricoPage />} />
                   <Route path="/estoque/configuracoes" element={<SettingsPage />} />
                   <Route path="/estoque/cadastros" element={<CadastrosPage />} />
+                  <Route path="/estoque/auditoria" element={<Navigate to="/admin?tab=audit-auge" replace />} />
                   <Route
                     path="/estoque/auditoria-legado"
                     element={
@@ -182,6 +183,7 @@ const App = () => (
                       </RequireRole>
                     }
                   />
+
                   <Route path="/estoque/minha-atividade" element={<MinhaAtividadePage />} />
                  <Route path="/estoque/entradas" element={<EntradasPage />} />
                  <Route path="/estoque/acabamentos" element={<RequireRole role="supervisor" fallback={<Navigate to="/estoque/operacao" replace />}><AcabamentosPage /></RequireRole>} />
