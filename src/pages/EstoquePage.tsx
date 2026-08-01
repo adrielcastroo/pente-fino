@@ -603,7 +603,7 @@ export default function EstoquePage() {
             transition={{ duration: 0.25, delay: 0.2, ease: 'easeOut' }}
           >
             <Card
-              onClick={() => navigate('/estoque/saida')}
+              onClick={() => setSaidasOpen(true)}
               className="rounded-lg border border-violet-500/20 bg-violet-500/5 hover:bg-violet-500/10 hover:border-violet-500/40 transition-all duration-200 cursor-pointer relative overflow-hidden group shadow-sm hover:shadow-md h-full"
             >
               <CardContent className="p-3 tablet-portrait:p-2 relative z-10 h-full flex flex-col">
