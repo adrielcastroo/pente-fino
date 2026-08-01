@@ -58,6 +58,7 @@ export default function MainLayout({
   usePresenceTracker();
   useNetworkStatus();
   useUserScopedPrefs();
+  useGlobalSettingsSync();
 
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   useKeyboardShortcuts({
