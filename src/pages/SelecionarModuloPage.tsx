@@ -50,7 +50,7 @@ function FooterVersion({ hasNewVersion }: { hasNewVersion: boolean }) {
   return (
     <>
       <p className="text-[10px] text-muted-foreground/50 font-mono">
-        Pente Fino · v{version}{buildLabel ? ` · build ${buildLabel}` : ''}
+        Pente Fino · v{version} “{codenameFor(version)}”{buildLabel ? ` · build ${buildLabel}` : ''}
       </p>
       {hasNewVersion && (
         <span className="text-[8px] font-semibold px-1 py-0.5 rounded bg-primary/10 text-primary">
