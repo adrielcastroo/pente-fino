@@ -3,8 +3,10 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContain
 import { supabase } from '@/integrations/supabase/client';
 import { useAppStore } from '@/store/useAppStore';
 import { toast } from 'sonner';
-import { Package, MapPin, Layers, ArrowRightLeft, Trash2, ChevronRight, Box, Grid3X3, Info, LogOut, Upload, ScanBarcode, Loader2, CheckCircle2, Archive, Calendar, Shirt, TreePine, ArrowLeft, LayoutDashboard, Barcode, Warehouse } from 'lucide-react';
-import MadeiraEstoque from '@/components/estoque/MadeiraEstoque';
+import { Package, MapPin, Layers, ArrowRightLeft, Trash2, ChevronRight, Box, Grid3X3, Info, LogOut, Upload, ScanBarcode, Loader2, CheckCircle2, Archive, Calendar, ArrowLeft, LayoutDashboard, Barcode, Warehouse, TrendingUp, TrendingDown } from 'lucide-react';
+import { UltimasSaidasDialog } from '@/components/estoque/UltimasSaidasDialog';
+import { TopTecidosBlocks } from '@/components/estoque/TopTecidosBlocks';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -17,7 +19,6 @@ import { usePerformance } from '@/hooks/use-performance';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import ImportDialog from '@/components/estoque/ImportDialog';
 import { useAuth } from '@/hooks/use-auth';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { normalizarCodigo } from '@/lib/codigoFornecedor';
@@ -85,14 +86,16 @@ export default function EstoquePage() {
   const setActiveTec = (val: string) => setFormData({ estoqueActiveTec: val });
 
   const [allPosicoes, setAllPosicoes] = useState<Posicao[]>([]);
-  const [category, setCategory] = useState<'tecido' | 'madeira'>('tecido');
   const [loading, setLoading] = useState(true);
   const [selectedCell, setSelectedCell] = useState<{ col: string; nivel: number } | null>(null);
   const [detailPos, setDetailPos] = useState<Posicao | null>(null);
   const [selectedStat, setSelectedStat] = useState<string | null>(null);
+  // Drill-down dentro do dialog de estatísticas: estrutura selecionada no "Resumo por estrutura".
+  const [drillTec, setDrillTec] = useState<string | null>(null);
+  const [saidasOpen, setSaidasOpen] = useState(false);
+
   const [confirmSaida, setConfirmSaida] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [importOpen, setImportOpen] = useState(false);
   const [scanMode, setScanMode] = useState(false);
   const [scanInput, setScanInput] = useState('');
   const [scanning, setScanning] = useState(false);
@@ -259,6 +262,21 @@ export default function EstoquePage() {
     const free = totalSlots - occupied - blocked - reserved; // Exited items are removed from DB, so they don't count against capacity
     return { totalSlots, occupied, blocked, reserved, exited, chao, free };
   }, [allPosicoes, totalSlots]);
+
+  // Variação (entrada/saída) desde a última atualização dos dados — alimenta as setas dos cards.
+  const prevStatsRef = useRef<{ occupied: number; free: number } | null>(null);
+  const [deltas, setDeltas] = useState<{ occupied: number; free: number }>({ occupied: 0, free: 0 });
+  useEffect(() => {
+    if (!allPosicoes.length) return;
+    const prev = prevStatsRef.current;
+    if (prev) {
+      const d = { occupied: stats.occupied - prev.occupied, free: stats.free - prev.free };
+      if (d.occupied !== 0 || d.free !== 0) setDeltas(d);
+    }
+    prevStatsRef.current = { occupied: stats.occupied, free: stats.free };
+  }, [stats.occupied, stats.free, allPosicoes.length]);
+
+
 
 
   const cellMap = useMemo(() => {
@@ -515,50 +533,9 @@ export default function EstoquePage() {
       className="max-w-full mx-auto space-y-4 pb-20 overflow-x-hidden min-w-0"
     >
       {/* Header */}
-      <PageHeader
-        title="Gestão de estoque"
-        actions={
-          <Button
-            onClick={() => setImportOpen(true)}
-            variant="outline"
-            size="sm"
-            className="h-9"
-          >
-            Importar
-          </Button>
-        }
-      />
-
-      {/* Categoria Tabs */}
-      <div className="inline-flex bg-card/60 rounded-md p-1 gap-1 border border-border/40 w-full sm:max-w-md">
-        {(['tecido', 'madeira'] as const).map((key) => {
-          const Icon = key === 'tecido' ? Shirt : TreePine;
-          const label = key === 'tecido' ? 'Estoque de Tecidos' : 'Estoque de Madeira';
-          const isActive = category === key;
-          return (
-            <button
-              key={key}
-              onClick={() => setCategory(key)}
-              aria-pressed={isActive}
-              className={cn(
-                'flex-1 py-2 rounded-md text-[11px] sm:text-xs font-medium transition-colors duration-200 flex items-center justify-center gap-2 min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
-                isActive
-                  ? 'bg-primary text-primary-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/40',
-              )}
-            >
-              <Icon className="w-4 h-4 shrink-0" strokeWidth={1.75} />
-              <span className="truncate">{label}</span>
-            </button>
-          );
-        })}
-      </div>
+      <PageHeader title="Gestão de estoque" />
 
 
-      {category === 'madeira' ? (
-        <MadeiraEstoque />
-      ) : (
-        <>
       {/* Stats Cards */}
       <div className="w-full pb-4 px-0">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 tablet-portrait:grid-cols-5 gap-3 sm:gap-4 tablet-portrait:gap-2">
@@ -589,8 +566,25 @@ export default function EstoquePage() {
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-white/[0.04] to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <CardContent className="p-4 sm:p-5 tablet-portrait:p-2 text-center space-y-1.5 sm:space-y-2 tablet-portrait:space-y-0.5 relative z-10">
-                  <div className={cn('text-xl sm:text-2xl lg:text-[26px] tablet-portrait:text-lg font-semibold tabular-nums tracking-tight leading-none', s.config.color)}>{s.value}</div>
+                  <div className="flex items-center justify-center gap-1.5">
+                    <div className={cn('text-xl sm:text-2xl lg:text-[26px] tablet-portrait:text-lg font-semibold tabular-nums tracking-tight leading-none', s.config.color)}>{s.value}</div>
+                    {(s.key === 'ocupado' || s.key === 'livre') && (() => {
+                      const d = s.key === 'ocupado' ? deltas.occupied : deltas.free;
+                      if (!d) return null;
+                      const Icon = d > 0 ? TrendingUp : TrendingDown;
+                      return (
+                        <span
+                          className={cn('flex items-center gap-0.5 text-[10px] font-semibold tabular-nums', d > 0 ? 'text-emerald-500' : 'text-rose-500')}
+                          title={d > 0 ? 'Aumentou desde a última atualização' : 'Diminuiu desde a última atualização'}
+                        >
+                          <Icon className="w-3 h-3" strokeWidth={2} />
+                          {d > 0 ? `+${d}` : d}
+                        </span>
+                      );
+                    })()}
+                  </div>
                   <div className="text-[9px] tablet-portrait:text-[8px] font-semibold text-muted-foreground uppercase tracking-[0.18em] opacity-70 group-hover:opacity-100 transition-opacity">{s.label}</div>
+
                   <div className="flex items-center justify-center gap-1.5 pt-1.5">
                     <div className="h-1 w-10 bg-muted-foreground/15 rounded-full overflow-hidden">
                        <div className={cn('h-full transition-all duration-500 ease-out', s.config.color.replace('text', 'bg'))} style={{ width: `${s.percent}%` }} />
@@ -609,7 +603,7 @@ export default function EstoquePage() {
             transition={{ duration: 0.25, delay: 0.2, ease: 'easeOut' }}
           >
             <Card
-              onClick={() => navigate('/estoque/saida')}
+              onClick={() => setSaidasOpen(true)}
               className="rounded-lg border border-violet-500/20 bg-violet-500/5 hover:bg-violet-500/10 hover:border-violet-500/40 transition-all duration-200 cursor-pointer relative overflow-hidden group shadow-sm hover:shadow-md h-full"
             >
               <CardContent className="p-3 tablet-portrait:p-2 relative z-10 h-full flex flex-col">
@@ -921,8 +915,6 @@ export default function EstoquePage() {
           </div>
         </motion.div>
       )}
-        </>
-      )}
 
       {/* ===== POSITIONS GRID DIALOG ===== */}
       <Dialog open={!!selectedCell} onOpenChange={() => setSelectedCell(null)}>
@@ -1153,8 +1145,9 @@ export default function EstoquePage() {
       </Dialog>
 
       {/* ===== STAT DETAIL DIALOG ===== */}
-      <Dialog open={!!selectedStat} onOpenChange={() => setSelectedStat(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-5xl p-0 gap-0 border border-border bg-card overflow-hidden rounded-lg shadow-xl max-h-[90vh] flex flex-col">
+      <Dialog open={!!selectedStat} onOpenChange={(o) => { if (!o) { setSelectedStat(null); setDrillTec(null); } }}>
+        <DialogContent className="max-w-[95vw] sm:max-w-5xl p-0 gap-0 border border-border bg-card overflow-hidden rounded-lg shadow-xl max-h-[90vh] flex flex-col relative">
+
           {selectedStat && (() => {
             const statItems: { label: string; value: number; percent: number; color: string; bg: string; hex: string }[] = [
               { label: 'Total', value: stats.totalSlots, percent: 100, color: 'text-foreground', bg: 'bg-muted', hex: 'hsl(var(--primary))' },
@@ -1292,13 +1285,26 @@ export default function EstoquePage() {
                     </div>
                   </div>
 
+                  {/* Analytics de tecidos — top ocupação e giro */}
+                  {selectedStat === 'ocupado' && (
+                    <TopTecidosBlocks posicoes={allPosicoes as any} describeItem={describeItem} />
+                  )}
+
                   {/* Detailed Summary Cards */}
                   <div>
                     <h4 className="text-xs font-semibold text-foreground mb-2">Resumo por estrutura</h4>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       {tecBreakdown.map((t) => (
-                        <div key={t.tec} className="bg-card border border-border rounded-md p-3 hover:border-primary/40 transition-colors">
-                          <div className="text-[10px] font-medium text-muted-foreground mb-1">{t.tec}</div>
+                        <button
+                          key={t.tec}
+                          type="button"
+                          onClick={() => setDrillTec(t.tec)}
+                          className="text-left bg-card border border-border rounded-md p-3 hover:border-primary/40 hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] font-medium text-muted-foreground">{t.tec}</span>
+                            <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                          </div>
                           <div className="text-xl font-semibold text-foreground tabular-nums leading-none mb-2">{t.value.toLocaleString('pt-BR')}</div>
                           <div className="flex items-center gap-2">
                             <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden">
@@ -1306,7 +1312,7 @@ export default function EstoquePage() {
                             </div>
                             <div className="text-[10px] font-medium text-muted-foreground tabular-nums">{t.percent}%</div>
                           </div>
-                        </div>
+                        </button>
                       ))}
                     </div>
                   </div>
@@ -1314,8 +1320,77 @@ export default function EstoquePage() {
               </>
             );
           })()}
+
+          {/* ===== DRILL-DOWN: itens da estrutura selecionada ===== */}
+          {drillTec && (() => {
+            const itens = (allPosicoes as any[])
+              .filter(p => p.estrutura === drillTec && p.status !== 'saida' && (p.item || '').trim())
+              .sort((a, b) => `${a.coluna}${a.nivel}`.localeCompare(`${b.coluna}${b.nivel}`));
+            return (
+              <div className="absolute inset-0 z-20 bg-card flex flex-col">
+                <div className="px-5 sm:px-6 py-4 border-b border-border flex items-center gap-3 pr-10">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 shrink-0"
+                    onClick={() => setDrillTec(null)}
+                    aria-label="Voltar"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                  </Button>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-base font-semibold tracking-tight leading-tight">Estrutura {drillTec}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
+                      <span className="tabular-nums font-medium text-foreground">{itens.length}</span> tecidos posicionados
+                    </div>
+                  </div>
+                </div>
+                <div className="flex-1 overflow-y-auto bg-background/40">
+                  {itens.length === 0 ? (
+                    <div className="py-16 text-center text-xs text-muted-foreground">Nenhum tecido nesta estrutura.</div>
+                  ) : (
+                    <table className="w-full text-xs">
+                      <thead className="sticky top-0 bg-card border-b border-border">
+                        <tr className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                          <th className="text-left font-semibold px-4 py-2">Tecido</th>
+                          <th className="text-left font-semibold px-4 py-2">Lote</th>
+                          <th className="text-left font-semibold px-4 py-2 hidden sm:table-cell">Endereço</th>
+                          <th className="text-right font-semibold px-4 py-2">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {itens.map((p) => {
+                          const stCfg = STATUS_CONFIG[p.status];
+                          return (
+                            <tr key={p.id} className="border-b border-border/50 hover:bg-muted/30">
+                              <td className="px-4 py-2 max-w-[240px]">
+                                <div className="font-medium text-foreground truncate">{describeItem(p.item) || p.item}</div>
+                                {describeItem(p.item) !== p.item && (
+                                  <div className="font-mono text-[10px] text-muted-foreground truncate">{p.item}</div>
+                                )}
+                              </td>
+                              <td className="px-4 py-2 font-mono text-[11px] text-muted-foreground">{p.lote || p.lote_sistema || '—'}</td>
+                              <td className="px-4 py-2 font-mono text-[11px] text-muted-foreground hidden sm:table-cell">
+                                {p.endereco || `${p.estrutura}.${p.coluna}.N${String(p.nivel).padStart(2, '0')}`}
+                              </td>
+                              <td className="px-4 py-2 text-right">
+                                <Badge variant="outline" className={cn('text-[9px] uppercase tracking-wider', stCfg?.color)}>
+                                  {stCfg?.label || p.status}
+                                </Badge>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
         </DialogContent>
       </Dialog>
+
 
 
       {/* Confirmação Dar Saída */}
@@ -1444,8 +1519,9 @@ export default function EstoquePage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Import Dialog */}
-      <ImportDialog open={importOpen} onOpenChange={setImportOpen} onImportComplete={loadPosicoes} />
+      {/* Últimas saídas — 15 baixas mais recentes */}
+      <UltimasSaidasDialog open={saidasOpen} onOpenChange={setSaidasOpen} describeItem={describeItem} />
+
     </motion.div>
   );
 }
