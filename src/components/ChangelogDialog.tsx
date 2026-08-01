@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Bell, Sparkles, Wrench, Zap } from 'lucide-react';
 import { CHANGELOG, LATEST_VERSION, CHANGELOG_STORAGE_KEY, type ChangelogEntry } from '@/lib/changelog';
+import { BUMP_META, codenameFor, diffBump } from '@/lib/version';
+
 import { cn } from '@/lib/utils';
 
 const TYPE_META: Record<ChangelogEntry['highlights'][number]['type'], { label: string; icon: typeof Sparkles; className: string }> = {
