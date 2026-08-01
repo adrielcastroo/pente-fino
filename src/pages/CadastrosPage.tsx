@@ -586,25 +586,24 @@ export default function CadastrosPage() {
                       <SortableHead k="descricao">Descrição</SortableHead>
                       <SortableHead k="codigo_fornecedor" className="w-[200px]">Código fornecedor</SortableHead>
                       <SortableHead k="updated_at" className="w-[140px]">Atualizado</SortableHead>
-                      <TableHead className="w-[110px] text-center">Edição</TableHead>
                       <TableHead className="w-[100px] text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {isLoading && (
-                      <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Carregando...</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Carregando...</TableCell></TableRow>
                     )}
                     {!isLoading && filtered.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center text-muted-foreground py-12">
+                        <TableCell colSpan={6} className="text-center text-muted-foreground py-12">
                           {itens.length === 0 ? 'Nenhum item cadastrado. Sincronize via Auge no /admin.' : 'Nenhum resultado para a busca.'}
                         </TableCell>
                       </TableRow>
                     )}
                     {paged.map((item) => {
                       const lf = item.last_edited_field || null;
-                      const wasEdited = !!item.last_edited_at;
                       const editedCol = (k: string) => lf === k;
+
                       const isHighlight = item.id === highlightId;
                       const isSelected = selected.has(item.id);
                       return (
