@@ -15,6 +15,8 @@ import { Reserva } from '@/types';
 import { diffFields } from '@/lib/audit';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { PageHeader } from '@/components/ui/page-header';
+import { resolverCodigoInterno } from '@/lib/resolveCodigoInterno';
+import { toast } from 'sonner';
 
 
 const ReservasPage = () => {
@@ -30,10 +32,19 @@ const ReservasPage = () => {
   );
 
   const handleAddReserva = async (formData: ReservaFormData) => {
+    // Converte o código digitado (fornecedor ou interno) no código interno oficial,
+    // consultando o cadastro do Pente Fino e, em seguida, o catálogo do Auge.
+    const resolvido = await resolverCodigoInterno(formData.codigo);
+    if (resolvido.origem !== 'nenhum' && resolvido.codigoInterno !== formData.codigo.trim()) {
+      toast.success(`Código convertido para ${resolvido.codigoInterno} (${resolvido.origem === 'auge' ? 'Auge' : 'cadastro interno'})`);
+    } else if (resolvido.origem === 'nenhum') {
+      toast.warning('Código não encontrado no cadastro nem no Auge — reserva salva com o código informado.');
+    }
+
     const newReserva: Reserva = {
       id: crypto.randomUUID(),
-      codigo: formData.codigo.trim(),
-      descricao: formData.descricao.trim(),
+      codigo: resolvido.codigoInterno,
+      descricao: resolvido.descricao || formData.descricao.trim(),
       endereco: formData.endereco.trim(),
       quantidade: Number(formData.quantidade),
       caixaNum: formData.caixaNum.trim(),
@@ -47,10 +58,11 @@ const ReservasPage = () => {
 
   const handleUpdateReserva = async (formData: ReservaFormData) => {
     if (!editing) return;
+    const resolvido = await resolverCodigoInterno(formData.codigo);
     const updated: Reserva = {
       ...editing,
-      codigo: formData.codigo.trim(),
-      descricao: formData.descricao.trim(),
+      codigo: resolvido.origem === 'nenhum' ? formData.codigo.trim() : resolvido.codigoInterno,
+      descricao: resolvido.descricao || formData.descricao.trim(),
       endereco: formData.endereco.trim(),
       quantidade: Number(formData.quantidade),
       caixaNum: formData.caixaNum.trim(),
