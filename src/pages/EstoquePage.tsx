@@ -263,6 +263,21 @@ export default function EstoquePage() {
     return { totalSlots, occupied, blocked, reserved, exited, chao, free };
   }, [allPosicoes, totalSlots]);
 
+  // Variação (entrada/saída) desde a última atualização dos dados — alimenta as setas dos cards.
+  const prevStatsRef = useRef<{ occupied: number; free: number } | null>(null);
+  const [deltas, setDeltas] = useState<{ occupied: number; free: number }>({ occupied: 0, free: 0 });
+  useEffect(() => {
+    if (!allPosicoes.length) return;
+    const prev = prevStatsRef.current;
+    if (prev) {
+      const d = { occupied: stats.occupied - prev.occupied, free: stats.free - prev.free };
+      if (d.occupied !== 0 || d.free !== 0) setDeltas(d);
+    }
+    prevStatsRef.current = { occupied: stats.occupied, free: stats.free };
+  }, [stats.occupied, stats.free, allPosicoes.length]);
+
+
+
 
   const cellMap = useMemo(() => {
     const map: Record<string, Posicao[]> = {};
