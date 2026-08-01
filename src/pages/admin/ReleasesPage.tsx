@@ -184,18 +184,26 @@ export default function ReleasesPage() {
         <Card className="p-8 text-center text-muted-foreground">Nenhuma release registrada.</Card>
       ) : (
         <div className="space-y-2">
-          {releases.map((r: AppRelease) => (
+          {releases.map((r: AppRelease, idx: number) => {
+            const bump = diffBump(releases[idx + 1]?.version, r.version);
+            const bumpMeta = BUMP_META[bump];
+            return (
             <Card key={r.id} className="p-4">
               <div className="flex items-start gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-mono font-bold text-lg">v{r.version}</span>
+                    <span className="text-sm font-medium text-primary">{codenameFor(r.version)}</span>
+                    <Badge variant="outline" className={`text-[10px] uppercase tracking-wider font-bold border ${bumpMeta.className}`} title={bumpMeta.description}>
+                      {bumpMeta.label}
+                    </Badge>
                     {r.is_current && <Badge className="bg-primary">Atual</Badge>}
                     {r.is_stable && <Badge variant="secondary" className="gap-1"><Star className="h-3 w-3" /> Estável</Badge>}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
                     {new Date(r.released_at).toLocaleString('pt-BR')}
                   </p>
+
                   {r.notes && (
                     <pre className="text-xs mt-2 whitespace-pre-wrap font-sans text-foreground/80">{r.notes}</pre>
                   )}
