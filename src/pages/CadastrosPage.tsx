@@ -345,10 +345,8 @@ export default function CadastrosPage() {
           <TabsTrigger value="interno" className="gap-2 flex-1 sm:flex-none">
             <Package className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">Cadastro interno</span>
           </TabsTrigger>
-          <TabsTrigger value="reconciliacao" className="gap-2 flex-1 sm:flex-none">
-            <GitCompare className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">Reconciliação</span>
-          </TabsTrigger>
         </TabsList>
+
 
         <TabsContent value="interno" className="flex-1 flex flex-col gap-3 sm:gap-4 overflow-hidden mt-0 min-w-0">
           <div className="flex flex-col md:flex-row md:items-center gap-2 sm:gap-3 min-w-0">
