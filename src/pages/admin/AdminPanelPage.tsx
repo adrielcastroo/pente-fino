@@ -333,7 +333,7 @@ function OverviewTab() {
         </h3>
         <div className="grid gap-2.5 sm:grid-cols-2">
           <a
-            href="/admin/automacoes"
+            href="/automacoes"
             className="group flex items-start gap-3 rounded-md border border-border/40 bg-card/50 p-3 transition-colors hover:border-primary/40 hover:bg-card"
           >
             <div className="rounded-md bg-primary/10 p-2 text-primary"><Workflow className="h-4 w-4" /></div>
