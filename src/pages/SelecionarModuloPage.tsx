@@ -6,6 +6,8 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 import { useAppStore } from '@/store/useAppStore';
 import { LATEST_VERSION, CHANGELOG_STORAGE_KEY } from '@/lib/changelog';
+import { codenameFor } from '@/lib/version';
+
 import { useCurrentRelease } from '@/hooks/useAppReleases';
 
 declare const __BUILD_TIME__: string;
