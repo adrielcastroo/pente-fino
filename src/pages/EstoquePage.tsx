@@ -566,8 +566,25 @@ export default function EstoquePage() {
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-white/[0.04] to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <CardContent className="p-4 sm:p-5 tablet-portrait:p-2 text-center space-y-1.5 sm:space-y-2 tablet-portrait:space-y-0.5 relative z-10">
-                  <div className={cn('text-xl sm:text-2xl lg:text-[26px] tablet-portrait:text-lg font-semibold tabular-nums tracking-tight leading-none', s.config.color)}>{s.value}</div>
+                  <div className="flex items-center justify-center gap-1.5">
+                    <div className={cn('text-xl sm:text-2xl lg:text-[26px] tablet-portrait:text-lg font-semibold tabular-nums tracking-tight leading-none', s.config.color)}>{s.value}</div>
+                    {(s.key === 'ocupado' || s.key === 'livre') && (() => {
+                      const d = s.key === 'ocupado' ? deltas.occupied : deltas.free;
+                      if (!d) return null;
+                      const Icon = d > 0 ? TrendingUp : TrendingDown;
+                      return (
+                        <span
+                          className={cn('flex items-center gap-0.5 text-[10px] font-semibold tabular-nums', d > 0 ? 'text-emerald-500' : 'text-rose-500')}
+                          title={d > 0 ? 'Aumentou desde a última atualização' : 'Diminuiu desde a última atualização'}
+                        >
+                          <Icon className="w-3 h-3" strokeWidth={2} />
+                          {d > 0 ? `+${d}` : d}
+                        </span>
+                      );
+                    })()}
+                  </div>
                   <div className="text-[9px] tablet-portrait:text-[8px] font-semibold text-muted-foreground uppercase tracking-[0.18em] opacity-70 group-hover:opacity-100 transition-opacity">{s.label}</div>
+
                   <div className="flex items-center justify-center gap-1.5 pt-1.5">
                     <div className="h-1 w-10 bg-muted-foreground/15 rounded-full overflow-hidden">
                        <div className={cn('h-full transition-all duration-500 ease-out', s.config.color.replace('text', 'bg'))} style={{ width: `${s.percent}%` }} />
