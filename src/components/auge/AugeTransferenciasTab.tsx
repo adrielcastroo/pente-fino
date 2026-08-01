@@ -16,7 +16,7 @@ import { formatQty } from '@/lib/utils';
 import TransferenciaDetailDialog from './TransferenciaDetailDialog';
 import NovaTransferenciaDialog, { type TransfDialogInitial, type TransfDialogMode } from './NovaTransferenciaDialog';
 
-type Filtro = 'todos' | 'rascunho' | 'efetivada';
+type Filtro = 'rascunho' | 'efetivada';
 type SortDirection = 'asc' | 'desc';
 type SortKey = 'documento' | 'nr_efetivacao' | 'deposito' | 'codigo_produto' | 'descricao_produto' | 'quantidade' | 'usuario_criacao' | 'observacao' | 'data_movimento';
 
