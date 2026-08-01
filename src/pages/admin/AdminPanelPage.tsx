@@ -118,7 +118,7 @@ export default function AdminPanelPage() {
   return (
     <PageShell>
       <PageHeader
-        title="eu preciso ver as verões na tela de visão geral da pagina admin"
+        title="oi"
         actions={
           <div className="flex items-center gap-2 text-xs">
             <Badge variant="outline" className="font-mono h-7 px-2.5">v{version}</Badge>
