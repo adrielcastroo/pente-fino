@@ -2,12 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, RefreshCw, Loader2, FileText, Clock, User, Archive, DollarSign, AlertTriangle } from 'lucide-react';
+import { Search, FileText, Clock, User, Archive, DollarSign, AlertTriangle } from 'lucide-react';
 import { formatDateBR } from '@/lib/app-utils';
+import FiltroColapsado from '@/components/erp/FiltroColapsado';
+import Paginacao from '@/components/erp/Paginacao';
 import MovimentacaoDetailDialog, { type MovimentacaoRow } from './MovimentacaoDetailDialog';
+
 
 interface AugeSaida {
   id: string;
