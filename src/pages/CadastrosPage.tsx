@@ -15,7 +15,7 @@ import {
 import ItemFormDialog from '@/components/cadastros/ItemFormDialog';
 import ImportItensDialog from '@/components/cadastros/ImportItensDialog';
 import CadastroDetailDialog from '@/components/cadastros/CadastroDetailDialog';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { ItemCadastro } from '@/services/itensCadastroService';
 import { toast } from 'sonner';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -352,15 +352,9 @@ export default function CadastrosPage() {
       />
 
       <Tabs defaultValue="interno" className="flex-1 flex flex-col overflow-hidden gap-3 sm:gap-4 min-w-0">
-        <TabsList className="w-full sm:w-fit overflow-x-auto no-scrollbar">
-          <TabsTrigger value="interno" className="gap-2 flex-1 sm:flex-none">
-            <Package className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">Cadastro interno</span>
-          </TabsTrigger>
-        </TabsList>
-
-
         <TabsContent value="interno" className="flex-1 flex flex-col gap-3 sm:gap-4 overflow-hidden mt-0 min-w-0">
-          <div className="flex flex-col md:flex-row md:items-center gap-2 sm:gap-3 min-w-0">
+          <div className="flex flex-col md:flex-row md:items-center gap-2 sm:gap-3 min-w-0 rounded-md border border-border/40 bg-card/60 p-2 sm:p-3 shadow-sm">
+
             <div className="relative w-full md:flex-1 md:max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input

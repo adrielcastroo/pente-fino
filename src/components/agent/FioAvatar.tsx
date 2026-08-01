@@ -48,7 +48,11 @@ export function FioAvatar({
         ? "hover"
         : "idle";
 
-  const src = FIO_IMAGES[effective];
+  // No modo escuro a arte de hover tem baixo contraste e "some" contra o fundo:
+  // mantemos a pose idle (a animação de bounce já dá o feedback visual).
+  const isDark =
+    typeof document !== "undefined" && document.documentElement.classList.contains("dark");
+  const src = FIO_IMAGES[effective === "hover" && isDark ? "idle" : effective];
 
   // Trigger bounce quando estado mudar para thinking/responding/hover
   useEffect(() => {
@@ -140,7 +144,10 @@ export function FioAvatar({
           className="h-full w-full object-contain select-none pointer-events-none will-change-transform transition-transform duration-300 ease-out"
           style={{
             transform: "perspective(600px) rotateX(0deg) rotateY(0deg)",
-            filter: "drop-shadow(0 6px 12px rgba(0, 102, 255, 0.25))",
+            filter:
+              effective === "hover"
+                ? "drop-shadow(0 0 14px hsl(var(--primary) / 0.55)) drop-shadow(0 6px 12px rgba(0, 102, 255, 0.35))"
+                : "drop-shadow(0 6px 12px rgba(0, 102, 255, 0.25))",
           }}
         />
       </div>

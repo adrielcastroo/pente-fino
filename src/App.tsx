@@ -174,14 +174,16 @@ const App = () => (
                   <Route path="/estoque/historico" element={<HistoricoPage />} />
                   <Route path="/estoque/configuracoes" element={<SettingsPage />} />
                   <Route path="/estoque/cadastros" element={<CadastrosPage />} />
+                  <Route path="/estoque/auditoria" element={<Navigate to="/admin?tab=audit-auge" replace />} />
                   <Route
-                    path="/estoque/auditoria"
+                    path="/estoque/auditoria-legado"
                     element={
                       <RequireRole action="view:auditoria" fallback={<Navigate to="/" replace />}>
                         <AuditoriaPage />
                       </RequireRole>
                     }
                   />
+
                   <Route path="/estoque/minha-atividade" element={<MinhaAtividadePage />} />
                  <Route path="/estoque/entradas" element={<EntradasPage />} />
                  <Route path="/estoque/acabamentos" element={<RequireRole role="supervisor" fallback={<Navigate to="/estoque/operacao" replace />}><AcabamentosPage /></RequireRole>} />
@@ -206,7 +208,7 @@ const App = () => (
                   <Route path="/historico" element={<Navigate to="/estoque/historico" replace />} />
                   <Route path="/configuracoes" element={<Navigate to="/estoque/configuracoes" replace />} />
                   <Route path="/cadastros" element={<Navigate to="/estoque/cadastros" replace />} />
-                  <Route path="/auditoria" element={<Navigate to="/estoque/auditoria" replace />} />
+                  <Route path="/auditoria" element={<Navigate to="/admin?tab=audit-auge" replace />} />
                   <Route path="/minha-atividade" element={<Navigate to="/estoque/minha-atividade" replace />} />
                 </Route>
                 </Route>
@@ -293,7 +295,8 @@ const App = () => (
                   <Route path="/admin/n8n" element={<N8nMonitorPage />} />
                   <Route path="/admin/har-transferencias" element={<HarTransferenciasPage />} />
                   <Route path="/admin/depositos" element={<RequireRole role="admin" fallback={<Navigate to="/admin" replace />}><DepositosAdminPage /></RequireRole>} />
-                  <Route path="/admin/automacoes" element={<RequireRole role="admin" fallback={<Navigate to="/admin" replace />}><AutomacoesPage /></RequireRole>} />
+                  <Route path="/automacoes" element={<RequireRole role="admin" fallback={<Navigate to="/admin" replace />}><AutomacoesPage /></RequireRole>} />
+                  <Route path="/admin/automacoes" element={<Navigate to="/automacoes" replace />} />
                 </Route>
 
                 <Route path="/admin/flags" element={<Navigate to="/admin?tab=flags" replace />} />

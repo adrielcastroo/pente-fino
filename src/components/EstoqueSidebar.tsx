@@ -7,7 +7,6 @@ import {
   Table,
   FolderOpen,
   ClipboardList,
-  ShieldAlert,
   LayoutDashboard,
   ShieldCheck,
   
@@ -41,8 +40,8 @@ const EstoqueSidebar = memo(() => {
         {
           label: 'Operações',
           items: [
-            { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/estoque/dashboard', minRole: 'supervisor' },
             { key: 'inicio', label: 'Início', icon: Home, path: '/estoque/operacao' },
+            { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/estoque/dashboard', minRole: 'supervisor' },
             { key: 'conferencia', label: 'Conferência', icon: ScanLine, path: '/estoque/conferencia' },
             { key: 'saida', label: 'Saída', icon: ArrowUpRight, path: '/estoque/saida' },
             { key: 'entradas', label: 'Entradas', icon: PackagePlus, path: '/estoque/entradas' },
@@ -67,9 +66,8 @@ const EstoqueSidebar = memo(() => {
           minRole: 'supervisor',
           items: [
             { key: 'cadastros', label: 'Cadastros', icon: ClipboardList, path: '/estoque/cadastros', minRole: 'supervisor' },
-            { key: 'auditoria', label: 'Auditoria', icon: ShieldAlert, path: '/estoque/auditoria', minRole: 'gerente' },
             { key: 'admin', label: 'Painel Admin', icon: ShieldCheck, path: '/admin', minRole: 'admin' },
-            { key: 'automacoes', label: 'Automações', icon: Workflow, path: '/admin/automacoes', minRole: 'admin' },
+            { key: 'automacoes', label: 'Automações', icon: Workflow, path: '/automacoes', minRole: 'admin' },
           ],
         },
       ],
