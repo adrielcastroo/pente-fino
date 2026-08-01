@@ -115,7 +115,7 @@ function ChatWindow({
     [accessToken],
   );
 
-  const { messages, sendMessage, status, error } = useChat({
+  const { messages, sendMessage, setMessages: setChatMessages, status, error } = useChat({
     id: threadId,
     messages: initialMessages,
     transport,
@@ -128,11 +128,20 @@ function ChatWindow({
     },
   });
 
+  // Persistência contínua: grava no store a cada mudança (não apenas ao finalizar),
+  // para que fechar/reabrir o painel durante o streaming não perca a resposta.
   useEffect(() => {
-    if (status === "ready" || status === "error") {
-      setMessages(threadId, messages as UIMessage[]);
-    }
-  }, [status, messages, threadId, setMessages]);
+    setMessages(threadId, messages as UIMessage[]);
+  }, [messages, threadId, setMessages]);
+
+  // Flush final ao desmontar (troca de thread / fechamento do painel).
+  const messagesRef = useRef(messages);
+  messagesRef.current = messages;
+  useEffect(() => {
+    return () => {
+      setMessages(threadId, messagesRef.current as UIMessage[]);
+    };
+  }, [threadId, setMessages]);
 
   useEffect(() => {
     composerRef.current?.focus();
@@ -154,9 +163,33 @@ function ChatWindow({
     }
   }, [messages, onArtifact, registerFloatingWidget]);
 
+  /** Comandos locais (não vão para o modelo). */
+  const runLocalCommand = (raw: string): boolean => {
+    const cmd = raw.toLowerCase().replace(/^\//, "").trim();
+    if (cmd === "limpar" || cmd === "clear") {
+      setChatMessages([]);
+      setMessages(threadId, []);
+      return true;
+    }
+    if (cmd === "ajuda" || cmd === "help" || cmd === "comandos") {
+      const help: UIMessage = {
+        id: `help_${Date.now()}`,
+        role: "assistant",
+        parts: [{ type: "text", text: FIO_HELP_TEXT }],
+      } as UIMessage;
+      setChatMessages([...(messages as UIMessage[]), help]);
+      return true;
+    }
+    return false;
+  };
+
   const handleSubmit = (msg: PromptInputMessage) => {
     const text = (msg.text ?? "").trim();
     if (!text || status === "streaming" || status === "submitted") return;
+    if (text.startsWith("/") && runLocalCommand(text)) {
+      setTimeout(() => composerRef.current?.focus(), 0);
+      return;
+    }
     if (messages.length === 0) setTitle(threadId, text);
     void sendMessage({ parts: [{ type: "text", text }] });
     setTimeout(() => composerRef.current?.focus(), 0);
@@ -181,6 +214,19 @@ function ChatWindow({
     });
   const showThinking = isLoading && !lastAssistantHasVisibleContent;
 
+  // Modo "thinking": mostra a ferramenta/pesquisa em andamento, não só "Pensando…".
+  const thinkingLabel = (() => {
+    if (status === "submitted") return "Interpretando sua pergunta…";
+    const running = lastMessage?.parts?.filter((p: any) => p.type?.startsWith("tool-")) ?? [];
+    const active: any = [...running].reverse().find((p: any) => p.state !== "output-available" && p.state !== "output-error");
+    const target = active ?? running[running.length - 1];
+    if (target) {
+      const name = String((target as any).type).replace(/^tool-/, "").replace(/_/g, " ");
+      return `Consultando ${name}…`;
+    }
+    return "Pensando…";
+  })();
+
   return (
     <div className="flex flex-1 flex-col min-h-0 min-w-0">
       <Conversation className="flex-1 min-h-0">
@@ -189,7 +235,7 @@ function ChatWindow({
             <ConversationEmptyState
               icon={<FioAvatar size={72} state={isLoading ? "thinking" : "idle"} />}
               title="Fio · Assistente do Pente Fino"
-              description="Sou o Fio. Pergunte sobre itens, transferências, saldo do estoque, movimentações e mais."
+              description="Sou o Fio. Pergunte sobre itens, transferências, saldo do estoque, movimentações e mais. Digite /ajuda para ver os comandos disponíveis."
             />
           )}
           {messages.map((m) => (
@@ -273,7 +319,14 @@ function ChatWindow({
           {showThinking && (
             <Message from="assistant">
               <MessageContent className="bg-transparent">
-                <Shimmer>Pensando…</Shimmer>
+                <div className="flex items-center gap-2">
+                  <span className="flex items-end gap-1" aria-hidden="true">
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce" />
+                  </span>
+                  <Shimmer>{thinkingLabel}</Shimmer>
+                </div>
               </MessageContent>
             </Message>
           )}
@@ -310,6 +363,17 @@ function ChatWindow({
     </div>
   );
 }
+
+const FIO_HELP_TEXT = `🧭 **Comandos do Fio**
+
+| Comando | O que faz |
+| --- | --- |
+| \`/ajuda\` · \`/comandos\` | Mostra esta lista |
+| \`/limpar\` · \`/clear\` | Limpa a conversa atual |
+
+ℹ️ Além dos comandos, é só perguntar em linguagem natural — ex.: *"saldo do TC.000.033"*, *"últimas transferências do depósito 01"*, *"onde está o lote TEC02.A.N03"*, *"quais acabamentos usam o item X"*.
+
+> Pergunte **"o que você pode fazer?"** para ver todas as capacidades liberadas para o seu perfil.`;
 
 export function AgentChatWidget() {
   const { user } = useAuth();
