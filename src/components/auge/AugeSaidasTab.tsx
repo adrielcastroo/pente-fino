@@ -39,12 +39,14 @@ const SITUACAO_STYLE: Record<string, string> = {
 export default function AugeSaidasTab() {
   const [rows, setRows] = useState<AugeSaida[]>([]);
   const [loading, setLoading] = useState(true);
-  const [syncing, setSyncing] = useState(false);
   const [search, setSearch] = useState('');
-  const [situacao, setSituacao] = useState<string>('todos');
-  const [pageSize, setPageSize] = useState(30);
+  const [situacao, setSituacao] = useState<string | null>(null);
+  const [usuario, setUsuario] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [lastSync, setLastSync] = useState<string | null>(null);
   const [detail, setDetail] = useState<MovimentacaoRow | null>(null);
+
 
   const load = async () => {
     setLoading(true);
