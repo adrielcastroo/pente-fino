@@ -13,6 +13,7 @@ import { Type, Maximize, Layout, Save, RefreshCw, Shirt, Cog, Square, Check, Plu
 import type { LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { TecidoPreview, MotorPreview, LABEL_PX_PER_MM } from '@/components/labels/LabelTemplates';
+import { saveGlobalSetting, GLOBAL_PRINT_CONFIG_KEY } from '@/hooks/useGlobalSettings';
 
 type LabelKind = 'tecido' | 'motor' | 'expedicao';
 
@@ -793,6 +794,14 @@ function WebhookUrlEditor() {
     }
   }
 
+  const persistGlobal = (webhookUrl: string | null) => {
+    const silentPrint = (() => {
+      try { return localStorage.getItem('pref_silent_browser_print') === 'true'; } catch { return false; }
+    })();
+    saveGlobalSetting(GLOBAL_PRINT_CONFIG_KEY, { webhookUrl, silentPrint })
+      .catch((e) => console.warn('[global-settings] webhook', e));
+  };
+
   const handleSave = () => {
     if (urlError) {
       toast.error(urlError);
@@ -802,9 +811,10 @@ function WebhookUrlEditor() {
     try {
       if (v) localStorage.setItem(WEBHOOK_LS_KEY, v);
       else localStorage.removeItem(WEBHOOK_LS_KEY);
+      persistGlobal(v || null);
       setSaved(true);
       setTimeout(() => setSaved(false), 1500);
-      toast.success(v ? 'Webhook do n8n atualizado' : 'Webhook restaurado para o padrão');
+      toast.success(v ? 'Webhook do n8n atualizado para todos' : 'Webhook restaurado para o padrão');
     } catch (e) {
       toast.error('Não foi possível salvar o webhook');
     }
@@ -813,8 +823,10 @@ function WebhookUrlEditor() {
   const handleReset = () => {
     setValue('');
     try { localStorage.removeItem(WEBHOOK_LS_KEY); } catch { /* noop */ }
+    persistGlobal(null);
     toast.success('Webhook restaurado para o padrão');
   };
+
 
   return (
     <div className="space-y-2 pt-2 rounded-md border border-dashed border-border/50 bg-muted/20 px-2.5 py-2">
@@ -1003,11 +1015,15 @@ function SilentPrintPanel() {
     try {
       if (v) localStorage.setItem(SILENT_PRINT_KEY, 'true');
       else localStorage.removeItem(SILENT_PRINT_KEY);
+      const webhookUrl = localStorage.getItem('n8n_webhook_url');
+      saveGlobalSetting(GLOBAL_PRINT_CONFIG_KEY, { webhookUrl: webhookUrl || null, silentPrint: v })
+        .catch((e) => console.warn('[global-settings] impressão silenciosa', e));
       toast.success(v
         ? 'Impressão silenciosa habilitada — requer Chrome/Edge em modo kiosk-printing'
         : 'Impressão silenciosa desabilitada');
     } catch { /* noop */ }
   };
+
 
   const copyToClipboard = async (text: string, id: string) => {
     try {
