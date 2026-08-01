@@ -189,6 +189,8 @@ export default function ReleasesPage() {
                 <p className="text-sm font-semibold">Build atual</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   <span className="font-mono">v{currentVersion ?? '?'}</span>
+                  {currentVersion && <> · <strong className="text-primary">{codenameFor(currentVersion)}</strong></>}
+
                   {currentBuildTime && (
                     <> · compilado em {new Date(currentBuildTime).toLocaleString('pt-BR')}</>
                   )}
