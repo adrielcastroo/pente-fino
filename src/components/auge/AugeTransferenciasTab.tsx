@@ -322,11 +322,16 @@ export default function AugeTransferenciasTab({
             </Button>
           )}
         </div>
-        <ToggleGroup type="single" value={filtro} onValueChange={(v) => v && setFiltro(v as Filtro)} className="h-11 shrink-0">
-          <ToggleGroupItem value="todos" className="h-11 px-3 text-xs">Todos</ToggleGroupItem>
-          <ToggleGroupItem value="rascunho" className="h-11 px-3 text-xs">Rascunhos</ToggleGroupItem>
-          <ToggleGroupItem value="efetivada" className="h-11 px-3 text-xs">Efetivadas</ToggleGroupItem>
-        </ToggleGroup>
+        <FiltroColapsado
+          label="Filtro"
+          value={filtro}
+          onChange={(v) => setFiltro(v as Filtro | null)}
+          opcoes={[
+            { value: 'rascunho', label: 'Rascunhos', count: rows.filter(r => isRascunho(r) && !isEfetivada(r)).length },
+            { value: 'efetivada', label: 'Efetivadas', count: rows.filter(isEfetivada).length },
+          ]}
+        />
+
         <Button onClick={abrirNovo} variant="default" className="h-11 px-4 sm:px-5 gap-2 shrink-0">
           <Plus className="w-4 h-4" />
           <span className="hidden sm:inline">Nova</span>
