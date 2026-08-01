@@ -31,6 +31,7 @@ import {
   Workflow,
   Warehouse,
   ListChecks,
+  ShieldAlert,
 } from 'lucide-react';
 
 const FeatureFlagsPage = lazy(() => import('./FeatureFlagsPage'));
@@ -47,6 +48,7 @@ const AugeAdminPanel = lazy(() => import('@/components/auge/AugeAdminPanel'));
 const LlmTokensTab = lazy(() => import('./tabs/LlmTokensTab'));
 const BackfillTransferenciasTab = lazy(() => import('./tabs/BackfillTransferenciasTab'));
 const AugePermissoesTab = lazy(() => import('./tabs/AugePermissoesTab'));
+const AugeKardexTab = lazy(() => import('@/components/auge/AugeKardexTab'));
 
 
 declare const __APP_VERSION__: string;
@@ -91,7 +93,8 @@ const TAB_GROUPS: TabGroup[] = [
       { key: 'settings', label: 'Configurações', icon: Settings2 },
       { key: 'database', label: 'Banco de Dados', icon: Database },
       { key: 'backup', label: 'Backup & Dados', icon: HardDriveDownload },
-      { key: 'audit', label: 'Auditoria', icon: ScrollText },
+      { key: 'audit', label: 'Auditoria (App)', icon: ScrollText },
+      { key: 'audit-auge', label: 'Auditoria Auge', icon: ShieldAlert },
       { key: 'security', label: 'Segurança & Auth', icon: KeyRound },
     ],
   },
@@ -222,6 +225,9 @@ export default function AdminPanelPage() {
             <Suspense fallback={tabFallback}><BackupTab /></Suspense>
           </TabsContent>
           <TabsContent value="audit" className="mt-0"><AuditTab /></TabsContent>
+          <TabsContent value="audit-auge" className="mt-0">
+            <Suspense fallback={tabFallback}><AugeKardexTab /></Suspense>
+          </TabsContent>
           <TabsContent value="security" className="mt-0"><SecurityTab /></TabsContent>
         </motion.div>
       </Tabs>
