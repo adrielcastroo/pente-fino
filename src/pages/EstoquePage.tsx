@@ -517,50 +517,9 @@ export default function EstoquePage() {
       className="max-w-full mx-auto space-y-4 pb-20 overflow-x-hidden min-w-0"
     >
       {/* Header */}
-      <PageHeader
-        title="Gestão de estoque"
-        actions={
-          <Button
-            onClick={() => setImportOpen(true)}
-            variant="outline"
-            size="sm"
-            className="h-9"
-          >
-            Importar
-          </Button>
-        }
-      />
-
-      {/* Categoria Tabs */}
-      <div className="inline-flex bg-card/60 rounded-md p-1 gap-1 border border-border/40 w-full sm:max-w-md">
-        {(['tecido', 'madeira'] as const).map((key) => {
-          const Icon = key === 'tecido' ? Shirt : TreePine;
-          const label = key === 'tecido' ? 'Estoque de Tecidos' : 'Estoque de Madeira';
-          const isActive = category === key;
-          return (
-            <button
-              key={key}
-              onClick={() => setCategory(key)}
-              aria-pressed={isActive}
-              className={cn(
-                'flex-1 py-2 rounded-md text-[11px] sm:text-xs font-medium transition-colors duration-200 flex items-center justify-center gap-2 min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
-                isActive
-                  ? 'bg-primary text-primary-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/40',
-              )}
-            >
-              <Icon className="w-4 h-4 shrink-0" strokeWidth={1.75} />
-              <span className="truncate">{label}</span>
-            </button>
-          );
-        })}
-      </div>
+      <PageHeader title="Gestão de estoque" />
 
 
-      {category === 'madeira' ? (
-        <MadeiraEstoque />
-      ) : (
-        <>
       {/* Stats Cards */}
       <div className="w-full pb-4 px-0">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 tablet-portrait:grid-cols-5 gap-3 sm:gap-4 tablet-portrait:gap-2">
