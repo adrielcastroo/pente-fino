@@ -13,6 +13,7 @@ import { Type, Maximize, Layout, Save, RefreshCw, Shirt, Cog, Square, Check, Plu
 import type { LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { TecidoPreview, MotorPreview, LABEL_PX_PER_MM } from '@/components/labels/LabelTemplates';
+import { saveGlobalSetting, GLOBAL_PRINT_CONFIG_KEY } from '@/hooks/useGlobalSettings';
 
 type LabelKind = 'tecido' | 'motor' | 'expedicao';
 
