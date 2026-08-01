@@ -1519,6 +1519,9 @@ export default function EstoquePage() {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Últimas saídas — 15 baixas mais recentes */}
+      <UltimasSaidasDialog open={saidasOpen} onOpenChange={setSaidasOpen} describeItem={describeItem} />
+
     </motion.div>
   );
 }
