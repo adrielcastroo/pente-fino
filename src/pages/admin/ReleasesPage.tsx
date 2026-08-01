@@ -4,6 +4,8 @@ import { Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { useAppReleases, type AppRelease } from '@/hooks/useAppReleases';
+import { BUMP_META, applyBump, codenameFor, diffBump } from '@/lib/version';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
