@@ -133,63 +133,33 @@ export function ReservaFormDialog({ onAdd, mode = 'create', open, onOpenChange, 
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="quantidade" className="font-bold text-xs uppercase tracking-wider text-muted-foreground">
-                Qtd Unid. <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="quantidade"
-                type="text"
-                inputMode="numeric"
-                value={form.quantidade}
-                onChange={e => handleNumericInput('quantidade', e.target.value)}
-                placeholder="0"
-                className="bg-muted/30 border-border/60 focus:bg-background transition-all font-mono"
-                required
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="quantidadeCx" className="font-bold text-xs uppercase tracking-wider text-muted-foreground">
-                Qtd por CX
-              </Label>
-              <Input
-                id="quantidadeCx"
-                type="text"
-                inputMode="numeric"
-                value={form.quantidadeCx}
-                onChange={e => handleNumericInput('quantidadeCx', e.target.value)}
-                placeholder="Ex: 5"
-                className="bg-muted/30 border-border/60 focus:bg-background transition-all font-mono"
-              />
-            </div>
+          <div className="grid gap-2">
+            <Label htmlFor="quantidade" className="font-bold text-xs uppercase tracking-wider text-muted-foreground">
+              Qtd Unid. <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="quantidade"
+              type="text"
+              inputMode="numeric"
+              value={form.quantidade}
+              onChange={e => handleNumericInput('quantidade', e.target.value)}
+              placeholder="0"
+              className="bg-muted/30 border-border/60 focus:bg-background transition-all font-mono"
+              required
+            />
           </div>
 
-          <div className="grid grid-cols-2 gap-4 border-t border-border/20 pt-4">
-            <div className="grid gap-2">
-              <Label htmlFor="caixa" className="font-bold text-xs uppercase tracking-wider text-muted-foreground">
-                Nº da Caixa
-              </Label>
-              <Input
-                id="caixa"
-                value={form.caixaNum}
-                onChange={e => updateField('caixaNum', e.target.value)}
-                placeholder="Opcional"
-                className="bg-muted/10 border-border/40 focus:bg-background transition-all"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="descricao" className="font-bold text-xs uppercase tracking-wider text-muted-foreground">
-                Descrição
-              </Label>
-              <Input
-                id="descricao"
-                value={form.descricao}
-                onChange={e => updateField('descricao', e.target.value)}
-                placeholder="Opcional"
-                className="bg-muted/10 border-border/40 focus:bg-background transition-all"
-              />
-            </div>
+          <div className="grid gap-2">
+            <Label htmlFor="caixa" className="font-bold text-xs uppercase tracking-wider text-muted-foreground">
+              Nº de identificação da caixa
+            </Label>
+            <Input
+              id="caixa"
+              value={form.caixaNum}
+              onChange={e => updateField('caixaNum', e.target.value)}
+              placeholder="Opcional"
+              className="bg-muted/10 border-border/40 focus:bg-background transition-all"
+            />
           </div>
 
           <div className="grid gap-2">
