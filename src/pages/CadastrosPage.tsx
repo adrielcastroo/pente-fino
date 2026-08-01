@@ -746,9 +746,6 @@ export default function CadastrosPage() {
           )}
         </TabsContent>
 
-        <TabsContent value="reconciliacao" className="flex-1 overflow-hidden mt-0">
-          <AugeReconciliacaoTab />
-        </TabsContent>
       </Tabs>
 
       <ItemFormDialog open={formOpen} onOpenChange={setFormOpen} initial={editing} />
