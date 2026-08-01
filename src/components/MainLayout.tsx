@@ -4,6 +4,7 @@ import { useIsMobile, useIsTablet } from '@/hooks/use-mobile';
 import { usePresenceTracker } from '@/hooks/use-presence';
 import { useNetworkStatus } from '@/hooks/use-network-status';
 import { useUserScopedPrefs } from '@/hooks/useUserScopedPrefs';
+import { useGlobalSettingsSync } from '@/hooks/useGlobalSettings';
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import TopBar from '@/components/TopBar';
 import EstoqueSidebar from '@/components/EstoqueSidebar';
