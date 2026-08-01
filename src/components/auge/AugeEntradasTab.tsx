@@ -67,34 +67,20 @@ export default function AugeEntradasTab() {
     }
   };
 
-  const sync = async () => {
-    setSyncing(true);
-    const t = toast.loading('Sincronizando entradas do Auge...');
-    try {
-      const { data, error } = await supabase.functions.invoke('auge-sync', {
-        body: {},
-        method: 'POST' as any,
-      });
-      if (error) throw error;
-      if (data?.ok === false) throw new Error(data.error || 'Falha na sincronização');
-      const ent = (data?.results ?? []).find((r: any) => r.entity === 'entradas');
-      if (ent?.error) throw new Error(ent.error);
-      toast.success(`${ent?.upserted ?? 0} entradas sincronizadas`, { id: t });
-      await load();
-    } catch (e: any) {
-      toast.error('Falha ao sincronizar: ' + (e.message || ''), { id: t });
-    } finally {
-      setSyncing(false);
-    }
-  };
-
   useEffect(() => { load(); }, []);
-  useEffect(() => { setPageSize(30); }, [search, situacao]);
+  useEffect(() => { setPage(1); }, [search, situacao, usuario, pageSize]);
+
+  const usuarios = useMemo(
+    () => Array.from(new Set(rows.map(r => r.usuario_criacao).filter(Boolean) as string[]))
+      .sort((a, b) => a.localeCompare(b, 'pt-BR')),
+    [rows],
+  );
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
     return rows.filter(r => {
-      if (situacao !== 'todos' && r.situacao !== situacao) return false;
+      if (situacao && r.situacao !== situacao) return false;
+      if (usuario && r.usuario_criacao !== usuario) return false;
       if (!q) return true;
       return (
         (r.documento || '').toLowerCase().includes(q) ||
@@ -105,9 +91,16 @@ export default function AugeEntradasTab() {
         (r.ds_situacao || '').toLowerCase().includes(q)
       );
     });
-  }, [rows, search, situacao]);
+  }, [rows, search, situacao, usuario]);
 
-  const visible = filtered.slice(0, pageSize);
+  // Renderiza apenas a página atual — as demais só montam ao navegar.
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const visible = useMemo(
+    () => filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+    [filtered, currentPage, pageSize],
+  );
+
 
   const stats = useMemo(() => {
     const total = rows.length;
