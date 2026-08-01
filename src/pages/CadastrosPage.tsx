@@ -9,13 +9,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import {
   Plus, Search, Pencil, Trash2, Package, History,
-  ChevronLeft, ChevronRight, GitCompare, Sparkles,
+  ChevronLeft, ChevronRight, Sparkles,
   ArrowUp, ArrowDown, ArrowUpDown, Cloud, Loader2, Upload,
 } from 'lucide-react';
 import ItemFormDialog from '@/components/cadastros/ItemFormDialog';
 import ImportItensDialog from '@/components/cadastros/ImportItensDialog';
 import CadastroDetailDialog from '@/components/cadastros/CadastroDetailDialog';
-import AugeReconciliacaoTab from '@/components/auge/AugeReconciliacaoTab';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ItemCadastro } from '@/services/itensCadastroService';
 import { toast } from 'sonner';
