@@ -3,9 +3,13 @@ import { useAppStore } from '@/store/useAppStore';
 import { useAuth } from '@/hooks/use-auth';
 
 /**
- * Escopa as preferências pessoais (labelSettings e dashboardDialogTheme) por
- * usuário logado / visitante, evitando que configurações de uma pessoa vazem
- * para outra que use o mesmo navegador.
+ * Escopa as preferências pessoais (dashboardDialogTheme) por usuário logado /
+ * visitante, evitando que configurações de uma pessoa vazem para outra que use
+ * o mesmo navegador.
+ *
+ * Observação: `labelSettings` NÃO é mais escopado por usuário — passou a ser
+ * configuração global do app, gerenciada no Painel Admin e sincronizada por
+ * `useGlobalSettingsSync`.
  *
  * Chave: `user-prefs:<uid>` para logados, `user-prefs:guest:<nome>` para
  * visitantes, `user-prefs:anon` como fallback.
@@ -18,8 +22,6 @@ const scopeKey = (uid: string | null, guestName: string, isGuest: boolean) => {
 
 export function useUserScopedPrefs() {
   const { user, isGuest, guestName, loading } = useAuth();
-  const labelSettings = useAppStore(s => s.labelSettings);
-  const setLabelSettings = useAppStore(s => s.setLabelSettings);
   const dashboardDialogTheme = useAppStore(s => s.dashboardDialogTheme);
   const setDashboardDialogTheme = useAppStore(s => s.setDashboardDialogTheme);
 
@@ -37,7 +39,6 @@ export function useUserScopedPrefs() {
       if (raw) {
         const parsed = JSON.parse(raw);
         hydrating.current = true;
-        if (parsed.labelSettings) setLabelSettings(parsed.labelSettings);
         if (parsed.dashboardDialogTheme) setDashboardDialogTheme(parsed.dashboardDialogTheme);
         // libera a escrita no próximo tick para não gravar o valor recém lido
         setTimeout(() => { hydrating.current = false; }, 0);
@@ -45,7 +46,7 @@ export function useUserScopedPrefs() {
     } catch (e) {
       console.warn('[useUserScopedPrefs] hydrate failed', e);
     }
-  }, [user?.id, isGuest, guestName, loading, setLabelSettings, setDashboardDialogTheme]);
+  }, [user?.id, isGuest, guestName, loading, setDashboardDialogTheme]);
 
   // Persiste alterações no escopo atual.
   useEffect(() => {
@@ -53,10 +54,10 @@ export function useUserScopedPrefs() {
     try {
       localStorage.setItem(
         currentScope.current,
-        JSON.stringify({ labelSettings, dashboardDialogTheme }),
+        JSON.stringify({ dashboardDialogTheme }),
       );
     } catch (e) {
       console.warn('[useUserScopedPrefs] persist failed', e);
     }
-  }, [labelSettings, dashboardDialogTheme, loading]);
+  }, [dashboardDialogTheme, loading]);
 }
