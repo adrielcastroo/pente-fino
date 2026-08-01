@@ -401,6 +401,40 @@ export default function CadastrosPage() {
             </div>
           </div>
 
+          {/* Últimas edições — auditoria rápida, substitui a antiga coluna "Edição" */}
+          {ultimasEdicoes.length > 0 && (
+            <section
+              aria-label="Últimas edições"
+              className="rounded-lg border border-border/60 bg-card px-3 py-2.5 space-y-1.5"
+            >
+              <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground flex items-center gap-1.5">
+                <History className="h-3 w-3" /> Últimas edições
+              </p>
+              <div className="flex flex-col gap-1">
+                {ultimasEdicoes.map((it) => (
+                  <button
+                    key={it.id}
+                    type="button"
+                    onClick={() => setDetailItem(it)}
+                    className="flex flex-wrap items-center gap-x-2 gap-y-0.5 rounded-md px-2 py-1 text-left text-xs hover:bg-accent/40 transition-colors"
+                  >
+                    <span className="font-mono font-semibold text-primary shrink-0">{it.codigo_interno}</span>
+                    <span className="truncate max-w-[220px] text-foreground/80">{it.descricao}</span>
+                    <span className="text-muted-foreground">
+                      {it.updated_by_name || 'Usuário'} alterou{' '}
+                      <span className="font-medium text-foreground">{fieldLabel(it.last_edited_field) || '—'}</span>
+                    </span>
+                    <span className="text-muted-foreground/70 ml-auto shrink-0">
+                      {it.last_edited_at ? new Date(it.last_edited_at).toLocaleString('pt-BR') : '—'}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+
+
+
           {/* Auge inline hits — só quando há busca e itens do Auge fora do cadastro */}
           {search.trim().length >= 2 && fornFilter !== 'pendentes_auge' && augeHitsPendentes.length > 0 && (
             <div className="rounded-lg border border-violet-500/30 bg-violet-500/5 p-3 space-y-2">
