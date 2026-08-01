@@ -4,6 +4,8 @@ import { Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { useAppReleases, type AppRelease } from '@/hooks/useAppReleases';
+import { BUMP_META, applyBump, codenameFor, diffBump } from '@/lib/version';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -112,10 +114,42 @@ export default function ReleasesPage() {
           <DialogContent>
             <DialogHeader><DialogTitle>Registrar nova release</DialogTitle></DialogHeader>
             <div className="space-y-3">
+              <div className="space-y-2">
+                <label className="text-xs font-semibold uppercase text-muted-foreground">
+                  Tamanho da atualização
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {(['patch', 'minor', 'major'] as const).map((b) => {
+                    const base = releases?.[0]?.version ?? form.version ?? '0.0.0';
+                    const next = applyBump(base, b);
+                    return (
+                      <Button
+                        key={b}
+                        type="button"
+                        size="sm"
+                        variant={form.version === next ? 'default' : 'outline'}
+                        className="flex-col h-auto py-2 gap-0.5"
+                        onClick={() => setForm({ ...form, version: next })}
+                        title={BUMP_META[b].description}
+                      >
+                        <span className="text-[10px] uppercase tracking-wider font-bold">{BUMP_META[b].label}</span>
+                        <span className="font-mono text-xs">v{next}</span>
+                      </Button>
+                    );
+                  })}
+                </div>
+                <p className="text-[10px] text-muted-foreground">
+                  Patch = correção · Minor = nova funcionalidade · Major = mudança ampla.
+                </p>
+              </div>
               <div>
                 <label className="text-xs font-semibold uppercase text-muted-foreground">Versão</label>
                 <Input value={form.version} onChange={(e) => setForm({ ...form, version: e.target.value })} placeholder="3.18.0" />
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  Codinome: <strong className="text-primary">{codenameFor(form.version)}</strong>
+                </p>
               </div>
+
               <div>
                 <label className="text-xs font-semibold uppercase text-muted-foreground">Notas</label>
                 <Textarea rows={5} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="- Correção X&#10;- Nova funcionalidade Y" />
@@ -155,6 +189,8 @@ export default function ReleasesPage() {
                 <p className="text-sm font-semibold">Build atual</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   <span className="font-mono">v{currentVersion ?? '?'}</span>
+                  {currentVersion && <> · <strong className="text-primary">{codenameFor(currentVersion)}</strong></>}
+
                   {currentBuildTime && (
                     <> · compilado em {new Date(currentBuildTime).toLocaleString('pt-BR')}</>
                   )}
@@ -184,18 +220,26 @@ export default function ReleasesPage() {
         <Card className="p-8 text-center text-muted-foreground">Nenhuma release registrada.</Card>
       ) : (
         <div className="space-y-2">
-          {releases.map((r: AppRelease) => (
+          {releases.map((r: AppRelease, idx: number) => {
+            const bump = diffBump(releases[idx + 1]?.version, r.version);
+            const bumpMeta = BUMP_META[bump];
+            return (
             <Card key={r.id} className="p-4">
               <div className="flex items-start gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-mono font-bold text-lg">v{r.version}</span>
+                    <span className="text-sm font-medium text-primary">{codenameFor(r.version)}</span>
+                    <Badge variant="outline" className={`text-[10px] uppercase tracking-wider font-bold border ${bumpMeta.className}`} title={bumpMeta.description}>
+                      {bumpMeta.label}
+                    </Badge>
                     {r.is_current && <Badge className="bg-primary">Atual</Badge>}
                     {r.is_stable && <Badge variant="secondary" className="gap-1"><Star className="h-3 w-3" /> Estável</Badge>}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
                     {new Date(r.released_at).toLocaleString('pt-BR')}
                   </p>
+
                   {r.notes && (
                     <pre className="text-xs mt-2 whitespace-pre-wrap font-sans text-foreground/80">{r.notes}</pre>
                   )}
@@ -217,7 +261,9 @@ export default function ReleasesPage() {
                 </div>
               </div>
             </Card>
-          ))}
+            );
+          })}
+
         </div>
       )}
     </div>

@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Bell, Sparkles, Wrench, Zap } from 'lucide-react';
 import { CHANGELOG, LATEST_VERSION, CHANGELOG_STORAGE_KEY, type ChangelogEntry } from '@/lib/changelog';
+import { BUMP_META, codenameFor, diffBump } from '@/lib/version';
+
 import { cn } from '@/lib/utils';
 
 const TYPE_META: Record<ChangelogEntry['highlights'][number]['type'], { label: string; icon: typeof Sparkles; className: string }> = {
@@ -73,10 +75,21 @@ export function ChangelogDialog() {
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto pr-2 -mr-2 space-y-6">
-          {CHANGELOG.map((entry, idx) => (
+          {CHANGELOG.map((entry, idx) => {
+            const bump = diffBump(CHANGELOG[idx + 1]?.version, entry.version);
+            const bumpMeta = BUMP_META[bump];
+            return (
             <article key={entry.version} className="relative">
-              <header className="flex items-baseline gap-3 mb-3 pb-2 border-b border-border/40">
+              <header className="flex items-baseline gap-2 mb-3 pb-2 border-b border-border/40 flex-wrap">
                 <h3 className="text-lg font-semibold text-foreground">v{entry.version}</h3>
+                <span className="text-sm font-medium text-primary">{codenameFor(entry.version)}</span>
+                <Badge
+                  variant="outline"
+                  className={cn('text-[10px] uppercase tracking-wider font-bold border', bumpMeta.className)}
+                  title={bumpMeta.description}
+                >
+                  {bumpMeta.label}
+                </Badge>
                 {idx === 0 && (
                   <Badge className="bg-primary text-primary-foreground font-bold text-[10px] uppercase tracking-wider">
                     Mais recente
@@ -84,6 +97,7 @@ export function ChangelogDialog() {
                 )}
                 <span className="ml-auto text-xs text-muted-foreground font-semibold">{formatDate(entry.date)}</span>
               </header>
+
               <ul className="space-y-2">
                 {entry.highlights.map((h, i) => {
                   const meta = TYPE_META[h.type];
@@ -105,7 +119,9 @@ export function ChangelogDialog() {
                 })}
               </ul>
             </article>
-          ))}
+            );
+          })}
+
         </div>
       </DialogContent>
     </Dialog>

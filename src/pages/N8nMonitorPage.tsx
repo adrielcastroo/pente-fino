@@ -16,6 +16,8 @@ import {
   Send, Trash2, ExternalLink, XCircle, Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { N8nEtiquetaTester } from '@/components/admin/N8nEtiquetaTester';
+
 
 const POLL_MS = 15_000;
 
@@ -158,6 +160,11 @@ export default function N8nMonitorPage() {
         </div>
         <Button size="sm" onClick={saveConfig}>Salvar e testar</Button>
       </Card>
+
+      {/* Testador de etiquetas */}
+      <N8nEtiquetaTester defaultUrl={webhookOverride} />
+
+
 
       {/* Status + Health */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
