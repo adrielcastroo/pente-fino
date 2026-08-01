@@ -90,6 +90,10 @@ export default function EstoquePage() {
   const [selectedCell, setSelectedCell] = useState<{ col: string; nivel: number } | null>(null);
   const [detailPos, setDetailPos] = useState<Posicao | null>(null);
   const [selectedStat, setSelectedStat] = useState<string | null>(null);
+  // Drill-down dentro do dialog de estatísticas: estrutura selecionada no "Resumo por estrutura".
+  const [drillTec, setDrillTec] = useState<string | null>(null);
+  const [saidasOpen, setSaidasOpen] = useState(false);
+
   const [confirmSaida, setConfirmSaida] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [scanMode, setScanMode] = useState(false);
