@@ -1145,8 +1145,9 @@ export default function EstoquePage() {
       </Dialog>
 
       {/* ===== STAT DETAIL DIALOG ===== */}
-      <Dialog open={!!selectedStat} onOpenChange={() => setSelectedStat(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-5xl p-0 gap-0 border border-border bg-card overflow-hidden rounded-lg shadow-xl max-h-[90vh] flex flex-col">
+      <Dialog open={!!selectedStat} onOpenChange={(o) => { if (!o) { setSelectedStat(null); setDrillTec(null); } }}>
+        <DialogContent className="max-w-[95vw] sm:max-w-5xl p-0 gap-0 border border-border bg-card overflow-hidden rounded-lg shadow-xl max-h-[90vh] flex flex-col relative">
+
           {selectedStat && (() => {
             const statItems: { label: string; value: number; percent: number; color: string; bg: string; hex: string }[] = [
               { label: 'Total', value: stats.totalSlots, percent: 100, color: 'text-foreground', bg: 'bg-muted', hex: 'hsl(var(--primary))' },
