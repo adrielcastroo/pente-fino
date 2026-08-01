@@ -3,7 +3,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContain
 import { supabase } from '@/integrations/supabase/client';
 import { useAppStore } from '@/store/useAppStore';
 import { toast } from 'sonner';
-import { Package, MapPin, Layers, ArrowRightLeft, Trash2, ChevronRight, Box, Grid3X3, Info, LogOut, Upload, ScanBarcode, Loader2, CheckCircle2, Archive, Calendar, Shirt, TreePine, ArrowLeft, LayoutDashboard, Barcode, Warehouse, TrendingUp, TrendingDown } from 'lucide-react';
+import { Package, MapPin, Layers, ArrowRightLeft, Trash2, ChevronRight, Box, Grid3X3, Info, LogOut, Upload, ScanBarcode, Loader2, CheckCircle2, Archive, Calendar, ArrowLeft, LayoutDashboard, Barcode, Warehouse, TrendingUp, TrendingDown } from 'lucide-react';
 import { UltimasSaidasDialog } from '@/components/estoque/UltimasSaidasDialog';
 import { TopTecidosBlocks } from '@/components/estoque/TopTecidosBlocks';
 
@@ -19,7 +19,6 @@ import { usePerformance } from '@/hooks/use-performance';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import ImportDialog from '@/components/estoque/ImportDialog';
 import { useAuth } from '@/hooks/use-auth';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { normalizarCodigo } from '@/lib/codigoFornecedor';
@@ -87,14 +86,12 @@ export default function EstoquePage() {
   const setActiveTec = (val: string) => setFormData({ estoqueActiveTec: val });
 
   const [allPosicoes, setAllPosicoes] = useState<Posicao[]>([]);
-  const [category, setCategory] = useState<'tecido' | 'madeira'>('tecido');
   const [loading, setLoading] = useState(true);
   const [selectedCell, setSelectedCell] = useState<{ col: string; nivel: number } | null>(null);
   const [detailPos, setDetailPos] = useState<Posicao | null>(null);
   const [selectedStat, setSelectedStat] = useState<string | null>(null);
   const [confirmSaida, setConfirmSaida] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [importOpen, setImportOpen] = useState(false);
   const [scanMode, setScanMode] = useState(false);
   const [scanInput, setScanInput] = useState('');
   const [scanning, setScanning] = useState(false);
@@ -1403,8 +1400,6 @@ export default function EstoquePage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Import Dialog */}
-      <ImportDialog open={importOpen} onOpenChange={setImportOpen} onImportComplete={loadPosicoes} />
     </motion.div>
   );
 }
