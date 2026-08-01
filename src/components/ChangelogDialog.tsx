@@ -117,7 +117,9 @@ export function ChangelogDialog() {
                 })}
               </ul>
             </article>
-          ))}
+            );
+          })}
+
         </div>
       </DialogContent>
     </Dialog>
