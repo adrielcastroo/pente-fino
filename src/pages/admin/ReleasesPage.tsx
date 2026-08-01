@@ -225,7 +225,9 @@ export default function ReleasesPage() {
                 </div>
               </div>
             </Card>
-          ))}
+            );
+          })}
+
         </div>
       )}
     </div>
