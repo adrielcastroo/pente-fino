@@ -129,17 +129,29 @@ export default function AugeSaidasTab() {
             className="pl-10 h-11 rounded-md border-border/40 bg-card/40 focus:bg-background font-bold text-xs sm:text-sm"
           />
         </div>
-        <Select value={situacao} onValueChange={setSituacao}>
-          <SelectTrigger className="w-full lg:w-[200px] h-11 rounded-md border-border/40 font-bold text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todas situações</SelectItem>
-            <SelectItem value="20">Efetivadas</SelectItem>
-            <SelectItem value="10">Em edição</SelectItem>
-            <SelectItem value="8">Pendentes (erro)</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <FiltroColapsado
+            label="Situação"
+            value={situacao}
+            onChange={setSituacao}
+            opcoes={[
+              { value: '20', label: 'Efetivadas', count: stats.efetivadas },
+              { value: '10', label: 'Em edição', count: stats.emEdicao },
+              { value: '8', label: 'Pendentes (erro)', count: stats.pendentes },
+            ]}
+          />
+          <FiltroColapsado
+            label="Usuário"
+            value={usuario}
+            onChange={setUsuario}
+            opcoes={usuarios.map(u => ({
+              value: u,
+              label: u,
+              count: rows.filter(r => r.usuario_criacao === u).length,
+            }))}
+          />
+        </div>
+
       </div>
 
       {/* Stats */}
