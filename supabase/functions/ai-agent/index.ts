@@ -4,6 +4,8 @@ import { createOpenAICompatible } from "npm:@ai-sdk/openai-compatible";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { buildTools } from "./tools.ts";
 import { getFioCapabilitiesPrompt } from "./capabilities.ts";
+import { buildMemoryTools, listarMemorias, memoriesToPromptBlock } from "./memory.ts";
+import { parseDocuments } from "./documents.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
