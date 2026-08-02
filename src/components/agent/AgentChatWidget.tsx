@@ -591,11 +591,6 @@ export function AgentChatWidget() {
     const onDown = (e: MouseEvent) => {
       const target = e.target as HTMLElement | null;
       if (target?.closest("[role='dialog']")) return; // ignora painel flutuante/artefato
-      
-      // A2: Não fechar o chat por clique-fora durante uso
-      const hasText = composerRef.current?.value.trim();
-      const isBusy = status === "streaming" || status === "submitted";
-      if (hasText || isBusy) return;
 
       if (panelRef.current && !panelRef.current.contains(target as Node)) {
         toggleOpen(false);
@@ -605,6 +600,7 @@ export function AgentChatWidget() {
     document.addEventListener("mousedown", onDown);
     return () => document.removeEventListener("mousedown", onDown);
   }, [open, toggleOpen]);
+
 
   const { state: fioState, expression: fioExpr } = useFioAnimationState();
 
