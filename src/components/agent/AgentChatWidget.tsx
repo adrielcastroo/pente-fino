@@ -471,7 +471,12 @@ function ChatWindow({
       >
         <PromptInput onSubmit={handleSubmit}>
           <div className="flex flex-col gap-2">
-            <PromptInputTextarea ref={composerRef} placeholder="Pergunte algo ao Fio…" />
+            <PromptInputTextarea
+              ref={composerRef}
+              placeholder="Pergunte algo ao Fio…"
+              onFocus={() => emitFioExpression("curioso", 1500)}
+            />
+
             <div className="flex items-center justify-between gap-2 px-1 pb-1">
               <div className="flex items-center gap-1">
                 <DropdownMenu>
