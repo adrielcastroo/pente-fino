@@ -112,7 +112,7 @@ export default function AnaliseCompraPage() {
     <PageShell>
       <PageHeader
         title="Análise de Compra"
-        subtitle="Compare as planilhas para identificar itens alterados, disponibilidade e consumo médio"
+        subtitle="Compare as planilhas para identificar itens alterados, disponibilidade, duração em dias, consumo médio, quantidade em estoque e quantidade de saída."
         backTo="/compras/acompanhamentos"
         actions={
           <div className="flex flex-wrap items-center gap-2">
