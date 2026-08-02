@@ -591,22 +591,15 @@ async function buildAgentContext(admin: ReturnType<typeof createClient>, text: s
 
     let posicoes: any[] = [];
     if (codigos.length > 0) {
-      const [byAuge, byItem] = await Promise.all([
-        admin
-          .from("estoque_posicoes")
-          .select("item,auge_cd_item,lote,lote_sistema,endereco,deposito_atual,status,m_linear_atual,m_linear,m2_atual,m2")
-          .in("auge_cd_item", codigos)
-          .limit(500),
-        admin
-          .from("estoque_posicoes")
-          .select("item,auge_cd_item,lote,lote_sistema,endereco,deposito_atual,status,m_linear_atual,m_linear,m2_atual,m2")
-          .in("item", codigos)
-          .limit(500),
-      ]);
-      if (byAuge.error) context.estoque_erro = byAuge.error.message;
-      if (byItem.error) context.estoque_item_erro = byItem.error.message;
-      posicoes = [...(byAuge.data ?? []), ...(byItem.data ?? [])];
+      const { data, error } = await admin
+        .from("estoque_posicoes")
+        .select("item,auge_cd_item,lote,lote_sistema,endereco,deposito_atual,status,m_linear_atual,m_linear,m2_atual,m2")
+        .or(`auge_cd_item.in.(${codigos.join(",")}),item.in.(${codigos.join(",")})`)
+        .limit(200);
+      if (error) context.estoque_erro = error.message;
+      posicoes = data ?? [];
     }
+
 
     const byCodigo = new Map<string, any>();
     for (const item of itens) {
@@ -1267,7 +1260,13 @@ Deno.serve(async (req) => {
       }
     }
 
-    const automaticContext = await buildAgentContext(admin, conversationText);
+    const extractItem = (t: string) => {
+      const m = t.match(/\b([A-Z]{2})[\.\s-]?(\d{3})[\.\s-]?(\d{3})\b/i);
+      return m ? `${m[1].toUpperCase()}.${m[2]}.${m[3]}` : null;
+    };
+    const needsContext = task === "reasoning" && (looksLikeAugeItemCode(userText) || !!extractItem(userText));
+    const automaticContext = needsContext ? await buildAgentContext(admin, conversationText) : { skip: true };
+
 
     const tableAnswer = acabamentoItemTableAnswer(automaticContext, userText, previousText);
     if (tableAnswer) {
@@ -1499,17 +1498,10 @@ Data/hora: ${new Date().toISOString()}.
 Contexto consultado automaticamente no Pente Fino/Auge:
 ${JSON.stringify(automaticContext, null, 2)}`;
 
-    // Cadeia de fallback resiliente: tenta cada provedor com generateText.
-    // Se qualquer um falhar (rate limit, token limit, timeout, 5xx), passa para o próximo.
-    // Só emite o stream ao cliente depois que UM provedor devolveu texto válido —
-    // assim o usuário nunca fica sem resposta por falha de stream no meio.
-    const errors: Array<{ provider: string; model: string; error: string }> = [];
-    let finalText = "";
-    let usedProvider = "";
-    let usedModel = "";
-
+    // Fase 1 & 3 — Streaming nativo com Tool-calling e Fallback em cadeia.
     for (const cfg of providers) {
       const modelId = pickModel(cfg, task);
+      const startTime = Date.now();
       try {
         const provider = createOpenAICompatible({
           name: cfg.id,
@@ -1517,15 +1509,46 @@ ${JSON.stringify(automaticContext, null, 2)}`;
           headers: authHeaderFor(cfg),
         });
         const model = provider(modelId);
-        const ac = new AbortController();
-        const timeout = setTimeout(() => ac.abort(), 25000);
-        try {
-          const { text } = await generateText({
-            model,
-            system,
-            messages: modelMessages,
-            temperature: 0.2,
-            maxOutputTokens: 900,
+
+        const result = await streamText({
+          model,
+          system,
+          messages: modelMessages,
+          tools: buildTools(admin),
+          stopWhen: stepCountIs(6),
+          temperature: 0.2,
+          maxTokens: 900,
+        });
+
+        // Tenta consumir o início do stream para garantir que o provedor está respondendo.
+        const response = result.toUIMessageStreamResponse();
+        
+        // Background: Persistência no Servidor (Fase 4)
+        if (userId && body.threadId) {
+          (async () => {
+             try {
+               const latency = Date.now() - startTime;
+               const fullText = await result.text;
+               const { data: conv } = await admin
+                 .from("fio_conversations")
+                 .upsert({ id: body.threadId, user_id: userId, title: body.title || userText.slice(0, 50) }, { onConflict: 'id' })
+                 .select('id')
+                 .single();
+               
+               if (conv) {
+                 await admin.from("fio_messages").insert([
+                   { conversation_id: conv.id, role: 'user', content: userText },
+                   { conversation_id: conv.id, role: 'assistant', content: fullText, provider: cfg.id, model: modelId, task, latency_ms: latency }
+                 ]);
+               }
+             } catch (e) {
+               console.error("[ai-agent] erro ao persistir conversa:", e);
+             }
+          })();
+        }
+
+        return response;
+
             abortSignal: ac.signal,
           });
           clearTimeout(timeout);

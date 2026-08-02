@@ -111,9 +111,13 @@ function ChatWindow({
           apikey: PUBLISHABLE_KEY,
           Authorization: `Bearer ${accessToken ?? PUBLISHABLE_KEY}`,
         },
+        body: {
+          threadId,
+        }
       }),
-    [accessToken],
+    [accessToken, threadId],
   );
+
 
   const { messages, sendMessage, setMessages: setChatMessages, status, error } = useChat({
     id: threadId,
