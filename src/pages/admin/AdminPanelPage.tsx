@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { PageShell, PageHeader, StatCard } from '@/components/expedicao/ui';
 import { cn } from '@/lib/utils';
+import { codenameFor } from '@/lib/version';
 import {
   ShieldCheck,
   Flag,
