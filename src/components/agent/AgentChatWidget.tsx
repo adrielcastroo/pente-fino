@@ -451,16 +451,12 @@ function ChatWindow({
           )}
           {error && (
             <div className="mx-2 rounded-md border border-destructive/40 bg-destructive/10 p-2 text-xs text-destructive">
-              {error.message?.includes("Failed to fetch") 
-                ? "analise todo o código para resolver o erro failed to fetch, para que o FIO responda como deveria ser"
-                : error.message?.includes("IA indisponíveis")
-
-
-
-                ? "Sistemas de IA indisponíveis no momento. Vou te passar as chaves e vc configura no supabase pra mim."
-                : `Erro: ${error.message}`}
+              {error.message?.includes("IA indisponíveis")
+                ? "Sistemas de IA indisponíveis (sem chaves API)."
+                : "Não foi possível conectar ao assistente. Por favor, tente novamente em alguns instantes."}
             </div>
           )}
+
         </ConversationContent>
         <ConversationScrollButton />
       </Conversation>
