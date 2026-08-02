@@ -121,8 +121,7 @@ function ChatWindow({
         },
         body: {
           threadId,
-          messages,
-        }
+        },
       }),
     [accessToken, threadId],
   );
