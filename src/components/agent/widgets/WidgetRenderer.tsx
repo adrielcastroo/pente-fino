@@ -20,6 +20,11 @@ export function WidgetRenderer({
     const context =
       spec.type === "confirm" || spec.type === "lotpick" || spec.type === "itemlist" ? (spec.values ?? {}) : {};
     onSend(encodeWidgetSubmit({ widget_id: spec.id, intent: spec.onSubmitIntent, values: { ...context, ...values } }));
+    // Dispara animação de sucesso no avatar do Fio para widgets de confirmação/itemlist
+    if (spec.type === "confirm" || spec.type === "itemlist") {
+      window.dispatchEvent(new CustomEvent("fio:response", { detail: { success: true } }));
+    }
+
   };
 
   const Icon =
