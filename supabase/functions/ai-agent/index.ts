@@ -191,8 +191,8 @@ async function streamWithFallback(providers: any[], messages: ModelMessage[], ad
   const [current, ...rest] = providers;
   if (!current) {
     console.error("ERRO: Nenhum provider de IA configurado (chaves faltando).");
-    const msg = "Sistemas de IA indisponíveis no momento. Por favor, verifique as chaves de API nas configurações.";
-    return textStreamResponse("Sistemas de IA indisponíveis no momento. Por favor, verifique as chaves de API nas configurações.");
+    const msg = "Sistemas de IA indisponíveis no momento. Vou te passar as chaves e vc configura no supabase pra mim.";
+    return textStreamResponse(msg);
   }
 
   try {
