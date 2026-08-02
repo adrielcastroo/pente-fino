@@ -694,8 +694,8 @@ export default function EstoquePage() {
                 {Array.from(searchByTec!.entries())
                   .sort(([a], [b]) => (a === activeTec ? -1 : b === activeTec ? 1 : a.localeCompare(b)))
                   .map(([tec, items]) => (
-                    <div key={tec} className="border-b border-white/5 last:border-b-0">
-                      <div className="px-3 py-1.5 flex items-center justify-between bg-white/[0.02] sticky top-0">
+                    <div key={tec} className="border-b border-border/40 last:border-b-0">
+                      <div className="px-3 py-1.5 flex items-center justify-between bg-muted/20 sticky top-0">
                         <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-primary">{tec}</span>
                         <span className="text-[10px] text-muted-foreground">{items.length} {items.length === 1 ? 'item' : 'itens'}</span>
                       </div>
@@ -890,7 +890,7 @@ export default function EstoquePage() {
                             {items.slice(0, 6).sort((a,b) => a.posicao - b.posicao).map((it) => {
                               const statusColor = it.status === 'bloqueado' ? 'bg-red-500' : it.status === 'reservado' ? 'bg-amber-500' : 'bg-emerald-500';
                               return (
-                                <div key={it.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/5 transition-colors">
+                                <div key={it.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-muted/40 transition-colors">
                                   <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${statusColor}`} />
                                   <div className="text-[10px] font-semibold text-muted-foreground/70 shrink-0 w-7">P{String(it.posicao).padStart(2,'0')}</div>
                                   <div className="text-xs font-bold text-foreground truncate flex-1" title={it.item || ''}>{describeItem(it.item) || it.item || '—'}</div>
