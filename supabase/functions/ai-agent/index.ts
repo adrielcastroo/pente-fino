@@ -111,10 +111,19 @@ Deno.serve(async (req) => {
     }
     const userText = (lastMsg && typeof lastMsg.content === "string") ? lastMsg.content : "";
 
-    if (!isInScope(userText)) return textStreamResponse("Sou o Fio, assistente do Pente Fino. Só respondo sobre estoque e logística.");
+    // Documentos anexados (PDF/XLS/XLSX/ODS/CSV) — lidos antes do scope check
+    const { docs, promptBlock: documentsBlock } = await parseDocuments(body);
+
+    if (!documentsBlock && !isInScope(userText)) {
+      return textStreamResponse("Sou o Fio, assistente do Pente Fino. Só respondo sobre estoque e logística.");
+    }
+
+    // Memória de longo prazo do usuário
+    const { memorias } = await listarMemorias(admin, userId ?? null);
+    const memoryBlock = memoriesToPromptBlock(memorias ?? []);
 
     // Detecção de multimodal (imagens) para troca de modelo
-    const hasImages = messages.some(m => Array.isArray(m.content) && m.content.some(c => c.type === 'image_url'));
+    const hasImages = messages.some(m => Array.isArray(m.content) && m.content.some((c: any) => c.type === 'image_url' || c.type === 'image'));
 
     const providers = [
       { 
@@ -137,7 +146,11 @@ Deno.serve(async (req) => {
       }
     ].filter(p => !!p.apiKey);
 
-    return streamWithFallback(providers, messages, admin, userId, threadId, userText, userRole);
+    return streamWithFallback(providers, messages, admin, userId, threadId, userText, userRole, {
+      memoryBlock,
+      documentsBlock,
+      docCount: docs.length,
+    });
   } catch (err) {
     return new Response(JSON.stringify(errorPayload(err)), { status: 500, headers: corsHeaders });
   }
