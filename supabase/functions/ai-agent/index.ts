@@ -1,5 +1,5 @@
 // AI Agent — assistente do Pente Fino/Auge.
-import { streamText, type ModelMessage, type UIMessage, convertToModelMessages, stepCountIs } from "npm:ai";
+import { streamText, type ModelMessage, type UIMessage, convertToModelMessages } from "npm:ai";
 import { createOpenAICompatible } from "npm:@ai-sdk/openai-compatible";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { buildTools } from "./tools.ts";
@@ -59,9 +59,8 @@ function isInScope(text: string): boolean {
   return DOMAIN_TERMS.some(term => t.includes(term));
 }
 
-function roleLevel(role: string | null): number {
-  const levels: Record<string, number> = { admin: 1, gerente: 2, supervisor: 3, operador: 4, user: 4 };
-  return levels[role ?? ""] ?? 5;
+function roleLabel(role: string | null) {
+  return role || "visitante";
 }
 
 const WIDGET_SUBMIT_PREFIX = "__widget_submit__:";
@@ -75,12 +74,11 @@ function rewriteWidgetSubmit(text: string): string {
 
 async function buildAgentContext(admin: any, userText: string) {
   const ctx: any = {};
-  if (/\b([A-Z]{2})[\.\s-]?(\d{3})[\.\s-]?(\d{3})\b/.test(userText)) {
-    const code = userText.match(/\b([A-Z]{2})[\.\s-]?(\d{3})[\.\s-]?(\d{3})\b/)?.[0];
-    if (code) {
-      const { data } = await admin.from("estoque_posicoes").select("*").or(`auge_cd_item.ilike.%${code}%,item.ilike.%${code}%`).limit(10);
-      ctx.estoque_recente = data || [];
-    }
+  const codeMatch = userText.match(/\b([A-Z]{2})[\.\s-]?(\d{3})[\.\s-]?(\d{3})\b/);
+  if (codeMatch) {
+    const code = codeMatch[0];
+    const { data } = await admin.from("estoque_posicoes").select("*").or(`auge_cd_item.ilike.%${code}%,item.ilike.%${code}%`).limit(10);
+    ctx.estoque_recente = data || [];
   }
   return ctx;
 }
@@ -106,10 +104,12 @@ Deno.serve(async (req) => {
 
     const messages = convertToModelMessages(body.messages);
     const lastMsg = messages[messages.length - 1];
-    if (lastMsg.role === "user") lastMsg.content = rewriteWidgetSubmit(lastMsg.content as string);
-    const userText = typeof lastMsg.content === "string" ? lastMsg.content : "";
+    if (lastMsg && lastMsg.role === "user" && typeof lastMsg.content === "string") {
+      lastMsg.content = rewriteWidgetSubmit(lastMsg.content);
+    }
+    const userText = (lastMsg && typeof lastMsg.content === "string") ? lastMsg.content : "";
 
-    if (!isInScope(userText)) return textStreamResponse("Fora do escopo do Pente Fino.");
+    if (!isInScope(userText)) return textStreamResponse("Sou o Fio, assistente do Pente Fino. Só respondo sobre estoque e logística.");
 
     const providers = [
       { id: "cerebras", baseURL: "https://api.cerebras.ai/v1", apiKey: Deno.env.get("CEREBRAS_API_KEY"), model: "llama-3.3-70b" },
@@ -124,11 +124,12 @@ Deno.serve(async (req) => {
 
 async function streamWithFallback(providers: any[], messages: ModelMessage[], admin: any, userId: any, threadId: any, userText: string, userRole: any): Promise<Response> {
   const [current, ...rest] = providers;
-  if (!current) return textStreamResponse("Indisponível.");
+  if (!current) return textStreamResponse("Sistemas de IA indisponíveis no momento.");
 
   try {
     const ctx = await buildAgentContext(admin, userText);
-    const system = `${getFioCapabilitiesPrompt()}\nUser: ${userRole}. Context: ${JSON.stringify(ctx)}`;
+    const system = `${getFioCapabilitiesPrompt()}\n\nRegras visuais: Use markdown rico, tabelas, [[WIDGET]], [[ARTIFACT]] e [[SUGGESTIONS]] conforme documentado.\nPerfil do usuário: ${roleLabel(userRole)}.\nContexto dinâmico: ${JSON.stringify(ctx)}`;
+    
     const result = await streamText({
       model: createOpenAICompatible({ name: current.id, baseURL: current.baseURL, headers: { Authorization: `Bearer ${current.apiKey}` } })(current.model),
       system,
@@ -139,14 +140,19 @@ async function streamWithFallback(providers: any[], messages: ModelMessage[], ad
 
     if (userId && threadId) {
       (async () => {
-        const text = await result.text;
-        await admin.from("fio_conversations").upsert({ id: threadId, user_id: userId, title: userText.slice(0, 60), updated_at: new Date().toISOString() });
-        await admin.from("fio_messages").insert([
-          { conversation_id: threadId, role: "user", content: { text: userText } },
-          { conversation_id: threadId, role: "assistant", content: { text } }
-        ]);
+        try {
+          const text = await result.text;
+          await admin.from("fio_conversations").upsert({ id: threadId, user_id: userId, title: userText.slice(0, 60), updated_at: new Date().toISOString() });
+          await admin.from("fio_messages").insert([
+            { conversation_id: threadId, role: "user", content: { text: userText } },
+            { conversation_id: threadId, role: "assistant", content: { text } }
+          ]);
+        } catch (e) { console.error("Error persisting:", e); }
       })();
     }
     return result.toDataStreamResponse({ headers: corsHeaders });
-  } catch { return streamWithFallback(rest, messages, admin, userId, threadId, userText, userRole); }
+  } catch (err) { 
+    console.warn(`Fallback from ${current.id}:`, err);
+    return streamWithFallback(rest, messages, admin, userId, threadId, userText, userRole); 
+  }
 }
