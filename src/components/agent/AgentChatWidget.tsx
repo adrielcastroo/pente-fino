@@ -545,7 +545,10 @@ export function AgentChatWidget() {
   const { user } = useAuth();
   const { open, toggleOpen, threads, activeId, newThread, selectThread, deleteThread } = useAgentThreads();
   const [hasUnread, setHasUnread] = useState(false);
+  const [chatStatus, setChatStatus] = useState("idle");
   const panelRef = useRef<HTMLDivElement>(null);
+  const composerRef = useRef<HTMLTextAreaElement>(null);
+
 
   // Artifacts state — accumulated across the active thread and reset on thread change.
   const [artifacts, setArtifacts] = useState<ArtifactMap>({});
