@@ -28,7 +28,7 @@ export function useTeamChat() {
         .limit(100);
 
       if (error) throw error;
-      setMessages(data || []);
+      setMessages((data as any[]) || []);
     } catch (err: any) {
       console.error('[team-chat] Error fetching messages:', err);
     } finally {
