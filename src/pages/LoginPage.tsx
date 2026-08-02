@@ -440,7 +440,7 @@ export default function LoginPage() {
                     <span className="w-full border-t border-border/40" />
                   </div>
                   <div className="relative flex justify-center text-[10px] uppercase">
-                    <span className="bg-muted/10 backdrop-blur-sm px-2 text-muted-foreground/60 font-medium">Ou continue como</span>
+                    <span className="bg-muted/10 backdrop-blur-sm px-2 text-muted-foreground/60 font-medium">Acesso rápido</span>
                   </div>
                 </div>
 
@@ -452,7 +452,7 @@ export default function LoginPage() {
                     setGuestDialogOpen(true);
                   }}
                 >
-                  Entrar como Visitante
+                  Entrar como visitante (sem conta)
                 </Button>
               </CardFooter>
             </Card>
@@ -467,9 +467,9 @@ export default function LoginPage() {
       <Dialog open={guestDialogOpen} onOpenChange={setGuestDialogOpen}>
         <DialogContent className="sm:max-w-[420px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Entrar como Visitante</DialogTitle>
+            <DialogTitle>Entrar como visitante</DialogTitle>
             <DialogDescription>
-              Informe seu nome para continuar. Este nome será usado como identificação do conferente.
+              Seu nome identifica o conferente em cada bipagem e no histórico de auditoria.
             </DialogDescription>
           </DialogHeader>
           <form
