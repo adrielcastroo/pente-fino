@@ -265,7 +265,7 @@ function OverviewTab() {
     const [users, flags, releases, registros, conferences, saidas] = await Promise.all([
       (supabase.from('profiles' as any).select('id', { count: 'exact', head: true }) as any),
       (supabase.from('feature_flags' as any).select('key,enabled') as any),
-      (supabase.from('app_releases' as any).select('version,is_current,is_stable').order('released_at', { ascending: false }).limit(5) as any),
+      (supabase.from('app_releases' as any).select('version,is_current,is_stable,notes').order('released_at', { ascending: false }).limit(5) as any),
       (supabase.from('registros' as any).select('id', { count: 'exact', head: true }) as any),
       (supabase.from('conferences' as any).select('id', { count: 'exact', head: true }) as any),
       (supabase.from('estoque_saidas' as any).select('id', { count: 'exact', head: true }) as any),
@@ -318,7 +318,8 @@ function OverviewTab() {
           <ul className="divide-y divide-border/40">
             {stats.releases.map((r: any) => (
               <li key={r.version} className="flex items-center gap-2 py-2 text-sm">
-                <span className="font-mono">v{r.version}</span>
+                <span className="font-mono font-bold">v{r.version}</span>
+                <span className="text-[10px] font-medium text-primary uppercase tracking-tighter">{codenameFor(r.version)}</span>
                 {r.is_current && <Badge className="bg-primary text-[10px] h-5">Atual</Badge>}
                 {r.is_stable && <Badge variant="secondary" className="text-[10px] h-5">Estável</Badge>}
               </li>
