@@ -1,13 +1,14 @@
-import { useState } from "react";
 import { CodeBlock, CodeBlockActions, CodeBlockContent, CodeBlockCopyButton, CodeBlockHeader, CodeBlockTitle } from "@/components/ai-elements/code-block";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 
 interface MarkdownArtifactProps {
-  content: string;
+  spec: {
+    content: string;
+  };
 }
 
-export function MarkdownArtifact({ content }: MarkdownArtifactProps) {
+export function MarkdownArtifact({ spec }: MarkdownArtifactProps) {
   return (
     <div className="prose prose-invert max-w-none p-6">
       <ReactMarkdown
@@ -51,8 +52,24 @@ export function MarkdownArtifact({ content }: MarkdownArtifactProps) {
           },
         }}
       >
-        {content}
+        {spec.content}
       </ReactMarkdown>
+    </div>
+  );
+}
+
+export function JsonArtifact({ spec }: { spec: { content: string } }) {
+  const content = typeof spec.content === 'string' ? spec.content : JSON.stringify(spec.content, null, 2);
+  return (
+    <div className="p-4">
+      <CodeBlock code={content} language="json">
+        <CodeBlockHeader>
+          <CodeBlockTitle>JSON</CodeBlockTitle>
+          <CodeBlockActions>
+            <CodeBlockCopyButton />
+          </CodeBlockActions>
+        </CodeBlockHeader>
+      </CodeBlock>
     </div>
   );
 }
