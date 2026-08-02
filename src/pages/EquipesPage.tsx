@@ -549,11 +549,11 @@ export default function EquipesPage() {
               <CommandGroup>
                 {availableToAdd.map((p) => (
                   <CommandItem key={p.id} value={p.display_name ?? p.id} onSelect={() => addMember(p.id)}>
-                    <div className="w-7 h-7 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mr-2 overflow-hidden">
-                      {p.avatar_url
-                        ? <img src={p.avatar_url} alt="" className="w-full h-full object-cover" />
-                        : <span className="text-xs font-bold text-primary">{(p.display_name ?? '?').charAt(0).toUpperCase()}</span>}
-                    </div>
+                    <UserAvatar 
+                      avatarUrl={p.avatar_url} 
+                      name={p.display_name} 
+                      className="w-7 h-7 rounded-full mr-2" 
+                    />
                     <span className="flex-1">{p.display_name ?? 'Sem nome'}</span>
                     <Badge variant="outline" className="text-[10px]">{ROLE_LABEL[rolesByUser[p.id] ?? 'operador']}</Badge>
                   </CommandItem>
