@@ -428,7 +428,9 @@ export default function EquipesPage() {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold truncate">{m.display_name}</p>
                         <Badge variant="outline" className="text-[10px] mt-0.5">{ROLE_LABEL[m.role]}</Badge>
+                        {m.is_optimistic && <CheckCircle2 className="w-3 h-3 text-muted-foreground animate-pulse ml-2 inline" />}
                       </div>
+
                       <Button size="sm" variant="outline" onClick={() => setManagingMember(m)} className="gap-1.5">
                         <Settings2 className="w-3.5 h-3.5" /> Gerenciar
                       </Button>
