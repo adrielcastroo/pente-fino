@@ -145,15 +145,26 @@ function KanbanColumn({ status, label, pedidos, onOpen }: ColumnProps) {
 type Visao = 'kanban' | 'lista';
 
 export default function AcompanhamentosPage() {
+  const { modulo: moduloParam } = useParams<{ modulo: string }>();
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [activeId, setActiveId] = useState<string | null>(null);
   const [detalhe, setDetalhe] = useState<ComprasPedidoCard | null>(null);
   const [visao, setVisao] = useState<Visao>('kanban');
   const [novaAberta, setNovaAberta] = useState(false);
 
+  // Mapeia o parâmetro da URL para o enum do banco
+  const moduloAtivo = (moduloParam === 'entrega-apos' ? 'entrega_apos' : moduloParam || 'geral') as ComprasModulo;
 
-  const { data: pedidos = [], isLoading, isError, error } = useComprasKanbanPedidos();
+  const { data: todosPedidos = [], isLoading, isError, error } = useComprasKanbanPedidos();
+  
+  // Filtra pedidos pelo módulo atual
+  const pedidos = useMemo(() => {
+    return todosPedidos.filter(p => p.modulo === moduloAtivo);
+  }, [todosPedidos, moduloAtivo]);
+
   const updatePedido = useUpdatePedido();
+
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
