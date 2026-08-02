@@ -710,11 +710,11 @@ function MemberPermissionsDialog({ member, team, grantableModules, onClose, onSa
       <DialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden">
-              {member.avatar_url
-                ? <img src={member.avatar_url} alt="" className="w-full h-full object-cover" />
-                : <span className="text-sm font-bold text-primary">{member.display_name.charAt(0).toUpperCase()}</span>}
-            </div>
+            <UserAvatar 
+              avatarUrl={member.avatar_url} 
+              name={member.display_name} 
+              className="w-11 h-11 rounded-md" 
+            />
             <div className="flex-1">
               <DialogTitle className="flex items-center gap-2">
                 {member.display_name}
