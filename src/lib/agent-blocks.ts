@@ -70,6 +70,43 @@ export type WidgetSpec =
       onSubmitIntent?: string;
       /** Contexto enviado junto do submit (ex.: cdMovimentacao). */
       values?: Record<string, unknown>;
+    }
+  | {
+      /** Lista dinâmica de itens (ex.: múltiplos itens/lotes numa transferência). */
+      type: "itemlist";
+      id: string;
+      title: string;
+      description?: string;
+      /** Campos repetidos por linha. */
+      itemFields: WidgetField[];
+      /** Campos únicos aplicados ao envio inteiro (ex.: observação). */
+      sharedFields?: WidgetField[];
+      /** Linhas iniciais (pré-preenchimento). */
+      rows?: Array<Record<string, unknown>>;
+      minRows?: number;
+      maxRows?: number;
+      addLabel?: string;
+      submitLabel?: string;
+      onSubmitIntent?: string;
+      values?: Record<string, unknown>;
+    }
+  | {
+      /** Seleção de lote/série: FIFO automático ou escolha manual. */
+      type: "lotpick";
+      id: string;
+      title: string;
+      description?: string;
+      cdItem?: string;
+      cdDeposito?: string;
+      /** Quantidade a atender (usada para validar a soma manual). */
+      qtd?: number;
+      lotes: WidgetLoteOption[];
+      allowMultiple?: boolean;
+      defaultMode?: "fifo" | "manual";
+      submitLabel?: string;
+      onSubmitIntent?: string;
+      /** Contexto devolvido junto do submit (payload pendente). */
+      values?: Record<string, unknown>;
     };
 
 export type ArtifactColumn = {
