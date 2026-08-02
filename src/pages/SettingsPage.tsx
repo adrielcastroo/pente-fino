@@ -183,10 +183,6 @@ export default function SettingsPage() {
         upsert: true, contentType: file.type,
       });
       if (upErr) throw upErr;
-      const { data: signed, error: signedError } = await supabase.storage
-        .from('avatars')
-        .createSignedUrl(path, 60 * 60 * 24);
-      if (signedError) throw signedError;
       const { error: updErr } = await (supabase.from('profiles') as any)
         .update({ avatar_url: path, updated_at: new Date().toISOString() })
         .eq('id', user.id);

@@ -209,12 +209,6 @@ const TopBar = memo(function TopBar() {
           {!isGuest && user && (() => {
             const displayName = profile?.display_name || user.email?.split('@')[0] || 'Usuário';
             const avatarUrl = profile?.avatar_url as string | undefined;
-            const initials = displayName
-              .split(/\s+/)
-              .filter(Boolean)
-              .slice(0, 2)
-              .map((p: string) => p[0]?.toUpperCase())
-              .join('') || 'U';
             return (
               <Link
                 to="/estoque/minha-atividade"

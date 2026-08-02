@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, User, MessageSquare } from "lucide-react";
+import { Send, MessageSquare } from "lucide-react";
 import { useTeamChat } from "@/hooks/use-team-chat";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
