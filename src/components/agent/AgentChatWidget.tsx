@@ -281,10 +281,13 @@ function ChatWindow({
     ),
   );
   useEffect(() => {
-    if (toolRunning) {
-      emitFioExpression("analisando", 3000);
-      window.dispatchEvent(new CustomEvent("fio:thinking", { detail: true }));
-    }
+    if (!toolRunning) return;
+    // Mantém a expressão "analisando" enquanto a ferramenta estiver rodando,
+    // reemitindo antes do timeout expirar (evita "piscar" para neutro).
+    emitFioExpression("analisando", 2600);
+    window.dispatchEvent(new CustomEvent<boolean>("fio:thinking", { detail: true }));
+    const interval = window.setInterval(() => emitFioExpression("analisando", 2600), 2000);
+    return () => window.clearInterval(interval);
   }, [toolRunning]);
 
 
