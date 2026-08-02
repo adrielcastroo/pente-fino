@@ -172,7 +172,8 @@ function ChatWindow({
   useEffect(() => {
     for (const m of messages) {
       if (m.role !== "assistant") continue;
-      for (const part of m.parts) {
+      const parts = (m as UIMessage).parts ?? [];
+      for (const part of parts) {
         if (part.type !== "text") continue;
         const { artifacts } = extractArtifacts(part.text);
         for (const a of artifacts) onArtifact(a);
@@ -223,7 +224,7 @@ function ChatWindow({
   const lastMessage = messages[messages.length - 1];
   const lastAssistantHasVisibleContent =
     lastMessage?.role === "assistant" &&
-    lastMessage.parts.some((part) => {
+    (lastMessage.parts ?? []).some((part) => {
       if (part.type === "text") return part.text.trim().length > 0;
       if (part.type?.startsWith("tool-")) {
         const toolPart = part as any;
@@ -262,7 +263,7 @@ function ChatWindow({
               <MessageContent
                 className={m.role === "user" ? "bg-primary text-primary-foreground" : "bg-transparent"}
               >
-                {m.parts.map((part, i) => {
+                {(m.parts ?? []).map((part, i) => {
                   if (part.type === "text") {
                     // Hide raw widget-submit payloads on user messages.
                     if (m.role === "user") {

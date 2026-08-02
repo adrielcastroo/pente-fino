@@ -49,7 +49,8 @@ const AugeAdminPanel = lazy(() => import('@/components/auge/AugeAdminPanel'));
 const LlmTokensTab = lazy(() => import('./tabs/LlmTokensTab'));
 const BackfillTransferenciasTab = lazy(() => import('./tabs/BackfillTransferenciasTab'));
 const AugePermissoesTab = lazy(() => import('./tabs/AugePermissoesTab'));
-const AugeKardexTab = lazy(() => import('@/components/auge/AugeKardexTab'));
+import AugeKardexTab from '@/components/auge/AugeKardexTab';
+import TechnicalAuditTab from '@/components/admin/TechnicalAuditTab';
 
 
 declare const __APP_VERSION__: string;
@@ -96,6 +97,7 @@ const TAB_GROUPS: TabGroup[] = [
       { key: 'backup', label: 'Backup & Dados', icon: HardDriveDownload },
       { key: 'audit', label: 'Auditoria (App)', icon: ScrollText },
       { key: 'audit-auge', label: 'Auditoria Auge', icon: ShieldAlert },
+      { key: 'technical-audit', label: 'Auditoria Técnica', icon: Bug },
       { key: 'security', label: 'Segurança & Auth', icon: KeyRound },
     ],
   },
@@ -228,6 +230,9 @@ export default function AdminPanelPage() {
           <TabsContent value="audit" className="mt-0"><AuditTab /></TabsContent>
           <TabsContent value="audit-auge" className="mt-0">
             <Suspense fallback={tabFallback}><AugeKardexTab /></Suspense>
+          </TabsContent>
+          <TabsContent value="technical-audit" className="mt-0">
+            <TechnicalAuditTab />
           </TabsContent>
           <TabsContent value="security" className="mt-0"><SecurityTab /></TabsContent>
         </motion.div>
