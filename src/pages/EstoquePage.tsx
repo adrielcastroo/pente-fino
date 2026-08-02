@@ -712,7 +712,7 @@ export default function EstoquePage() {
                               setTimeout(() => setSelectedCell({ col: p.coluna, nivel: p.nivel }), p.estrutura !== activeTec ? 120 : 0);
                               setSearchOpen(false);
                             }}
-                            className="w-full text-left px-3 py-2 hover:bg-primary/10 flex items-center gap-3 border-t border-white/[0.03]"
+                            className="w-full text-left px-3 py-2 hover:bg-muted/60 flex items-center gap-3 border-t border-border/40"
                           >
                             <span className={cn('w-1.5 h-8 rounded-full shrink-0', stCfg?.bg || 'bg-muted/30')} />
                             <div className="flex-1 min-w-0">
@@ -1197,7 +1197,7 @@ export default function EstoquePage() {
                 </div>
 
                 {/* Body */}
-                <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6 bg-background/40">
+                <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">>
                   {/* Charts Grid */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                     {/* Pie */}
@@ -1512,7 +1512,7 @@ export default function EstoquePage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="rounded-md">Cancelar</AlertDialogCancel>
-            <AlertDialogAction className="rounded-md bg-violet-600 hover:bg-violet-700" onClick={executeScanSaida}>
+            <AlertDialogAction className="rounded-md bg-primary hover:bg-primary/90" onClick={executeScanSaida}>
               Confirmar Saída
             </AlertDialogAction>
           </AlertDialogFooter>
