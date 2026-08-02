@@ -79,7 +79,7 @@ export function TeamChatPanel() {
                   <UserAvatar
                     avatarUrl={msg.sender?.avatar_url}
                     name={msg.sender?.display_name}
-                    className="h-8 w-8 rounded-full border border-border/50 bg-primary/10"
+                    className="h-8 w-8 rounded-full"
                     fallbackClassName="text-[10px] text-primary"
                   />
                   
