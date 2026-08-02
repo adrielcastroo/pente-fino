@@ -373,10 +373,32 @@ function ChatWindow({
             />
           )}
           {messages.map((m) => (
-            <Message key={m.id} from={m.role === "user" ? "user" : "assistant"}>
+            <Message 
+              key={m.id} 
+              from={m.role === "user" ? "user" : "assistant"}
+              className="group relative"
+            >
+              {m.role === "assistant" && (
+                <div className="absolute right-0 top-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 z-10">
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    className="h-6 w-6 rounded-full bg-background/50 hover:bg-background shadow-sm border"
+                    title="Copiar texto"
+                    onClick={() => {
+                      const text = m.parts?.map(p => p.type === 'text' ? p.text : '').join('\n') || '';
+                      navigator.clipboard.writeText(text);
+                      toast.success("Copiado!", { duration: 1000 });
+                    }}
+                  >
+                    <Copy className="h-3 w-3" />
+                  </Button>
+                </div>
+              )}
               <MessageContent
                 className={m.role === "user" ? "bg-primary text-primary-foreground" : "bg-transparent"}
               >
+
                 {(m.parts ?? []).map((part, i) => {
                   if (part.type === "text") {
                     // Hide raw widget-submit payloads on user messages.
