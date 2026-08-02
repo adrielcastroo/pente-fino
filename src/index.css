@@ -653,13 +653,20 @@ iframe[src*="lovable.dev/badge"] {
 @keyframes fio-blink { 0%,92%,100%{ transform: scaleY(1); } 96%{ transform: scaleY(.08); } }
 @keyframes fio-pulse3d { 0%,100%{ transform: scale(1) rotateY(-4deg); } 50%{ transform: scale(1.06) rotateY(4deg); } }
 @keyframes fio-bounce { 0%,100%{ transform: translateY(0) scale(1.02); } 50%{ transform: translateY(-4px) scale(1.06); } }
+/* varredura horizontal dos "olhos-scanner" durante a execução de ferramentas */
+@keyframes fio-scan { 0%,100%{ transform: translateX(-2.5px); opacity: .75; } 50%{ transform: translateX(2.5px); opacity: 1; } }
+@keyframes fio-scan-dot { 0%,100%{ transform: scale(.7); opacity: .35; } 50%{ transform: scale(1.15); opacity: .9; } }
 
 .fio-flow-slow { animation: fio-flow 6s linear infinite; }
 .fio-flow-fast { animation: fio-flow 1s linear infinite; }
 .fio-eye { transform-box: fill-box; transform-origin: center; animation: fio-blink 5s ease-in-out infinite; }
+.fio-scan { transform-box: fill-box; transform-origin: center; animation: fio-scan 1.1s ease-in-out infinite; }
+.fio-scan-dot { transform-box: fill-box; transform-origin: center; animation: fio-scan-dot 1.4s ease-in-out infinite; }
+/* transição suave ao alternar expressões */
+.fio-face { transition: opacity .18s ease-out; }
 
 @media (prefers-reduced-motion: reduce) {
-  .fio-flow-slow, .fio-flow-fast, .fio-eye { animation: none !important; }
+  .fio-flow-slow, .fio-flow-fast, .fio-eye, .fio-scan, .fio-scan-dot { animation: none !important; }
 }
 
 
