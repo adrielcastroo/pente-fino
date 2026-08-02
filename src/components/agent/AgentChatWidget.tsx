@@ -363,8 +363,17 @@ function ChatWindow({
             <PromptInputTextarea ref={composerRef} placeholder="Pergunte algo ao Fio…" />
             <div className="flex items-center justify-between gap-2 px-1 pb-1">
               <div className="flex items-center gap-1">
-                <PromptInputActionAddAttachments label="Fotos/Arquivos" />
-                <PromptInputActionAddScreenshot label="Capturar tela" />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon-sm" title="Anexar">
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-48">
+                    <PromptInputActionAddAttachments label="Fotos/Arquivos" />
+                    <PromptInputActionAddScreenshot label="Capturar tela" />
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
               <PromptInputSubmit status={status} disabled={isLoading} />
             </div>
