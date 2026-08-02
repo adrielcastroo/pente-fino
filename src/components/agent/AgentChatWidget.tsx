@@ -287,8 +287,21 @@ function ChatWindow({
   const runLocalCommand = (raw: string): boolean => {
     const cmd = raw.toLowerCase().replace(/^\//, "").trim();
     if (cmd === "limpar" || cmd === "clear") {
+      const oldMessages = [...messages];
       setChatMessages([]);
       setMessages(threadId, []);
+      
+      // A3: Undo para /limpar
+      toast("Conversa limpa", {
+        action: {
+          label: "Desfazer",
+          onClick: () => {
+            setChatMessages(oldMessages as any);
+            setMessages(threadId, oldMessages as UIMessage[]);
+          }
+        },
+        duration: 5000
+      });
       return true;
     }
     if (cmd === "ajuda" || cmd === "help" || cmd === "comandos") {
@@ -302,6 +315,7 @@ function ChatWindow({
     }
     return false;
   };
+
 
   const handleSubmit = (msg: PromptInputMessage) => {
     const text = (msg.text ?? "").trim();
