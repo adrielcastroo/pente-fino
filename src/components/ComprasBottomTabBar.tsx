@@ -1,9 +1,9 @@
 import { NavLink } from 'react-router-dom';
-import { ClipboardList, TrendingDown } from 'lucide-react';
+import { LayoutGrid, TrendingDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const TABS = [
-  { path: '/compras/acompanhamentos', label: 'Acompanh.', icon: ClipboardList, exact: true },
+  { path: '/compras/acompanhamentos', label: 'Hub', icon: LayoutGrid, exact: true },
   { path: '/compras/analise-compra', label: 'Análise', icon: TrendingDown, exact: false },
 ] as const;
 
