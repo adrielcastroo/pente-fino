@@ -14,6 +14,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/use-auth';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
+import { UserAvatar } from '@/components/UserAvatar';
 
 
 
@@ -220,13 +221,12 @@ const TopBar = memo(function TopBar() {
                 className="flex items-center gap-2 pl-1 pr-1 sm:pr-2.5 py-1 rounded-full hover:bg-muted/60 transition-colors group shrink-0"
                 aria-label="Ver minha atividade do dia"
               >
-                <div className="w-8 h-8 rounded-full overflow-hidden bg-muted ring-1 ring-border/60 group-hover:ring-primary/40 transition-shadow flex items-center justify-center shrink-0">
-                  {avatarUrl ? (
-                    <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                  ) : (
-                    <span className="text-[11px] font-bold text-muted-foreground tracking-tight">{initials}</span>
-                  )}
-                </div>
+                <UserAvatar
+                  avatarUrl={avatarUrl}
+                  name={displayName}
+                  className="h-8 w-8 rounded-full ring-1 ring-border/60 transition-shadow group-hover:ring-primary/40"
+                  fallbackClassName="text-[11px] tracking-tight"
+                />
                 <span className="hidden sm:inline text-xs font-semibold text-foreground/90 truncate max-w-[80px] md:max-w-[120px]">
                   {displayName}
                 </span>

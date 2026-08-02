@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { UserAvatar } from "@/components/UserAvatar";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -76,12 +76,12 @@ export function TeamChatPanel() {
                     isMe ? "ml-auto flex-row-reverse" : "mr-auto"
                   )}
                 >
-                  <Avatar className="h-8 w-8 border border-border/50 shrink-0">
-                    <AvatarImage src={msg.sender?.avatar_url || undefined} />
-                    <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-bold">
-                      {msg.sender?.display_name?.charAt(0).toUpperCase() || <User className="w-4 h-4" />}
-                    </AvatarFallback>
-                  </Avatar>
+                  <UserAvatar
+                    avatarUrl={msg.sender?.avatar_url}
+                    name={msg.sender?.display_name}
+                    className="h-8 w-8 rounded-full border border-border/50 bg-primary/10"
+                    fallbackClassName="text-[10px] text-primary"
+                  />
                   
                   <div className={cn("flex flex-col gap-1", isMe ? "items-end" : "items-start")}>
                     {!isMe && (
