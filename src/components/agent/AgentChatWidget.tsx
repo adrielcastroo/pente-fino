@@ -738,7 +738,7 @@ export function AgentChatWidget() {
                 <div className="flex p-0.5 rounded-lg bg-muted/50 border border-border/20">
                   <Button
                     variant={activeTab === "fio" ? "secondary" : "ghost"}
-                    size="icon-xs"
+                    size="icon-sm"
                     className={cn("h-7 w-7 rounded-md", activeTab === "fio" && "bg-background shadow-sm")}
                     onClick={() => setActiveTab("fio")}
                     title="Assistente Fio"
@@ -747,7 +747,7 @@ export function AgentChatWidget() {
                   </Button>
                   <Button
                     variant={activeTab === "team" ? "secondary" : "ghost"}
-                    size="icon-xs"
+                    size="icon-sm"
                     className={cn("h-7 w-7 rounded-md", activeTab === "team" && "bg-background shadow-sm")}
                     onClick={() => setActiveTab("team")}
                     title="Chat da Equipe"
