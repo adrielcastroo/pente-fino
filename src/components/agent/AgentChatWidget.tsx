@@ -48,12 +48,22 @@ import { useChatPanel } from "@/store/useChatPanel";
 import { FioAvatar } from "./FioAvatar";
 import type { FioAnimationState, FioExpression } from "@/components/agent/FioAvatar";
 
+/** Emite uma expressão temporária para o avatar do Fio. */
+export function emitFioExpression(expression: FioExpression, duration = 1800) {
+  window.dispatchEvent(
+    new CustomEvent<{ expression: FioExpression; duration: number }>("fio:expression", {
+      detail: { expression, duration },
+    }),
+  );
+}
+
 // Hook: escuta eventos globais para sincronizar o avatar do Fio com o status
 // do chat mesmo quando o componente está fora do <ChatWindow>.
 function useFioAnimationState(): { state: FioAnimationState; expression: FioExpression | undefined } {
   const [state, setState] = useState<FioAnimationState>("idle");
   const [expression, setExpression] = useState<FioExpression | undefined>(undefined);
   const idleTimer = useRef<number | null>(null);
+
 
   useEffect(() => {
     let respondingTimer: number | undefined;
