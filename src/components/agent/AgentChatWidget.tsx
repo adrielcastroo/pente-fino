@@ -162,7 +162,7 @@ function ChatWindow({
   const setMessages = useAgentThreads((s) => s.setMessages);
   const setTitle = useAgentThreads((s) => s.setTitleFromFirstMessage);
   const [accessToken, setAccessToken] = useState<string | null>(null);
-  const composerRef = useRef<HTMLTextAreaElement>(null);
+
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setAccessToken(data.session?.access_token ?? null));
