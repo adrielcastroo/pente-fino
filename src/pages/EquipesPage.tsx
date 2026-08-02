@@ -368,12 +368,19 @@ export default function EquipesPage() {
 
 
               <div className="space-y-2">
-                {selectedMembers.length === 0 ? (
-                  <div className="text-center py-10 text-muted-foreground text-sm border border-dashed border-border/40 rounded-md">
-                    Nenhum membro nesta equipe.
-                  </div>
-                ) : (
-                  selectedMembers.map((m) => (
+                {(() => {
+                  const filtered = selectedMembers.filter(m => 
+                    m.display_name.toLowerCase().includes(searchTerm.toLowerCase())
+                  );
+                  if (filtered.length === 0) {
+                    return (
+                      <div className="text-center py-10 text-muted-foreground text-sm border border-dashed border-border/40 rounded-md">
+                        {searchTerm ? 'Nenhum membro corresponde à busca.' : 'Nenhum membro nesta equipe.'}
+                      </div>
+                    );
+                  }
+                  return filtered.map((m) => (
+
                     <div key={m.user_id} className="flex flex-wrap items-center gap-3 p-3 rounded-md bg-muted/20 border border-border/20">
                       <div className="w-10 h-10 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden">
                         {m.avatar_url ? (
