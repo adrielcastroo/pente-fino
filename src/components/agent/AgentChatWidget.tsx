@@ -119,9 +119,10 @@ function ChatWindow({
           apikey: PUBLISHABLE_KEY,
           Authorization: `Bearer ${accessToken ?? PUBLISHABLE_KEY}`,
         },
-        body: {
+        body: (req: any) => ({
+          ...req.body,
           threadId,
-        },
+        })
       }),
     [accessToken, threadId],
   );
