@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { PageShell, PageHeader, StatCard } from '@/components/expedicao/ui';
 import { cn } from '@/lib/utils';
+import { codenameFor } from '@/lib/version';
 import {
   ShieldCheck,
   Flag,
@@ -265,7 +266,7 @@ function OverviewTab() {
     const [users, flags, releases, registros, conferences, saidas] = await Promise.all([
       (supabase.from('profiles' as any).select('id', { count: 'exact', head: true }) as any),
       (supabase.from('feature_flags' as any).select('key,enabled') as any),
-      (supabase.from('app_releases' as any).select('version,is_current,is_stable').order('released_at', { ascending: false }).limit(5) as any),
+      (supabase.from('app_releases' as any).select('version,is_current,is_stable,notes').order('released_at', { ascending: false }).limit(5) as any),
       (supabase.from('registros' as any).select('id', { count: 'exact', head: true }) as any),
       (supabase.from('conferences' as any).select('id', { count: 'exact', head: true }) as any),
       (supabase.from('estoque_saidas' as any).select('id', { count: 'exact', head: true }) as any),
@@ -317,10 +318,18 @@ function OverviewTab() {
         ) : (
           <ul className="divide-y divide-border/40">
             {stats.releases.map((r: any) => (
-              <li key={r.version} className="flex items-center gap-2 py-2 text-sm">
-                <span className="font-mono">v{r.version}</span>
-                {r.is_current && <Badge className="bg-primary text-[10px] h-5">Atual</Badge>}
-                {r.is_stable && <Badge variant="secondary" className="text-[10px] h-5">Estável</Badge>}
+              <li key={r.version} className="flex flex-col py-3 text-sm gap-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-mono font-bold">v{r.version}</span>
+                  <span className="text-[10px] font-bold text-primary uppercase tracking-wider">{codenameFor(r.version)}</span>
+                  {r.is_current && <Badge className="bg-primary text-[10px] h-5">Atual</Badge>}
+                  {r.is_stable && <Badge variant="secondary" className="text-[10px] h-5">Estável</Badge>}
+                </div>
+                {r.notes && (
+                  <p className="text-[11px] text-muted-foreground line-clamp-2 leading-tight pl-0.5">
+                    {r.notes}
+                  </p>
+                )}
               </li>
             ))}
           </ul>

@@ -50,6 +50,7 @@ export default function ReleasesPage() {
         is_stable: form.is_stable,
         is_current: true,
         released_by: user?.id ?? null,
+        build_time: typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : new Date().toISOString(),
       });
       if (error) throw error;
     },
