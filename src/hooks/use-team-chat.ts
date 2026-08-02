@@ -41,7 +41,7 @@ export function useTeamChat() {
 
     try {
       const { error } = await supabase
-        .from('team_messages')
+        .from('team_messages' as any)
         .insert({
           sender_id: user.id,
           content: content.trim()
