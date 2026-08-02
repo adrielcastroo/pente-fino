@@ -97,9 +97,13 @@ export default function HistoricoPage() {
           <Loader2 className="size-4 animate-spin" /> Carregando…
         </div>
       ) : rows.length === 0 ? (
-        <p className="rounded-md border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-          Nenhum picking encontrado para os filtros selecionados.
-        </p>
+        <div className="rounded-md border border-dashed border-border">
+          <EmptyState
+            icon={History}
+            title="Nenhum picking neste filtro"
+            description="Ajuste o período, o status ou o termo de busca para encontrar movimentações anteriores."
+          />
+        </div>
       ) : (
         <div className="overflow-x-auto rounded-md border border-border bg-card">
           <table className="w-full text-sm">

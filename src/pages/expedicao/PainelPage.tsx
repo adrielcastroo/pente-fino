@@ -123,13 +123,11 @@ export default function PainelPage() {
             <Loader2 className="w-5 h-5 animate-spin" />
           </div>
         ) : filtered.length === 0 ? (
-          <div className="p-12 text-center">
-            <PackageSearch className="w-10 h-10 text-muted-foreground/60 mx-auto mb-3" />
-            <p className="text-sm font-medium text-foreground">Nenhum picking encontrado</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Cadastre o primeiro picking para começar.
-            </p>
-          </div>
+          <EmptyState
+            icon={PackageSearch}
+            title="Nenhum picking em andamento"
+            description="Quando um pedido entrar em separação, ele aparece aqui com o SLA em tempo real."
+          />
         ) : (
           <>
             {/* Mobile: cards */}
