@@ -18,6 +18,8 @@ import {
   PromptInput,
   PromptInputTextarea,
   PromptInputSubmit,
+  PromptInputActionAddAttachments,
+  PromptInputActionAddScreenshot,
   type PromptInputMessage,
 } from "@/components/ai-elements/prompt-input";
 import { InputGroupAddon } from "@/components/ui/input-group";
