@@ -172,7 +172,7 @@ export function PeriodComparisonCard({ history }: Props) {
                     {deltaLabel}
                   </Badge>
                 </div>
-                <p className="text-3xl font-bold text-foreground tracking-tight tabular-nums leading-none">{display}</p>
+                <p className="text-3xl font-bold text-foreground tracking-tight tabular-nums leading-none font-display">{display}</p>
                 <p className="text-[11px] text-muted-foreground/80 mt-2">
                   Anterior <span className="tabular-nums">{prevDisplay}</span>
                 </p>
