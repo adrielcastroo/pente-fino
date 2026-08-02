@@ -3,6 +3,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { ComprasPedidoStatus } from './useComprasPedidos';
 
+export type ComprasModulo = 'geral' | 'rma' | 'starcolor' | 'entrega_apos';
+
 export const KANBAN_COLUNAS: { status: ComprasPedidoStatus; label: string }[] = [
   { status: 'pendente', label: 'Pendente' },
   { status: 'em_andamento', label: 'Em andamento' },
@@ -18,6 +20,7 @@ export interface ComprasPedidoCard {
   titulo: string | null;
   descricao: string | null;
   status: ComprasPedidoStatus;
+  modulo: ComprasModulo;
   itens: number;
   valor_total: number | null;
   previsao: string | null;
@@ -90,6 +93,7 @@ export interface PedidoPatch {
   numero?: string;
   previsao?: string | null;
   status?: ComprasPedidoStatus;
+  modulo?: ComprasModulo;
   ordem?: number;
 }
 
@@ -129,6 +133,7 @@ export interface NovaTarefaInput {
   descricao?: string;
   previsao?: string | null;
   status?: ComprasPedidoStatus;
+  modulo?: ComprasModulo;
 }
 
 /** Cria uma nova tarefa/pedido de acompanhamento no topo da coluna escolhida. */
@@ -151,6 +156,7 @@ export function useCreatePedido() {
           descricao: input.descricao?.trim() || null,
           previsao: input.previsao || null,
           status: input.status ?? 'pendente',
+          modulo: input.modulo ?? 'geral',
           ordem: -Date.now() / 1000,
           created_by: user.id,
         })

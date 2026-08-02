@@ -45,6 +45,7 @@ const ExpedicaoOperacaoHomePage = lazy(() => import("@/pages/expedicao/OperacaoH
 const ExpedicaoDoubleCheckPage = lazy(() => import("@/pages/expedicao/DoubleCheckPage"));
 const EtiquetasPage = ExpedicaoEtiquetasPage; // alias compartilhado entre módulos
 const ComprasLayout = lazy(() => import("@/components/compras/ComprasLayout"));
+const ComprasAcompanhamentosHubPage = lazy(() => import("@/pages/compras/AcompanhamentosHubPage"));
 const ComprasAcompanhamentosPage = lazy(() => import("@/pages/compras/AcompanhamentosPage"));
 const ComprasAnaliseCompraPage = lazy(() => import("@/pages/compras/AnaliseCompraPage"));
 
@@ -274,7 +275,8 @@ const App = () => (
                 >
                   <Route element={<PageAccessOutlet />}>
                   <Route index element={<Navigate to="/compras/acompanhamentos" replace />} />
-                  <Route path="acompanhamentos" element={<ComprasAcompanhamentosPage />} />
+                  <Route path="acompanhamentos" element={<ComprasAcompanhamentosHubPage />} />
+                  <Route path="acompanhamentos/:modulo" element={<ComprasAcompanhamentosPage />} />
 
                   <Route path="analise-compra" element={<ComprasAnaliseCompraPage />} />
                   <Route path="equipes" element={<RequireRole role="supervisor" fallback={<Navigate to="/compras/acompanhamentos" replace />}><EquipesPage /></RequireRole>} />

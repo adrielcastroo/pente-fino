@@ -1243,6 +1243,7 @@ export type Database = {
           fornecedor: string
           id: string
           itens: number
+          modulo: Database["public"]["Enums"]["compras_modulo"] | null
           numero: string
           observacao: string | null
           ordem: number
@@ -1259,6 +1260,7 @@ export type Database = {
           fornecedor: string
           id?: string
           itens?: number
+          modulo?: Database["public"]["Enums"]["compras_modulo"] | null
           numero: string
           observacao?: string | null
           ordem?: number
@@ -1275,6 +1277,7 @@ export type Database = {
           fornecedor?: string
           id?: string
           itens?: number
+          modulo?: Database["public"]["Enums"]["compras_modulo"] | null
           numero?: string
           observacao?: string | null
           ordem?: number
@@ -4326,6 +4329,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "operador" | "user" | "supervisor" | "gerente"
+      compras_modulo: "geral" | "rma" | "starcolor" | "entrega_apos"
       compras_pedido_status:
         | "pendente"
         | "em_andamento"
@@ -4489,6 +4493,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "operador", "user", "supervisor", "gerente"],
+      compras_modulo: ["geral", "rma", "starcolor", "entrega_apos"],
       compras_pedido_status: [
         "pendente",
         "em_andamento",

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 export interface PageHeaderProps {
-  title: string;
+  title: ReactNode;
   subtitle?: string;
   backTo?: string;
   actions?: ReactNode;

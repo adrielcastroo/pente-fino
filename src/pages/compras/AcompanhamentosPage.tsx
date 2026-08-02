@@ -14,7 +14,9 @@ import { PageShell, PageHeader } from '@/components/compras/ui';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import {
+  ToggleGroup, ToggleGroupItem,
+} from '@/components/ui/toggle-group';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -23,9 +25,12 @@ import PedidoDetailDialog from '@/components/compras/PedidoDetailDialog';
 import NovaTarefaDialog from '@/components/compras/NovaTarefaDialog';
 import {
   KANBAN_COLUNAS, useComprasKanbanPedidos, useUpdatePedido,
-  type ComprasPedidoCard,
+  type ComprasPedidoCard, type ComprasModulo
 } from '@/hooks/compras/useComprasKanban';
 import type { ComprasPedidoStatus } from '@/hooks/compras/useComprasPedidos';
+import { useParams, useNavigate } from 'react-router-dom';
+import { ChevronLeft } from 'lucide-react';
+
 
 
 function formatDate(iso: string | null) {
@@ -140,15 +145,26 @@ function KanbanColumn({ status, label, pedidos, onOpen }: ColumnProps) {
 type Visao = 'kanban' | 'lista';
 
 export default function AcompanhamentosPage() {
+  const { modulo: moduloParam } = useParams<{ modulo: string }>();
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [activeId, setActiveId] = useState<string | null>(null);
   const [detalhe, setDetalhe] = useState<ComprasPedidoCard | null>(null);
   const [visao, setVisao] = useState<Visao>('kanban');
   const [novaAberta, setNovaAberta] = useState(false);
 
+  // Mapeia o parâmetro da URL para o enum do banco
+  const moduloAtivo = (moduloParam === 'entrega-apos' ? 'entrega_apos' : moduloParam || 'geral') as ComprasModulo;
 
-  const { data: pedidos = [], isLoading, isError, error } = useComprasKanbanPedidos();
+  const { data: todosPedidos = [], isLoading, isError, error } = useComprasKanbanPedidos();
+  
+  // Filtra pedidos pelo módulo atual
+  const pedidos = useMemo(() => {
+    return todosPedidos.filter(p => p.modulo === moduloAtivo);
+  }, [todosPedidos, moduloAtivo]);
+
   const updatePedido = useUpdatePedido();
+
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -218,10 +234,25 @@ export default function AcompanhamentosPage() {
   return (
     <PageShell>
       <PageHeader
-        title="Acompanhamentos"
+        title={
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => navigate('/compras/acompanhamentos')}
+              className="h-8 w-8 -ml-1"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+            {moduloAtivo === 'rma' ? 'Kanban RMA' : 
+             moduloAtivo === 'starcolor' ? 'Kanban Starcolor' :
+             moduloAtivo === 'entrega_apos' ? 'Kanban Entrega Após' : 
+             'Kanban Geral'}
+          </div>
+        }
         subtitle={visao === 'kanban'
-          ? 'Quadro kanban dos pedidos de compra — arraste para mudar o status'
-          : 'Lista de tarefas de acompanhamento de compras'}
+          ? `Quadro kanban do módulo ${moduloAtivo.replace('_', ' ')} — arraste para mudar o status`
+          : `Lista de tarefas do módulo ${moduloAtivo.replace('_', ' ')}`}
       />
 
       <div className="flex flex-wrap items-center gap-2">
@@ -340,7 +371,11 @@ export default function AcompanhamentosPage() {
         </p>
       )}
 
-      <NovaTarefaDialog open={novaAberta} onOpenChange={setNovaAberta} />
+      <NovaTarefaDialog 
+        open={novaAberta} 
+        onOpenChange={setNovaAberta} 
+        moduloInicial={moduloAtivo}
+      />
 
       <PedidoDetailDialog
         pedido={detalheAtual}

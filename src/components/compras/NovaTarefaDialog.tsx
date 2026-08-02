@@ -11,13 +11,14 @@ import { Button } from '@/components/ui/button';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { KANBAN_COLUNAS, useCreatePedido, uploadAnexoParaPedido } from '@/hooks/compras/useComprasKanban';
+import { KANBAN_COLUNAS, useCreatePedido, uploadAnexoParaPedido, type ComprasModulo } from '@/hooks/compras/useComprasKanban';
 import type { ComprasPedidoStatus } from '@/hooks/compras/useComprasPedidos';
 
 interface NovaTarefaDialogProps {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   statusInicial?: ComprasPedidoStatus;
+  moduloInicial?: ComprasModulo;
 }
 
 function formatSize(bytes: number) {
@@ -26,13 +27,14 @@ function formatSize(bytes: number) {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
-export function NovaTarefaDialog({ open, onOpenChange, statusInicial = 'pendente' }: NovaTarefaDialogProps) {
+export function NovaTarefaDialog({ open, onOpenChange, statusInicial = 'pendente', moduloInicial = 'geral' }: NovaTarefaDialogProps) {
   const [titulo, setTitulo] = useState('');
   const [fornecedor, setFornecedor] = useState('');
   const [numero, setNumero] = useState('');
   const [descricao, setDescricao] = useState('');
   const [previsao, setPrevisao] = useState('');
   const [status, setStatus] = useState<ComprasPedidoStatus>(statusInicial);
+  const [modulo, setModulo] = useState<ComprasModulo>(moduloInicial);
   const [arquivos, setArquivos] = useState<File[]>([]);
   const [enviando, setEnviando] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -41,7 +43,7 @@ export function NovaTarefaDialog({ open, onOpenChange, statusInicial = 'pendente
 
   function reset() {
     setTitulo(''); setFornecedor(''); setNumero(''); setDescricao(''); setPrevisao('');
-    setStatus(statusInicial); setArquivos([]);
+    setStatus(statusInicial); setModulo(moduloInicial); setArquivos([]);
     if (fileRef.current) fileRef.current.value = '';
   }
 
@@ -66,7 +68,7 @@ export function NovaTarefaDialog({ open, onOpenChange, statusInicial = 'pendente
     setEnviando(true);
     try {
       const criado = await createPedido.mutateAsync({
-        titulo, fornecedor, numero, descricao, previsao: previsao || null, status,
+        titulo, fornecedor, numero, descricao, previsao: previsao || null, status, modulo,
       });
       for (const file of arquivos) {
         try {
@@ -149,6 +151,21 @@ export function NovaTarefaDialog({ open, onOpenChange, statusInicial = 'pendente
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="nt-modulo">Módulo</Label>
+            <Select value={modulo} onValueChange={(v) => setModulo(v as ComprasModulo)}>
+              <SelectTrigger id="nt-modulo">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="geral">Geral / Acompanhamento</SelectItem>
+                <SelectItem value="rma">RMA</SelectItem>
+                <SelectItem value="starcolor">Starcolor</SelectItem>
+                <SelectItem value="entrega_apos">Entrega Após</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-1.5">
