@@ -13,6 +13,13 @@ export const KANBAN_COLUNAS: { status: ComprasPedidoStatus; label: string }[] = 
   { status: 'cancelado', label: 'Cancelado' },
 ];
 
+export const COMPRAS_MODULOS: { id: ComprasModulo; label: string }[] = [
+  { id: 'geral', label: 'Geral' },
+  { id: 'rma', label: 'RMA' },
+  { id: 'starcolor', label: 'Starcolor' },
+  { id: 'entrega_apos', label: 'Entrega Após' },
+];
+
 export interface ComprasPedidoCard {
   id: string;
   numero: string;
