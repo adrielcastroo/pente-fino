@@ -1,4 +1,7 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&display=swap');
+
 /* Fontes carregadas via <link> assíncrono no index.html — evita bloqueio de render */
+
 
 
 /* OCR-B self-hosted — usada como fonte padrão das etiquetas (preview e PNG impresso). */
@@ -657,5 +660,3 @@ iframe[src*="lovable.dev/badge"] {
   .fio-flow-slow, .fio-flow-fast, .fio-eye { animation: none !important; }
 }
 
-/* Fonte Sora para identidade da marca */
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&display=swap');
