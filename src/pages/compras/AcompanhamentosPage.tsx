@@ -8,7 +8,8 @@ import {
 } from '@dnd-kit/sortable';
 import { useDroppable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { CalendarDays, Columns3, List, Loader2, MessageSquare, Plus } from 'lucide-react';
+import { CalendarDays, Columns3, List, Loader2, MessageSquare, Plus, ClipboardList } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
 import { toast } from 'sonner';
 import { PageShell, PageHeader } from '@/components/compras/ui';
 import { Input } from '@/components/ui/input';

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Loader2, Search, Undo2 } from 'lucide-react';
+import { Loader2, Search, Undo2, History } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
