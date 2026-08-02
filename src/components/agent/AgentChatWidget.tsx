@@ -329,7 +329,10 @@ function ChatWindow({
                             spec={askSpec}
                             disabled={isLoading}
                             onSubmit={(formatted) =>
-                              void sendMessage({ parts: [{ type: "text", text: formatted }] })
+                              void sendMessage({ parts: [{ type: "text", text: formatted }] }).then(() => {
+                                window.dispatchEvent(new CustomEvent("fio:response", { detail: { success: true } }));
+                              })
+
                             }
                           />
                         )}
@@ -349,7 +352,10 @@ function ChatWindow({
                             items={suggestions}
                             disabled={isLoading}
                             onPick={(text) =>
-                              void sendMessage({ parts: [{ type: "text", text }] })
+                              void sendMessage({ parts: [{ type: "text", text }] }).then(() => {
+                                window.dispatchEvent(new CustomEvent("fio:response", { detail: { success: true } }));
+                              })
+
                             }
                           />
                         )}
