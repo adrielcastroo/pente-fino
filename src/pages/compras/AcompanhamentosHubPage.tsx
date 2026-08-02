@@ -105,7 +105,7 @@ export default function AcompanhamentosHubPage() {
               onClick={() => navigate(modulo.path)}
             >
               <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-                <div className="flex items-center justify-center">
+                <div className="flex items-center justify-center pt-1">
                   <modulo.icon className={cn("w-6 h-6", modulo.color)} strokeWidth={1.75} />
                 </div>
                 <div className="flex flex-col items-end">

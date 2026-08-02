@@ -167,7 +167,7 @@ button .lucide,
   }
 
   body {
-    @apply bg-background text-foreground antialiased selection:bg-primary/30 selection:text-primary overflow-x-hidden;
+    @apply bg-background text-foreground antialiased selection:bg-primary/30 selection:text-primary overflow-x-hidden transition-colors duration-300;
     font-family: 'Geist Variable', 'Geist', 'Inter', system-ui, -apple-system, sans-serif;
 
     font-feature-settings: 'ss01', 'cv11', 'tnum';
