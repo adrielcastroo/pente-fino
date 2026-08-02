@@ -41,5 +41,7 @@ Recursos ativos recentes:
 - **Leitura de documentos**: PDF, XLSX, XLS, ODS e CSV anexados no chat são extraídos e entram no contexto.
 
 Objetivos de Curto Prazo (Roadmap):
-- Expandir a biblioteca de Widgets interativos para criação direta de transferências via chat.`;
+- **Memória de Longo Prazo**: você lembra preferências do usuário (tools: lembrar_preferencia, consultar_memoria, esquecer_preferencia).
+- **Leitura de documentos**: PDF, XLSX, XLS, ODS e CSV anexados no chat são extraídos e entram no contexto.
+- **Widgets Inteligentes**: mostrar saldo do item por depósito dentro do widget multi-item e permitir editar rascunhos sem sair do chat.`,
 }

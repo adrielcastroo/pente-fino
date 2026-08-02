@@ -160,10 +160,21 @@ function Cell({
   const str = value === undefined || value === null ? "" : String(value);
 
   return (
-    <div className={"space-y-1 " + (type === "textarea" ? "sm:col-span-2" : "")}>
-      <Label htmlFor={id} className="text-[11px] font-medium">
-        {field.label} {field.required && <span className="text-destructive">*</span>}
-      </Label>
+    <div className={"space-y-1 " + (type === "textarea" || type === "switch" ? "sm:col-span-2" : "")}>
+      <div className="flex items-center justify-between">
+        <Label htmlFor={id} className="text-[11px] font-medium">
+          {field.label} {field.required && <span className="text-destructive">*</span>}
+        </Label>
+        {type === "switch" && (
+          <input
+            id={id}
+            type="checkbox"
+            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+            checked={!!value}
+            onChange={(e) => onChange(e.target.checked)}
+          />
+        )}
+      </div>
 
       {type === "textarea" ? (
         <Textarea id={id} rows={2} placeholder={field.placeholder} value={str} onChange={(e) => onChange(e.target.value)} />
@@ -180,6 +191,8 @@ function Cell({
             ))}
           </SelectContent>
         </Select>
+      ) : type === "switch" ? (
+        value && <StockDisplay field={field} rowId={idPrefix} />
       ) : (
         <Input
           id={id}
@@ -196,3 +209,66 @@ function Cell({
     </div>
   );
 }
+
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+
+function StockDisplay({ field, rowId }: { field: WidgetField; rowId: string }) {
+  // O rowId contém o índice da linha no formato `w-transf_xxxx-0`
+  // Precisamos acessar os valores do formulário para pegar cdItem e cdDepositoOrigem.
+  // Como estamos dentro do Cell, a forma mais fácil é passar esses valores via props ou usar um hack de DOM.
+  // Mas o Cell só recebe o value do switch. Vamos usar um seletor DOM para pegar os valores irmãos.
+  
+  const [data, setData] = useState<{ item: string; dep: string } | null>(null);
+
+  useEffect(() => {
+    const parent = document.getElementById(rowId)?.parentElement;
+    if (!parent) return;
+    
+    const update = () => {
+      const itemInput = parent.querySelector(`[id*="-cdItem"]`) as HTMLInputElement;
+      const depSelect = parent.querySelector(`[id*="-cdDepositoOrigem"] button`) as HTMLButtonElement;
+      
+      const item = itemInput?.value || "";
+      const depLabel = depSelect?.innerText || "";
+      const depMatch = depLabel.match(/^(\d+)/);
+      const dep = depMatch ? depMatch[1] : "";
+      
+      if (item && dep) {
+        setData({ item, dep });
+      }
+    };
+
+    const interval = setInterval(update, 1000);
+    update();
+    return () => clearInterval(interval);
+  }, [rowId]);
+
+  const { data: stock, isLoading } = useQuery({
+    queryKey: ["auge-stock-live", data?.item, data?.dep],
+    queryFn: async () => {
+      if (!data?.item || !data?.dep) return null;
+      const { data: res, error } = await supabase.functions.invoke("auge-sync", {
+        body: { action: "lotes_live", cdItem: data.item, cdDeposito: data.dep }
+      });
+      if (error) throw error;
+      const total = (res.data || []).reduce((acc: number, curr: any) => acc + Number(curr.quantidade || 0), 0);
+      return total;
+    },
+    enabled: !!data?.item && !!data?.dep
+  });
+
+  if (!data?.item || !data?.dep) return <div className="text-[10px] text-muted-foreground italic">Preencha item e origem...</div>;
+  if (isLoading) return <div className="text-[10px] animate-pulse">Consultando Auge...</div>;
+
+  return (
+    <div className="flex items-center gap-2 rounded bg-primary/5 px-2 py-1 border border-primary/10">
+      <span className="text-[10px] font-bold text-primary">Saldo:</span>
+      <span className="text-[11px] font-mono font-medium">
+        {stock !== undefined ? new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2 }).format(stock) : "0,00"}
+      </span>
+    </div>
+  );
+}
+
+import { useEffect } from "react";

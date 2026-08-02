@@ -9,7 +9,7 @@ export function ConfirmWidget({
 }: {
   spec: Extract<WidgetSpec, { type: "confirm" }>;
   disabled?: boolean;
-  onSubmit: (values: { confirmed: boolean }) => void;
+  onSubmit: (values: { confirmed?: boolean; action?: "confirm" | "cancel" | "edit" }) => void;
 }) {
   const [submitted, setSubmitted] = useState(false);
   if (submitted) return null;
@@ -20,14 +20,27 @@ export function ConfirmWidget({
           {spec.summary}
         </div>
       )}
-      <div className="flex justify-end gap-2">
+      <div className="flex flex-wrap justify-end gap-2">
+        {spec.editLabel && (
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={disabled}
+            onClick={() => {
+              setSubmitted(true);
+              onSubmit({ action: "edit" });
+            }}
+          >
+            {spec.editLabel}
+          </Button>
+        )}
         <Button
           size="sm"
           variant="ghost"
           disabled={disabled}
           onClick={() => {
             setSubmitted(true);
-            onSubmit({ confirmed: false });
+            onSubmit({ confirmed: false, action: "cancel" });
           }}
         >
           {spec.cancelLabel ?? "Cancelar"}
@@ -37,7 +50,7 @@ export function ConfirmWidget({
           disabled={disabled}
           onClick={() => {
             setSubmitted(true);
-            onSubmit({ confirmed: true });
+            onSubmit({ confirmed: true, action: "confirm" });
           }}
         >
           {spec.confirmLabel ?? "Confirmar"}

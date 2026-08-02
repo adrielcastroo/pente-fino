@@ -109,6 +109,7 @@ export async function buildTransferFormMessage(admin: Admin, userText: string) {
         ],
       },
       { name: "nrLote", label: "Lote informado (opcional)", type: "text", placeholder: "deixe vazio para escolher" },
+      { name: "showStock", label: "Saldo na Origem", type: "switch", default: false },
     ],
     sharedFields: [
       { name: "observacao", label: "Observação", type: "textarea", placeholder: "Motivo da transferência" },
@@ -285,8 +286,9 @@ async function criarRascunho(itens: TransferItem[], observacao: string, authHead
       summary: `${itens.length} item(ns) · total ${nf(totalQtd)}`,
       confirmLabel: "Efetivar agora",
       cancelLabel: "Manter como rascunho",
+      editLabel: "Editar rascunho",
       onSubmitIntent: "transferencia_efetivar",
-      values: { cdMovimentacao: cd },
+      values: { cdMovimentacao: cd, itens, observacao },
     };
 
     const linhas = itens.map(
@@ -311,9 +313,49 @@ async function criarRascunho(itens: TransferItem[], observacao: string, authHead
 /** Executa a efetivação do rascunho. */
 export async function handleTransferEfetivar(values: Record<string, any>, authHeader: string): Promise<string> {
   const cd = String(values?.cdMovimentacao ?? values?.cd ?? "").trim();
-  const confirmado = values?.confirmed !== false && values?.value !== "cancel";
+  const action = values?.action || (values?.confirmed === false ? "cancel" : "confirm");
+
+  if (action === "edit") {
+    // Retorna ao formulário inicial pré-preenchido com os dados do rascunho
+    const options = await depositoOptions(admin);
+    const spec = {
+      type: "itemlist",
+      id: `edit_${cd}`,
+      title: `Editar Rascunho ${cd}`,
+      description: "Ajuste os itens e clique em 'Criar rascunho' para atualizar no Auge.",
+      submitLabel: "Atualizar rascunho",
+      addLabel: "Adicionar item",
+      onSubmitIntent: "transferencia_criar",
+      minRows: 1,
+      maxRows: 20,
+      rows: values.itens || [],
+      itemFields: [
+        { name: "cdItem", label: "Código do item", type: "text", required: true },
+        { name: "qtd", label: "Quantidade", type: "number", required: true, step: 0.01 },
+        { name: "cdDepositoOrigem", label: "Origem", type: "select", required: true, options },
+        { name: "cdDepositoDestino", label: "Destino", type: "select", required: true, options },
+        {
+          name: "loteModo",
+          label: "Lote / série",
+          type: "select",
+          options: [
+            { value: "fifo", label: "FIFO (automático)" },
+            { value: "manual", label: "Escolher lote" },
+          ],
+        },
+        { name: "nrLote", label: "Lote", type: "text" },
+        { name: "showStock", label: "Saldo na Origem", type: "switch" },
+      ],
+      sharedFields: [
+        { name: "observacao", label: "Observação", type: "textarea", default: values.observacao },
+      ],
+      values: { cdMovimentacaoOld: cd } // Para permitir deletar o anterior se necessário
+    };
+    return `Editando rascunho **${cd}**. Ajuste as informações:\n\n${widgetBlock(spec)}`;
+  }
+
   if (!cd) return "⚠️ Não identifiquei o número do rascunho para efetivar.";
-  if (!confirmado) return `Ok, mantive **${cd}** como rascunho no Auge.`;
+  if (action === "cancel") return `Ok, mantive **${cd}** como rascunho no Auge.`;
 
   try {
     await callAugeSync("transferencia_efetivar", { cdMovimentacao: cd }, authHeader);

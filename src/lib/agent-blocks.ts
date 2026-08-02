@@ -67,6 +67,7 @@ export type WidgetSpec =
       summary?: string;
       confirmLabel?: string;
       cancelLabel?: string;
+      editLabel?: string;
       onSubmitIntent?: string;
       /** Contexto enviado junto do submit (ex.: cdMovimentacao). */
       values?: Record<string, unknown>;
