@@ -1244,6 +1244,8 @@ export type Database = {
           id: string
           itens: number
           modulo: Database["public"]["Enums"]["compras_modulo"] | null
+          nf_emitida: string | null
+          nf_retorno: string | null
           numero: string
           observacao: string | null
           ordem: number
@@ -1261,6 +1263,8 @@ export type Database = {
           id?: string
           itens?: number
           modulo?: Database["public"]["Enums"]["compras_modulo"] | null
+          nf_emitida?: string | null
+          nf_retorno?: string | null
           numero: string
           observacao?: string | null
           ordem?: number
@@ -1278,6 +1282,8 @@ export type Database = {
           id?: string
           itens?: number
           modulo?: Database["public"]["Enums"]["compras_modulo"] | null
+          nf_emitida?: string | null
+          nf_retorno?: string | null
           numero?: string
           observacao?: string | null
           ordem?: number
