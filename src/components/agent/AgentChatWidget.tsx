@@ -46,40 +46,65 @@ import {
 import { useChatPanel } from "@/store/useChatPanel";
 
 import { FioAvatar } from "./FioAvatar";
-import type { FioAnimationState } from "@/components/agent/FioAvatar";
+import type { FioAnimationState, FioExpression } from "@/components/agent/FioAvatar";
 
 // Hook: escuta eventos globais para sincronizar o avatar do Fio com o status
 // do chat mesmo quando o componente está fora do <ChatWindow>.
-function useFioAnimationState(): FioAnimationState {
+function useFioAnimationState(): { state: FioAnimationState; expression: FioExpression | undefined } {
   const [state, setState] = useState<FioAnimationState>("idle");
+  const [expression, setExpression] = useState<FioExpression | undefined>(undefined);
+  const idleTimer = useRef<number | null>(null);
+
   useEffect(() => {
     let respondingTimer: number | undefined;
+
+    const resetIdleTimer = () => {
+      if (idleTimer.current) window.clearTimeout(idleTimer.current);
+      setExpression(undefined);
+      idleTimer.current = window.setTimeout(() => {
+        setExpression("descansando");
+      }, 30000) as unknown as number; // 30s de inatividade -> descansando
+    };
+
     const onThinking = (e: Event) => {
       const active = (e as CustomEvent<boolean>).detail;
       if (active) {
         window.clearTimeout(respondingTimer);
         setState("thinking");
+        resetIdleTimer();
       } else {
         setState((s) => (s === "thinking" ? "idle" : s));
       }
     };
-    const onResponse = () => {
+
+    const onResponse = (e: Event) => {
+      const isSuccess = (e as CustomEvent<{ success?: boolean }>).detail?.success;
       setState("responding");
+      if (isSuccess) setExpression("confirmando");
+      
       window.clearTimeout(respondingTimer);
-      respondingTimer = window.setTimeout(() => setState("idle"), 1600);
+      respondingTimer = window.setTimeout(() => {
+        setState("idle");
+        setExpression(undefined);
+        resetIdleTimer();
+      }, 1600);
     };
+
     window.addEventListener("fio:thinking", onThinking as EventListener);
-    window.addEventListener("fio:response", onResponse);
+    window.addEventListener("fio:response", onResponse as EventListener);
+    
+    resetIdleTimer();
+
     return () => {
       window.removeEventListener("fio:thinking", onThinking as EventListener);
-      window.removeEventListener("fio:response", onResponse);
+      window.removeEventListener("fio:response", onResponse as EventListener);
       window.clearTimeout(respondingTimer);
+      if (idleTimer.current) window.clearTimeout(idleTimer.current);
     };
   }, []);
-  return state;
+
+  return { state, expression };
 }
-
-
 
 const SUPABASE_URL = "https://ymqrfgqdmgjbwpikcwnk.supabase.co";
 const PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InltcXJmZ3FkbWdqYndwaWtjd25rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNzkzODYsImV4cCI6MjEwMDg1NTM4Nn0.i_4qu4OZLBqJ2VUOINuw99hacMG35pyofeUswiWoydA";
@@ -495,7 +520,7 @@ export function AgentChatWidget() {
     return () => document.removeEventListener("mousedown", onDown);
   }, [open, toggleOpen]);
 
-  const fioState = useFioAnimationState();
+  const { state: fioState, expression: fioExpr } = useFioAnimationState();
 
   if (!user) return null;
 
@@ -512,6 +537,7 @@ export function AgentChatWidget() {
             <FioAvatar
               size={56}
               state={fioState}
+              expression={fioExpr}
               className="h-full w-full transition-transform duration-300 group-hover:scale-105"
             />
           </div>
@@ -533,7 +559,7 @@ export function AgentChatWidget() {
           showArtifactPane={showArtifactPane}
           headerContent={
             <>
-              <FioAvatar size={28} state={fioState} hoverOnEnter={false} />
+              <FioAvatar size={28} state={fioState} expression={fioExpr} hoverOnEnter={false} />
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-semibold leading-tight">Fio</div>
                 <div className="truncate text-[11px] text-muted-foreground">
@@ -599,274 +625,79 @@ export function AgentChatWidget() {
                   className="shrink-0"
                   aria-label="Nova conversa"
                 >
-                  <Plus className="h-3.5 w-3.5" />
+                  <Plus className="h-4 w-4" />
                 </Button>
               </div>
             ) : null
           }
-          chatColumn={
-            activeId ? (
-              <ChatWindow
-                key={activeId}
-                threadId={activeId}
-                onArtifact={registerArtifact}
-                activeArtifactId={activeArtifactId}
-                onSelectArtifact={handleSelectArtifact}
-              />
-            ) : null
-          }
-          artifactColumn={
-            activeArtifact ? (
+        >
+          <div className="relative flex flex-1 min-h-0 overflow-hidden">
+            <ChatWindow
+              threadId={activeId!}
+              onArtifact={registerArtifact}
+              activeArtifactId={activeArtifactId}
+              onSelectArtifact={handleSelectArtifact}
+            />
+            {showArtifactPane && activeArtifact && (
               <ArtifactPanel
                 spec={activeArtifact}
-                onClose={() => {
-                  setActiveArtifactId(null);
-                  setMobileArtifactVisible(false);
-                }}
+                onClose={() => setActiveArtifactId(null)}
+                isMobile={mobileArtifactVisible}
               />
-            ) : null
-          }
-          artifactVisibleOnNarrow={mobileArtifactVisible}
-        />
+            )}
+          </div>
+        </ChatPanelShell>
       )}
     </>
   );
 }
 
-// ---------- Chat panel shell (resizable + sidebar mode) ----------
-
 function SidebarModeToggle() {
-  const { mode, toggleMode } = useChatPanel();
-  const isSidebar = mode === "sidebar";
+  const { sidebarMode, setSidebarMode } = useChatPanel();
   return (
     <Button
       variant="ghost"
       size="icon-sm"
-      onClick={toggleMode}
-      title={isSidebar ? "Modo flutuante" : "Fixar como barra lateral"}
-      aria-label={isSidebar ? "Modo flutuante" : "Fixar como barra lateral"}
+      onClick={() => setSidebarMode(sidebarMode === "docked" ? "floating" : "docked")}
+      title={sidebarMode === "docked" ? "Flutuar painel" : "Fixar na lateral"}
     >
-      {isSidebar ? <PanelRightOpen className="h-4 w-4" /> : <PanelRightClose className="h-4 w-4" />}
+      {sidebarMode === "docked" ? <PanelRightClose className="h-4 w-4" /> : <PanelRightOpen className="h-4 w-4" />}
     </Button>
   );
 }
 
-const MIN_W = 340;
-const MAX_W = 1400;
-const MIN_H = 400;
-
 function ChatPanelShell({
-  panelRef,
+  children,
   headerContent,
   threadsBar,
-  chatColumn,
-  artifactColumn,
   showArtifactPane,
-  artifactVisibleOnNarrow,
+  panelRef,
 }: {
-  panelRef: React.RefObject<HTMLDivElement>;
+  children: React.ReactNode;
   headerContent: React.ReactNode;
   threadsBar: React.ReactNode;
-  chatColumn: React.ReactNode;
-  artifactColumn: React.ReactNode;
   showArtifactPane: boolean;
-  artifactVisibleOnNarrow: boolean;
+  panelRef: React.RefObject<HTMLDivElement>;
 }) {
-  const { mode, width, height, setWidth, setHeight } = useChatPanel();
-  const [measuredW, setMeasuredW] = useState<number>(width);
-  const isSidebar = mode === "sidebar";
-
-  // Media query mobile — no mobile, ocupa a tela toda.
-  const [isMobile, setIsMobile] = useState(
-    typeof window !== "undefined" && window.innerWidth < 640,
-  );
-  useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth < 640);
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, []);
-
-  // Observa a largura real para adaptar o layout interno.
-  useEffect(() => {
-    const el = panelRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver((entries) => {
-      for (const e of entries) setMeasuredW(e.contentRect.width);
-    });
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [panelRef]);
-
-  // --- Drag/resize: refs para evitar re-execução do effect durante o drag. ---
-  const dragRef = useRef<
-    | {
-        kind: "w" | "h" | "wh";
-        startX: number;
-        startY: number;
-        origW: number;
-        origH: number;
-        artifactOffset: number;
-      }
-    | null
-  >(null);
-  const setWidthRef = useRef(setWidth);
-  const setHeightRef = useRef(setHeight);
-  const isSidebarRef = useRef(isSidebar);
-  useEffect(() => {
-    setWidthRef.current = setWidth;
-    setHeightRef.current = setHeight;
-    isSidebarRef.current = isSidebar;
-  });
-
-  const handleResizeStart = useCallback(
-    (kind: "w" | "h" | "wh") => (e: React.PointerEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const rect = panelRef.current?.getBoundingClientRect();
-      const currentW = rect?.width ?? width;
-      const currentH = rect?.height ?? height;
-      // width no store não inclui o offset do painel de artifact;
-      // guardamos esse delta para reaplicar ao commitar.
-      const artifactOffset = Math.max(0, Math.round(currentW - width));
-      dragRef.current = {
-        kind,
-        startX: e.clientX,
-        startY: e.clientY,
-        origW: currentW,
-        origH: currentH,
-        artifactOffset,
-      };
-      document.body.style.userSelect = "none";
-      document.body.style.cursor =
-        kind === "w" ? "ew-resize" : kind === "h" ? "ns-resize" : "nwse-resize";
-    },
-    [panelRef, width, height],
-  );
-
-  useEffect(() => {
-    const onMove = (ev: PointerEvent) => {
-      const d = dragRef.current;
-      if (!d) return;
-      ev.preventDefault();
-      if (d.kind === "w" || d.kind === "wh") {
-        const dx = d.startX - ev.clientX; // arrastar para a esquerda aumenta
-        const nextTotal = Math.min(
-          MAX_W,
-          Math.max(MIN_W, d.origW + dx),
-        );
-        // Reaplica descontando o offset do painel de artifact.
-        setWidthRef.current(Math.max(MIN_W, nextTotal - d.artifactOffset));
-      }
-      if (d.kind === "h" || d.kind === "wh") {
-        if (isSidebarRef.current) return;
-        const dy = d.startY - ev.clientY;
-        const nextH = Math.min(
-          window.innerHeight - 40,
-          Math.max(MIN_H, d.origH + dy),
-        );
-        setHeightRef.current(nextH);
-      }
-    };
-    const onUp = () => {
-      if (!dragRef.current) return;
-      dragRef.current = null;
-      document.body.style.userSelect = "";
-      document.body.style.cursor = "";
-    };
-    window.addEventListener("pointermove", onMove, { passive: false });
-    window.addEventListener("pointerup", onUp);
-    window.addEventListener("pointercancel", onUp);
-    return () => {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-      window.removeEventListener("pointercancel", onUp);
-    };
-  }, []);
-
-  const style: React.CSSProperties = isMobile
-    ? {}
-    : isSidebar
-      ? { width: Math.max(MIN_W, Math.min(MAX_W, width + (showArtifactPane ? 440 : 0))) }
-      : {
-          width: Math.max(MIN_W, Math.min(MAX_W, width + (showArtifactPane ? 440 : 0))),
-          height,
-        };
-
-  // Layout interno: se o painel ficar estreito, empilha chat e artifact.
-  const totalW = measuredW || width;
-  const canSideBySide = showArtifactPane && totalW >= 720;
+  const { sidebarMode } = useChatPanel();
+  const isDocked = sidebarMode === "docked";
 
   return (
     <div
       ref={panelRef}
       className={cn(
-        "fixed z-50 flex flex-col overflow-hidden border bg-background shadow-2xl",
-        isMobile
-          ? "inset-x-2 bottom-2 top-14 rounded-xl"
-          : isSidebar
-            ? "top-0 bottom-0 right-0 rounded-none border-r-0 border-t-0 border-b-0"
-            : "bottom-6 right-6 rounded-xl",
+        "z-50 flex flex-col border-border bg-background shadow-2xl transition-all duration-300 ease-in-out",
+        isDocked
+          ? "fixed inset-y-0 right-0 w-full md:w-[400px] lg:w-[450px] border-l"
+          : "fixed bottom-4 right-4 top-4 w-[calc(100%-2rem)] md:w-[450px] rounded-2xl border",
+        showArtifactPane && "md:w-[90%] lg:w-[85%] xl:w-[80%]",
       )}
-      style={style}
     >
-      {/* Handles de resize (desktop apenas) */}
-      {!isMobile && (
-        <>
-          {/* Borda esquerda: resize horizontal */}
-          <div
-            onPointerDown={handleResizeStart("w")}
-            className="absolute left-0 top-0 z-20 h-full w-1.5 cursor-ew-resize hover:bg-primary/40"
-            aria-hidden
-          />
-          {!isSidebar && (
-            <>
-              {/* Borda superior: resize vertical */}
-              <div
-                onPointerDown={handleResizeStart("h")}
-                className="absolute left-1.5 top-0 z-20 h-1.5 w-[calc(100%-0.375rem)] cursor-ns-resize hover:bg-primary/40"
-                aria-hidden
-              />
-              {/* Canto superior esquerdo: resize diagonal */}
-              <div
-                onPointerDown={handleResizeStart("wh")}
-                className="absolute left-0 top-0 z-30 h-3 w-3 cursor-nwse-resize"
-                aria-hidden
-              />
-            </>
-          )}
-        </>
-      )}
-
-      {/* Header */}
-      <div className="flex items-center gap-2 border-b bg-card/50 px-3 py-2 pl-4">
+      <div className="flex h-12 items-center gap-2 border-b px-3 shrink-0">
         {headerContent}
       </div>
-
       {threadsBar}
-
-      {/* Split layout adaptativo */}
-      <div className="flex flex-1 min-h-0 min-w-0">
-        <div
-          className={cn(
-            "flex flex-1 min-w-0 flex-col",
-            canSideBySide && "max-w-[440px] flex-none border-r",
-            showArtifactPane && artifactVisibleOnNarrow && !canSideBySide && "hidden",
-          )}
-        >
-          {chatColumn}
-        </div>
-
-        {artifactColumn && (
-          <div
-            className={cn(
-              "flex flex-1 min-w-0 flex-col",
-              !canSideBySide && !artifactVisibleOnNarrow && "hidden",
-            )}
-          >
-            {artifactColumn}
-          </div>
-        )}
-      </div>
+      {children}
     </div>
   );
 }
