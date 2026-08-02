@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useTeamPresence, type PresenceMeta, type PresenceStatus } from '@/hooks/use-presence';
-import { Users, Circle, Search, ShieldCheck, Trash2, Package, Truck, ShoppingCart } from 'lucide-react';
+import { Users, Circle, Search, ShieldCheck, Trash2, Package, Truck, ShoppingCart, MessageSquare } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -15,6 +15,7 @@ import {
 import { useAuth } from '@/hooks/use-auth';
 import { ROLE_LABEL, normalizeRole, type Role } from '@/lib/permissions';
 import { toast } from 'sonner';
+import { useAgentThreads } from '@/store/useAgentThreads';
 
 type ModuleKey = 'estoque' | 'expedicao' | 'compras';
 const ALL_MODULES: { key: ModuleKey; label: string; icon: typeof Package }[] = [
@@ -59,6 +60,7 @@ const ASSIGNABLE_ROLES: Role[] = ['operador', 'supervisor', 'gerente', 'admin'];
 
 export default function TeamPanel() {
   const { user, isAdmin } = useAuth();
+  const { toggleOpen, setActiveTab } = useAgentThreads();
   const [profiles, setProfiles] = useState<ProfileRow[]>([]);
   const [rolesByUser, setRolesByUser] = useState<Record<string, Role>>({});
   const [loading, setLoading] = useState(true);
@@ -338,6 +340,20 @@ export default function TeamPanel() {
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
+                    {!isSelf && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 text-primary hover:text-primary hover:bg-primary/10"
+                        onClick={() => {
+                          setActiveTab("team");
+                          toggleOpen(true);
+                        }}
+                        title="Conversar"
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                      </Button>
+                    )}
                     <div className="hidden sm:flex items-center gap-1">
                       {ALL_MODULES.filter((mod) => m.modules.includes(mod.key)).map(({ key, label, icon: Icon }) => (
                         <Badge key={key} variant="outline" className="text-[10px] gap-1 px-2 py-0.5">
