@@ -430,9 +430,9 @@ export const PromptInputActionAddAttachments = ({
   );
 
   return (
-    <DropdownMenuItem {...props} onSelect={handleSelect}>
+    <div {...props} onClick={handleSelect} className={cn("flex w-full items-center", props.className)}>
       <ImageIcon className="mr-2 size-4" /> {label}
-    </DropdownMenuItem>
+    </div>
   );
 };
 
