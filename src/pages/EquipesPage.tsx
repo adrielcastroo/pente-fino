@@ -45,7 +45,9 @@ import {
   Settings2,
   Search,
   ShieldCheck,
+  CheckCircle2
 } from 'lucide-react';
+
 import { atLeast, ROLE_LABEL, type Role, normalizeRole } from '@/lib/permissions';
 import { MODULE_LABEL, PAGE_REGISTRY, pagesByModule, type PageEntry, type PageModule } from '@/lib/page-registry';
 import { Navigate } from 'react-router-dom';
@@ -66,7 +68,9 @@ interface Member {
   avatar_url: string | null;
   role: Role;
   modules: string[];
+  is_optimistic?: boolean;
 }
+
 
 interface ProfileLite {
   id: string;
@@ -90,6 +94,8 @@ export default function EquipesPage() {
   const [profiles, setProfiles] = useState<Record<string, ProfileLite>>({});
   const [rolesByUser, setRolesByUser] = useState<Record<string, Role>>({});
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
 
   const [teamDialogOpen, setTeamDialogOpen] = useState(false);
@@ -216,16 +222,43 @@ export default function EquipesPage() {
 
   const addMember = async (userId: string) => {
     if (!selectedTeam) return;
+    const prof = profiles[userId];
+    if (!prof) return;
+
+    // A2: Atualização otimista
+    const tempMember: Member = {
+      user_id: userId,
+      team_id: selectedTeam.id,
+      display_name: prof.display_name ?? 'Sem nome',
+      avatar_url: prof.avatar_url,
+      role: rolesByUser[userId] ?? 'operador',
+      modules: prof.modules ?? ['estoque'],
+      is_optimistic: true
+    };
+    
+    setMembersByTeam(prev => ({
+      ...prev,
+      [selectedTeam.id]: [...(prev[selectedTeam.id] || []), tempMember].sort((a,b) => a.display_name.localeCompare(b.display_name))
+    }));
+    
+    setAddMemberOpen(false);
+
     try {
       const { error } = await (supabase.from('team_members' as any)
         .insert({ team_id: selectedTeam.id, user_id: userId, added_by: user?.id }) as any);
       if (error) throw error;
       toast.success('Membro adicionado.');
-      setAddMemberOpen(false);
       await loadAll();
       await pageAccess.refresh();
-    } catch (err: any) { toast.error(err?.message || 'Falha ao adicionar.'); }
+    } catch (err: any) { 
+      toast.error(err?.message || 'Falha ao adicionar.');
+      await loadAll(); // Reverte
+    }
   };
+
+
+
+  const [memberToRemove, setMemberToRemove] = useState<Member | null>(null);
 
   const removeMember = async (m: Member) => {
     try {
@@ -236,10 +269,12 @@ export default function EquipesPage() {
       await (supabase.from('team_page_permissions' as any)
         .delete().eq('team_id', m.team_id).eq('user_id', m.user_id) as any);
       toast.success('Membro removido.');
+      setMemberToRemove(null);
       await loadAll();
       await pageAccess.refresh();
     } catch (err: any) { toast.error(err?.message || 'Falha ao remover.'); }
   };
+
 
   const availableToAdd = useMemo(() => {
     if (!selectedTeam) return [] as ProfileLite[];
@@ -343,23 +378,46 @@ export default function EquipesPage() {
                 </div>
               </header>
 
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
-                  Membros ({selectedMembers.length})
-                </h3>
-                <Button size="sm" onClick={() => setAddMemberOpen(true)} className="gap-1.5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3 flex-1 max-w-sm">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                    <Input
+                      placeholder="Filtrar membros..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-8 h-8 text-xs bg-muted/50"
+                    />
+                  </div>
+                </div>
+                <Button size="sm" onClick={() => setAddMemberOpen(true)} className="gap-1.5 h-8">
                   <UserPlus className="w-3.5 h-3.5" /> Adicionar membro
                 </Button>
               </div>
 
+
               <div className="space-y-2">
-                {selectedMembers.length === 0 ? (
-                  <div className="text-center py-10 text-muted-foreground text-sm border border-dashed border-border/40 rounded-md">
-                    Nenhum membro nesta equipe.
-                  </div>
-                ) : (
-                  selectedMembers.map((m) => (
-                    <div key={m.user_id} className="flex flex-wrap items-center gap-3 p-3 rounded-md bg-muted/20 border border-border/20">
+                {(() => {
+                  const filtered = selectedMembers.filter(m => 
+                    m.display_name.toLowerCase().includes(searchTerm.toLowerCase())
+                  );
+                  if (filtered.length === 0) {
+                    return (
+                      <div className="text-center py-10 text-muted-foreground text-sm border border-dashed border-border/40 rounded-md">
+                        {searchTerm ? 'Nenhum membro corresponde à busca.' : 'Nenhum membro nesta equipe.'}
+                      </div>
+                    );
+                  }
+                  return filtered.map((m) => (
+
+                    <div 
+                      key={m.user_id} 
+                      className={cn(
+                        "flex flex-wrap items-center gap-3 p-3 rounded-md bg-muted/20 border border-border/20 transition-opacity",
+                        m.is_optimistic && "opacity-50 pointer-events-none"
+                      )}
+                    >
+
                       <div className="w-10 h-10 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden">
                         {m.avatar_url ? (
                           <img src={m.avatar_url} alt={m.display_name} className="w-full h-full object-cover" />
@@ -370,21 +428,24 @@ export default function EquipesPage() {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold truncate">{m.display_name}</p>
                         <Badge variant="outline" className="text-[10px] mt-0.5">{ROLE_LABEL[m.role]}</Badge>
+                        {m.is_optimistic && <CheckCircle2 className="w-3 h-3 text-muted-foreground animate-pulse ml-2 inline" />}
                       </div>
+
                       <Button size="sm" variant="outline" onClick={() => setManagingMember(m)} className="gap-1.5">
                         <Settings2 className="w-3.5 h-3.5" /> Gerenciar
                       </Button>
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => removeMember(m)}
+                        onClick={() => setMemberToRemove(m)}
                         className="text-destructive hover:text-destructive"
                       >
                         <UserMinus className="w-3.5 h-3.5" />
                       </Button>
                     </div>
                   ))
-                )}
+                })()}
+
               </div>
             </div>
           )}
@@ -430,6 +491,29 @@ export default function EquipesPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      
+      {/* Confirm remove member (B1) */}
+      <AlertDialog open={!!memberToRemove} onOpenChange={(o) => !o && setMemberToRemove(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover membro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja remover <strong>{memberToRemove?.display_name}</strong> da equipe <strong>{selectedTeam?.name}</strong>? 
+              As permissões específicas deste usuário nesta equipe serão apagadas.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => memberToRemove && removeMember(memberToRemove)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Remover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
 
       {/* Add member */}
       <Dialog open={addMemberOpen} onOpenChange={setAddMemberOpen}>

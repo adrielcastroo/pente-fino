@@ -31,6 +31,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
+import { RefreshCw, XCircle } from "lucide-react";
+
 import { AskUserInline, extractAskUser } from "./AskUserDialog";
 import { Suggestions, extractSuggestions } from "./Suggestions";
 import { WidgetChip } from "./widgets/WidgetChip";
@@ -151,6 +154,10 @@ function ChatWindow({
   activeArtifactId: string | null;
   onSelectArtifact: (id: string) => void;
 }) {
+
+
+
+
   const initialMessages = useMemo(
     () => useAgentThreads.getState().threads.find((t) => t.id === threadId)?.messages ?? [],
     [threadId],
@@ -159,6 +166,8 @@ function ChatWindow({
   const setTitle = useAgentThreads((s) => s.setTitleFromFirstMessage);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const composerRef = useRef<HTMLTextAreaElement>(null);
+
+
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setAccessToken(data.session?.access_token ?? null));
@@ -198,7 +207,7 @@ function ChatWindow({
   );
 
 
-  const { messages, sendMessage, setMessages: setChatMessages, status, error } = useChat({
+  const { messages, sendMessage, setMessages: setChatMessages, status, error, stop } = useChat({
     id: threadId,
     messages: initialMessages as any,
     transport,
@@ -210,6 +219,13 @@ function ChatWindow({
       console.error("[ai-agent] erro no chat", err);
     },
   });
+
+  // Exportar status para o pai via evento ou contexto (A2)
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("fio:status", { detail: status }));
+  }, [status]);
+
+
 
   // Persistência contínua: grava no store a cada mudança (não apenas ao finalizar),
   // para que fechar/reabrir o painel durante o streaming não perca a resposta.
@@ -271,8 +287,21 @@ function ChatWindow({
   const runLocalCommand = (raw: string): boolean => {
     const cmd = raw.toLowerCase().replace(/^\//, "").trim();
     if (cmd === "limpar" || cmd === "clear") {
+      const oldMessages = [...messages];
       setChatMessages([]);
       setMessages(threadId, []);
+      
+      // A3: Undo para /limpar
+      toast("Conversa limpa", {
+        action: {
+          label: "Desfazer",
+          onClick: () => {
+            setChatMessages(oldMessages as any);
+            setMessages(threadId, oldMessages as UIMessage[]);
+          }
+        },
+        duration: 5000
+      });
       return true;
     }
     if (cmd === "ajuda" || cmd === "help" || cmd === "comandos") {
@@ -286,6 +315,7 @@ function ChatWindow({
     }
     return false;
   };
+
 
   const handleSubmit = (msg: PromptInputMessage) => {
     const text = (msg.text ?? "").trim();
@@ -342,8 +372,13 @@ function ChatWindow({
 
   return (
     <div className="flex flex-1 flex-col min-h-0 min-w-0">
-      <Conversation className="flex-1 min-h-0">
+      <Conversation 
+        className="flex-1 min-h-0" 
+        aria-live="polite" 
+        aria-atomic="false"
+      >
         <ConversationContent>
+
           {messages.length === 0 && (
             <ConversationEmptyState
               icon={<FioAvatar size={72} state={isLoading ? "thinking" : "idle"} expression={isLoading ? "pensando" : undefined} />}
@@ -352,10 +387,32 @@ function ChatWindow({
             />
           )}
           {messages.map((m) => (
-            <Message key={m.id} from={m.role === "user" ? "user" : "assistant"}>
+            <Message 
+              key={m.id} 
+              from={m.role === "user" ? "user" : "assistant"}
+              className="group relative"
+            >
+              {m.role === "assistant" && (
+                <div className="absolute right-0 top-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 z-10">
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    className="h-6 w-6 rounded-full bg-background/50 hover:bg-background shadow-sm border"
+                    title="Copiar texto"
+                    onClick={() => {
+                      const text = m.parts?.map(p => p.type === 'text' ? p.text : '').join('\n') || '';
+                      navigator.clipboard.writeText(text);
+                      toast.success("Copiado!", { duration: 1000 });
+                    }}
+                  >
+                    <Copy className="h-3 w-3" />
+                  </Button>
+                </div>
+              )}
               <MessageContent
                 className={m.role === "user" ? "bg-primary text-primary-foreground" : "bg-transparent"}
               >
+
                 {(m.parts ?? []).map((part, i) => {
                   if (part.type === "text") {
                     // Hide raw widget-submit payloads on user messages.
@@ -438,7 +495,7 @@ function ChatWindow({
           {showThinking && (
             <Message from="assistant">
               <MessageContent className="bg-transparent">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2" aria-label="Fio está respondendo">
                   <span className="flex items-end gap-1" aria-hidden="true">
                     <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]" />
                     <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]" />
@@ -446,16 +503,30 @@ function ChatWindow({
                   </span>
                   <Shimmer>{thinkingLabel}</Shimmer>
                 </div>
+
               </MessageContent>
             </Message>
           )}
           {error && (
-            <div className="mx-2 rounded-md border border-destructive/40 bg-destructive/10 p-2 text-xs text-destructive">
-              {error.message?.includes("IA indisponíveis")
-                ? "Sistemas de IA indisponíveis (sem chaves API)."
-                : "Não foi possível conectar ao assistente. Por favor, tente novamente em alguns instantes."}
+            <div className="mx-2 rounded-md border border-destructive/40 bg-destructive/10 p-2 text-xs text-destructive flex flex-col gap-2">
+              <p>
+                {error.message?.includes("IA indisponíveis")
+                  ? "Sistemas de IA indisponíveis (sem chaves API)."
+                  : "Não foi possível conectar ao assistente. Por favor, tente novamente em alguns instantes."}
+              </p>
+              {!error.message?.includes("IA indisponíveis") && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="h-7 text-[10px] w-fit gap-1 bg-background"
+                  onClick={() => sendMessage({ parts: [{ type: "text", text: messages[messages.length-1].role === 'user' ? (messages[messages.length-1].parts?.[0] as any)?.text || '' : '' }] })}
+                >
+                  <RefreshCw className="h-3 w-3" /> Tentar novamente
+                </Button>
+              )}
             </div>
           )}
+
 
         </ConversationContent>
         <ConversationScrollButton />
@@ -501,7 +572,24 @@ function ChatWindow({
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-              <PromptInputSubmit status={status} disabled={isLoading} />
+              {status === "streaming" ? (
+                <Button 
+                  size="icon-sm" 
+                  variant="ghost" 
+                  onClick={() => stop()} 
+                  className="text-destructive hover:bg-destructive/10"
+                  title="Parar geração"
+                >
+                  <XCircle className="h-4 w-4" />
+                </Button>
+              ) : (
+                <PromptInputSubmit 
+                  status={status} 
+                  disabled={isLoading} 
+                />
+              )}
+
+
             </div>
           </div>
         </PromptInput>
@@ -525,7 +613,10 @@ export function AgentChatWidget() {
   const { user } = useAuth();
   const { open, toggleOpen, threads, activeId, newThread, selectThread, deleteThread } = useAgentThreads();
   const [hasUnread, setHasUnread] = useState(false);
+  const [chatStatus, setChatStatus] = useState("idle");
   const panelRef = useRef<HTMLDivElement>(null);
+  const composerRef = useRef<HTMLTextAreaElement>(null);
+
 
   // Artifacts state — accumulated across the active thread and reset on thread change.
   const [artifacts, setArtifacts] = useState<ArtifactMap>({});
@@ -579,13 +670,30 @@ export function AgentChatWidget() {
     const onDown = (e: MouseEvent) => {
       const target = e.target as HTMLElement | null;
       if (target?.closest("[role='dialog']")) return; // ignora painel flutuante/artefato
+
+      // A2: Não fechar o chat por clique-fora durante uso
+      const hasText = composerRef.current?.value.trim();
+      const isBusy = chatStatus === "streaming" || chatStatus === "submitted";
+      if (hasText || isBusy) return;
+
       if (panelRef.current && !panelRef.current.contains(target as Node)) {
         toggleOpen(false);
       }
     };
+
+    const onStatus = (e: Event) => {
+      setChatStatus((e as CustomEvent<string>).detail);
+    };
+
     document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
-  }, [open, toggleOpen]);
+    window.addEventListener("fio:status", onStatus as EventListener);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      window.removeEventListener("fio:status", onStatus as EventListener);
+    };
+  }, [open, toggleOpen, chatStatus]);
+
+
 
   const { state: fioState, expression: fioExpr } = useFioAnimationState();
 
@@ -670,11 +778,16 @@ export function AgentChatWidget() {
                     <button
                       type="button"
                       onClick={() => selectThread(t.id)}
-                      className="max-w-[140px] truncate text-left"
+                      className="max-w-[140px] truncate text-left outline-none"
                       title={t.title}
+                      onDoubleClick={() => {
+                        const newTitle = prompt("Novo título:", t.title);
+                        if (newTitle) useAgentThreads.getState().renameThread(t.id, newTitle);
+                      }}
                     >
                       {t.title}
                     </button>
+
                     <button
                       type="button"
                       onClick={() => deleteThread(t.id)}
@@ -705,6 +818,8 @@ export function AgentChatWidget() {
               activeArtifactId={activeArtifactId}
               onSelectArtifact={handleSelectArtifact}
             />
+
+
             {showArtifactPane && activeArtifact && (
               <ArtifactPanel
                 spec={activeArtifact}
