@@ -58,6 +58,8 @@ export type WidgetSpec =
       confirmLabel?: string;
       cancelLabel?: string;
       onSubmitIntent?: string;
+      /** Contexto enviado junto do submit (ex.: cdMovimentacao). */
+      values?: Record<string, unknown>;
     };
 
 export type ArtifactColumn = {
