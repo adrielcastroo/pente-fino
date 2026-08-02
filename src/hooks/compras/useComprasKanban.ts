@@ -3,6 +3,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { ComprasPedidoStatus } from './useComprasPedidos';
 
+export type ComprasModulo = 'geral' | 'rma' | 'starcolor' | 'entrega_apos';
+
 export const KANBAN_COLUNAS: { status: ComprasPedidoStatus; label: string }[] = [
   { status: 'pendente', label: 'Pendente' },
   { status: 'em_andamento', label: 'Em andamento' },
