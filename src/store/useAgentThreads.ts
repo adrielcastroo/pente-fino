@@ -13,6 +13,7 @@ type State = {
   threads: AgentThread[];
   activeId: string | null;
   open: boolean;
+  activeTab: "fio" | "team";
 };
 
 type Actions = {
@@ -23,6 +24,7 @@ type Actions = {
   renameThread: (id: string, title: string) => void;
   setMessages: (id: string, messages: UIMessage[]) => void;
   setTitleFromFirstMessage: (id: string, text: string) => void;
+  setActiveTab: (tab: "fio" | "team") => void;
 };
 
 const genId = () =>
@@ -34,6 +36,7 @@ export const useAgentThreads = create<State & Actions>()(
       threads: [],
       activeId: null,
       open: false,
+      activeTab: "fio",
 
       toggleOpen: (v) => set((s) => ({ open: v ?? !s.open })),
 
@@ -69,6 +72,8 @@ export const useAgentThreads = create<State & Actions>()(
         const title = text.slice(0, 50).trim() + (text.length > 50 ? "…" : "");
         set((s) => ({ threads: s.threads.map((x) => (x.id === id ? { ...x, title } : x)) }));
       },
+
+      setActiveTab: (activeTab) => set({ activeTab }),
     }),
     {
       name: "fio-threads",
@@ -76,6 +81,7 @@ export const useAgentThreads = create<State & Actions>()(
       partialize: (state) => ({
         threads: state.threads,
         activeId: state.activeId,
+        activeTab: state.activeTab,
       }),
     }
   )
