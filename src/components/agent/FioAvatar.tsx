@@ -54,7 +54,10 @@ export function FioAvatar({
       ? "pensando"
       : effective === "responding"
         ? "respondendo"
-        : "neutro");
+        : effective === "hover"
+          ? "feliz"
+          : "neutro");
+
 
   // Tilt 3D seguindo o mouse (parallax) — só quando interactive.
   useEffect(() => {
