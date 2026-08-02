@@ -55,7 +55,7 @@ export default function ConferenciaPage() {
     if (!codigo) return;
     e.preventDefault();
     if (pendingList.includes(codigo)) {
-      toast.warning(`${codigo} já bipada nesta sessão`);
+      bipToast.duplicado(codigo);
       setPeca('');
       return;
     }
@@ -92,7 +92,7 @@ export default function ConferenciaPage() {
         }
       }
       if (sucesso > 0) {
-        toast.success(`${sucesso}/${pendingList.length} peça(s) alocada(s) em ${carrinho}`);
+        bipToast.lote(sucesso, pendingList.length, carrinho);
         setRecentes((prev) => [...alocadas, ...prev].slice(0, 30));
         setPendingList([]);
         setStep('bipar');
