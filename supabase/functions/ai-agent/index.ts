@@ -107,11 +107,20 @@ Deno.serve(async (req) => {
 
     const rawMessages = body?.messages;
     const messages = Array.isArray(rawMessages) ? convertToModelMessages(rawMessages) : [];
+    
+    // Log para depuração de entrada
+    console.log(`[ai-agent] Recebidas ${messages.length} mensagens. Thread: ${threadId}`);
+
+    if (messages.length === 0) {
+      return textStreamResponse("Olá! Como posso ajudar você hoje?");
+    }
+
     const lastMsg = messages[messages.length - 1];
     const rawLast = (lastMsg && lastMsg.role === "user" && typeof lastMsg.content === "string") ? lastMsg.content : "";
 
     // Submit de widget de transferência — fluxo determinístico (não passa pelo LLM).
     if (rawLast.startsWith(WIDGET_SUBMIT_PREFIX)) {
+      console.log("[ai-agent] Processando submit de widget...");
       let payload: any = null;
       try { payload = JSON.parse(rawLast.slice(WIDGET_SUBMIT_PREFIX.length)); } catch { /* ignora */ }
       const answer = await routeTransferSubmit(payload, authHeader);
@@ -180,7 +189,10 @@ type ExtraContext = { memoryBlock?: string; documentsBlock?: string; docCount?: 
 
 async function streamWithFallback(providers: any[], messages: ModelMessage[], admin: any, userId: any, threadId: any, userText: string, userRole: any, extra: ExtraContext = {}): Promise<Response> {
   const [current, ...rest] = providers;
-  if (!current) return textStreamResponse("Sistemas de IA indisponíveis no momento.");
+  if (!current) {
+    console.error("ERRO: Nenhum provider de IA configurado (chaves faltando).");
+    return textStreamResponse("Sistemas de IA indisponíveis no momento. Por favor, verifique as chaves de API nas configurações.");
+  }
 
   try {
     const ctx = await buildAgentContext(admin, userText);
