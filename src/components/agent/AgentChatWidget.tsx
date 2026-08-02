@@ -103,22 +103,25 @@ function ChatWindow({
     supabase.auth.getSession().then(({ data }) => setAccessToken(data.session?.access_token ?? null));
   }, []);
 
-  const api = `${SUPABASE_URL}/functions/v1/ai-agent`;
-  const headers = useMemo(() => ({
-    apikey: PUBLISHABLE_KEY,
-    Authorization: `Bearer ${accessToken ?? PUBLISHABLE_KEY}`,
-  }), [accessToken]);
-
-  const body = useMemo(() => ({
-    threadId,
-  }), [threadId]);
+  const transport = useMemo(
+    () =>
+      new DefaultChatTransport({
+        api: `${SUPABASE_URL}/functions/v1/ai-agent`,
+        headers: {
+          apikey: PUBLISHABLE_KEY,
+          Authorization: `Bearer ${accessToken ?? PUBLISHABLE_KEY}`,
+        },
+        body: {
+          threadId,
+        }
+      }),
+    [accessToken, threadId],
+  );
 
   const { messages, sendMessage, setMessages: setChatMessages, status, error } = useChat({
     id: threadId,
     messages: initialMessages as any,
-    api,
-    headers,
-    body,
+    transport,
     onFinish: () => {
       window.dispatchEvent(new CustomEvent("fio:response"));
       window.dispatchEvent(new CustomEvent<boolean>("fio:thinking", { detail: false }));
