@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Search, PackageX, RefreshCw, Loader2, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
 
 interface Row {
   id: string;
