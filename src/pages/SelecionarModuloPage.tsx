@@ -54,9 +54,9 @@ export default function SelecionarModuloPage() {
       icon: Boxes,
       path: '/estoque',
       stats: stats?.estoque || 0,
-      statusTemplate: (n: number) => n > 0 ? `${n} abertas` : 'Sem conferências',
+      statusTemplate: (n: number) => n > 0 ? `${n} conferência${n > 1 ? 's' : ''} em aberto` : 'Nenhuma conferência em aberto',
       hasWarning: (n: number) => n > 0,
-      ariaLabel: (n: number) => `Estoque, ${n > 0 ? `${n} conferências abertas` : 'sem conferências'}. Atalho 1.`
+      ariaLabel: (n: number) => `Estoque, ${n > 0 ? `${n} conferências em aberto` : 'nenhuma conferência em aberto'}. Atalho 1.`
     },
     {
       id: 'expedicao',
@@ -64,9 +64,9 @@ export default function SelecionarModuloPage() {
       icon: Truck,
       path: '/expedicao/painel',
       stats: stats?.expedicao || 0,
-      statusTemplate: (n: number) => n > 0 ? `${n} em separação` : 'Sem pendências',
+      statusTemplate: (n: number) => n > 0 ? `${n} picking${n > 1 ? 's' : ''} em separação` : 'Nada em separação agora',
       hasWarning: () => false, // Neutral per requirements
-      ariaLabel: (n: number) => `Expedição, ${n > 0 ? `${n} em separação` : 'sem pendências'}. Atalho 2.`
+      ariaLabel: (n: number) => `Expedição, ${n > 0 ? `${n} pickings em separação` : 'nada em separação'}. Atalho 2.`
     },
     {
       id: 'compras',
@@ -74,9 +74,9 @@ export default function SelecionarModuloPage() {
       icon: ShoppingCart,
       path: '/compras/acompanhamentos',
       stats: stats?.compras || 0,
-      statusTemplate: (n: number) => n > 0 ? `${n} em acompanhamento` : 'Tudo em dia',
+      statusTemplate: (n: number) => n > 0 ? `${n} pedido${n > 1 ? 's' : ''} em acompanhamento` : 'Nenhum pedido pendente',
       hasWarning: () => false, // Neutral per requirements
-      ariaLabel: (n: number) => `Compras, ${n > 0 ? `${n} pedidos em acompanhamento` : 'tudo em dia'}. Atalho 3.`
+      ariaLabel: (n: number) => `Compras, ${n > 0 ? `${n} pedidos em acompanhamento` : 'nenhum pedido pendente'}. Atalho 3.`
     }
   ].filter(m => modules.includes(m.id));
 
@@ -153,7 +153,7 @@ export default function SelecionarModuloPage() {
               {greeting}, {firstName}
             </h1>
             <p className="mt-2 text-[15px] text-muted-foreground">
-              Selecione um módulo para continuar
+              Escolha por onde começar. O status de cada módulo é atualizado em tempo real.
             </p>
           </div>
 
