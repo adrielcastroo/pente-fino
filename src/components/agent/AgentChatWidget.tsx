@@ -382,7 +382,7 @@ function ChatWindow({
                 <div className="absolute right-0 top-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 z-10">
                   <Button
                     variant="ghost"
-                    size="icon-xs"
+                    size="icon-sm"
                     className="h-6 w-6 rounded-full bg-background/50 hover:bg-background shadow-sm border"
                     title="Copiar texto"
                     onClick={() => {
