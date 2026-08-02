@@ -115,7 +115,7 @@ function ChatWindow({
 
   const { messages, sendMessage, setMessages: setChatMessages, status, error } = useChat({
     id: threadId,
-    initialMessages,
+    messages: initialMessages as any,
     api,
     headers,
     body,
