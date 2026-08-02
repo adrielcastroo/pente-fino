@@ -13,12 +13,24 @@ export function TeamChatPanel() {
   const { user } = useAuth();
   const { messages, sendMessage, loading } = useTeamChat();
   const [inputValue, setInputValue] = useState("");
+  const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const handleSend = () => {
-    if (!inputValue.trim()) return;
-    sendMessage(inputValue);
+  const handleSend = async () => {
+    if (!inputValue.trim() || sending) return;
+    
+    const text = inputValue.trim();
     setInputValue("");
+    setSending(true);
+    
+    try {
+      await sendMessage(text);
+    } catch (err) {
+      // Restore text on failure so the user doesn't lose it
+      setInputValue(text);
+    } finally {
+      setSending(false);
+    }
   };
 
   useEffect(() => {
@@ -106,17 +118,22 @@ export function TeamChatPanel() {
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSend()}
+            onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
             placeholder="Mensagem para o time..."
-            className="flex-1 bg-transparent border-none outline-none text-sm py-1.5 placeholder:text-muted-foreground/50"
+            disabled={sending}
+            className="flex-1 bg-transparent border-none outline-none text-sm py-1.5 placeholder:text-muted-foreground/50 disabled:opacity-50"
           />
           <Button
             size="icon"
             onClick={handleSend}
-            disabled={!inputValue.trim()}
+            disabled={!inputValue.trim() || sending}
             className="rounded-full h-8 w-8 shrink-0"
           >
-            <Send className="w-3.5 h-3.5" />
+            {sending ? (
+              <div className="h-3 w-3 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+            ) : (
+              <Send className="w-3.5 h-3.5" />
+            )}
           </Button>
         </div>
       </div>

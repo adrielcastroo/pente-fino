@@ -41,16 +41,20 @@ export function useTeamChat() {
 
     try {
       const { error } = await supabase
-        .from('team_messages' as any)
+        .from('team_messages')
         .insert({
           sender_id: user.id,
           content: content.trim()
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('[team-chat] Supabase error:', error);
+        throw error;
+      }
     } catch (err: any) {
       toast.error('Erro ao enviar mensagem.');
       console.error('[team-chat] Error sending message:', err);
+      throw err;
     }
   };
 
