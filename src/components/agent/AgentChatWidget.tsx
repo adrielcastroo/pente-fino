@@ -134,8 +134,8 @@ function useFioAnimationState(): { state: FioAnimationState; expression: FioExpr
   return { state, expression };
 }
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://ymqrfgqdmgjbwpikcwnk.supabase.co";
+const PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InltcXJmZ3FkbWdqYndwaWtjd25rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNzkzODYsImV4cCI6MjEwMDg1NTM4Nn0.i_4qu4OZLBqJ2VUOINuw99hacMG35pyofeUswiWoydA";
 
 
 type ArtifactMap = Record<string, ArtifactSpec>;
@@ -185,14 +185,18 @@ function ChatWindow({
           }
           const mergedBody = { ...parsedBody, threadId };
           
+          console.log("[fio] Fetching from:", url);
           return fetch(url, {
             ...options,
+            mode: 'cors',
+            credentials: 'omit',
             body: JSON.stringify(mergedBody),
           });
         },
       }),
     [accessToken, threadId],
   );
+
 
   const { messages, sendMessage, setMessages: setChatMessages, status, error } = useChat({
     id: threadId,
@@ -448,8 +452,9 @@ function ChatWindow({
           {error && (
             <div className="mx-2 rounded-md border border-destructive/40 bg-destructive/10 p-2 text-xs text-destructive">
               {error.message?.includes("Failed to fetch") 
-                ? "ainda apresenta o mesmo erro"
+                ? "analise todo o código para resolver o erro failed to fetch, para que o FIO responda como deveria ser"
                 : error.message?.includes("IA indisponíveis")
+
 
 
                 ? "Sistemas de IA indisponíveis no momento. Vou te passar as chaves e vc configura no supabase pra mim."
