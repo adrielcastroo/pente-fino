@@ -32,7 +32,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
-import { Copy, RefreshCw, XCircle } from "lucide-react";
+import { RefreshCw, XCircle } from "lucide-react";
 
 import { AskUserInline, extractAskUser } from "./AskUserDialog";
 import { Suggestions, extractSuggestions } from "./Suggestions";
