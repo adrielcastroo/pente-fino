@@ -25,7 +25,6 @@ const MODULOS = [
     description: 'Gerenciamento de trocas e devoluções de mercadorias.',
     icon: ClipboardList,
     color: 'text-orange-500',
-    bgColor: 'bg-orange-500/10',
     path: '/compras/acompanhamentos/rma'
   },
   {
@@ -34,7 +33,6 @@ const MODULOS = [
     description: 'Acompanhamento de pedidos e processos Starcolor.',
     icon: Palette,
     color: 'text-pink-500',
-    bgColor: 'bg-pink-500/10',
     path: '/compras/acompanhamentos/starcolor'
   },
   {
@@ -43,7 +41,6 @@ const MODULOS = [
     description: 'Monitoramento de entregas programadas e pendências.',
     icon: Truck,
     color: 'text-cyan-500',
-    bgColor: 'bg-cyan-500/10',
     path: '/compras/acompanhamentos/entrega-apos'
   },
   {
@@ -52,7 +49,6 @@ const MODULOS = [
     description: 'Acompanhamento geral de compras e tarefas diversas.',
     icon: LayoutDashboard,
     color: 'text-blue-500',
-    bgColor: 'bg-blue-500/10',
     path: '/compras/acompanhamentos/geral'
   }
 ];
