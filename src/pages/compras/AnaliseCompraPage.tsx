@@ -111,8 +111,8 @@ export default function AnaliseCompraPage() {
   return (
     <PageShell>
       <PageHeader
-        title="Análise de Saldo Baixo"
-        subtitle="Compare a planilha do dia anterior com a do dia atual"
+        title="Análise de Compra"
+        subtitle="Compare as planilhas para identificar itens alterados, disponibilidade, duração em dias, consumo médio, quantidade em estoque e quantidade de saída."
         backTo="/compras/acompanhamentos"
         actions={
           <div className="flex flex-wrap items-center gap-2">

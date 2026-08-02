@@ -28,6 +28,16 @@ export interface DiffResult {
   totais: Record<DiffStatus, number>;
 }
 
+/** 
+ * Mapeamento das colunas solicitadas para o Módulo Compras:
+ * 1. Disponibilidade (Pos 12 no Auge)
+ * 2. Duração em dias (Pos 23 no Auge)
+ * 3. Consumo Médio (Pos 16 no Auge)
+ * 4. Quantidade em Estoque (Pos 10 no Auge)
+ * 5. Quantidade de Saída (Pos 15 no Auge)
+ */
+export const COMPRAS_METRICS_COLS = [10, 12, 15, 16, 23];
+
 /** Coluna usada como chave (1-based, como no painel do Auge). */
 export const DIFF_KEY_COL = 2;
 

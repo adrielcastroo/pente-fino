@@ -32,34 +32,45 @@ export const SaldoBaixoDiffTable = memo(function SaldoBaixoDiffTable({
       <Table className="min-w-[900px]">
         <TableHeader>
           <TableRow>
-            <TableHead className="w-28 text-[11px]">Situação</TableHead>
-            {columns.map((c, i) => (
-              <TableHead key={`${c}-${i}`} className="whitespace-nowrap text-[11px]">
-                <span className="text-[9px] text-muted-foreground mr-1">
-                  {String(i + 1).padStart(2, '0')}
-                </span>
-                {c}
-              </TableHead>
-            ))}
+            <TableHead className="w-28 text-[11px] bg-muted/50 sticky left-0 z-10">Situação</TableHead>
+            {columns.map((c, i) => {
+              const isMetric = [10, 12, 15, 16, 23].includes(i + 1);
+              return (
+                <TableHead 
+                  key={`${c}-${i}`} 
+                  className={cn(
+                    "whitespace-nowrap text-[11px]",
+                    isMetric && "bg-primary/5 text-primary font-bold border-x border-primary/10"
+                  )}
+                >
+                  <span className="text-[9px] text-muted-foreground mr-1">
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  {c}
+                </TableHead>
+              );
+            })}
           </TableRow>
         </TableHeader>
         <TableBody>
           {rows.map((d, ri) => (
             <TableRow key={`${d.key}-${ri}`} className="hover:bg-muted/40">
-              <TableCell>
-                <Badge variant="outline" className={cn('text-[10px]', STATUS_STYLES[d.status])}>
+              <TableCell className="bg-muted/50 sticky left-0 z-10">
+                <Badge variant="outline" className={cn('text-[10px] whitespace-nowrap', STATUS_STYLES[d.status])}>
                   {DIFF_LABELS[d.status]}
                 </Badge>
               </TableCell>
               {columns.map((_, ci) => {
-                const mudou = d.alteradas.includes(ci);
-                return (
-                  <TableCell
-                    key={ci}
-                    className={cn(
-                      'text-[11px] align-top max-w-[420px] break-words',
-                      mudou && 'bg-amber-500/10 font-medium',
-                    )}
+                 const mudou = d.alteradas.includes(ci);
+                 const isMetric = [10, 12, 15, 16, 23].includes(ci + 1);
+                 return (
+                   <TableCell
+                     key={ci}
+                     className={cn(
+                       'text-[11px] align-top max-w-[420px] break-words',
+                       mudou && 'bg-amber-500/10 font-medium',
+                       isMetric && !mudou && 'bg-primary/5 font-semibold'
+                     )}
                     title={mudou ? `Antes: ${d.anterior?.[ci] ?? ''}` : undefined}
                   >
                     {d.row?.[ci] ?? ''}
