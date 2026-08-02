@@ -13,9 +13,11 @@ import {
 } from '@/components/ui/select';
 import {
   KANBAN_COLUNAS,
+  COMPRAS_MODULOS,
   useAddComentario, useAnexos, useComentarios, useDeleteAnexo, useDeleteComentario,
   useProfilesMap, useUploadAnexo, useUpdatePedido, baixarAnexo,
   type ComprasPedidoCard,
+  type ComprasModulo,
 } from '@/hooks/compras/useComprasKanban';
 import type { ComprasPedidoStatus } from '@/hooks/compras/useComprasPedidos';
 
@@ -49,6 +51,7 @@ export function PedidoDetailDialog({ pedido, open, onOpenChange }: PedidoDetailD
   const [numero, setNumero] = useState('');
   const [previsao, setPrevisao] = useState('');
   const [status, setStatus] = useState<ComprasPedidoStatus>('pendente');
+  const [modulo, setModulo] = useState<ComprasModulo>('geral');
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const [novoComentario, setNovoComentario] = useState('');
@@ -79,6 +82,7 @@ export function PedidoDetailDialog({ pedido, open, onOpenChange }: PedidoDetailD
     setNumero(pedido.numero ?? '');
     setPrevisao(pedido.previsao ? String(pedido.previsao).slice(0, 10) : '');
     setStatus(pedido.status);
+    setModulo(pedido.modulo || 'geral');
     setSavedAt(null);
   }, [pedido?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -97,6 +101,7 @@ export function PedidoDetailDialog({ pedido, open, onOpenChange }: PedidoDetailD
             numero: numero.trim() || pedido?.numero || '',
             previsao: previsao || null,
             status,
+            modulo,
           },
         });
         setSavedAt(Date.now());
@@ -107,7 +112,7 @@ export function PedidoDetailDialog({ pedido, open, onOpenChange }: PedidoDetailD
       }
     }, 700);
     return () => clearTimeout(t);
-  }, [titulo, descricao, fornecedor, numero, previsao, status, pedidoId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [titulo, descricao, fornecedor, numero, previsao, status, modulo, pedidoId]); // eslint-disable-line react-hooks/exhaustive-deps
 
 
   async function handleUpload(files: FileList | null) {
@@ -211,6 +216,20 @@ export function PedidoDetailDialog({ pedido, open, onOpenChange }: PedidoDetailD
                 <SelectContent>
                   {KANBAN_COLUNAS.map((c) => (
                     <SelectItem key={c.status} value={c.status}>{c.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="pedido-modulo" className="text-xs font-medium text-muted-foreground">Módulo</Label>
+              <Select
+                value={modulo}
+                onValueChange={(v) => { dirtyRef.current = true; setModulo(v as ComprasModulo); }}
+              >
+                <SelectTrigger id="pedido-modulo"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {COMPRAS_MODULOS.map((m) => (
+                    <SelectItem key={m.id} value={m.id}>{m.label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
