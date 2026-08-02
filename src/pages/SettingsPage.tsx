@@ -13,7 +13,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { KeyRound, AlertTriangle, Loader2, ShieldCheck, QrCode, Copy, RefreshCw, Info } from 'lucide-react';
+import { Brain, KeyRound, AlertTriangle, Loader2, ShieldCheck, QrCode, Copy, RefreshCw, Info } from 'lucide-react';
 import { 
   User, 
   Settings, 
@@ -65,6 +65,7 @@ import { supabase } from '@/integrations/supabase/client';
 import TeamPanel from '@/components/settings/TeamPanel';
 import LabelLayoutPanel from '@/components/settings/LabelLayoutPanel';
 import ExpedicaoPanel from '@/components/settings/ExpedicaoPanel';
+import FioMemoryPanel from '@/components/settings/FioMemoryPanel';
 import { Truck } from 'lucide-react';
 import SettingsErrorBoundary from '@/components/SettingsErrorBoundary';
 import { setBipSoundEnabled, isBipSoundEnabled, bipSuccess } from '@/lib/bip-feedback';
@@ -94,6 +95,7 @@ const CATEGORY_GROUPS: { id: 'account' | 'system'; label: string; minRole?: Role
       { id: 'auge-account', name: 'Minha conta Auge', icon: KeyRound, description: 'Configure suas credenciais do Auge para ações no ERP.' },
       { id: 'appearance', name: 'Aparência', icon: Palette, description: 'Personalize o visual e as cores.' },
       { id: 'preferences', name: 'Preferências', icon: Settings, description: 'Ajuste o comportamento do sistema.' },
+      { id: 'fio-memory', name: 'Memória do Fio', icon: Brain, description: 'Revise, edite e apague o que o assistente lembra sobre você.' },
     ],
   },
   {
@@ -1286,6 +1288,10 @@ export default function SettingsPage() {
 
                   {activeCategory === 'expedicao' && (
                     <ExpedicaoPanel />
+                  )}
+
+                  {activeCategory === 'fio-memory' && (
+                    <FioMemoryPanel />
                   )}
 
 
