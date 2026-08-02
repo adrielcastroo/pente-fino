@@ -13,13 +13,17 @@ export default {
       },
     },
     screens: {
+      xs: "480px",
       sm: "640px",
       md: "768px",
       lg: "1024px",
       xl: "1280px",
       "2xl": "1536px",
-      // Desktop real: mouse fino + hover. Notebooks com janelas pequenas continuam desktop.
-      desktop: { raw: "(min-width: 1024px) and (hover: hover) and (pointer: fine), (min-width: 1366px)" },
+      // Desktop real: tem mouse (hover + pointer fine), OU tela muito larga (≥1366px) como fallback.
+      // Não usamos mais `(min-width: 1024px) and (hover: hover)` aqui porque notebooks touch com mouse
+      // Bluetooth entre 1024–1365px ficavam classificados como tablet — sidebar sumia e BottomTabBar
+      // aparecia. Agora qualquer dispositivo com `hover:hover` + `pointer:fine` (mouse real) é desktop.
+      desktop: { raw: "(hover: hover) and (pointer: fine), (min-width: 1366px)" },
       "tablet-landscape": { raw: "(min-width: 768px) and (max-width: 1365px) and (orientation: landscape) and (hover: none), (min-width: 768px) and (max-width: 1365px) and (orientation: landscape) and (pointer: coarse)" },
       "tablet-portrait": { raw: "(min-width: 600px) and (max-width: 1365px) and (orientation: portrait) and (hover: none), (min-width: 600px) and (max-width: 1365px) and (orientation: portrait) and (pointer: coarse)" },
     },

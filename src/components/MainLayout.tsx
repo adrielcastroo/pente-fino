@@ -76,6 +76,19 @@ export default function MainLayout({
   const prefStartCollapsed = typeof window !== 'undefined' && localStorage.getItem('pref_sidebar_collapsed') === 'true';
   const defaultOpen = !isMobile && !isTablet && !prefStartCollapsed;
 
+  // Renderização mutuamente exclusiva dos shells de navegação: em desktop só
+  // mostramos a Sidebar; em tablet landscape só o NavRail; em mobile só a BottomTabBar.
+  // Antes, sidebar+navRail ficavam empilhados no DOM em janelas entre 1024–1365px de
+  // dispositivos touch (Surface Pro), gerando duas barras verticais lado a lado.
+  const renderSidebar = !isMobile && !isTablet;
+  const renderNavRail = isTablet; // tablet-landscape (já tem sua media query interna)
+  const renderBottomNav = isMobile;
+  // Padding-bottom no <main>: só vale a pena quando há BottomTabBar fixa embaixo.
+  // Antes era sempre `pb-16`, deixando 4rem de espaço morto em rotas que não tinham BottomTabBar.
+  const mainPaddingBottom = renderBottomNav
+    ? 'pb-[calc(4rem+env(safe-area-inset-bottom,0px))]'
+    : 'pb-0';
+
   const handleOpenChange = (open: boolean) => {
     try {
       localStorage.setItem('pref_sidebar_collapsed', open ? 'false' : 'true');
@@ -87,16 +100,16 @@ export default function MainLayout({
   return (
     <SidebarProvider defaultOpen={defaultOpen} onOpenChange={handleOpenChange}>
       <div className="h-[100dvh] flex flex-row w-full bg-background overflow-hidden relative app-bg-pattern">
-        {sidebar}
+        {renderSidebar && sidebar}
 
-        {navRail}
+        {renderNavRail && navRail}
 
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
           <TopBar />
           <Breadcrumbs />
           {showResumeBanner && <ResumeBanner />}
 
-          <main id="main-content" tabIndex={-1} className="flex-1 overflow-y-auto bg-background/50 custom-scrollbar relative overscroll-contain pb-[calc(4rem+env(safe-area-inset-bottom,0px))] tablet-landscape:pb-0 desktop:pb-0 focus:outline-none">
+          <main id="main-content" tabIndex={-1} className={`flex-1 overflow-y-auto bg-background/50 custom-scrollbar relative overscroll-contain ${mainPaddingBottom} tablet-landscape:pb-0 desktop:pb-0 focus:outline-none`}>
             <div className="min-h-full w-full max-w-full mx-auto">
               <Suspense fallback={<PageSkeleton />}>
                 <div className="p-2 sm:p-4 lg:p-6 xl:p-8 2xl:p-10 w-full max-w-[1600px] 2xl:max-w-[1800px] mx-auto min-w-0">
@@ -109,7 +122,7 @@ export default function MainLayout({
             </div>
           </main>
         </div>
-        {bottomNav}
+        {renderBottomNav && bottomNav}
         
       </div>
       {showUndo && <UndoBanner />}

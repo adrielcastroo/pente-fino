@@ -420,14 +420,14 @@ export default function LoginPage() {
                     {mode === 'login' ? (
                       <>
                         Ainda não tem conta?{' '}
-                        <button onClick={() => toggleMode('signup')} className="text-primary font-bold hover:underline">
+                        <button type="button" onClick={() => toggleMode('signup')} className="text-primary font-bold hover:underline">
                           Cadastre-se
                         </button>
                       </>
                     ) : (
                       <>
                         Já tem uma conta?{' '}
-                        <button onClick={() => toggleMode('login')} className="text-primary font-bold hover:underline">
+                        <button type="button" onClick={() => toggleMode('login')} className="text-primary font-bold hover:underline">
                           Fazer login
                         </button>
                       </>
