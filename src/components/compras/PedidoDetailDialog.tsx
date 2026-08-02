@@ -85,6 +85,8 @@ export function PedidoDetailDialog({ pedido, open, onOpenChange }: PedidoDetailD
     setPrevisao(pedido.previsao ? String(pedido.previsao).slice(0, 10) : '');
     setStatus(pedido.status);
     setModulo(pedido.modulo || 'geral');
+    setNfEmitida(pedido.nf_emitida ?? '');
+    setNfRetorno(pedido.nf_retorno ?? '');
     setSavedAt(null);
   }, [pedido?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -104,6 +106,8 @@ export function PedidoDetailDialog({ pedido, open, onOpenChange }: PedidoDetailD
             previsao: previsao || null,
             status,
             modulo,
+            nf_emitida: nfEmitida || null,
+            nf_retorno: nfRetorno || null,
           },
         });
         setSavedAt(Date.now());
@@ -114,7 +118,7 @@ export function PedidoDetailDialog({ pedido, open, onOpenChange }: PedidoDetailD
       }
     }, 700);
     return () => clearTimeout(t);
-  }, [titulo, descricao, fornecedor, numero, previsao, status, modulo, pedidoId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [titulo, descricao, fornecedor, numero, previsao, status, modulo, nfEmitida, nfRetorno, pedidoId]); // eslint-disable-line react-hooks/exhaustive-deps
 
 
   async function handleUpload(files: FileList | null) {
