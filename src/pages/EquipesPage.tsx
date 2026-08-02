@@ -90,6 +90,8 @@ export default function EquipesPage() {
   const [profiles, setProfiles] = useState<Record<string, ProfileLite>>({});
   const [rolesByUser, setRolesByUser] = useState<Record<string, Role>>({});
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
 
   const [teamDialogOpen, setTeamDialogOpen] = useState(false);
