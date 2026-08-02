@@ -31,6 +31,16 @@ export type WidgetChoiceOption = {
   description?: string;
 };
 
+export type WidgetLoteOption = {
+  /** Identificação do lote/série no Auge (ex.: "TEC02.B.N04 PROC29863/26 27M-1"). */
+  lote: string;
+  /** Saldo disponível no depósito de origem. */
+  quantidade?: number;
+  /** Quantidade já reservada/selecionada no Auge. */
+  selecionado?: number;
+  hint?: string;
+};
+
 export type WidgetSpec =
   | {
       type: "form";
@@ -59,6 +69,43 @@ export type WidgetSpec =
       cancelLabel?: string;
       onSubmitIntent?: string;
       /** Contexto enviado junto do submit (ex.: cdMovimentacao). */
+      values?: Record<string, unknown>;
+    }
+  | {
+      /** Lista dinâmica de itens (ex.: múltiplos itens/lotes numa transferência). */
+      type: "itemlist";
+      id: string;
+      title: string;
+      description?: string;
+      /** Campos repetidos por linha. */
+      itemFields: WidgetField[];
+      /** Campos únicos aplicados ao envio inteiro (ex.: observação). */
+      sharedFields?: WidgetField[];
+      /** Linhas iniciais (pré-preenchimento). */
+      rows?: Array<Record<string, unknown>>;
+      minRows?: number;
+      maxRows?: number;
+      addLabel?: string;
+      submitLabel?: string;
+      onSubmitIntent?: string;
+      values?: Record<string, unknown>;
+    }
+  | {
+      /** Seleção de lote/série: FIFO automático ou escolha manual. */
+      type: "lotpick";
+      id: string;
+      title: string;
+      description?: string;
+      cdItem?: string;
+      cdDeposito?: string;
+      /** Quantidade a atender (usada para validar a soma manual). */
+      qtd?: number;
+      lotes: WidgetLoteOption[];
+      allowMultiple?: boolean;
+      defaultMode?: "fifo" | "manual";
+      submitLabel?: string;
+      onSubmitIntent?: string;
+      /** Contexto devolvido junto do submit (payload pendente). */
       values?: Record<string, unknown>;
     };
 
