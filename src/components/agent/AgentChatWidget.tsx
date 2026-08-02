@@ -100,18 +100,36 @@ function useFioAnimationState(): { state: FioAnimationState; expression: FioExpr
       }, 1600);
     };
 
+    // Expressões pontuais: analisando (ferramenta), surpreso (erro),
+    // feliz (resultado), curioso (usuário digitando), confirmando (sucesso).
+    let exprTimer: number | undefined;
+    const onExpression = (e: Event) => {
+      const detail = (e as CustomEvent<{ expression: FioExpression; duration?: number }>).detail;
+      if (!detail?.expression) return;
+      window.clearTimeout(exprTimer);
+      setExpression(detail.expression);
+      exprTimer = window.setTimeout(() => {
+        setExpression(undefined);
+        resetIdleTimer();
+      }, detail.duration ?? 1800);
+    };
+
     window.addEventListener("fio:thinking", onThinking as EventListener);
     window.addEventListener("fio:response", onResponse as EventListener);
-    
+    window.addEventListener("fio:expression", onExpression as EventListener);
+
     resetIdleTimer();
 
     return () => {
       window.removeEventListener("fio:thinking", onThinking as EventListener);
       window.removeEventListener("fio:response", onResponse as EventListener);
+      window.removeEventListener("fio:expression", onExpression as EventListener);
       window.clearTimeout(respondingTimer);
+      window.clearTimeout(exprTimer);
       if (idleTimer.current) window.clearTimeout(idleTimer.current);
     };
   }, []);
+
 
   return { state, expression };
 }
