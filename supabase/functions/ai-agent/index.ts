@@ -169,7 +169,13 @@ async function streamWithFallback(providers: any[], messages: ModelMessage[], ad
         } catch (e) { console.error("Error persisting:", e); }
       })();
     }
-    return result.toDataStreamResponse({ headers: corsHeaders });
+    return result.toDataStreamResponse({ 
+      headers: {
+        ...corsHeaders,
+        "x-fio-provider": current.id,
+        "x-fio-model": current.model
+      } 
+    });
   } catch (err) { 
     console.warn(`Fallback from ${current.id}:`, err);
     return streamWithFallback(rest, messages, admin, userId, threadId, userText, userRole); 
