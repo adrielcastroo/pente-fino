@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { MessageSquarePlus, PanelRightClose, PanelRightOpen, Plus, Trash2, X } from "lucide-react";
+import { Copy, CornerDownLeft, GripVertical, Image as ImageIcon, MessageSquarePlus, PanelRightClose, PanelRightOpen, Plus, Trash2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useAgentThreads } from "@/store/useAgentThreads";
@@ -18,6 +18,8 @@ import {
   PromptInput,
   PromptInputTextarea,
   PromptInputSubmit,
+  PromptInputActionAddAttachments,
+  PromptInputActionAddScreenshot,
   type PromptInputMessage,
 } from "@/components/ai-elements/prompt-input";
 import { InputGroupAddon } from "@/components/ui/input-group";
@@ -118,10 +120,9 @@ function ChatWindow({
     [accessToken, threadId],
   );
 
-
   const { messages, sendMessage, setMessages: setChatMessages, status, error } = useChat({
     id: threadId,
-    messages: initialMessages,
+    messages: initialMessages as any,
     transport,
     onFinish: () => {
       window.dispatchEvent(new CustomEvent("fio:response"));
@@ -358,10 +359,16 @@ function ChatWindow({
         )}
       >
         <PromptInput onSubmit={handleSubmit}>
-          <PromptInputTextarea ref={composerRef} placeholder="Pergunte algo ao Fio…" />
-          <InputGroupAddon align="inline-end">
-            <PromptInputSubmit status={status} disabled={isLoading} />
-          </InputGroupAddon>
+          <div className="flex flex-col gap-2">
+            <PromptInputTextarea ref={composerRef} placeholder="Pergunte algo ao Fio…" />
+            <div className="flex items-center justify-between gap-2 px-1 pb-1">
+              <div className="flex items-center gap-1">
+                <PromptInputActionAddAttachments label="Fotos/Arquivos" />
+                <PromptInputActionAddScreenshot label="Capturar tela" />
+              </div>
+              <PromptInputSubmit status={status} disabled={isLoading} />
+            </div>
+          </div>
         </PromptInput>
       </div>
     </div>

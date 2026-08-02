@@ -1,18 +1,76 @@
-import { MessageResponse } from "@/components/ai-elements/message";
-import type { ArtifactSpec } from "@/lib/agent-blocks";
+import { CodeBlock, CodeBlockActions, CodeBlockContent, CodeBlockCopyButton, CodeBlockHeader, CodeBlockTitle } from "@/components/ai-elements/code-block";
+import { cn } from "@/lib/utils";
+import ReactMarkdown from "react-markdown";
 
-export function MarkdownArtifact({ spec }: { spec: Extract<ArtifactSpec, { type: "markdown" }> }) {
+interface MarkdownArtifactProps {
+  spec: {
+    content: string;
+  };
+}
+
+export function MarkdownArtifact({ spec }: MarkdownArtifactProps) {
   return (
-    <div className="h-full overflow-auto">
-      <MessageResponse>{spec.content}</MessageResponse>
+    <div className="prose prose-invert max-w-none p-6">
+      <ReactMarkdown
+        components={{
+          code({ node, inline, className, children, ...props }: any) {
+            const match = /language-(\w+)/.exec(className || "");
+            const language = match ? match[1] : "text";
+            const code = String(children).replace(/\n$/, "");
+
+            if (inline) {
+              return (
+                <code className={cn("rounded bg-muted px-1.5 py-0.5 font-mono text-sm", className)} {...props}>
+                  {children}
+                </code>
+              );
+            }
+
+            return (
+              <CodeBlock code={code} language={language as any} className="my-4">
+                <CodeBlockHeader>
+                  <CodeBlockTitle>{language.toUpperCase()}</CodeBlockTitle>
+                  <CodeBlockActions>
+                    <CodeBlockCopyButton />
+                  </CodeBlockActions>
+                </CodeBlockHeader>
+              </CodeBlock>
+            );
+          },
+          table({ children }) {
+            return (
+              <div className="my-6 overflow-x-auto rounded-lg border">
+                <table className="w-full border-collapse text-sm">{children}</table>
+              </div>
+            );
+          },
+          th({ children }) {
+            return <th className="border-b bg-muted/50 px-4 py-2 text-left font-medium">{children}</th>;
+          },
+          td({ children }) {
+            return <td className="border-b px-4 py-2">{children}</td>;
+          },
+        }}
+      >
+        {spec.content}
+      </ReactMarkdown>
     </div>
   );
 }
 
-export function JsonArtifact({ spec }: { spec: Extract<ArtifactSpec, { type: "json" }> }) {
+export function JsonArtifact({ spec }: { spec: { data?: any; content?: string } }) {
+  const data = spec.data ?? spec.content;
+  const content = typeof data === "string" ? data : JSON.stringify(data, null, 2);
   return (
-    <pre className="h-full overflow-auto rounded-md border bg-muted/40 p-3 text-[11px] leading-relaxed">
-      {JSON.stringify(spec.data, null, 2)}
-    </pre>
+    <div className="p-4">
+      <CodeBlock code={content} language="json">
+        <CodeBlockHeader>
+          <CodeBlockTitle>JSON</CodeBlockTitle>
+          <CodeBlockActions>
+            <CodeBlockCopyButton />
+          </CodeBlockActions>
+        </CodeBlockHeader>
+      </CodeBlock>
+    </div>
   );
 }
