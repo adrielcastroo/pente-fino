@@ -371,7 +371,11 @@ export default function AcompanhamentosPage() {
         </p>
       )}
 
-      <NovaTarefaDialog open={novaAberta} onOpenChange={setNovaAberta} />
+      <NovaTarefaDialog 
+        open={novaAberta} 
+        onOpenChange={setNovaAberta} 
+        moduloInicial={moduloAtivo}
+      />
 
       <PedidoDetailDialog
         pedido={detalheAtual}
