@@ -28,6 +28,8 @@ export interface ComprasPedidoCard {
   descricao: string | null;
   status: ComprasPedidoStatus;
   modulo: ComprasModulo;
+  nf_emitida?: string | null;
+  nf_retorno?: string | null;
   itens: number;
   valor_total: number | null;
   previsao: string | null;
@@ -101,6 +103,8 @@ export interface PedidoPatch {
   previsao?: string | null;
   status?: ComprasPedidoStatus;
   modulo?: ComprasModulo;
+  nf_emitida?: string | null;
+  nf_retorno?: string | null;
   ordem?: number;
 }
 
@@ -141,6 +145,8 @@ export interface NovaTarefaInput {
   previsao?: string | null;
   status?: ComprasPedidoStatus;
   modulo?: ComprasModulo;
+  nf_emitida?: string | null;
+  nf_retorno?: string | null;
 }
 
 /** Cria uma nova tarefa/pedido de acompanhamento no topo da coluna escolhida. */
@@ -164,6 +170,8 @@ export function useCreatePedido() {
           previsao: input.previsao || null,
           status: input.status ?? 'pendente',
           modulo: input.modulo ?? 'geral',
+          nf_emitida: input.nf_emitida || null,
+          nf_retorno: input.nf_retorno || null,
           ordem: -Date.now() / 1000,
           created_by: user.id,
         })

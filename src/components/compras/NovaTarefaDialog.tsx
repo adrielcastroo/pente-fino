@@ -35,6 +35,8 @@ export function NovaTarefaDialog({ open, onOpenChange, statusInicial = 'pendente
   const [previsao, setPrevisao] = useState('');
   const [status, setStatus] = useState<ComprasPedidoStatus>(statusInicial);
   const [modulo, setModulo] = useState<ComprasModulo>(moduloInicial);
+  const [nfEmitida, setNfEmitida] = useState('');
+  const [nfRetorno, setNfRetorno] = useState('');
   const [arquivos, setArquivos] = useState<File[]>([]);
   const [enviando, setEnviando] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -43,6 +45,7 @@ export function NovaTarefaDialog({ open, onOpenChange, statusInicial = 'pendente
 
   function reset() {
     setTitulo(''); setFornecedor(''); setNumero(''); setDescricao(''); setPrevisao('');
+    setNfEmitida(''); setNfRetorno('');
     setStatus(statusInicial); setModulo(moduloInicial); setArquivos([]);
     if (fileRef.current) fileRef.current.value = '';
   }
@@ -69,6 +72,7 @@ export function NovaTarefaDialog({ open, onOpenChange, statusInicial = 'pendente
     try {
       const criado = await createPedido.mutateAsync({
         titulo, fornecedor, numero, descricao, previsao: previsao || null, status, modulo,
+        nf_emitida: nfEmitida || null, nf_retorno: nfRetorno || null,
       });
       for (const file of arquivos) {
         try {
@@ -167,6 +171,31 @@ export function NovaTarefaDialog({ open, onOpenChange, statusInicial = 'pendente
               </SelectContent>
             </Select>
           </div>
+
+          {modulo === 'rma' && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-muted/30 rounded-lg border border-border/50">
+              <div className="space-y-1.5">
+                <Label htmlFor="nf-emitida" className="text-xs font-medium text-primary">NF Emitida</Label>
+                <Input
+                  id="nf-emitida"
+                  value={nfEmitida}
+                  placeholder="Opcional"
+                  className="bg-background"
+                  onChange={(e) => setNfEmitida(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="nf-retorno" className="text-xs font-medium text-primary">NF Retorno</Label>
+                <Input
+                  id="nf-retorno"
+                  value={nfRetorno}
+                  placeholder="Opcional"
+                  className="bg-background"
+                  onChange={(e) => setNfRetorno(e.target.value)}
+                />
+              </div>
+            </div>
+          )}
 
           <div className="space-y-1.5">
             <Label htmlFor="nt-desc">Descrição</Label>
