@@ -376,8 +376,12 @@ function ChatWindow({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start" className="w-48">
-                    <PromptInputActionAddAttachments label="Fotos/Arquivos" />
-                    <PromptInputActionAddScreenshot label="Capturar tela" />
+                    <DropdownMenuItem>
+                      <PromptInputActionAddAttachments label="Fotos/Arquivos" />
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <PromptInputActionAddScreenshot label="Capturar tela" />
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
