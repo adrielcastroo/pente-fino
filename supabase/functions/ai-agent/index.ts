@@ -156,19 +156,29 @@ Deno.serve(async (req) => {
   }
 });
 
-async function streamWithFallback(providers: any[], messages: ModelMessage[], admin: any, userId: any, threadId: any, userText: string, userRole: any): Promise<Response> {
+type ExtraContext = { memoryBlock?: string; documentsBlock?: string; docCount?: number };
+
+async function streamWithFallback(providers: any[], messages: ModelMessage[], admin: any, userId: any, threadId: any, userText: string, userRole: any, extra: ExtraContext = {}): Promise<Response> {
   const [current, ...rest] = providers;
   if (!current) return textStreamResponse("Sistemas de IA indisponíveis no momento.");
 
   try {
     const ctx = await buildAgentContext(admin, userText);
-    const system = `${getFioCapabilitiesPrompt()}\n\nRegras visuais: Use markdown rico, tabelas, [[WIDGET]], [[ARTIFACT]] e [[SUGGESTIONS]] conforme documentado.\nPerfil do usuário: ${roleLabel(userRole)}.\nContexto dinâmico: ${JSON.stringify(ctx)}`;
-    
+    const system = [
+      getFioCapabilitiesPrompt(),
+      "Regras visuais: Use markdown rico, tabelas, [[WIDGET]], [[ARTIFACT]] e [[SUGGESTIONS]] conforme documentado.",
+      `Perfil do usuário: ${roleLabel(userRole)}.`,
+      extra.memoryBlock || "",
+      "Quando o usuário revelar uma preferência estável (depósito favorito, formato preferido, apelido de item), chame a tool lembrar_preferencia.",
+      extra.documentsBlock || "",
+      `Contexto dinâmico: ${JSON.stringify(ctx)}`,
+    ].filter(Boolean).join("\n\n");
+
     const result = await streamText({
       model: createOpenAICompatible({ name: current.id, baseURL: current.baseURL, headers: { Authorization: `Bearer ${current.apiKey}` } })(current.model),
       system,
       messages,
-      tools: buildTools(admin),
+      tools: { ...buildTools(admin), ...buildMemoryTools(admin, userId ?? null) },
       maxSteps: 5
     });
 
@@ -178,7 +188,7 @@ async function streamWithFallback(providers: any[], messages: ModelMessage[], ad
           const text = await result.text;
           await admin.from("fio_conversations").upsert({ id: threadId, user_id: userId, title: userText.slice(0, 60), updated_at: new Date().toISOString() });
           await admin.from("fio_messages").insert([
-            { conversation_id: threadId, role: "user", content: { text: userText } },
+            { conversation_id: threadId, role: "user", content: { text: userText, anexos: extra.docCount ?? 0 } },
             { conversation_id: threadId, role: "assistant", content: { text } }
           ]);
         } catch (e) { console.error("Error persisting:", e); }
@@ -188,11 +198,12 @@ async function streamWithFallback(providers: any[], messages: ModelMessage[], ad
       headers: {
         ...corsHeaders,
         "x-fio-provider": current.id,
-        "x-fio-model": current.model
+        "x-fio-model": current.model,
+        "x-fio-docs": String(extra.docCount ?? 0)
       } 
     });
   } catch (err) { 
     console.warn(`Fallback from ${current.id}:`, err);
-    return streamWithFallback(rest, messages, admin, userId, threadId, userText, userRole); 
+    return streamWithFallback(rest, messages, admin, userId, threadId, userText, userRole, extra); 
   }
 }
