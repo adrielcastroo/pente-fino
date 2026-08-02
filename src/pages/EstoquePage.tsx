@@ -1197,7 +1197,7 @@ export default function EstoquePage() {
                 </div>
 
                 {/* Body */}
-                <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">>
+                <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
                   {/* Charts Grid */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                     {/* Pie */}
