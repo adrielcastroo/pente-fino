@@ -156,6 +156,7 @@ export function useCreatePedido() {
           descricao: input.descricao?.trim() || null,
           previsao: input.previsao || null,
           status: input.status ?? 'pendente',
+          modulo: input.modulo ?? 'geral',
           ordem: -Date.now() / 1000,
           created_by: user.id,
         })
