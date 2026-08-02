@@ -121,7 +121,15 @@ function ChatWindow({
         },
         body: {
           threadId,
-        }
+        },
+        fetch: async (url, options) => {
+          const body = JSON.parse(options?.body as string || "{}");
+          const mergedBody = { ...body, threadId };
+          return fetch(url, {
+            ...options,
+            body: JSON.stringify(mergedBody),
+          });
+        },
       }),
     [accessToken, threadId],
   );
