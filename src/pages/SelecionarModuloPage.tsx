@@ -157,12 +157,6 @@ export default function SelecionarModuloPage() {
             </p>
           </div>
 
-          <div className="mb-4 text-sm text-muted-foreground max-md:hidden">
-            Pressione <kbd className="font-mono text-[13px] border border-border rounded px-2 py-0.5 bg-card mx-1">1</kbd> 
-            <kbd className="font-mono text-[13px] border border-border rounded px-2 py-0.5 bg-card mx-1">2</kbd> 
-            <kbd className="font-mono text-[13px] border border-border rounded px-2 py-0.5 bg-card mx-1">3</kbd> 
-            ou navegue com <kbd className="font-mono text-[13px] border border-border rounded px-2 py-0.5 bg-card mx-1">setas</kbd> e <kbd className="font-mono text-[13px] border border-border rounded px-2 py-0.5 bg-card mx-1">Enter</kbd>.
-          </div>
 
           <div className="grid grid-cols-3 gap-4 max-md:grid-cols-1" role="list">
             {availableModules.map((mod, idx) => (
