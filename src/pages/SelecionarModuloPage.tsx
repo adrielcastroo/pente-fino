@@ -131,34 +131,23 @@ export default function SelecionarModuloPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
-      {/* Topbar */}
-      <header className="h-[60px] bg-slate-800 shrink-0">
-        <div className="max-w-[1080px] mx-auto px-6 h-full flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-md bg-[hsl(201_96%_45%)] text-[hsl(var(--navy-2))] overflow-hidden grid place-items-center">
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col justify-center py-10 max-md:justify-start max-md:pt-12">
+        <div className="container max-w-[1080px] mx-auto px-6">
+          {/* Centralized Branding */}
+          <div className="flex flex-col items-center justify-center mb-10 text-center animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <div className="w-16 h-16 mb-4 rounded-xl bg-transparent overflow-hidden grid place-items-center">
               <img 
                 src={logoComb} 
-                alt="" 
-                className="w-full h-full object-contain p-0.5" 
+                alt="Logo Pente Fino" 
+                className="w-full h-full object-contain" 
               />
             </div>
-            <span className="text-[15px] font-semibold text-white">Pente Fino</span>
+            <h2 className="text-xl font-bold tracking-tight text-foreground">
+              Pente Fino
+            </h2>
           </div>
 
-          <button
-            onClick={() => signOut().then(() => navigate('/login'))}
-            aria-label="Trocar de conta"
-            className="min-h-[44px] px-4 rounded-md border border-[hsl(217_33%_26%)] bg-transparent text-slate-300 text-sm font-medium flex items-center gap-2 hover:bg-[hsl(217_33%_22%)] transition-colors"
-          >
-            <ArrowRightLeft className="w-4 h-4" />
-            <span>Trocar conta</span>
-          </button>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col justify-center py-10 max-md:justify-start max-md:pt-6">
-        <div className="container max-w-[1080px] mx-auto px-6">
           <div className="mb-6">
             <h1 className="font-bold tracking-tight text-[clamp(1.625rem,1.15rem+1.8vw,2.125rem)]">
               {greeting}, {firstName}
