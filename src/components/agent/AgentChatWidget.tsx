@@ -366,7 +366,7 @@ function ChatWindow({
           {error && (
             <div className="mx-2 rounded-md border border-destructive/40 bg-destructive/10 p-2 text-xs text-destructive">
               {error.message?.includes("IA indisponíveis") 
-                ? "Sistemas de IA indisponíveis no momento. Por favor, verifique as chaves de API nas configurações."
+                ? "Sistemas de IA indisponíveis no momento. Vou te passar as chaves e vc configura no supabase pra mim."
                 : `Erro: ${error.message}`}
             </div>
           )}
