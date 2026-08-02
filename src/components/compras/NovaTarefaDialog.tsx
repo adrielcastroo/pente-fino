@@ -18,6 +18,7 @@ interface NovaTarefaDialogProps {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   statusInicial?: ComprasPedidoStatus;
+  moduloInicial?: ComprasModulo;
 }
 
 function formatSize(bytes: number) {
