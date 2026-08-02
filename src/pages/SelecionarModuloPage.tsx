@@ -181,17 +181,28 @@ export default function SelecionarModuloPage() {
             ))}
           </div>
 
-          <div className="mt-6 flex items-center gap-4 flex-wrap">
-            <Button 
-              onClick={handleNewConference}
-              className="min-h-[48px] px-[1.375rem] text-[15px] font-semibold max-md:min-h-[56px] max-md:w-full"
+          <div className="mt-8 flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-4 flex-wrap">
+              <Button 
+                onClick={handleNewConference}
+                className="min-h-[48px] px-[1.375rem] text-[15px] font-semibold max-md:min-h-[56px] max-md:w-full"
+              >
+                <Plus className="w-[18px] h-[18px] mr-2" />
+                Iniciar nova conferência
+              </Button>
+              <span className="text-[13px] text-muted-foreground max-md:hidden">
+                ou pressione <kbd className="font-mono text-[13px] border border-border rounded px-2 py-0.5 bg-card mx-1">N</kbd>
+              </span>
+            </div>
+
+            <button
+              onClick={() => signOut().then(() => navigate('/login'))}
+              aria-label="Trocar de conta"
+              className="min-h-[44px] px-4 rounded-md border border-border bg-transparent text-muted-foreground text-xs font-medium flex items-center gap-2 hover:bg-muted transition-colors max-md:w-full max-md:justify-center"
             >
-              <Plus className="w-[18px] h-[18px] mr-2" />
-              Iniciar nova conferência
-            </Button>
-            <span className="text-[13px] text-muted-foreground max-md:hidden">
-              ou pressione <kbd className="font-mono text-[13px] border border-border rounded px-2 py-0.5 bg-card mx-1">N</kbd>
-            </span>
+              <ArrowRightLeft className="w-3.5 h-3.5" />
+              <span>Trocar conta</span>
+            </button>
           </div>
         </div>
       </main>
