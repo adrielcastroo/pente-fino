@@ -27,7 +27,7 @@ function formatSize(bytes: number) {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
-export function NovaTarefaDialog({ open, onOpenChange, statusInicial = 'pendente' }: NovaTarefaDialogProps) {
+export function NovaTarefaDialog({ open, onOpenChange, statusInicial = 'pendente', moduloInicial = 'geral' }: NovaTarefaDialogProps) {
   const [titulo, setTitulo] = useState('');
   const [fornecedor, setFornecedor] = useState('');
   const [numero, setNumero] = useState('');
