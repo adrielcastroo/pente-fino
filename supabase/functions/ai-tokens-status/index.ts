@@ -265,7 +265,11 @@ Deno.serve(async (req) => {
 
     const results = await Promise.all(
       PROVIDERS.map(async (cfg) => {
-        const key = Deno.env.get(cfg.envKey) ?? "";
+        // Cerebras aceita a chave salva como CEREBRAS_API_KEY ou OPENAI_API_KEY.
+        const key =
+          Deno.env.get(cfg.envKey) ??
+          (cfg.id === "cerebras" ? Deno.env.get("OPENAI_API_KEY") : undefined) ??
+          "";
         const configured = key.length > 0;
         const health = configured ? await probe(cfg, key) : null;
         const activeModel = (settings as any)?.[`${cfg.id}_model`] ?? DEFAULT_MODELS[cfg.id].model;
