@@ -150,8 +150,8 @@ function ChatWindow({
   onArtifact: (spec: ArtifactSpec) => void;
   activeArtifactId: string | null;
   onSelectArtifact: (id: string) => void;
-  status: string;
 }) {
+
 
   const initialMessages = useMemo(
     () => useAgentThreads.getState().threads.find((t) => t.id === threadId)?.messages ?? [],
