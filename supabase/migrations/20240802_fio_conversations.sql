@@ -1,63 +1,54 @@
-CREATE TABLE public.fio_conversations (
-    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-    title text,
-    created_at timestamptz DEFAULT now(),
-    updated_at timestamptz DEFAULT now()
+create table if not exists public.fio_conversations (
+    id uuid primary key default gen_random_uuid(),
+    user_id uuid references auth.users(id) on delete cascade not null,
+    title text not null,
+    created_at timestamptz default now() not null,
+    updated_at timestamptz default now() not null
 );
 
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.fio_conversations TO authenticated;
-GRANT ALL ON public.fio_conversations TO service_role;
-
-ALTER TABLE public.fio_conversations ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can manage their own conversations"
-ON public.fio_conversations
-FOR ALL
-TO authenticated
-USING (auth.uid() = user_id)
-WITH CHECK (auth.uid() = user_id);
-
-CREATE TABLE public.fio_messages (
-    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    conversation_id uuid REFERENCES public.fio_conversations(id) ON DELETE CASCADE NOT NULL,
-    role text NOT NULL CHECK (role IN ('user', 'assistant', 'system', 'tool')),
-    content text NOT NULL,
-    provider text,
-    model text,
-    task text,
-    found_data boolean DEFAULT false,
-    latency_ms int,
-    created_at timestamptz DEFAULT now()
+create table if not exists public.fio_messages (
+    id uuid primary key default gen_random_uuid(),
+    conversation_id uuid references public.fio_conversations(id) on delete cascade not null,
+    role text not null check (role in ('user', 'assistant', 'system')),
+    content jsonb not null,
+    created_at timestamptz default now() not null
 );
 
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.fio_messages TO authenticated;
-GRANT ALL ON public.fio_messages TO service_role;
+grant select, insert, update, delete on public.fio_conversations to authenticated;
+grant select, insert, update, delete on public.fio_messages to authenticated;
+grant all on public.fio_conversations to service_role;
+grant all on public.fio_messages to service_role;
 
-ALTER TABLE public.fio_messages ENABLE ROW LEVEL SECURITY;
+alter table public.fio_conversations enable row level security;
+alter table public.fio_messages enable row level security;
 
-CREATE POLICY "Users can manage messages of their own conversations"
-ON public.fio_messages
-FOR ALL
-TO authenticated
-USING (
-    EXISTS (
-        SELECT 1 FROM public.fio_conversations
-        WHERE id = conversation_id AND user_id = auth.uid()
-    )
-);
+create policy "Users can view their own conversations"
+on public.fio_conversations for select
+to authenticated
+using (auth.uid() = user_id);
 
-CREATE INDEX idx_fio_messages_conversation_created ON public.fio_messages(conversation_id, created_at);
+create policy "Users can insert their own conversations"
+on public.fio_conversations for insert
+to authenticated
+with check (auth.uid() = user_id);
 
-CREATE OR REPLACE FUNCTION public.handle_updated_at()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = now();
-    RETURN NEW;
-END;
-$$ language 'plpgsql';
+create policy "Users can update their own conversations"
+on public.fio_conversations for update
+to authenticated
+using (auth.uid() = user_id);
 
-CREATE TRIGGER set_fio_conversations_updated_at
-    BEFORE UPDATE ON public.fio_conversations
-    FOR EACH ROW
-    EXECUTE PROCEDURE public.handle_updated_at();
+create policy "Users can view messages in their conversations"
+on public.fio_messages for select
+to authenticated
+using (exists (
+    select 1 from public.fio_conversations
+    where id = conversation_id and user_id = auth.uid()
+));
+
+create policy "Users can insert messages in their conversations"
+on public.fio_messages for insert
+to authenticated
+with check (exists (
+    select 1 from public.fio_conversations
+    where id = conversation_id and user_id = auth.uid()
+));
