@@ -52,6 +52,8 @@ export function PedidoDetailDialog({ pedido, open, onOpenChange }: PedidoDetailD
   const [previsao, setPrevisao] = useState('');
   const [status, setStatus] = useState<ComprasPedidoStatus>('pendente');
   const [modulo, setModulo] = useState<ComprasModulo>('geral');
+  const [nfEmitida, setNfEmitida] = useState('');
+  const [nfRetorno, setNfRetorno] = useState('');
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const [novoComentario, setNovoComentario] = useState('');
