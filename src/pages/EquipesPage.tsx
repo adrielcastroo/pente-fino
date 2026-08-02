@@ -220,16 +220,40 @@ export default function EquipesPage() {
 
   const addMember = async (userId: string) => {
     if (!selectedTeam) return;
+    const prof = profiles.find((p) => p.user_id === userId);
+    if (!prof) return;
+
+    // A2: Atualização otimista
+    const tempMember: Member = {
+      user_id: userId,
+      team_id: selectedTeam.id,
+      display_name: prof.display_name,
+      avatar_url: prof.avatar_url,
+      role: rolesByUser[userId] ?? 'operador',
+      modules: prof.modules ?? ['estoque'],
+      is_optimistic: true
+    };
+    
+    setMembersByTeam(prev => ({
+      ...prev,
+      [selectedTeam.id]: [...(prev[selectedTeam.id] || []), tempMember].sort((a,b) => a.display_name.localeCompare(b.display_name))
+    }));
+    
+    setAddMemberOpen(false);
+
     try {
       const { error } = await (supabase.from('team_members' as any)
         .insert({ team_id: selectedTeam.id, user_id: userId, added_by: user?.id }) as any);
       if (error) throw error;
       toast.success('Membro adicionado.');
-      setAddMemberOpen(false);
       await loadAll();
       await pageAccess.refresh();
-    } catch (err: any) { toast.error(err?.message || 'Falha ao adicionar.'); }
+    } catch (err: any) { 
+      toast.error(err?.message || 'Falha ao adicionar.');
+      await loadAll(); // Reverte
+    }
   };
+
 
   const [memberToRemove, setMemberToRemove] = useState<Member | null>(null);
 
