@@ -68,7 +68,7 @@ export function ItemListWidget({
     >
       <div className="space-y-2">
         {rows.map((row, i) => (
-          <div key={i} className="rounded-md border border-border/70 bg-background/60 p-2">
+          <div key={i} id={`w-row-${spec.id}-${i}`} className="rounded-md border border-border/70 bg-background/60 p-2">
             <div className="mb-1.5 flex items-center justify-between">
               <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                 Item {i + 1}
@@ -103,7 +103,7 @@ export function ItemListWidget({
                 <Cell
                   key={f.name}
                   field={f}
-                  idPrefix={`w-${spec.id}-${i}`}
+                  idPrefix={`w-row-${spec.id}-${i}`}
                   value={row[f.name]}
                   onChange={(v) => setCell(i, f.name, v)}
                 />
