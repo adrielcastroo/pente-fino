@@ -145,7 +145,7 @@ function ChatWindow({
     messages: initialMessages as any,
     transport,
     onFinish: () => {
-      window.dispatchEvent(new CustomEvent("fio:response"));
+      window.dispatchEvent(new CustomEvent("fio:response", { detail: { success: true } }));
       window.dispatchEvent(new CustomEvent<boolean>("fio:thinking", { detail: false }));
     },
     onError: (err) => {
@@ -266,7 +266,7 @@ function ChatWindow({
         <ConversationContent>
           {messages.length === 0 && (
             <ConversationEmptyState
-              icon={<FioAvatar size={72} state={isLoading ? "thinking" : "idle"} />}
+              icon={<FioAvatar size={72} state={isLoading ? "thinking" : "idle"} expression={isLoading ? "pensando" : undefined} />}
               title="Fio · Assistente do Pente Fino"
               description="Sou o Fio. Pergunte sobre itens, transferências, saldo do estoque, movimentações e mais. Digite /ajuda para ver os comandos disponíveis."
             />
