@@ -611,10 +611,9 @@ const FIO_HELP_TEXT = `🧭 **Comandos do Fio**
 
 export function AgentChatWidget() {
   const { user } = useAuth();
-  const { open, toggleOpen, threads, activeId, newThread, selectThread, deleteThread } = useAgentThreads();
+  const { open, toggleOpen, threads, activeId, newThread, selectThread, deleteThread, activeTab, setActiveTab } = useAgentThreads();
   const [hasUnread, setHasUnread] = useState(false);
   const [chatStatus, setChatStatus] = useState("idle");
-  const [activeTab, setActiveTab] = useState<"fio" | "team">("fio");
   const panelRef = useRef<HTMLDivElement>(null);
   const composerRef = useRef<HTMLTextAreaElement>(null);
 
