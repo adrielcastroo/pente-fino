@@ -14,7 +14,9 @@ import { PageShell, PageHeader } from '@/components/compras/ui';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import {
+  ToggleGroup, ToggleGroupItem,
+} from '@/components/ui/toggle-group';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -23,9 +25,12 @@ import PedidoDetailDialog from '@/components/compras/PedidoDetailDialog';
 import NovaTarefaDialog from '@/components/compras/NovaTarefaDialog';
 import {
   KANBAN_COLUNAS, useComprasKanbanPedidos, useUpdatePedido,
-  type ComprasPedidoCard,
+  type ComprasPedidoCard, type ComprasModulo
 } from '@/hooks/compras/useComprasKanban';
 import type { ComprasPedidoStatus } from '@/hooks/compras/useComprasPedidos';
+import { useParams, useNavigate } from 'react-router-dom';
+import { ChevronLeft } from 'lucide-react';
+
 
 
 function formatDate(iso: string | null) {
