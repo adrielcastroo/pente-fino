@@ -31,6 +31,16 @@ export type WidgetChoiceOption = {
   description?: string;
 };
 
+export type WidgetLoteOption = {
+  /** Identificação do lote/série no Auge (ex.: "TEC02.B.N04 PROC29863/26 27M-1"). */
+  lote: string;
+  /** Saldo disponível no depósito de origem. */
+  quantidade?: number;
+  /** Quantidade já reservada/selecionada no Auge. */
+  selecionado?: number;
+  hint?: string;
+};
+
 export type WidgetSpec =
   | {
       type: "form";
