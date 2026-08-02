@@ -58,8 +58,9 @@ export function MarkdownArtifact({ spec }: MarkdownArtifactProps) {
   );
 }
 
-export function JsonArtifact({ spec }: { spec: { content: string } }) {
-  const content = typeof spec.content === 'string' ? spec.content : JSON.stringify(spec.content, null, 2);
+export function JsonArtifact({ spec }: { spec: { data?: any; content?: string } }) {
+  const data = spec.data ?? spec.content;
+  const content = typeof data === "string" ? data : JSON.stringify(data, null, 2);
   return (
     <div className="p-4">
       <CodeBlock code={content} language="json">
