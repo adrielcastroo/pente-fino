@@ -15,7 +15,8 @@ export function WidgetRenderer({
   onSend: (text: string) => void;
 }) {
   const submit = (values: Record<string, unknown>) => {
-    onSend(encodeWidgetSubmit({ widget_id: spec.id, intent: spec.onSubmitIntent, values }));
+    const context = spec.type === "confirm" ? (spec.values ?? {}) : {};
+    onSend(encodeWidgetSubmit({ widget_id: spec.id, intent: spec.onSubmitIntent, values: { ...context, ...values } }));
   };
 
   const Icon = spec.type === "form" ? HelpCircle : spec.type === "choice" ? ListChecks : CheckCircle2;
