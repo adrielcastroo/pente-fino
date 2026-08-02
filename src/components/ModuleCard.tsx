@@ -46,7 +46,7 @@ export function ModuleCard({
       >
         <div className="flex items-center justify-between w-full">
           <div className={cn(
-            "rounded-md bg-primary/10 text-primary grid place-items-center shrink-0",
+            "text-primary grid place-items-center shrink-0",
             "w-[44px] h-[44px]",
             "max-md:w-[52px] max-md:h-[52px]"
           )}>
