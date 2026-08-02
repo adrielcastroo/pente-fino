@@ -409,76 +409,63 @@ export const usePromptInputReferencedSources = () => {
   return ctx;
 };
 
-export type PromptInputActionAddAttachmentsProps = ComponentProps<
-  typeof DropdownMenuItem
-> & {
+export type PromptInputActionAddAttachmentsProps = {
   label?: string;
+  className?: string;
 };
 
 export const PromptInputActionAddAttachments = ({
   label = "Add photos or files",
-  ...props
+  className,
 }: PromptInputActionAddAttachmentsProps) => {
   const attachments = usePromptInputAttachments();
 
-  const handleSelect = useCallback(
-    (e: React.MouseEvent) => {
-      e.preventDefault();
-      attachments.openFileDialog();
-    },
-    [attachments]
-  );
+  const handleSelect = (e: React.MouseEvent) => {
+    e.preventDefault();
+    attachments.openFileDialog();
+  };
 
   return (
-    <div {...props} onClick={handleSelect} className={cn("flex w-full items-center", props.className)}>
+    <div onClick={handleSelect} className={cn("flex w-full items-center cursor-pointer", className)}>
       <ImageIcon className="mr-2 size-4" /> {label}
     </div>
   );
 };
 
-export type PromptInputActionAddScreenshotProps = ComponentProps<
-  typeof DropdownMenuItem
-> & {
+export type PromptInputActionAddScreenshotProps = {
   label?: string;
+  className?: string;
 };
 
 export const PromptInputActionAddScreenshot = ({
   label = "Take screenshot",
-  onSelect,
-  ...props
+  className,
 }: PromptInputActionAddScreenshotProps) => {
   const attachments = usePromptInputAttachments();
 
-  const handleSelect = useCallback(
-    async (event: Event) => {
-      onSelect?.(event);
-      if (event.defaultPrevented) {
+  const handleSelect = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    try {
+      const screenshot = await captureScreenshot();
+      if (screenshot) {
+        attachments.add([screenshot]);
+      }
+    } catch (error) {
+      if (
+        error instanceof DOMException &&
+        (error.name === "NotAllowedError" || error.name === "AbortError")
+      ) {
         return;
       }
-
-      try {
-        const screenshot = await captureScreenshot();
-        if (screenshot) {
-          attachments.add([screenshot]);
-        }
-      } catch (error) {
-        if (
-          error instanceof DOMException &&
-          (error.name === "NotAllowedError" || error.name === "AbortError")
-        ) {
-          return;
-        }
-        throw error;
-      }
-    },
-    [onSelect, attachments]
-  );
+      throw error;
+    }
+  };
 
   return (
-    <DropdownMenuItem {...props} onSelect={handleSelect}>
+    <div onClick={handleSelect} className={cn("flex w-full items-center cursor-pointer", className)}>
       <Monitor className="mr-2 size-4" />
       {label}
-    </DropdownMenuItem>
+    </div>
   );
 };
 
