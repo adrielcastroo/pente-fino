@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { Copy, CornerDownLeft, GripVertical, Image as ImageIcon, MessageSquarePlus, PanelRightClose, PanelRightOpen, Plus, Trash2, X } from "lucide-react";
+import { Copy, CornerDownLeft, GripVertical, Image as ImageIcon, MessageSquarePlus, PanelRightClose, PanelRightOpen, Plus, Trash2, X, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useAgentThreads } from "@/store/useAgentThreads";
@@ -32,8 +32,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
-import { RefreshCw, XCircle } from "lucide-react";
-
+import { RefreshCw, XCircle, MessagesSquare } from "lucide-react";
+import { TeamChatPanel } from "../chat/TeamChatPanel";
 import { AskUserInline, extractAskUser } from "./AskUserDialog";
 import { Suggestions, extractSuggestions } from "./Suggestions";
 import { WidgetChip } from "./widgets/WidgetChip";
@@ -614,9 +614,9 @@ export function AgentChatWidget() {
   const { open, toggleOpen, threads, activeId, newThread, selectThread, deleteThread } = useAgentThreads();
   const [hasUnread, setHasUnread] = useState(false);
   const [chatStatus, setChatStatus] = useState("idle");
+  const [activeTab, setActiveTab] = useState<"fio" | "team">("fio");
   const panelRef = useRef<HTMLDivElement>(null);
   const composerRef = useRef<HTMLTextAreaElement>(null);
-
 
   // Artifacts state — accumulated across the active thread and reset on thread change.
   const [artifacts, setArtifacts] = useState<ArtifactMap>({});
@@ -734,23 +734,55 @@ export function AgentChatWidget() {
           showArtifactPane={showArtifactPane}
           headerContent={
             <>
-              <FioAvatar size={28} state={fioState} expression={fioExpr} hoverOnEnter={false} />
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-semibold leading-tight">Fio</div>
-                <div className="truncate text-[11px] text-muted-foreground">
-                  {threads.find((t) => t.id === activeId)?.title ?? "Nova conversa"}
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <div className="flex p-0.5 rounded-lg bg-muted/50 border border-border/20">
+                  <Button
+                    variant={activeTab === "fio" ? "secondary" : "ghost"}
+                    size="icon-sm"
+                    className={cn("h-7 w-7 rounded-md", activeTab === "fio" && "bg-background shadow-sm")}
+                    onClick={() => setActiveTab("fio")}
+                    title="Assistente Fio"
+                  >
+                    <FioAvatar size={18} state={fioState} expression={fioExpr} hoverOnEnter={false} />
+                  </Button>
+                  <Button
+                    variant={activeTab === "team" ? "secondary" : "ghost"}
+                    size="icon-sm"
+                    className={cn("h-7 w-7 rounded-md", activeTab === "team" && "bg-background shadow-sm")}
+                    onClick={() => setActiveTab("team")}
+                    title="Chat da Equipe"
+                  >
+                    <Users className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+                
+                <div className="flex-1 min-w-0 ml-1">
+                  <div className="text-[13px] font-bold leading-tight truncate">
+                    {activeTab === "fio" ? "Fio AI" : "Chat Equipe"}
+                  </div>
+                  <div className="truncate text-[10px] text-muted-foreground font-medium">
+                    {activeTab === "fio" 
+                      ? (threads.find((t) => t.id === activeId)?.title ?? "Nova conversa")
+                      : "Mensagens em tempo real"
+                    }
+                  </div>
                 </div>
               </div>
+
               <SidebarModeToggle />
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={() => newThread()}
-                title="Nova conversa"
-                aria-label="Nova conversa"
-              >
-                <MessageSquarePlus className="h-4 w-4" />
-              </Button>
+              
+              {activeTab === "fio" && (
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => newThread()}
+                  title="Nova conversa"
+                  aria-label="Nova conversa"
+                >
+                  <MessageSquarePlus className="h-4 w-4" />
+                </Button>
+              )}
+              
               <Button
                 variant="ghost"
                 size="icon-sm"
@@ -763,7 +795,7 @@ export function AgentChatWidget() {
             </>
           }
           threadsBar={
-            threads.length > 1 ? (
+            activeTab === "fio" && threads.length > 1 ? (
               <div className="flex gap-1 overflow-x-auto border-b bg-muted/30 px-2 py-1.5">
                 {threads.map((t) => (
                   <div
@@ -812,12 +844,16 @@ export function AgentChatWidget() {
           }
         >
           <div className="relative flex flex-1 min-h-0 overflow-hidden">
-            <ChatWindow
-              threadId={activeId!}
-              onArtifact={registerArtifact}
-              activeArtifactId={activeArtifactId}
-              onSelectArtifact={handleSelectArtifact}
-            />
+            {activeTab === "fio" ? (
+              <ChatWindow
+                threadId={activeId!}
+                onArtifact={registerArtifact}
+                activeArtifactId={activeArtifactId}
+                onSelectArtifact={handleSelectArtifact}
+              />
+            ) : (
+              <TeamChatPanel />
+            )}
 
 
             {showArtifactPane && activeArtifact && (
