@@ -604,15 +604,15 @@ export default function EstoquePage() {
           >
             <Card
               onClick={() => setSaidasOpen(true)}
-              className="rounded-lg border border-violet-500/20 bg-violet-500/5 hover:bg-violet-500/10 hover:border-violet-500/40 transition-all duration-200 cursor-pointer relative overflow-hidden group shadow-sm hover:shadow-md h-full"
+              className="rounded-lg border border-border/40 bg-card hover:bg-muted/40 transition-all duration-200 cursor-pointer relative overflow-hidden group shadow-sm hover:shadow-md h-full"
             >
               <CardContent className="p-3 tablet-portrait:p-2 relative z-10 h-full flex flex-col">
                 <div className="flex items-center justify-between gap-2 mb-1.5">
                   <div className="flex items-center gap-1.5 min-w-0">
-                    <LogOut className="w-3.5 h-3.5 text-violet-400 shrink-0" strokeWidth={1.75} />
+                    <LogOut className="w-3.5 h-3.5 text-primary shrink-0" strokeWidth={1.75} />
                     <span className="text-[9px] tablet-portrait:text-[8px] font-semibold text-muted-foreground uppercase tracking-[0.18em]">Últimas Saídas</span>
                   </div>
-                  <span className="text-[10px] font-medium text-violet-400 tabular-nums shrink-0">{recentSaidas.length}</span>
+                  <span className="text-[10px] font-medium text-primary tabular-nums shrink-0">{recentSaidas.length}</span>
                 </div>
                 {recentSaidas.length === 0 ? (
                   <div className="flex-1 flex items-center justify-center text-[10px] text-muted-foreground/60 italic">
