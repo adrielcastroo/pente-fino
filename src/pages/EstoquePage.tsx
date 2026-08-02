@@ -684,7 +684,7 @@ export default function EstoquePage() {
 
         {/* Dropdown de resultados */}
         {searchOpen && locateQuery && searchMatches && (
-          <div className="absolute z-30 mt-1 w-full rounded-md border border-white/10 bg-card/95 backdrop-blur-xl shadow-2xl ring-1 ring-white/5 max-h-[420px] overflow-y-auto">
+          <div className="absolute z-30 mt-1 w-full rounded-md border border-border bg-card shadow-2xl max-h-[420px] overflow-y-auto">
             {searchMatches.length === 0 ? (
               <div className="p-4 text-xs text-muted-foreground text-center">
                 Nada encontrado para <span className="text-foreground font-semibold">"{locateQuery}"</span>.
@@ -881,7 +881,7 @@ export default function EstoquePage() {
                     </motion.div>
                       </HoverCardTrigger>
                       {hasItems && (
-                        <HoverCardContent side="top" align="center" className="hidden lg:block w-72 p-0 border-white/10 bg-card/95 backdrop-blur-2xl rounded-md shadow-2xl">
+                        <HoverCardContent side="top" align="center" className="hidden lg:block w-72 p-0 border-border bg-card rounded-md shadow-2xl">
                           <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between">
                             <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">{activeTec}.{col}.N{String(nivel).padStart(2,'0')}</div>
                             <div className="text-[10px] font-semibold text-muted-foreground">{items.length}/30 · {fillPercent}%</div>
