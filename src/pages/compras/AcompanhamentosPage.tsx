@@ -234,10 +234,25 @@ export default function AcompanhamentosPage() {
   return (
     <PageShell>
       <PageHeader
-        title="Acompanhamentos"
+        title={
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => navigate('/compras/acompanhamentos')}
+              className="h-8 w-8 -ml-1"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+            {moduloAtivo === 'rma' ? 'Kanban RMA' : 
+             moduloAtivo === 'starcolor' ? 'Kanban Starcolor' :
+             moduloAtivo === 'entrega_apos' ? 'Kanban Entrega Após' : 
+             'Kanban Geral'}
+          </div>
+        }
         subtitle={visao === 'kanban'
-          ? 'Quadro kanban dos pedidos de compra — arraste para mudar o status'
-          : 'Lista de tarefas de acompanhamento de compras'}
+          ? `Quadro kanban do módulo ${moduloAtivo.replace('_', ' ')} — arraste para mudar o status`
+          : `Lista de tarefas do módulo ${moduloAtivo.replace('_', ' ')}`}
       />
 
       <div className="flex flex-wrap items-center gap-2">
