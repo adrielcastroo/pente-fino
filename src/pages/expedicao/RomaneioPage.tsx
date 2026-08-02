@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from 'react';
 import { FileText, Loader2, Printer, Truck, Check } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -214,7 +215,11 @@ export default function RomaneioPage() {
         {loadingCarts ? (
           <div className="p-8 flex justify-center"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
         ) : carrinhos.length === 0 ? (
-          <p className="p-8 text-center text-sm text-muted-foreground">Nenhum carrinho conferido aguardando romaneio.</p>
+          <EmptyState
+            icon={Truck}
+            title="Nenhum carrinho aguardando romaneio"
+            description="Finalize a conferência de um carrinho na Double Check para que ele apareça aqui."
+          />
         ) : (
           <ul className="divide-y divide-border">
             {carrinhos.map(c => (
@@ -240,7 +245,12 @@ export default function RomaneioPage() {
         {loadingRom ? (
           <div className="p-8 flex justify-center"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
         ) : romaneiosAbertos.length === 0 ? (
-          <p className="p-8 text-center text-sm text-muted-foreground">Nenhum romaneio aberto.</p>
+          <EmptyState
+            icon={FileText}
+            title="Nenhum romaneio aberto"
+            description="Os romaneios gerados ficam listados aqui até serem faturados."
+          />
+
         ) : (
           <ul className="divide-y divide-border">
             {romaneiosAbertos.map(r => (

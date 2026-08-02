@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Search, PackageX, RefreshCw, Loader2, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
 
 interface Row {
   id: string;
@@ -160,14 +161,15 @@ export default function TecidosSemEspacoTab() {
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center py-12 gap-3">
-            <PackageX className="w-10 h-10 text-muted-foreground/40" />
-            <p className="text-sm text-muted-foreground">
-              {rows.length === 0
-                ? 'Nenhum tecido sem espaço. Todos os lotes do Auge estão alocados.'
-                : 'Sem resultados para o filtro.'}
-            </p>
-          </div>
+          <EmptyState
+            icon={PackageX}
+            title={rows.length === 0 ? 'Todos os lotes estão alocados' : 'Nenhum resultado para o filtro'}
+            description={
+              rows.length === 0
+                ? 'Nenhum tecido do Auge está aguardando espaço no mapa.'
+                : 'Ajuste a busca por item, endereço ou PROC para encontrar o lote.'
+            }
+          />
         ) : (
           <div className="overflow-auto max-h-[calc(100vh-320px)]">
             <Table>

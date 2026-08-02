@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Plus, Loader2 } from 'lucide-react';
+import { Plus, Loader2, ShoppingCart } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -58,9 +59,11 @@ export default function CarrinhosPage() {
             <Loader2 className="w-5 h-5 animate-spin" />
           </div>
         ) : data.length === 0 ? (
-          <div className="p-8 text-center text-sm text-muted-foreground">
-            Nenhum carrinho cadastrado.
-          </div>
+          <EmptyState
+            icon={ShoppingCart}
+            title="Nenhum carrinho cadastrado"
+            description="Cadastre os carrinhos usados na expedição para começar a alocar peças conferidas."
+          />
         ) : (
           <>
             {/* Mobile: grid de cards */}

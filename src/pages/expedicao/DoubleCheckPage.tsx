@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { ShieldCheck, Loader2, X, AlertTriangle, Check } from 'lucide-react';
 import { toast } from 'sonner';
+import { bipToast, describeError } from '@/lib/toast-flows';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PageShell, PageHeader } from '@/components/expedicao/ui';
@@ -59,8 +60,8 @@ export default function DoubleCheckPage() {
       .select('id, codigo, status')
       .eq('codigo', cod)
       .maybeSingle();
-    if (error) return toast.error(error.message);
-    if (!data) return toast.error(`Carrinho ${cod} não encontrado`);
+    if (error) return bipToast.erro(error);
+    if (!data) return bipToast.naoEncontrado(cod, 'na expedição');
     setCarrinho(data);
     setCarrinhoCodigo('');
   };
@@ -166,12 +167,12 @@ export default function DoubleCheckPage() {
 
       await logConferencia('ok', codigo, peca.id);
 
-      toast.success(`✓ ${codigo}`);
+      bipToast.ok(codigo, `Conferida no carrinho ${carrinho.codigo}.`);
       setEtiquetaInput('');
       qc.invalidateQueries({ queryKey: ['expedicao_double_check', carrinho.id] });
       etiquetaRef.current?.focus();
     } catch (err: any) {
-      toast.error(err.message ?? 'Falha ao conferir');
+      bipToast.erro(err);
     } finally {
       setSaving(false);
     }
@@ -191,10 +192,16 @@ export default function DoubleCheckPage() {
         })
         .eq('id', carrinho.id);
       if (error) throw error;
-      toast.success(`Carrinho ${carrinho.codigo} conferido — pronto para romaneio`);
+      toast.success(`Carrinho ${carrinho.codigo} conferido`, {
+        description: 'Pronto para entrar em um romaneio.',
+        duration: 3500,
+      });
       fecharCarrinho();
     } catch (err: any) {
-      toast.error(err.message ?? 'Falha ao finalizar');
+      toast.error('Não foi possível finalizar a conferência', {
+        description: describeError(err, 'As leituras foram mantidas. Tente novamente.'),
+        duration: 6000,
+      });
     } finally {
       setSaving(false);
     }

@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAlocarPecaNoCarrinho } from '@/hooks/expedicao/useExpedicaoData';
 import { toast } from 'sonner';
+import { bipToast } from '@/lib/toast-flows';
 
 type CarrinhoOpt = { id: string; codigo: string; status: string };
 type Alocacao = { etiqueta: string; carrinho: string; ts: number };
@@ -54,7 +55,7 @@ export default function ConferenciaPage() {
     if (!codigo) return;
     e.preventDefault();
     if (pendingList.includes(codigo)) {
-      toast.warning(`${codigo} já bipada nesta sessão`);
+      bipToast.duplicado(codigo);
       setPeca('');
       return;
     }
@@ -91,7 +92,7 @@ export default function ConferenciaPage() {
         }
       }
       if (sucesso > 0) {
-        toast.success(`${sucesso}/${pendingList.length} peça(s) alocada(s) em ${carrinho}`);
+        bipToast.lote(sucesso, pendingList.length, carrinho);
         setRecentes((prev) => [...alocadas, ...prev].slice(0, 30));
         setPendingList([]);
         setStep('bipar');

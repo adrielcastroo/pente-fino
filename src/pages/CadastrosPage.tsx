@@ -12,6 +12,7 @@ import {
   ChevronLeft, ChevronRight, Sparkles,
   ArrowUp, ArrowDown, ArrowUpDown, Cloud, Loader2, Upload,
 } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
 import ItemFormDialog from '@/components/cadastros/ItemFormDialog';
 import ImportItensDialog from '@/components/cadastros/ImportItensDialog';
 import CadastroDetailDialog from '@/components/cadastros/CadastroDetailDialog';
@@ -503,7 +504,11 @@ export default function CadastrosPage() {
                 {pendentesLoading ? (
                   <p className="text-center text-muted-foreground py-12 text-sm">Buscando itens do Auge...</p>
                 ) : augePendentes.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-12 text-sm">Nenhum item do Auge pendente — tudo cadastrado. 🎉</p>
+                  <EmptyState
+                    icon={Cloud}
+                    title="Tudo cadastrado"
+                    description="Nenhum item do Auge está pendente de cadastro interno neste momento."
+                  />
                 ) : (
                   <Table>
                     <TableHeader className="sticky top-0 bg-card z-10">
@@ -551,9 +556,15 @@ export default function CadastrosPage() {
               <div className="md:hidden flex-1 overflow-auto space-y-2">
                 {isLoading && <p className="text-center text-muted-foreground py-8 text-sm">Carregando...</p>}
                 {!isLoading && filtered.length === 0 && (
-                  <p className="text-center text-muted-foreground py-12 text-sm">
-                    {itens.length === 0 ? 'Nenhum item cadastrado.' : 'Nenhum resultado.'}
-                  </p>
+                  <EmptyState
+                    icon={Package}
+                    title={itens.length === 0 ? 'Nenhum item cadastrado' : 'Nenhum resultado para a busca'}
+                    description={
+                      itens.length === 0
+                        ? 'Cadastre um item ou sincronize a base do Auge para começar.'
+                        : 'Tente outro código, descrição ou use * como curinga.'
+                    }
+                  />
                 )}
                 {paged.map((item) => {
                   const codigos = getCodigos(item);
@@ -632,8 +643,16 @@ export default function CadastrosPage() {
                     )}
                     {!isLoading && filtered.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center text-muted-foreground py-12">
-                          {itens.length === 0 ? 'Nenhum item cadastrado. Sincronize via Auge no /admin.' : 'Nenhum resultado para a busca.'}
+                        <TableCell colSpan={6} className="p-0">
+                          <EmptyState
+                            icon={Package}
+                            title={itens.length === 0 ? 'Nenhum item cadastrado' : 'Nenhum resultado para a busca'}
+                            description={
+                              itens.length === 0
+                                ? 'Cadastre um item ou sincronize a base do Auge no painel admin.'
+                                : 'Tente outro código, descrição ou use * como curinga.'
+                            }
+                          />
                         </TableCell>
                       </TableRow>
                     )}

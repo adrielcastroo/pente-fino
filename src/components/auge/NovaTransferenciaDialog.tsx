@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { transferToast } from '@/lib/toast-flows';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -173,17 +174,18 @@ export default function NovaTransferenciaDialog({
       const { data, error } = await supabase.functions.invoke(endpoint, { body });
       if (error) throw error;
       if (data?.ok === false) throw new Error(data.error || 'Falha');
-      toast.success(
-        isEdit
-          ? `Rascunho ${data.cdMovimentacao} atualizado`
-          : `Transferência ${data.cdMovimentacao} ${data.efetivado ? 'criada e efetivada' : 'criada (rascunho)'}`,
-        { id: t },
-      );
+      if (isEdit) {
+        transferToast.criada(data.cdMovimentacao, 'Rascunho atualizado no Auge.', { id: t });
+      } else if (data.efetivado) {
+        transferToast.efetivada(data.cdMovimentacao, { id: t });
+      } else {
+        transferToast.criada(data.cdMovimentacao, undefined, { id: t });
+      }
       reset();
       onOpenChange(false);
       onCreated?.();
     } catch (e: any) {
-      toast.error('Erro: ' + (e.message || String(e)), { id: t });
+      transferToast.erro(e, isEdit ? 'atualização' : 'transferência', { id: t });
     } finally {
       setLoading(false);
     }

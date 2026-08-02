@@ -8,7 +8,8 @@ import {
 } from '@dnd-kit/sortable';
 import { useDroppable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { CalendarDays, Columns3, List, Loader2, MessageSquare, Plus } from 'lucide-react';
+import { CalendarDays, Columns3, List, Loader2, MessageSquare, Plus, ClipboardList } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
 import { toast } from 'sonner';
 import { PageShell, PageHeader } from '@/components/compras/ui';
 import { Input } from '@/components/ui/input';
@@ -334,8 +335,13 @@ export default function AcompanhamentosPage() {
             <TableBody>
               {filtrados.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center text-sm text-muted-foreground">
-                    Nenhuma tarefa encontrada.
+                  <TableCell colSpan={5} className="p-0">
+                    <EmptyState
+                      icon={ClipboardList}
+                      title="Nenhuma tarefa neste filtro"
+                      description="Crie um acompanhamento ou limpe os filtros para ver os pedidos em andamento."
+                      compact
+                    />
                   </TableCell>
                 </TableRow>
               ) : (
@@ -365,10 +371,12 @@ export default function AcompanhamentosPage() {
       )}
 
       {!isLoading && visao === 'kanban' && filtrados.length === 0 && (
-        <p className="text-sm text-muted-foreground inline-flex items-center gap-2">
-          <MessageSquare className="w-4 h-4 opacity-50" aria-hidden />
-          Nenhum pedido em acompanhamento.
-        </p>
+        <EmptyState
+          icon={MessageSquare}
+          title="Nenhum pedido em acompanhamento"
+          description="Assim que um pedido for aberto, ele aparece no quadro e pode ser arrastado entre as etapas."
+          compact
+        />
       )}
 
       <NovaTarefaDialog 
