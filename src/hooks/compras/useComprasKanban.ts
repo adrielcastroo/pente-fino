@@ -133,6 +133,7 @@ export interface NovaTarefaInput {
   descricao?: string;
   previsao?: string | null;
   status?: ComprasPedidoStatus;
+  modulo?: ComprasModulo;
 }
 
 /** Cria uma nova tarefa/pedido de acompanhamento no topo da coluna escolhida. */
