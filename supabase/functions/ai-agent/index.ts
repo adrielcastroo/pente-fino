@@ -1,6 +1,6 @@
 // AI Agent — assistente do Pente Fino/Auge.
-import { streamText, type ModelMessage, type UIMessage, convertToModelMessages } from "npm:ai@3.1.20";
-import { createOpenAICompatible } from "npm:@ai-sdk/openai-compatible@0.0.8";
+import { streamText, stepCountIs, type ModelMessage, type UIMessage, convertToModelMessages } from "npm:ai@^5";
+import { createOpenAICompatible } from "npm:@ai-sdk/openai-compatible@^1";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { buildTools } from "./tools.ts";
 import { getFioCapabilitiesPrompt } from "./capabilities.ts";
@@ -222,7 +222,7 @@ async function streamWithFallback(providers: any[], messages: ModelMessage[], ad
       system,
       messages,
       tools: { ...buildTools(admin), ...buildMemoryTools(admin, userId ?? null) },
-      maxSteps: 5
+      stopWhen: stepCountIs(5)
     });
 
     if (userId && threadId) {
@@ -237,7 +237,7 @@ async function streamWithFallback(providers: any[], messages: ModelMessage[], ad
         } catch (e) { console.error("Error persisting:", e); }
       })();
     }
-    return result.toDataStreamResponse({ 
+    return result.toUIMessageStreamResponse({ 
       headers: {
         ...corsHeaders,
         "x-fio-provider": current.id,
