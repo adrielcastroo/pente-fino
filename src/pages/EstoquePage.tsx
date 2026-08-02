@@ -804,7 +804,7 @@ export default function EstoquePage() {
                 transition={{ delay: idx * 0.05 }}
                 className="flex gap-2 sm:gap-3"
               >
-                <div className="w-10 sm:w-12 md:w-16 text-[8px] sm:text-[10px] md:text-xs font-semibold text-muted-foreground flex items-center justify-center bg-card/40 backdrop-blur-xl rounded-md shrink-0 border border-white/10 shadow-lg ring-1 ring-white/5">
+                <div className="w-10 sm:w-12 md:w-16 text-[8px] sm:text-[10px] md:text-xs font-semibold text-muted-foreground flex items-center justify-center bg-card rounded-md shrink-0 border border-border/40 shadow-md">
                   N{String(nivel).padStart(2, '0')}
                 </div>
                 {config.cols.map(col => {
@@ -824,12 +824,12 @@ export default function EstoquePage() {
 
                   // Color by occupation: green <50%, amber 50-80%, red >80%
                   const fillTone = !hasItems
-                    ? { bg: 'bg-muted/10', border: 'border-white/5', bar: 'bg-muted/30' }
+                    ? { bg: 'bg-card', border: 'border-border/40', bar: 'bg-muted/10' }
                     : fillPercent <= 50
-                      ? { bg: 'bg-emerald-500/10', border: 'border-emerald-500/25', bar: 'bg-emerald-500/30' }
+                      ? { bg: 'bg-card', border: 'border-emerald-500/25', bar: 'bg-emerald-500/15' }
                       : fillPercent <= 80
-                        ? { bg: 'bg-amber-500/10', border: 'border-amber-500/30', bar: 'bg-amber-500/35' }
-                        : { bg: 'bg-rose-500/10', border: 'border-rose-500/30', bar: 'bg-rose-500/40' };
+                        ? { bg: 'bg-card', border: 'border-amber-500/30', bar: 'bg-amber-500/20' }
+                        : { bg: 'bg-card', border: 'border-rose-500/30', bar: 'bg-rose-500/25' };
                   
                   return (
                     <HoverCard key={col} openDelay={250} closeDelay={80}>
@@ -838,7 +838,7 @@ export default function EstoquePage() {
                       whileHover={{ scale: 1.02, zIndex: 10 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => setSelectedCell({ col, nivel })} 
-                      className={`touch-cell flex-1 min-w-0 h-14 sm:h-20 md:h-24 rounded-md sm:rounded-md cursor-pointer p-2 sm:p-4 transition-all duration-300 group relative overflow-hidden border backdrop-blur-xl shadow-lg hover:shadow-primary/10 ${fillTone.bg} ${fillTone.border} ${
+                      className={`touch-cell flex-1 min-w-0 h-14 sm:h-20 md:h-24 rounded-md sm:rounded-md cursor-pointer p-2 sm:p-4 transition-all duration-300 group relative overflow-hidden border shadow-sm hover:shadow-md ${fillTone.bg} ${fillTone.border} ${
                         !matchesFilter ? 'opacity-20 grayscale cursor-not-allowed' : ''
                       } ${
                         isHighlighted ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-[1.03] z-10' : ''
