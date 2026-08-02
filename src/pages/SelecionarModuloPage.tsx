@@ -117,10 +117,10 @@ export default function SelecionarModuloPage() {
         handleEnterModule(activeIndex);
       }
 
-      // N for new conference
-      if (key === 'n') {
+      // N for new conference - Disabled by user request
+      /* if (key === 'n') {
         handleNewConference();
-      }
+      } */
     };
 
     window.addEventListener('keydown', handler);
