@@ -122,7 +122,9 @@ function ChatWindow({
   const { messages, sendMessage, setMessages: setChatMessages, status, error } = useChat({
     id: threadId,
     messages: initialMessages,
-    transport,
+    api: transport.api,
+    headers: transport.headers as Record<string, string>,
+    body: transport.body,
     onFinish: () => {
       window.dispatchEvent(new CustomEvent("fio:response"));
       window.dispatchEvent(new CustomEvent<boolean>("fio:thinking", { detail: false }));
