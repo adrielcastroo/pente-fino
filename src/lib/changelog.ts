@@ -7,6 +7,14 @@ export interface ChangelogEntry {
 // Newest first. Bump LATEST_VERSION when adding entries to trigger "novo" badge.
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '4.9.0',
+    date: '2026-08-02',
+    highlights: [
+      { type: 'feature', text: "Fase F — Operação & Logística: Implementação do monitor de volumetria em tempo real no dashboard admin e sincronização de releases com metadados estendidos." },
+      { type: 'improvement', text: "Admin: Visão geral agora exibe codinomes e notas de release integradas ao padrão SemVer do sistema." },
+    ],
+  },
+  {
     version: '4.8.0',
     date: '2026-08-02',
     highlights: [

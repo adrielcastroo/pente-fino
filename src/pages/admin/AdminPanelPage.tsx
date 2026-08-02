@@ -266,7 +266,7 @@ function OverviewTab() {
     const [users, flags, releases, registros, conferences, saidas] = await Promise.all([
       (supabase.from('profiles' as any).select('id', { count: 'exact', head: true }) as any),
       (supabase.from('feature_flags' as any).select('key,enabled') as any),
-      (supabase.from('app_releases' as any).select('version,is_current,is_stable,notes').order('released_at', { ascending: false }).limit(5) as any),
+      (supabase.from('app_releases' as any).select('version,is_current,is_stable,notes,released_at').order('released_at', { ascending: false }).limit(5) as any),
       (supabase.from('registros' as any).select('id', { count: 'exact', head: true }) as any),
       (supabase.from('conferences' as any).select('id', { count: 'exact', head: true }) as any),
       (supabase.from('estoque_saidas' as any).select('id', { count: 'exact', head: true }) as any),
@@ -324,6 +324,7 @@ function OverviewTab() {
                   <span className="text-[10px] font-bold text-primary uppercase tracking-wider">{codenameFor(r.version)}</span>
                   {r.is_current && <Badge className="bg-primary text-[10px] h-5">Atual</Badge>}
                   {r.is_stable && <Badge variant="secondary" className="text-[10px] h-5">Estável</Badge>}
+                  {r.released_at && <span className="text-[10px] text-muted-foreground ml-auto">{new Date(r.released_at).toLocaleDateString('pt-BR')}</span>}
                 </div>
                 {r.notes && (
                   <p className="text-[11px] text-muted-foreground line-clamp-2 leading-tight pl-0.5">
