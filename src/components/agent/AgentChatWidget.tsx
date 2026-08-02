@@ -221,6 +221,13 @@ function ChatWindow({
       new CustomEvent<boolean>("fio:thinking", { detail: isLoading }),
     );
   }, [isLoading]);
+
+  // Captura erros silenciosos e exibe no chat
+  useEffect(() => {
+    if (error) {
+      console.error("[fio] Erro detectado:", error);
+    }
+  }, [error]);
   const lastMessage = messages[messages.length - 1];
   const lastAssistantHasVisibleContent =
     lastMessage?.role === "assistant" &&

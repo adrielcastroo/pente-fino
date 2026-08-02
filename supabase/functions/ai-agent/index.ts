@@ -180,7 +180,10 @@ type ExtraContext = { memoryBlock?: string; documentsBlock?: string; docCount?: 
 
 async function streamWithFallback(providers: any[], messages: ModelMessage[], admin: any, userId: any, threadId: any, userText: string, userRole: any, extra: ExtraContext = {}): Promise<Response> {
   const [current, ...rest] = providers;
-  if (!current) return textStreamResponse("Sistemas de IA indisponíveis no momento.");
+  if (!current) {
+    console.error("ERRO: Nenhum provider de IA configurado (chaves faltando).");
+    return textStreamResponse("Sistemas de IA indisponíveis no momento. Por favor, verifique as chaves de API nas configurações.");
+  }
 
   try {
     const ctx = await buildAgentContext(admin, userText);
