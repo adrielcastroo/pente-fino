@@ -952,6 +952,9 @@ export const PromptInputTextarea = forwardRef<HTMLTextAreaElement, PromptInputTe
   const attachments = usePromptInputAttachments();
   const [isComposing, setIsComposing] = useState(false);
 
+  const value = controller?.textInput.value;
+  const setInput = controller?.textInput.setInput;
+
   const handleKeyDown: KeyboardEventHandler<HTMLTextAreaElement> = useCallback(
     (e) => {
       // Call the external onKeyDown handler first

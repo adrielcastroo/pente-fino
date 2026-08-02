@@ -20,6 +20,7 @@ import {
   PromptInputSubmit,
   PromptInputActionAddAttachments,
   PromptInputActionAddScreenshot,
+  PromptInputProvider,
   type PromptInputMessage,
 } from "@/components/ai-elements/prompt-input";
 import { InputGroupAddon } from "@/components/ui/input-group";
@@ -546,8 +547,9 @@ function ChatWindow({
           "[&_[data-slot=input-group]]:has-[[data-slot=input-group-control]:focus-visible]:ring-0",
         )}
       >
-        <PromptInput onSubmit={handleSubmit}>
-          <div className="flex flex-col gap-2">
+        <PromptInputProvider>
+          <PromptInput onSubmit={handleSubmit}>
+            <div className="flex flex-col gap-2">
             <PromptInputTextarea
               ref={composerRef}
               placeholder="Pergunte algo ao Fio…"
@@ -592,7 +594,8 @@ function ChatWindow({
 
             </div>
           </div>
-        </PromptInput>
+          </PromptInput>
+        </PromptInputProvider>
       </div>
     </div>
   );
