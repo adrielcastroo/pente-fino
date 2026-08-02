@@ -20,6 +20,7 @@ export interface ComprasPedidoCard {
   titulo: string | null;
   descricao: string | null;
   status: ComprasPedidoStatus;
+  modulo: ComprasModulo;
   itens: number;
   valor_total: number | null;
   previsao: string | null;
