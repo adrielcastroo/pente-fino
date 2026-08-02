@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
@@ -45,12 +45,8 @@ import {
   Settings2,
   Search,
   ShieldCheck,
-  MessageSquare,
 } from 'lucide-react';
 import { atLeast, ROLE_LABEL, type Role, normalizeRole } from '@/lib/permissions';
-import { useTeamPresence, type PresenceMeta } from '@/hooks/use-presence';
-import { PresenceIndicator } from '@/components/equipes/PresenceIndicator';
-import { QuickChatDialog } from '@/components/equipes/QuickChatDialog';
 import { MODULE_LABEL, PAGE_REGISTRY, pagesByModule, type PageEntry, type PageModule } from '@/lib/page-registry';
 import { Navigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -95,8 +91,6 @@ export default function EquipesPage() {
   const [rolesByUser, setRolesByUser] = useState<Record<string, Role>>({});
   const [loading, setLoading] = useState(true);
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
-  const [presenceMap, setPresenceMap] = useState<Record<string, PresenceMeta>>({});
-  const [chatReceiver, setChatReceiver] = useState<Member | null>(null);
 
   const [teamDialogOpen, setTeamDialogOpen] = useState(false);
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
@@ -161,8 +155,6 @@ export default function EquipesPage() {
       setLoading(false);
     }
   };
-
-  useTeamPresence(useCallback((map) => setPresenceMap(map), []));
 
   useEffect(() => { loadAll(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
 
@@ -366,59 +358,32 @@ export default function EquipesPage() {
                     Nenhum membro nesta equipe.
                   </div>
                 ) : (
-                  selectedMembers.map((m) => {
-                    const presence = presenceMap[m.user_id];
-                    const status = presence?.status ?? 'offline';
-                    
-                    return (
-                      <div key={m.user_id} className="flex flex-wrap items-center gap-3 p-3 rounded-md bg-muted/20 border border-border/20 group/member">
-                        <div className="relative">
-                          <div className="w-10 h-10 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden">
-                            {m.avatar_url ? (
-                              <img src={m.avatar_url} alt={m.display_name} className="w-full h-full object-cover" />
-                            ) : (
-                              <span className="text-sm font-bold text-primary">{m.display_name.charAt(0).toUpperCase()}</span>
-                            )}
-                          </div>
-                          <span className={cn(
-                            "absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-card",
-                            status === 'online' ? 'bg-emerald-500' : status === 'away' ? 'bg-amber-500' : 'bg-slate-500'
-                          )} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className="text-sm font-bold truncate">{m.display_name}</p>
-                            <PresenceIndicator status={status} className="scale-90 origin-left" />
-                          </div>
-                          <Badge variant="outline" className="text-[10px] mt-0.5">{ROLE_LABEL[m.role]}</Badge>
-                        </div>
-                        
-                        {m.user_id !== user?.id && (
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            onClick={() => setChatReceiver(m)}
-                            className="gap-1.5 border-primary/30 hover:bg-primary/5"
-                          >
-                            <MessageSquare className="w-3.5 h-3.5" />
-                            <span className="hidden sm:inline">Conversar</span>
-                          </Button>
+                  selectedMembers.map((m) => (
+                    <div key={m.user_id} className="flex flex-wrap items-center gap-3 p-3 rounded-md bg-muted/20 border border-border/20">
+                      <div className="w-10 h-10 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden">
+                        {m.avatar_url ? (
+                          <img src={m.avatar_url} alt={m.display_name} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-sm font-bold text-primary">{m.display_name.charAt(0).toUpperCase()}</span>
                         )}
-
-                        <Button size="sm" variant="outline" onClick={() => setManagingMember(m)} className="gap-1.5">
-                          <Settings2 className="w-3.5 h-3.5" /> Gerenciar
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => removeMember(m)}
-                          className="text-destructive hover:text-destructive opacity-0 group-hover/member:opacity-100 transition-opacity"
-                        >
-                          <UserMinus className="w-3.5 h-3.5" />
-                        </Button>
                       </div>
-                    );
-                  })
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold truncate">{m.display_name}</p>
+                        <Badge variant="outline" className="text-[10px] mt-0.5">{ROLE_LABEL[m.role]}</Badge>
+                      </div>
+                      <Button size="sm" variant="outline" onClick={() => setManagingMember(m)} className="gap-1.5">
+                        <Settings2 className="w-3.5 h-3.5" /> Gerenciar
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => removeMember(m)}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <UserMinus className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  ))
                 )}
               </div>
             </div>
@@ -503,18 +468,6 @@ export default function EquipesPage() {
           grantableModules={grantableModules}
           onClose={() => setManagingMember(null)}
           onSaved={async () => { await pageAccess.refresh(); }}
-        />
-      )}
-
-      {chatReceiver && (
-        <QuickChatDialog
-          receiver={{
-            id: chatReceiver.user_id,
-            display_name: chatReceiver.display_name,
-            avatar_url: chatReceiver.avatar_url,
-          }}
-          open={!!chatReceiver}
-          onOpenChange={(open) => !open && setChatReceiver(null)}
         />
       )}
     </div>
