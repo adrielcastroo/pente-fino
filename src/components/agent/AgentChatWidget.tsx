@@ -508,7 +508,12 @@ function ChatWindow({
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-              <PromptInputSubmit status={status} disabled={isLoading} />
+              <PromptInputSubmit 
+                status={status} 
+                disabled={isLoading && status !== "streaming"} 
+                onClick={() => status === "streaming" && stop()}
+              />
+
             </div>
           </div>
         </PromptInput>
