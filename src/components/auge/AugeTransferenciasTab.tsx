@@ -103,10 +103,10 @@ export default function AugeTransferenciasTab({
       });
       if (error) throw error;
       if (data?.ok === false) throw new Error(data.error);
-      toast.success(`Transferência ${row.documento} efetivada`, { id: t });
+      transferToast.efetivada(row.documento, { id: t });
       await sync();
     } catch (e: any) {
-      toast.error('Falha: ' + (e.message || ''), { id: t });
+      transferToast.erro(e, 'efetivação', { id: t });
     }
   };
 
@@ -155,11 +155,11 @@ export default function AugeTransferenciasTab({
       });
       if (error) throw error;
       if (data?.ok === false) throw new Error(data.error);
-      toast.success(`Rascunho ${row.documento} removido`, { id: t });
+      transferToast.removida(row.documento, { id: t });
       setRows(rs => rs.filter(r => r.id !== row.id));
       await sync();
     } catch (e: any) {
-      toast.error('Falha ao remover: ' + (e.message || ''), { id: t });
+      transferToast.erro(e, 'remoção do rascunho', { id: t });
     }
   };
 

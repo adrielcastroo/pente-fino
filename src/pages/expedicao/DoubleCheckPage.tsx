@@ -198,7 +198,10 @@ export default function DoubleCheckPage() {
       });
       fecharCarrinho();
     } catch (err: any) {
-      toast.error(err.message ?? 'Falha ao finalizar');
+      toast.error('Não foi possível finalizar a conferência', {
+        description: describeError(err, 'As leituras foram mantidas. Tente novamente.'),
+        duration: 6000,
+      });
     } finally {
       setSaving(false);
     }
