@@ -305,8 +305,10 @@ function ChatWindow({
   useEffect(() => {
     if (error) {
       console.error("[fio] Erro detectado:", error);
+      emitFioExpression("surpreso", 2500);
     }
   }, [error]);
+
   const lastMessage = messages[messages.length - 1];
   const lastAssistantHasVisibleContent =
     lastMessage?.role === "assistant" &&
