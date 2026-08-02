@@ -605,14 +605,28 @@ export function AgentChatWidget() {
       const target = e.target as HTMLElement | null;
       if (target?.closest("[role='dialog']")) return; // ignora painel flutuante/artefato
 
+      // A2: Não fechar o chat por clique-fora durante uso
+      const hasText = composerRef.current?.value.trim();
+      const isBusy = chatStatus === "streaming" || chatStatus === "submitted";
+      if (hasText || isBusy) return;
+
       if (panelRef.current && !panelRef.current.contains(target as Node)) {
         toggleOpen(false);
       }
     };
 
+    const onStatus = (e: Event) => {
+      setChatStatus((e as CustomEvent<string>).detail);
+    };
+
     document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
-  }, [open, toggleOpen]);
+    window.addEventListener("fio:status", onStatus as EventListener);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      window.removeEventListener("fio:status", onStatus as EventListener);
+    };
+  }, [open, toggleOpen, chatStatus]);
+
 
 
   const { state: fioState, expression: fioExpr } = useFioAnimationState();
