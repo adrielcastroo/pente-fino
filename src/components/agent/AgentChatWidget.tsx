@@ -545,11 +545,23 @@ function ChatWindow({
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-              <PromptInputSubmit 
-                status={status} 
-                disabled={isLoading && status !== "streaming"} 
-                onClick={() => status === "streaming" && stop()}
-              />
+              {status === "streaming" ? (
+                <Button 
+                  size="icon-sm" 
+                  variant="ghost" 
+                  onClick={() => stop()} 
+                  className="text-destructive hover:bg-destructive/10"
+                  title="Parar geração"
+                >
+                  <XCircle className="h-4 w-4" />
+                </Button>
+              ) : (
+                <PromptInputSubmit 
+                  status={status} 
+                  disabled={isLoading} 
+                />
+              )}
+
 
             </div>
           </div>
