@@ -139,7 +139,7 @@ Deno.serve(async (req) => {
     const memoryBlock = memoriesToPromptBlock(memorias ?? []);
 
     // Detecção de multimodal (imagens) para troca de modelo
-    const hasImages = messages.some(m => Array.isArray(m.content) && m.content.some((c: any) => c.type === 'image_url' || c.type === 'image'));
+    const hasImages = Array.isArray(messages) && messages.some(m => Array.isArray(m.content) && m.content.some((c: any) => c.type === 'image_url' || c.type === 'image'));
 
     const providers = [
       { 
