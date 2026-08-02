@@ -343,8 +343,13 @@ function ChatWindow({
 
   return (
     <div className="flex flex-1 flex-col min-h-0 min-w-0">
-      <Conversation className="flex-1 min-h-0">
+      <Conversation 
+        className="flex-1 min-h-0" 
+        aria-live="polite" 
+        aria-atomic="false"
+      >
         <ConversationContent>
+
           {messages.length === 0 && (
             <ConversationEmptyState
               icon={<FioAvatar size={72} state={isLoading ? "thinking" : "idle"} expression={isLoading ? "pensando" : undefined} />}
