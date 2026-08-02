@@ -62,11 +62,9 @@ const EstoqueSidebar = memo(() => {
         },
         {
           label: 'Admin',
-
           minRole: 'supervisor',
           items: [
             { key: 'cadastros', label: 'Cadastros', icon: ClipboardList, path: '/estoque/cadastros', minRole: 'supervisor' },
-            { key: 'admin', label: 'Painel Admin', icon: ShieldCheck, path: '/admin', minRole: 'admin' },
             { key: 'automacoes', label: 'Automações', icon: Workflow, path: '/automacoes', minRole: 'admin' },
           ],
         },
