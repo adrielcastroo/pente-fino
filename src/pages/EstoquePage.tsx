@@ -1182,7 +1182,7 @@ export default function EstoquePage() {
                 {/* Header ERP: título + subtítulo + ícone contido */}
                 <div className="px-5 sm:px-6 py-4 border-b border-border bg-card">
                   <div className="flex items-center gap-3 pr-10">
-                    <div className={cn("p-2 rounded-md", current.color)}>
+                    <div className={cn("p-2 rounded-md", current.color.replace('text-', 'bg-').replace('/10', '/20'))}>
                       <LayoutDashboard className="w-5 h-5" strokeWidth={1.5} />
                     </div>
                     <div className="min-w-0 flex-1">
