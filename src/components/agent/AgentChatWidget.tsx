@@ -124,6 +124,10 @@ function ChatWindow({
     id: threadId,
     messages: initialMessages as any,
     transport,
+    onResponse: (response) => {
+      const provider = response.headers.get("x-fio-provider");
+      if (provider) console.log(`[Fio] Responding via ${provider}`);
+    },
     onFinish: () => {
       window.dispatchEvent(new CustomEvent("fio:response"));
       window.dispatchEvent(new CustomEvent<boolean>("fio:thinking", { detail: false }));
