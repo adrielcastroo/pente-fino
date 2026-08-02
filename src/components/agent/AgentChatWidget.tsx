@@ -81,9 +81,8 @@ function useFioAnimationState(): FioAnimationState {
 
 
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
-const PUBLISHABLE_KEY = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-  import.meta.env.VITE_SUPABASE_ANON_KEY) as string;
+const SUPABASE_URL = "https://ymqrfgqdmgjbwpikcwnk.supabase.co";
+const PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InltcXJmZ3FkbWdqYndwaWtjd25rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNzkzODYsImV4cCI6MjEwMDg1NTM4Nn0.i_4qu4OZLBqJ2VUOINuw99hacMG35pyofeUswiWoydA";
 
 type ArtifactMap = Record<string, ArtifactSpec>;
 
