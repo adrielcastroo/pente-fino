@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAppStore } from '@/store/useAppStore';
 import { toast } from 'sonner';
 import { Package, MapPin, Layers, ArrowRightLeft, Trash2, ChevronRight, Box, Grid3X3, Info, LogOut, Upload, ScanBarcode, Loader2, CheckCircle2, Archive, Calendar, ArrowLeft, LayoutDashboard, Barcode, Warehouse, TrendingUp, TrendingDown } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
 import { UltimasSaidasDialog } from '@/components/estoque/UltimasSaidasDialog';
 import { TopTecidosBlocks } from '@/components/estoque/TopTecidosBlocks';
 

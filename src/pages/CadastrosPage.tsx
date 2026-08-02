@@ -12,6 +12,7 @@ import {
   ChevronLeft, ChevronRight, Sparkles,
   ArrowUp, ArrowDown, ArrowUpDown, Cloud, Loader2, Upload,
 } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
 import ItemFormDialog from '@/components/cadastros/ItemFormDialog';
 import ImportItensDialog from '@/components/cadastros/ImportItensDialog';
 import CadastroDetailDialog from '@/components/cadastros/CadastroDetailDialog';
