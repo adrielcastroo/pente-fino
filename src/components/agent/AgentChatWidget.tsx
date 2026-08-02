@@ -134,8 +134,9 @@ function useFioAnimationState(): { state: FioAnimationState; expression: FioExpr
   return { state, expression };
 }
 
-const SUPABASE_URL = "https://ymqrfgqdmgjbwpikcwnk.supabase.co";
-const PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InltcXJmZ3FkbWdqYndwaWtjd25rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNzkzODYsImV4cCI6MjEwMDg1NTM4Nn0.i_4qu4OZLBqJ2VUOINuw99hacMG35pyofeUswiWoydA";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
 
 type ArtifactMap = Record<string, ArtifactSpec>;
 

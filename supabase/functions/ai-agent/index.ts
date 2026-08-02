@@ -1,7 +1,7 @@
 // AI Agent — assistente do Pente Fino/Auge.
-import { streamText, type ModelMessage, type UIMessage, convertToModelMessages } from "npm:ai";
-import { createOpenAICompatible } from "npm:@ai-sdk/openai-compatible";
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { streamText, type ModelMessage, type UIMessage, convertToModelMessages } from "npm:ai@3.1.20";
+import { createOpenAICompatible } from "npm:@ai-sdk/openai-compatible@0.0.8";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { buildTools } from "./tools.ts";
 import { getFioCapabilitiesPrompt } from "./capabilities.ts";
 import { buildMemoryTools, listarMemorias, memoriesToPromptBlock } from "./memory.ts";
@@ -156,6 +156,7 @@ Deno.serve(async (req) => {
 
     // Ordem de preferência: Groq -> Cerebras -> NVIDIA (fallback em cascata).
     // A chave da Cerebras pode estar salva como CEREBRAS_API_KEY ou OPENAI_API_KEY.
+    // Prioridade de provider: Groq (instântaneo) -> Cerebras (inteligente) -> NVIDIA.
     const providers = [
       {
         id: "groq",
@@ -176,6 +177,13 @@ Deno.serve(async (req) => {
         model: hasImages ? "meta/llama-3.2-90b-vision-instruct" : "meta/llama-3.1-405b-instruct"
       }
     ].filter(p => !!p.apiKey);
+
+    // Adiciona fallback extra caso nenhum provider esteja configurado
+    if (providers.length === 0) {
+      console.error("[ai-agent] ERRO CRÍTICO: Nenhum provider configurado.");
+      return textStreamResponse("Sistemas de IA indisponíveis (sem chaves API).");
+    }
+
 
     return streamWithFallback(providers, messages, admin, userId, threadId, userText, userRole, {
       memoryBlock,
