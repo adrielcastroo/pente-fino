@@ -28,9 +28,10 @@ export default class ErrorBoundary extends Component<Props, State> {
             <AlertTriangle className="w-8 h-8" aria-hidden="true" />
           </div>
           <div>
-            <h2 className="text-xl font-semibold tracking-tight">Algo deu errado</h2>
+            <h2 className="text-xl font-semibold tracking-tight">Não foi possível carregar esta área</h2>
             <p className="text-sm text-muted-foreground mt-2">
-              Ocorreu um erro inesperado. Você pode tentar novamente ou voltar ao início.
+              Um erro inesperado interrompeu o carregamento. Nada do seu trabalho foi perdido —
+              tente novamente ou volte ao início.
             </p>
             {this.state.error?.message && (
               <p className="text-[11px] font-mono text-muted-foreground/70 mt-3 break-all">

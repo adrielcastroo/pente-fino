@@ -43,16 +43,16 @@ export class GlobalErrorBoundary extends Component<Props, State> {
           </div>
           
           <h1 className="text-3xl font-semibold tracking-tight text-foreground mb-3">
-            Ops! Algo deu errado.
+            O sistema precisou parar aqui
           </h1>
           
           <p className="text-muted-foreground max-w-md mb-8 font-medium">
-            A aplicação encontrou um erro inesperado e não pôde continuar. 
-            Isso pode ser um problema temporário de conexão ou um erro no sistema.
+            Um erro inesperado interrompeu esta tela. Seus dados e conferências em andamento
+            estão preservados — recarregar costuma resolver.
           </p>
 
           <div className="bg-muted/30 border border-border/50 rounded-md p-6 mb-10 w-full max-w-lg text-left overflow-auto max-h-[200px]">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">Detalhes do erro:</p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">Detalhes técnicos (para o suporte)</p>
             <code className="text-xs font-mono text-destructive font-bold break-all">
               {this.state.error?.name}: {this.state.error?.message}
             </code>
