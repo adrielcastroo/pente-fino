@@ -25,6 +25,12 @@ import {
 import { InputGroupAddon } from "@/components/ui/input-group";
 import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from "@/components/ai-elements/tool";
 import { Shimmer } from "@/components/ai-elements/shimmer";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { AskUserInline, extractAskUser } from "./AskUserDialog";
 import { Suggestions, extractSuggestions } from "./Suggestions";
 import { WidgetChip } from "./widgets/WidgetChip";
