@@ -68,7 +68,9 @@ interface Member {
   avatar_url: string | null;
   role: Role;
   modules: string[];
+  is_optimistic?: boolean;
 }
+
 
 interface ProfileLite {
   id: string;
