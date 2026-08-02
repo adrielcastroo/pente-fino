@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { KANBAN_COLUNAS, useCreatePedido, uploadAnexoParaPedido } from '@/hooks/compras/useComprasKanban';
+import { KANBAN_COLUNAS, useCreatePedido, uploadAnexoParaPedido, type ComprasModulo } from '@/hooks/compras/useComprasKanban';
 import type { ComprasPedidoStatus } from '@/hooks/compras/useComprasPedidos';
 
 interface NovaTarefaDialogProps {
