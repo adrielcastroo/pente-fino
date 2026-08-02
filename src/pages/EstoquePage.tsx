@@ -1057,7 +1057,7 @@ export default function EstoquePage() {
 
                 {/* Info Grid */}
                 <div className="flex-1 overflow-y-auto p-6 space-y-6 min-h-0">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-border border border-border rounded-md overflow-hidden">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-border/40 border border-border/40 rounded-md overflow-hidden">
                     {(() => {
                       const depAtual = detailPos.deposito_atual || null;
                       const depNome = depAtual === '01' ? '01 · Central'
