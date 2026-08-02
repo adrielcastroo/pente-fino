@@ -43,12 +43,13 @@ export const SaldoBaixoDiffTable = memo(function SaldoBaixoDiffTable({
                     isMetric && "bg-primary/5 text-primary font-bold border-x border-primary/10"
                   )}
                 >
-                <span className="text-[9px] text-muted-foreground mr-1">
-                  {String(i + 1).padStart(2, '0')}
-                </span>
-                {c}
-              </TableHead>
-            ))}
+                  <span className="text-[9px] text-muted-foreground mr-1">
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  {c}
+                </TableHead>
+              );
+            })}
           </TableRow>
         </TableHeader>
         <TableBody>
