@@ -63,9 +63,29 @@ export function ArtifactPanel({
             <div className="truncate text-[11px] text-muted-foreground">{spec.subtitle}</div>
           )}
         </div>
-        <Button variant="ghost" size="icon-sm" onClick={onClose} aria-label="Fechar painel">
-          <X className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => {
+              if (spec.type === "markdown") navigator.clipboard.writeText(spec.content);
+              else if (spec.type === "json") navigator.clipboard.writeText(JSON.stringify(spec.data, null, 2));
+              else if (spec.type === "table") {
+                const csv = [
+                  spec.columns.map(c => c.label).join(","),
+                  ...spec.rows.map(r => spec.columns.map(c => String(r[c.key] ?? "")).join(","))
+                ].join("\n");
+                navigator.clipboard.writeText(csv);
+              }
+            }}
+            title="Copiar conteúdo"
+          >
+            <Copy className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon-sm" onClick={onClose} aria-label="Fechar painel">
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
       <div className="min-h-0 flex-1 overflow-hidden p-3">
         <ArtifactRenderer spec={spec} />
