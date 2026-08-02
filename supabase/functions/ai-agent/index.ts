@@ -105,7 +105,7 @@ Deno.serve(async (req) => {
       userRole = data?.role || null;
     }
 
-    const messages = convertToModelMessages(body.messages);
+    const messages = Array.isArray(body?.messages) ? convertToModelMessages(body.messages) : [];
     const lastMsg = messages[messages.length - 1];
     const rawLast = (lastMsg && lastMsg.role === "user" && typeof lastMsg.content === "string") ? lastMsg.content : "";
 
