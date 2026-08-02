@@ -442,33 +442,17 @@ button .lucide,
   scrollbar-width: none;  /* Firefox */
 }
 
-/* Performance Mode Optimizations */
-.low-perf *, 
-.low-perf {
-  transition-duration: 0ms !important;
-  animation-duration: 0ms !important;
-  animation-iteration-count: 1 !important;
-  box-shadow: none !important;
-}
-
-.low-perf .app-bg-pattern {
-  background-image: none !important;
-}
-
-.low-perf .animate-spin {
-  animation: spin 1s linear infinite !important; /* Keep essential animations */
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
 /* ============ Modo Apresentação (Desktop) ============ */
 body.presentation-mode [data-sidebar],
 body.presentation-mode aside[role="navigation"],
 body.presentation-mode header.app-topbar,
-body.presentation-mode nav[aria-label="Navegação principal"] {
+body.presentation-mode nav[aria-label="Navegação principal"],
+body.presentation-mode nav[aria-label="Navegação lateral"] {
   display: none !important;
+}
+body.presentation-mode #main-content {
+  padding: 2rem 3rem !important;
+  font-size: 1.05rem;
 }
 body.presentation-mode #dashboard-content {
   padding: 2rem 3rem !important;
