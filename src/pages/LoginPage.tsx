@@ -72,7 +72,7 @@ export default function LoginPage() {
 
       if (error) {
         if (error.message.includes('Invalid login credentials')) {
-          toast.error('Email ou senha incorretos.');
+          toast.error('E-mail ou senha não conferem. Verifique e tente novamente.');
         } else {
           toast.error(error.message);
         }
@@ -82,10 +82,10 @@ export default function LoginPage() {
         } else {
           localStorage.removeItem('rememberMe');
         }
-        toast.success('Bem-vindo de volta!');
+        toast.success('Acesso liberado. Bom trabalho!');
       }
     } catch (err) {
-      toast.error('Ocorreu um erro inesperado.');
+      toast.error('Não conseguimos concluir o login agora. Tente novamente em instantes.');
     } finally {
       setLoading(false);
     }
@@ -105,13 +105,13 @@ export default function LoginPage() {
       if (error) {
         toast.error(error.message);
       } else if (data.session) {
-        toast.success('Cadastro realizado com sucesso!');
+        toast.success('Conta criada. Você já está dentro!');
       } else {
-        toast.success('Cadastro realizado! Verifique seu e-mail.');
+        toast.success('Conta criada. Confirme o link enviado para o seu e-mail.');
         setMode('login');
       }
     } catch (err) {
-      toast.error('Erro ao realizar cadastro.');
+      toast.error('Não foi possível criar a conta agora. Tente novamente em instantes.');
     } finally {
       setLoading(false);
     }
@@ -126,10 +126,10 @@ export default function LoginPage() {
       if (error) {
         toast.error(error.message);
       } else {
-        toast.success('E-mail de recuperação enviado!');
+        toast.success('Link enviado. Confira sua caixa de entrada e o spam.');
       }
     } catch (err) {
-      toast.error('Erro ao enviar e-mail.');
+      toast.error('Não foi possível enviar o e-mail agora. Tente novamente em instantes.');
     } finally {
       setLoading(false);
     }
@@ -200,14 +200,14 @@ export default function LoginPage() {
             <Card className="border-border/60 shadow-lg rounded-xl overflow-hidden bg-card">
               <CardHeader className="space-y-1 pb-4 pt-6 px-5 sm:px-6">
                 <h2 className="text-xl font-semibold leading-none tracking-tight">
-                  {mode === 'login' && 'Bem-vindo de volta'}
-                  {mode === 'signup' && 'Criar conta'}
-                  {mode === 'forgot' && 'Recuperar senha'}
+                  {mode === 'login' && 'Acesse sua operação'}
+                  {mode === 'signup' && 'Criar seu acesso'}
+                  {mode === 'forgot' && 'Recuperar acesso'}
                 </h2>
                 <CardDescription className="text-xs sm:text-sm">
-                  {mode === 'login' && 'Entre na sua conta para continuar'}
-                  {mode === 'signup' && 'Cadastre-se para começar a usar'}
-                  {mode === 'forgot' && 'Enviaremos um link para seu e-mail'}
+                  {mode === 'login' && 'Entre para continuar suas conferências, endereçamentos e expedições.'}
+                  {mode === 'signup' && 'Leva menos de um minuto. Depois é só bipar e começar.'}
+                  {mode === 'forgot' && 'Informe seu e-mail e enviamos um link para criar uma nova senha.'}
                 </CardDescription>
               </CardHeader>
 
