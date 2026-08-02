@@ -118,7 +118,7 @@ export default function AdminPanelPage() {
   return (
     <PageShell>
       <PageHeader
-        title="oi"
+        title="."
         actions={
           <div className="flex items-center gap-2 text-xs">
             <Badge variant="outline" className="font-mono h-7 px-2.5">v{version}</Badge>
