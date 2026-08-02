@@ -227,6 +227,8 @@ export default function EquipesPage() {
     } catch (err: any) { toast.error(err?.message || 'Falha ao adicionar.'); }
   };
 
+  const [memberToRemove, setMemberToRemove] = useState<Member | null>(null);
+
   const removeMember = async (m: Member) => {
     try {
       const { error } = await (supabase.from('team_members' as any)
@@ -236,10 +238,12 @@ export default function EquipesPage() {
       await (supabase.from('team_page_permissions' as any)
         .delete().eq('team_id', m.team_id).eq('user_id', m.user_id) as any);
       toast.success('Membro removido.');
+      setMemberToRemove(null);
       await loadAll();
       await pageAccess.refresh();
     } catch (err: any) { toast.error(err?.message || 'Falha ao remover.'); }
   };
+
 
   const availableToAdd = useMemo(() => {
     if (!selectedTeam) return [] as ProfileLite[];
