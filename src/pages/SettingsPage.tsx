@@ -70,6 +70,7 @@ import { Truck } from 'lucide-react';
 import SettingsErrorBoundary from '@/components/SettingsErrorBoundary';
 import { setBipSoundEnabled, isBipSoundEnabled, bipSuccess } from '@/lib/bip-feedback';
 import AugeUserCredentialsDialog from '@/components/auge/AugeUserCredentialsDialog';
+import { UserAvatar } from '@/components/UserAvatar';
 
 type ModuleScope = 'estoque' | 'expedicao';
 type Category = {
@@ -182,13 +183,11 @@ export default function SettingsPage() {
         upsert: true, contentType: file.type,
       });
       if (upErr) throw upErr;
-      const { data: pub } = supabase.storage.from('avatars').getPublicUrl(path);
-      const url = pub.publicUrl;
       const { error: updErr } = await (supabase.from('profiles') as any)
-        .update({ avatar_url: url, updated_at: new Date().toISOString() })
+        .update({ avatar_url: path, updated_at: new Date().toISOString() })
         .eq('id', user.id);
       if (updErr) throw updErr;
-      setAvatarUrl(url);
+      setAvatarUrl(path);
       toast.success('Avatar atualizado!');
     } catch (e: any) {
       toast.error('Erro ao enviar avatar: ' + e.message);
@@ -649,13 +648,12 @@ export default function SettingsPage() {
                     <div className="space-y-6">
                       <div className="flex items-center gap-5 p-4 rounded-md bg-muted/30 border border-border/20">
                         <div className="relative group">
-                          <div className="w-16 h-16 rounded-md bg-primary/10 flex items-center justify-center border-2 border-primary/20 overflow-hidden">
-                            {avatarUrl ? (
-                              <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-                            ) : (
-                              <User className="w-8 h-8 text-primary" />
-                            )}
-                          </div>
+                          <UserAvatar
+                            avatarUrl={avatarUrl}
+                            name={profile?.display_name}
+                            className="h-16 w-16 rounded-md border-2 border-primary/20 bg-primary/10"
+                            fallbackClassName="text-primary"
+                          />
                           {!isGuest && (
                             <label
                               htmlFor="avatar-upload"

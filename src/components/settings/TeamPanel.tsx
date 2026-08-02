@@ -16,6 +16,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { ROLE_LABEL, normalizeRole, type Role } from '@/lib/permissions';
 import { toast } from 'sonner';
 import { useAgentThreads } from '@/store/useAgentThreads';
+import { UserAvatar } from '@/components/UserAvatar';
 
 type ModuleKey = 'estoque' | 'expedicao' | 'compras';
 const ALL_MODULES: { key: ModuleKey; label: string; icon: typeof Package }[] = [
@@ -270,13 +271,12 @@ export default function TeamPanel() {
             return (
               <div key={m.id} className="flex flex-wrap items-center gap-3 sm:gap-4 p-3.5 rounded-md bg-muted/20 border border-border/20 hover:border-border/40 transition-colors">
                 <div className="relative">
-                  <div className="w-11 h-11 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden">
-                    {m.avatar ? (
-                      <img src={m.avatar} alt={m.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-sm font-bold text-primary">{m.name.charAt(0).toUpperCase()}</span>
-                    )}
-                  </div>
+                  <UserAvatar
+                    avatarUrl={m.avatar}
+                    name={m.name}
+                    className="h-11 w-11 rounded-md border border-primary/20 bg-primary/10"
+                    fallbackClassName="text-sm text-primary"
+                  />
                   <span className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-background ${STATUS_DOT[m.status]}`} aria-label={STATUS_LABEL[m.status]} />
                 </div>
 
