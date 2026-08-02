@@ -168,171 +168,229 @@ export function PedidoDetailDialog({ pedido, open, onOpenChange }: PedidoDetailD
           </div>
         </DialogHeader>
 
-        {/* Título e descrição — autosave */}
-        <div className="space-y-3">
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label htmlFor="pedido-titulo" className="text-xs font-medium text-muted-foreground">Título</label>
-              <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1">
-                {saving ? (<><Loader2 className="w-3 h-3 animate-spin" /> Salvando…</>)
-                  : savedAt ? (<><Check className="w-3 h-3 text-primary" /> Salvo</>) : null}
-              </span>
-            </div>
-            <Input
-              id="pedido-titulo"
-              value={titulo}
-              placeholder="Sem título"
-              onChange={(e) => { dirtyRef.current = true; setTitulo(e.target.value); }}
-            />
-          </div>
+        <Tabs defaultValue="geral" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="geral">Geral</TabsTrigger>
+            <TabsTrigger value="anexos">Anexos & NFs</TabsTrigger>
+            <TabsTrigger value="comentarios">Comentários</TabsTrigger>
+          </TabsList>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="pedido-fornecedor" className="text-xs font-medium text-muted-foreground">Fornecedor</Label>
-              <Input
-                id="pedido-fornecedor"
-                value={fornecedor}
-                placeholder="Opcional"
-                onChange={(e) => { dirtyRef.current = true; setFornecedor(e.target.value); }}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="pedido-numero" className="text-xs font-medium text-muted-foreground">Número</Label>
-              <Input
-                id="pedido-numero"
-                value={numero}
-                onChange={(e) => { dirtyRef.current = true; setNumero(e.target.value); }}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="pedido-previsao" className="text-xs font-medium text-muted-foreground">Previsão</Label>
-              <Input
-                id="pedido-previsao"
-                type="date"
-                value={previsao}
-                onChange={(e) => { dirtyRef.current = true; setPrevisao(e.target.value); }}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="pedido-status" className="text-xs font-medium text-muted-foreground">Coluna</Label>
-              <Select
-                value={status}
-                onValueChange={(v) => { dirtyRef.current = true; setStatus(v as ComprasPedidoStatus); }}
-              >
-                <SelectTrigger id="pedido-status"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {KANBAN_COLUNAS.map((c) => (
-                    <SelectItem key={c.status} value={c.status}>{c.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="pedido-modulo" className="text-xs font-medium text-muted-foreground">Módulo</Label>
-              <Select
-                value={modulo}
-                onValueChange={(v) => { dirtyRef.current = true; setModulo(v as ComprasModulo); }}
-              >
-                <SelectTrigger id="pedido-modulo"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {COMPRAS_MODULOS.map((m) => (
-                    <SelectItem key={m.id} value={m.id}>{m.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          <TabsContent value="geral" className="space-y-4 py-4">
+            {/* Título e descrição — autosave */}
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label htmlFor="pedido-titulo" className="text-xs font-medium text-muted-foreground">Título</label>
+                  <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1">
+                    {saving ? (<><Loader2 className="w-3 h-3 animate-spin" /> Salvando…</>)
+                      : savedAt ? (<><Check className="w-3 h-3 text-primary" /> Salvo</>) : null}
+                  </span>
+                </div>
+                <Input
+                  id="pedido-titulo"
+                  value={titulo}
+                  placeholder="Sem título"
+                  onChange={(e) => { dirtyRef.current = true; setTitulo(e.target.value); }}
+                />
+              </div>
 
-          <div className="space-y-1.5">
-            <label htmlFor="pedido-desc" className="text-xs font-medium text-muted-foreground">Descrição detalhada</label>
-            <Textarea
-              id="pedido-desc"
-              value={descricao}
-              rows={5}
-              placeholder="Adicione detalhes, combinados e pendências deste acompanhamento…"
-              onChange={(e) => { dirtyRef.current = true; setDescricao(e.target.value); }}
-            />
-          </div>
-        </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="pedido-fornecedor" className="text-xs font-medium text-muted-foreground">Fornecedor</Label>
+                  <Input
+                    id="pedido-fornecedor"
+                    value={fornecedor}
+                    placeholder="Opcional"
+                    onChange={(e) => { dirtyRef.current = true; setFornecedor(e.target.value); }}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="pedido-numero" className="text-xs font-medium text-muted-foreground">Número</Label>
+                  <Input
+                    id="pedido-numero"
+                    value={numero}
+                    onChange={(e) => { dirtyRef.current = true; setNumero(e.target.value); }}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="pedido-previsao" className="text-xs font-medium text-muted-foreground">Previsão</Label>
+                  <Input
+                    id="pedido-previsao"
+                    type="date"
+                    value={previsao}
+                    onChange={(e) => { dirtyRef.current = true; setPrevisao(e.target.value); }}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="pedido-status" className="text-xs font-medium text-muted-foreground">Coluna</Label>
+                  <Select
+                    value={status}
+                    onValueChange={(v) => { dirtyRef.current = true; setStatus(v as ComprasPedidoStatus); }}
+                  >
+                    <SelectTrigger id="pedido-status"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {KANBAN_COLUNAS.map((c) => (
+                        <SelectItem key={c.status} value={c.status}>{c.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="pedido-modulo" className="text-xs font-medium text-muted-foreground">Módulo</Label>
+                  <Select
+                    value={modulo}
+                    onValueChange={(v) => { dirtyRef.current = true; setModulo(v as ComprasModulo); }}
+                  >
+                    <SelectTrigger id="pedido-modulo"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {COMPRAS_MODULOS.map((m) => (
+                        <SelectItem key={m.id} value={m.id}>{m.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
 
-        <Separator />
-
-        {/* Anexos */}
-        <section className="space-y-2">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold">Anexos</h3>
-            <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()} disabled={uploadAnexo.isPending}>
-              {uploadAnexo.isPending
-                ? <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                : <Paperclip className="w-4 h-4 mr-1" />}
-              Anexar
-            </Button>
-            <input ref={fileRef} type="file" multiple className="hidden" onChange={(e) => handleUpload(e.target.files)} />
-          </div>
-          {anexos.length === 0 ? (
-            <p className="text-xs text-muted-foreground">Nenhum documento anexado.</p>
-          ) : (
-            <ul className="space-y-1">
-              {anexos.map((a) => (
-                <li key={a.id} className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-2 py-1.5">
-                  <Paperclip className="w-3.5 h-3.5 text-muted-foreground shrink-0" aria-hidden />
-                  <span className="text-xs truncate flex-1">{a.file_name}</span>
-                  <span className="text-[11px] text-muted-foreground hidden sm:inline">{formatSize(a.size_bytes)}</span>
-                  <Button variant="ghost" size="sm" onClick={() => baixarAnexo(a).catch((e) => toast.error(e.message))} aria-label={`Baixar ${a.file_name}`}>
-                    <Download className="w-3.5 h-3.5" />
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => delAnexo.mutate(a)} aria-label={`Remover ${a.file_name}`}>
-                    <Trash2 className="w-3.5 h-3.5 text-destructive" />
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        <Separator />
-
-        {/* Comentários */}
-        <section className="space-y-3">
-          <h3 className="text-sm font-semibold">Comentários</h3>
-          {comentarios.length === 0 ? (
-            <p className="text-xs text-muted-foreground">Nenhum comentário ainda.</p>
-          ) : (
-            <ul className="space-y-3">
-              {comentarios.map((c) => (
-                <li key={c.id} className="flex gap-2">
-                  <div className="w-7 h-7 rounded-full bg-primary/10 text-primary grid place-items-center text-[11px] font-semibold shrink-0">
-                    {(c.user_id ? (profiles[c.user_id] ?? 'U') : 'U').slice(0, 2).toUpperCase()}
+              {/* Campos NF para RMA */}
+              {modulo === 'rma' && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-muted/30 rounded-lg border border-border/50">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="nf-emitida" className="text-xs font-medium text-primary flex items-center gap-1.5">
+                      <FileText className="w-3.5 h-3.5" /> NF Emitida
+                    </Label>
+                    <Input
+                      id="nf-emitida"
+                      value={nfEmitida}
+                      placeholder="Número da NF"
+                      className="bg-background"
+                      onChange={(e) => { dirtyRef.current = true; setNfEmitida(e.target.value); }}
+                    />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                      <span className="font-medium text-foreground">{c.user_id ? (profiles[c.user_id] ?? 'Usuário') : 'Usuário'}</span>
-                      <span>{formatDateTime(c.created_at)}</span>
-                      <Button variant="ghost" size="sm" className="ml-auto h-6 px-1" onClick={() => delComentario.mutate(c.id)} aria-label="Excluir comentário">
-                        <Trash2 className="w-3 h-3 text-destructive" />
-                      </Button>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="nf-retorno" className="text-xs font-medium text-primary flex items-center gap-1.5">
+                      <FileText className="w-3.5 h-3.5" /> NF Retorno
+                    </Label>
+                    <Input
+                      id="nf-retorno"
+                      value={nfRetorno}
+                      placeholder="Número da NF"
+                      className="bg-background"
+                      onChange={(e) => { dirtyRef.current = true; setNfRetorno(e.target.value); }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <label htmlFor="pedido-desc" className="text-xs font-medium text-muted-foreground">Descrição detalhada</label>
+                <Textarea
+                  id="pedido-desc"
+                  value={descricao}
+                  rows={5}
+                  placeholder="Adicione detalhes, combinados e pendências deste acompanhamento…"
+                  onChange={(e) => { dirtyRef.current = true; setDescricao(e.target.value); }}
+                />
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="anexos" className="space-y-6 py-4">
+            <section className="space-y-2">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold">Documentos e XMLs</h3>
+                <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()} disabled={uploadAnexo.isPending}>
+                  {uploadAnexo.isPending
+                    ? <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                    : <Paperclip className="w-4 h-4 mr-1" />}
+                  Anexar PDF/XML
+                </Button>
+                <input ref={fileRef} type="file" multiple className="hidden" accept=".pdf,.xml" onChange={(e) => handleUpload(e.target.files)} />
+              </div>
+              
+              {anexos.length === 0 ? (
+                <p className="text-xs text-muted-foreground text-center py-8 border-2 border-dashed rounded-lg">
+                  Nenhum documento anexado.
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {/* NF / XML List */}
+                  <div className="grid gap-2">
+                    {anexos.map((a) => {
+                      const isXml = a.file_name.toLowerCase().endsWith('.xml');
+                      return (
+                        <div key={a.id} className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-2 py-2 group">
+                          <div className={`w-8 h-8 rounded grid place-items-center ${isXml ? 'bg-cyan-500/10 text-cyan-600' : 'bg-red-500/10 text-red-600'}`}>
+                            {isXml ? <FileText className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <span className="text-xs font-medium truncate block">{a.file_name}</span>
+                            <span className="text-[10px] text-muted-foreground">{formatSize(a.size_bytes)} • {isXml ? 'XML NFe' : 'PDF Documento'}</span>
+                          </div>
+                          
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => baixarAnexo(a).catch((e) => toast.error(e.message))} title="Baixar">
+                              <DownloadCloud className="w-3.5 h-3.5" />
+                            </Button>
+                            {isXml && (
+                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => toast.info("Visualização de XML em breve")} title="Visualizar Online">
+                                <Eye className="w-3.5 h-3.5" />
+                              </Button>
+                            )}
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => delAnexo.mutate(a)} title="Remover">
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </section>
+          </TabsContent>
+
+          <TabsContent value="comentarios" className="space-y-3 py-4">
+            <h3 className="text-sm font-semibold">Histórico de Conversa</h3>
+            {comentarios.length === 0 ? (
+              <p className="text-xs text-muted-foreground text-center py-8">Nenhum comentário ainda.</p>
+            ) : (
+              <ul className="space-y-3">
+                {comentarios.map((c) => (
+                  <li key={c.id} className="flex gap-2">
+                    <div className="w-7 h-7 rounded-full bg-primary/10 text-primary grid place-items-center text-[11px] font-semibold shrink-0">
+                      {(c.user_id ? (profiles[c.user_id] ?? 'U') : 'U').slice(0, 2).toUpperCase()}
                     </div>
-                    <p className="text-sm whitespace-pre-wrap break-words">{c.conteudo}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-          <div className="flex items-end gap-2">
-            <Textarea
-              value={novoComentario}
-              rows={2}
-              placeholder="Escreva um comentário…"
-              onChange={(e) => setNovoComentario(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); handleComentar(); }
-              }}
-            />
-            <Button onClick={handleComentar} disabled={!novoComentario.trim() || addComentario.isPending}>
-              {addComentario.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-            </Button>
-          </div>
-        </section>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                        <span className="font-medium text-foreground">{c.user_id ? (profiles[c.user_id] ?? 'Usuário') : 'Usuário'}</span>
+                        <span>{formatDateTime(c.created_at)}</span>
+                        <Button variant="ghost" size="sm" className="ml-auto h-6 px-1" onClick={() => delComentario.mutate(c.id)} aria-label="Excluir comentário">
+                          <Trash2 className="w-3 h-3 text-destructive" />
+                        </Button>
+                      </div>
+                      <p className="text-sm whitespace-pre-wrap break-words">{c.conteudo}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="flex items-end gap-2 pt-2 border-t mt-4">
+              <Textarea
+                value={novoComentario}
+                rows={2}
+                className="min-h-[60px]"
+                placeholder="Escreva um comentário…"
+                onChange={(e) => setNovoComentario(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); handleComentar(); }
+                }}
+              />
+              <Button onClick={handleComentar} disabled={!novoComentario.trim() || addComentario.isPending} className="h-[60px]">
+                {addComentario.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              </Button>
+            </div>
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );
