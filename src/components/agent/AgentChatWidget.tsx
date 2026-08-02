@@ -150,7 +150,9 @@ function ChatWindow({
   onArtifact: (spec: ArtifactSpec) => void;
   activeArtifactId: string | null;
   onSelectArtifact: (id: string) => void;
+  composerRef: React.RefObject<HTMLTextAreaElement>;
 }) {
+
 
 
   const initialMessages = useMemo(
