@@ -204,7 +204,7 @@ function ChatWindow({
     id: threadId,
     messages: initialMessages as any,
     transport,
-    onFinish: (message) => {
+    onFinish: () => {
       window.dispatchEvent(new CustomEvent("fio:response", { detail: { success: true } }));
       window.dispatchEvent(new CustomEvent<boolean>("fio:thinking", { detail: false }));
     },
@@ -212,6 +212,12 @@ function ChatWindow({
       console.error("[ai-agent] erro no chat", err);
     },
   });
+
+  // Exportar status para o pai via evento ou contexto (A2)
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("fio:status", { detail: status }));
+  }, [status]);
+
 
 
   // Persistência contínua: grava no store a cada mudança (não apenas ao finalizar),
