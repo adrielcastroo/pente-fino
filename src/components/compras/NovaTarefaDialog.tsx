@@ -43,7 +43,7 @@ export function NovaTarefaDialog({ open, onOpenChange, statusInicial = 'pendente
 
   function reset() {
     setTitulo(''); setFornecedor(''); setNumero(''); setDescricao(''); setPrevisao('');
-    setStatus(statusInicial); setArquivos([]);
+    setStatus(statusInicial); setModulo(moduloInicial); setArquivos([]);
     if (fileRef.current) fileRef.current.value = '';
   }
 
