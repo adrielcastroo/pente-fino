@@ -508,12 +508,25 @@ function ChatWindow({
             </Message>
           )}
           {error && (
-            <div className="mx-2 rounded-md border border-destructive/40 bg-destructive/10 p-2 text-xs text-destructive">
-              {error.message?.includes("IA indisponíveis")
-                ? "Sistemas de IA indisponíveis (sem chaves API)."
-                : "Não foi possível conectar ao assistente. Por favor, tente novamente em alguns instantes."}
+            <div className="mx-2 rounded-md border border-destructive/40 bg-destructive/10 p-2 text-xs text-destructive flex flex-col gap-2">
+              <p>
+                {error.message?.includes("IA indisponíveis")
+                  ? "Sistemas de IA indisponíveis (sem chaves API)."
+                  : "Não foi possível conectar ao assistente. Por favor, tente novamente em alguns instantes."}
+              </p>
+              {!error.message?.includes("IA indisponíveis") && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="h-7 text-[10px] w-fit gap-1 bg-background"
+                  onClick={() => sendMessage({ parts: [{ type: "text", text: messages[messages.length-1].role === 'user' ? (messages[messages.length-1].parts?.[0] as any)?.text || '' : '' }] })}
+                >
+                  <RefreshCw className="h-3 w-3" /> Tentar novamente
+                </Button>
+              )}
             </div>
           )}
+
 
         </ConversationContent>
         <ConversationScrollButton />
