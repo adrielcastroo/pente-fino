@@ -642,9 +642,9 @@ export function AgentChatWidget() {
               <ArtifactPanel
                 spec={activeArtifact}
                 onClose={() => setActiveArtifactId(null)}
-                isMobile={mobileArtifactVisible}
               />
             )}
+
           </div>
         </ChatPanelShell>
       )}
@@ -653,18 +653,19 @@ export function AgentChatWidget() {
 }
 
 function SidebarModeToggle() {
-  const { sidebarMode, setSidebarMode } = useChatPanel();
+  const { mode, toggleMode } = useChatPanel();
   return (
     <Button
       variant="ghost"
       size="icon-sm"
-      onClick={() => setSidebarMode(sidebarMode === "docked" ? "floating" : "docked")}
-      title={sidebarMode === "docked" ? "Flutuar painel" : "Fixar na lateral"}
+      onClick={() => toggleMode()}
+      title={mode === "sidebar" ? "Flutuar painel" : "Fixar na lateral"}
     >
-      {sidebarMode === "docked" ? <PanelRightClose className="h-4 w-4" /> : <PanelRightOpen className="h-4 w-4" />}
+      {mode === "sidebar" ? <PanelRightClose className="h-4 w-4" /> : <PanelRightOpen className="h-4 w-4" />}
     </Button>
   );
 }
+
 
 function ChatPanelShell({
   children,
@@ -679,8 +680,9 @@ function ChatPanelShell({
   showArtifactPane: boolean;
   panelRef: React.RefObject<HTMLDivElement>;
 }) {
-  const { sidebarMode } = useChatPanel();
-  const isDocked = sidebarMode === "docked";
+  const { mode } = useChatPanel();
+  const isDocked = mode === "sidebar";
+
 
   return (
     <div
