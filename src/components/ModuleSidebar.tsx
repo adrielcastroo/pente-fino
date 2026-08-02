@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Settings, LogOut, ArrowLeftRight, Users, type LucideIcon } from 'lucide-react';
+import { Settings, LogOut, ArrowLeftRight, Users, ShieldCheck, type LucideIcon } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -90,6 +90,7 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
   const settingsActive = isItemActive(config.settingsPath);
   const teamsActive = config.teamsPath ? isItemActive(config.teamsPath) : false;
   const showTeams = Boolean(config.teamsPath) && atLeast(role, 'supervisor');
+  const showAdmin = atLeast(role, 'admin');
 
   // Prefetch em idle das rotas visíveis — navegação passa a ser instantânea
   // após o primeiro segundo de idle da aplicação.
@@ -217,6 +218,37 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
 
       <SidebarFooter className={cn('overflow-hidden border-t border-border/30 py-3', isIconCollapsed ? 'px-0' : 'px-3')}>
         <SidebarMenu className={cn('gap-0.5', isIconCollapsed && 'items-center')}>
+          {showAdmin && (
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                size="lg"
+                onClick={() => handleNavigate('/admin')}
+                isActive={location.pathname.startsWith('/admin')}
+                tooltip="Painel Admin"
+                aria-label="Abrir Painel Admin"
+                className={cn(
+                  'relative h-10 rounded-md transition-colors duration-150',
+                  isIconCollapsed && '!size-10 !p-0 justify-center',
+                  location.pathname.startsWith('/admin')
+                    ? 'font-bold text-primary'
+                    : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                )}
+              >
+                {location.pathname.startsWith('/admin') && !isIconCollapsed && (
+                  <div className="pointer-events-none absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-primary" />
+                )}
+                <div className="flex h-5 w-5 shrink-0 items-center justify-center">
+                  <ShieldCheck className="h-[18px] w-[18px]" />
+                </div>
+                {!isIconCollapsed && (
+                  <span className="min-w-0 flex-1 truncate text-left text-xs font-medium">
+                    Painel Admin
+                  </span>
+                )}
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
+
           {showTeams && (
             <SidebarMenuItem>
               <SidebarMenuButton
