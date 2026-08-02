@@ -111,9 +111,28 @@ Deno.serve(async (req) => {
 
     if (!isInScope(userText)) return textStreamResponse("Sou o Fio, assistente do Pente Fino. Só respondo sobre estoque e logística.");
 
+    // Detecção de multimodal (imagens) para troca de modelo
+    const hasImages = messages.some(m => Array.isArray(m.content) && m.content.some(c => c.type === 'image_url'));
+
     const providers = [
-      { id: "cerebras", baseURL: "https://api.cerebras.ai/v1", apiKey: Deno.env.get("CEREBRAS_API_KEY"), model: "llama-3.3-70b" },
-      { id: "groq", baseURL: "https://api.groq.com/openai/v1", apiKey: Deno.env.get("GROQ_API_KEY"), model: "llama-3.3-70b-versatile" }
+      { 
+        id: "cerebras", 
+        baseURL: "https://api.cerebras.ai/v1", 
+        apiKey: Deno.env.get("CEREBRAS_API_KEY"), 
+        model: "llama-3.3-70b" 
+      },
+      { 
+        id: "nvidia", 
+        baseURL: "https://integrate.api.nvidia.com/v1", 
+        apiKey: Deno.env.get("NVIDIA_API_KEY"), 
+        model: hasImages ? "meta/llama-3.2-90b-vision-instruct" : "meta/llama-3.1-405b-instruct" 
+      },
+      { 
+        id: "groq", 
+        baseURL: "https://api.groq.com/openai/v1", 
+        apiKey: Deno.env.get("GROQ_API_KEY"), 
+        model: hasImages ? "llama-3.2-90b-vision-preview" : "llama-3.3-70b-versatile" 
+      }
     ].filter(p => !!p.apiKey);
 
     return streamWithFallback(providers, messages, admin, userId, threadId, userText, userRole);
