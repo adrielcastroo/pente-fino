@@ -222,14 +222,14 @@ export default function EquipesPage() {
 
   const addMember = async (userId: string) => {
     if (!selectedTeam) return;
-    const prof = profiles.find((p) => p.user_id === userId);
+    const prof = profiles[userId];
     if (!prof) return;
 
     // A2: Atualização otimista
     const tempMember: Member = {
       user_id: userId,
       team_id: selectedTeam.id,
-      display_name: prof.display_name,
+      display_name: prof.display_name ?? 'Sem nome',
       avatar_url: prof.avatar_url,
       role: rolesByUser[userId] ?? 'operador',
       modules: prof.modules ?? ['estoque'],
@@ -255,6 +255,7 @@ export default function EquipesPage() {
       await loadAll(); // Reverte
     }
   };
+
 
 
   const [memberToRemove, setMemberToRemove] = useState<Member | null>(null);
