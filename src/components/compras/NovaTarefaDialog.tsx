@@ -34,6 +34,7 @@ export function NovaTarefaDialog({ open, onOpenChange, statusInicial = 'pendente
   const [descricao, setDescricao] = useState('');
   const [previsao, setPrevisao] = useState('');
   const [status, setStatus] = useState<ComprasPedidoStatus>(statusInicial);
+  const [modulo, setModulo] = useState<ComprasModulo>(moduloInicial);
   const [arquivos, setArquivos] = useState<File[]>([]);
   const [enviando, setEnviando] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
