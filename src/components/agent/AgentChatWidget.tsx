@@ -748,8 +748,8 @@ export function AgentChatWidget() {
               onArtifact={registerArtifact}
               activeArtifactId={activeArtifactId}
               onSelectArtifact={handleSelectArtifact}
-              composerRef={composerRef}
             />
+
 
             {showArtifactPane && activeArtifact && (
               <ArtifactPanel
