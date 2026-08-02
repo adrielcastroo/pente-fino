@@ -444,7 +444,7 @@ function ChatWindow({
           {showThinking && (
             <Message from="assistant">
               <MessageContent className="bg-transparent">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2" aria-label="Fio está respondendo">
                   <span className="flex items-end gap-1" aria-hidden="true">
                     <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]" />
                     <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]" />
@@ -452,6 +452,7 @@ function ChatWindow({
                   </span>
                   <Shimmer>{thinkingLabel}</Shimmer>
                 </div>
+
               </MessageContent>
             </Message>
           )}
