@@ -93,6 +93,7 @@ export interface PedidoPatch {
   numero?: string;
   previsao?: string | null;
   status?: ComprasPedidoStatus;
+  modulo?: ComprasModulo;
   ordem?: number;
 }
 
