@@ -882,7 +882,7 @@ export default function EstoquePage() {
                       </HoverCardTrigger>
                       {hasItems && (
                         <HoverCardContent side="top" align="center" className="hidden lg:block w-72 p-0 border-border bg-card rounded-md shadow-2xl">
-                          <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between">
+                          <div className="px-4 py-3 border-b border-border/40 flex items-center justify-between">
                             <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">{activeTec}.{col}.N{String(nivel).padStart(2,'0')}</div>
                             <div className="text-[10px] font-semibold text-muted-foreground">{items.length}/30 · {fillPercent}%</div>
                           </div>
@@ -901,7 +901,7 @@ export default function EstoquePage() {
                               <div className="text-[10px] font-semibold text-muted-foreground/60 text-center py-1">+ {items.length - 6} itens</div>
                             )}
                           </div>
-                          <div className="px-4 py-2 border-t border-white/5 text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/60 text-center">
+                          <div className="px-4 py-2 border-t border-border/40 text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/60 text-center">
                             Clique para abrir
                           </div>
                         </HoverCardContent>
