@@ -640,3 +640,20 @@ iframe[src*="lovable.dev/badge"] {
   height: 0 !important;
 }
 /* NEXUS-PRO:WATERMARK-HIDE:END */
+
+/* ===== Fio 3D — animações do avatar ===== */
+@keyframes fio-floaty { 0%,100%{ transform: translateY(0) rotateY(-6deg); } 50%{ transform: translateY(-7px) rotateY(6deg); } }
+@keyframes fio-tilt3d { 0%,100%{ transform: rotateZ(-4deg) rotateY(-8deg); } 50%{ transform: rotateZ(4deg) rotateY(8deg); } }
+@keyframes fio-flow { to { stroke-dashoffset: -120; } }
+@keyframes fio-blink { 0%,92%,100%{ transform: scaleY(1); } 96%{ transform: scaleY(.08); } }
+
+.fio-flow-slow { animation: fio-flow 6s linear infinite; }
+.fio-flow-fast { animation: fio-flow 1s linear infinite; }
+.fio-eye { transform-box: fill-box; transform-origin: center; animation: fio-blink 5s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fio-flow-slow, .fio-flow-fast, .fio-eye { animation: none !important; }
+}
+
+/* Fonte Sora para identidade da marca */
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&display=swap');
