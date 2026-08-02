@@ -406,7 +406,8 @@ export default function EquipesPage() {
                       </Button>
                     </div>
                   ))
-                )}
+                })()}
+
               </div>
             </div>
           )}
