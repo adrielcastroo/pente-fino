@@ -107,6 +107,11 @@ Deno.serve(async (req) => {
 
     const rawMessages = body?.messages;
     const messages = Array.isArray(rawMessages) ? convertToModelMessages(rawMessages) : [];
+    
+    if (messages.length === 0) {
+      return textStreamResponse("Olá! Como posso ajudar você hoje?");
+    }
+
     const lastMsg = messages[messages.length - 1];
     const rawLast = (lastMsg && lastMsg.role === "user" && typeof lastMsg.content === "string") ? lastMsg.content : "";
 

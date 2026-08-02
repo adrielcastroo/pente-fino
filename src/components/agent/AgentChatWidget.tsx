@@ -123,8 +123,15 @@ function ChatWindow({
           threadId,
         },
         fetch: async (url, options) => {
-          const body = JSON.parse(options?.body as string || "{}");
-          const mergedBody = { ...body, threadId };
+          const bodyText = options?.body as string || "{}";
+          let parsedBody = {};
+          try {
+            parsedBody = JSON.parse(bodyText);
+          } catch (e) {
+            console.error("[fio] Erro ao parsear body do transport", e);
+          }
+          const mergedBody = { ...parsedBody, threadId };
+          
           return fetch(url, {
             ...options,
             body: JSON.stringify(mergedBody),
