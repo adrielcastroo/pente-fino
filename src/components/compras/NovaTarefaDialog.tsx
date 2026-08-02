@@ -154,6 +154,21 @@ export function NovaTarefaDialog({ open, onOpenChange, statusInicial = 'pendente
           </div>
 
           <div className="space-y-1.5">
+            <Label htmlFor="nt-modulo">Módulo</Label>
+            <Select value={modulo} onValueChange={(v) => setModulo(v as ComprasModulo)}>
+              <SelectTrigger id="nt-modulo">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="geral">Geral / Acompanhamento</SelectItem>
+                <SelectItem value="rma">RMA</SelectItem>
+                <SelectItem value="starcolor">Starcolor</SelectItem>
+                <SelectItem value="entrega_apos">Entrega Após</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1.5">
             <Label htmlFor="nt-desc">Descrição</Label>
             <Textarea
               id="nt-desc"
