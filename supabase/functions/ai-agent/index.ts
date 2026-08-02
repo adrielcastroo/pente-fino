@@ -154,24 +154,26 @@ Deno.serve(async (req) => {
       return Array.isArray(content) && content.some((c: any) => c.type === 'image_url' || c.type === 'image');
     });
 
+    // Ordem de preferência: Groq -> Cerebras -> NVIDIA (fallback em cascata).
+    // A chave da Cerebras pode estar salva como CEREBRAS_API_KEY ou OPENAI_API_KEY.
     const providers = [
-      { 
-        id: "cerebras", 
-        baseURL: "https://api.cerebras.ai/v1", 
-        apiKey: Deno.env.get("CEREBRAS_API_KEY"), 
-        model: "llama-3.3-70b" 
+      {
+        id: "groq",
+        baseURL: "https://api.groq.com/openai/v1",
+        apiKey: Deno.env.get("GROQ_API_KEY"),
+        model: hasImages ? "llama-3.2-90b-vision-preview" : "llama-3.3-70b-versatile"
       },
-      { 
-        id: "nvidia", 
-        baseURL: "https://integrate.api.nvidia.com/v1", 
-        apiKey: Deno.env.get("NVIDIA_API_KEY"), 
-        model: hasImages ? "meta/llama-3.2-90b-vision-instruct" : "meta/llama-3.1-405b-instruct" 
+      {
+        id: "cerebras",
+        baseURL: "https://api.cerebras.ai/v1",
+        apiKey: Deno.env.get("CEREBRAS_API_KEY") ?? Deno.env.get("OPENAI_API_KEY"),
+        model: "llama-3.3-70b"
       },
-      { 
-        id: "groq", 
-        baseURL: "https://api.groq.com/openai/v1", 
-        apiKey: Deno.env.get("GROQ_API_KEY"), 
-        model: hasImages ? "llama-3.2-90b-vision-preview" : "llama-3.3-70b-versatile" 
+      {
+        id: "nvidia",
+        baseURL: "https://integrate.api.nvidia.com/v1",
+        apiKey: Deno.env.get("NVIDIA_API_KEY"),
+        model: hasImages ? "meta/llama-3.2-90b-vision-instruct" : "meta/llama-3.1-405b-instruct"
       }
     ].filter(p => !!p.apiKey);
 
