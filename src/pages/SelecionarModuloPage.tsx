@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ModuleCard } from '@/components/ModuleCard';
+import logoComb from '@/assets/logo-comb.webp';
 
 export default function SelecionarModuloPage() {
   const { profile, user, modules, signOut } = useAuth();
@@ -134,10 +135,12 @@ export default function SelecionarModuloPage() {
       <header className="h-[60px] bg-slate-800 shrink-0">
         <div className="max-w-[1080px] mx-auto px-6 h-full flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-md bg-[hsl(201_96%_45%)] text-[hsl(var(--navy-2))] grid place-items-center">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M4 6v12 M8 6v12 M12 6v12 M16 6v12 M20 6v12" />
-              </svg>
+            <div className="w-8 h-8 rounded-md bg-[hsl(201_96%_45%)] text-[hsl(var(--navy-2))] overflow-hidden grid place-items-center">
+              <img 
+                src={logoComb} 
+                alt="" 
+                className="w-full h-full object-contain p-0.5" 
+              />
             </div>
             <span className="text-[15px] font-semibold text-white">Pente Fino</span>
           </div>
