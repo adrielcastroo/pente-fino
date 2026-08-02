@@ -45,7 +45,8 @@ import {
   Settings2,
   Search,
   ShieldCheck,
-  CheckCircle2
+  CheckCircle2,
+  MessageSquare
 } from 'lucide-react';
 
 import { atLeast, ROLE_LABEL, type Role, normalizeRole } from '@/lib/permissions';
@@ -53,6 +54,7 @@ import { MODULE_LABEL, PAGE_REGISTRY, pagesByModule, type PageEntry, type PageMo
 import { Navigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { usePageAccess } from '@/hooks/use-page-access';
+import { useAgentThreads } from '@/store/useAgentThreads';
 
 interface Team {
   id: string;
@@ -82,6 +84,7 @@ interface ProfileLite {
 export default function EquipesPage() {
   const { role, user, isAdmin, modules: myModules } = useAuth();
   const pageAccess = usePageAccess();
+  const { toggleOpen, setActiveTab } = useAgentThreads();
   const canManage = atLeast(role, 'supervisor');
   // Módulos que o gestor pode conceder (admin concede tudo).
   const grantableModules = useMemo<string[]>(
@@ -430,18 +433,34 @@ export default function EquipesPage() {
                         <Badge variant="outline" className="text-[10px] mt-0.5">{ROLE_LABEL[m.role]}</Badge>
                         {m.is_optimistic && <CheckCircle2 className="w-3 h-3 text-muted-foreground animate-pulse ml-2 inline" />}
                       </div>
-
-                      <Button size="sm" variant="outline" onClick={() => setManagingMember(m)} className="gap-1.5">
-                        <Settings2 className="w-3.5 h-3.5" /> Gerenciar
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setMemberToRemove(m)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <UserMinus className="w-3.5 h-3.5" />
-                      </Button>
+                      
+                      <div className="flex items-center gap-2">
+                        {m.user_id !== user?.id && (
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            className="h-8 w-8 p-0 text-primary hover:text-primary hover:bg-primary/10"
+                            onClick={() => {
+                              setActiveTab("team");
+                              toggleOpen(true);
+                            }}
+                            title="Conversar"
+                          >
+                            <MessageSquare className="w-4 h-4" />
+                          </Button>
+                        )}
+                        <Button size="sm" variant="outline" onClick={() => setManagingMember(m)} className="gap-1.5 h-8">
+                          <Settings2 className="w-3.5 h-3.5" /> Gerenciar
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setMemberToRemove(m)}
+                          className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <UserMinus className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
                     </div>
                   ))
                 })()}
