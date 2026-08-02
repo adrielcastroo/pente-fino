@@ -651,7 +651,7 @@ export default function SettingsPage() {
                           <UserAvatar
                             avatarUrl={avatarUrl}
                             name={profile?.display_name}
-                            className="h-16 w-16 rounded-md border-2 border-primary/20 bg-primary/10"
+                            className="h-16 w-16 rounded-md"
                             fallbackClassName="text-primary"
                           />
                           {!isGuest && (

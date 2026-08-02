@@ -281,7 +281,10 @@ function ChatWindow({
     ),
   );
   useEffect(() => {
-    if (toolRunning) emitFioExpression("analisando", 2500);
+    if (toolRunning) {
+      emitFioExpression("analisando", 3000);
+      window.dispatchEvent(new CustomEvent("fio:thinking", { detail: true }));
+    }
   }, [toolRunning]);
 
 

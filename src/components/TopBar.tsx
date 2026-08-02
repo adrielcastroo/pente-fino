@@ -218,7 +218,7 @@ const TopBar = memo(function TopBar() {
                 <UserAvatar
                   avatarUrl={avatarUrl}
                   name={displayName}
-                  className="h-8 w-8 rounded-full ring-1 ring-border/60 transition-shadow group-hover:ring-primary/40"
+                  className="h-8 w-8 rounded-full transition-shadow group-hover:ring-primary/40"
                   fallbackClassName="text-[11px] tracking-tight"
                 />
                 <span className="hidden sm:inline text-xs font-semibold text-foreground/90 truncate max-w-[80px] md:max-w-[120px]">

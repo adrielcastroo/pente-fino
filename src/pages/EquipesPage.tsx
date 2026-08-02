@@ -25,6 +25,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { UserAvatar } from '@/components/UserAvatar';
 import {
   Command,
   CommandEmpty,
@@ -421,12 +422,12 @@ export default function EquipesPage() {
                       )}
                     >
 
-                      <div className="w-10 h-10 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden">
-                        {m.avatar_url ? (
-                          <img src={m.avatar_url} alt={m.display_name} className="w-full h-full object-cover" />
-                        ) : (
-                          <span className="text-sm font-bold text-primary">{m.display_name.charAt(0).toUpperCase()}</span>
-                        )}
+                      <div className="w-10 h-10 rounded-md flex items-center justify-center overflow-hidden">
+                        <UserAvatar 
+                          avatarUrl={m.avatar_url} 
+                          name={m.display_name} 
+                          className="w-full h-full rounded-md"
+                        />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold truncate">{m.display_name}</p>
@@ -548,11 +549,11 @@ export default function EquipesPage() {
               <CommandGroup>
                 {availableToAdd.map((p) => (
                   <CommandItem key={p.id} value={p.display_name ?? p.id} onSelect={() => addMember(p.id)}>
-                    <div className="w-7 h-7 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mr-2 overflow-hidden">
-                      {p.avatar_url
-                        ? <img src={p.avatar_url} alt="" className="w-full h-full object-cover" />
-                        : <span className="text-xs font-bold text-primary">{(p.display_name ?? '?').charAt(0).toUpperCase()}</span>}
-                    </div>
+                    <UserAvatar 
+                      avatarUrl={p.avatar_url} 
+                      name={p.display_name} 
+                      className="w-7 h-7 rounded-full mr-2" 
+                    />
                     <span className="flex-1">{p.display_name ?? 'Sem nome'}</span>
                     <Badge variant="outline" className="text-[10px]">{ROLE_LABEL[rolesByUser[p.id] ?? 'operador']}</Badge>
                   </CommandItem>
@@ -709,11 +710,11 @@ function MemberPermissionsDialog({ member, team, grantableModules, onClose, onSa
       <DialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden">
-              {member.avatar_url
-                ? <img src={member.avatar_url} alt="" className="w-full h-full object-cover" />
-                : <span className="text-sm font-bold text-primary">{member.display_name.charAt(0).toUpperCase()}</span>}
-            </div>
+            <UserAvatar 
+              avatarUrl={member.avatar_url} 
+              name={member.display_name} 
+              className="w-11 h-11 rounded-md" 
+            />
             <div className="flex-1">
               <DialogTitle className="flex items-center gap-2">
                 {member.display_name}

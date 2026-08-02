@@ -178,8 +178,6 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
                           <Icon
                             className="h-[18px] w-[18px]"
                             strokeWidth={isActive ? 2.4 : 1.75}
-                            fill={isActive ? 'currentColor' : 'none'}
-                            fillOpacity={isActive ? 0.18 : 0}
                           />
                           {hasBadge && isIconCollapsed && (
                             <span className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[8px] font-bold text-destructive-foreground">
