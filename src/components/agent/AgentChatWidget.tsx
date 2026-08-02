@@ -376,18 +376,8 @@ function ChatWindow({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start" className="w-48">
-                    <DropdownMenuItem
-                      onClick={() => composerRef.current?.dispatchEvent(new CustomEvent('open-file-dialog'))}
-                    >
-                      <ImageIcon className="mr-2 h-4 w-4" />
-                      <span>Fotos/Arquivos</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => composerRef.current?.dispatchEvent(new CustomEvent('capture-screenshot'))}
-                    >
-                      <Plus className="mr-2 h-4 w-4" />
-                      <span>Capturar tela</span>
-                    </DropdownMenuItem>
+                    <PromptInputActionAddAttachments label="Fotos/Arquivos" />
+                    <PromptInputActionAddScreenshot label="Capturar tela" />
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
