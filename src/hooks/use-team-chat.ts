@@ -82,5 +82,5 @@ export function useTeamChat() {
     };
   }, []);
 
-  return { messages, sendMessage, loading };
+  return { messages, sendMessage, loading, fetchMessages };
 }
