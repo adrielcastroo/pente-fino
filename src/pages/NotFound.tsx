@@ -12,7 +12,7 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-6">
+    <div className="flex min-h-[100dvh] items-center justify-center bg-muted px-4">
       <Seo
         title="Página não encontrada — Pente Fino"
         description="O endereço acessado não existe ou foi movido. Volte ao início do Sistema Pente Fino."
