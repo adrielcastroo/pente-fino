@@ -1,4 +1,4 @@
-import { FileText, Table2, Braces, X, ExternalLink, LayoutDashboard } from "lucide-react";
+import { FileText, Table2, Braces, X, ExternalLink, LayoutDashboard, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { ArtifactSpec } from "@/lib/agent-blocks";
