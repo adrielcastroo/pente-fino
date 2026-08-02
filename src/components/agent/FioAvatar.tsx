@@ -192,8 +192,11 @@ const LOOP =
 
 function floatAnim(state: FioAnimationState) {
   if (state === "thinking") return "fio-tilt3d 1.8s ease-in-out infinite";
+  if (state === "responding") return "fio-pulse3d 1.2s ease-in-out infinite";
+  if (state === "hover") return "fio-bounce 0.9s ease-in-out infinite";
   return "fio-floaty 4s ease-in-out infinite";
 }
+
 
 /** Rostos das 8 expressões da marca (viewBox 140). */
 function FioFace({ expr }: { expr: FioExpression }) {
