@@ -665,7 +665,7 @@ export default function EstoquePage() {
               }
             }}
             placeholder="Buscar em todos os TECs: item, descrição, código interno, lote, processo, endereço…  ( / )"
-            className="h-11 sm:h-12 rounded-md bg-card/40 backdrop-blur-xl border-white/10 pl-4 pr-40 text-xs sm:text-sm"
+            className="h-11 sm:h-12 rounded-md bg-card border-border/40 pl-4 pr-40 text-xs sm:text-sm"
           />
           {locateQuery && (
             <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
