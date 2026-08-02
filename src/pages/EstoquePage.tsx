@@ -1221,7 +1221,7 @@ export default function EstoquePage() {
                               animationDuration={600}
                             >
                               {pieData.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={entry.color} stroke="hsl(var(--card))" strokeWidth={2} />
+                                <Cell key={`cell-${index}`} fill={entry.color} stroke="transparent" strokeWidth={0} />
                               ))}
                             </Pie>
                             <ChartTooltip
