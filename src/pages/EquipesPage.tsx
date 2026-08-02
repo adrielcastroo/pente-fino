@@ -45,7 +45,9 @@ import {
   Settings2,
   Search,
   ShieldCheck,
+  CheckCircle2
 } from 'lucide-react';
+
 import { atLeast, ROLE_LABEL, type Role, normalizeRole } from '@/lib/permissions';
 import { MODULE_LABEL, PAGE_REGISTRY, pagesByModule, type PageEntry, type PageModule } from '@/lib/page-registry';
 import { Navigate } from 'react-router-dom';
