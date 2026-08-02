@@ -86,8 +86,8 @@ export default function SelecionarModuloPage() {
   }, [availableModules, navigate]);
 
   const handleNewConference = useCallback(() => {
-    navigate('/estoque/operacao');
-  }, [navigate]);
+    // navigate('/estoque/operacao'); // Removido por solicitação do usuário
+  }, []);
 
   // Keyboard navigation
   useEffect(() => {
@@ -183,16 +183,7 @@ export default function SelecionarModuloPage() {
 
           <div className="mt-8 flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-4 flex-wrap">
-              <Button 
-                onClick={handleNewConference}
-                className="min-h-[48px] px-[1.375rem] text-[15px] font-semibold max-md:min-h-[56px] max-md:w-full"
-              >
-                <Plus className="w-[18px] h-[18px] mr-2" />
-                Iniciar nova conferência
-              </Button>
-              <span className="text-[13px] text-muted-foreground max-md:hidden">
-                ou pressione <kbd className="font-mono text-[13px] border border-border rounded px-2 py-0.5 bg-card mx-1">N</kbd>
-              </span>
+              {/* Botão remover por solicitação do usuário */}
             </div>
 
             <button
