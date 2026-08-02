@@ -106,6 +106,16 @@ Deno.serve(async (req) => {
 
     const messages = convertToModelMessages(body.messages);
     const lastMsg = messages[messages.length - 1];
+    const rawLast = (lastMsg && lastMsg.role === "user" && typeof lastMsg.content === "string") ? lastMsg.content : "";
+
+    // Submit de widget de transferência — fluxo determinístico (não passa pelo LLM).
+    if (rawLast.startsWith(WIDGET_SUBMIT_PREFIX)) {
+      let payload: any = null;
+      try { payload = JSON.parse(rawLast.slice(WIDGET_SUBMIT_PREFIX.length)); } catch { /* ignora */ }
+      const answer = await routeTransferSubmit(payload, authHeader);
+      if (answer) return textStreamResponse(answer);
+    }
+
     if (lastMsg && lastMsg.role === "user" && typeof lastMsg.content === "string") {
       lastMsg.content = rewriteWidgetSubmit(lastMsg.content);
     }
@@ -113,6 +123,11 @@ Deno.serve(async (req) => {
 
     // Documentos anexados (PDF/XLS/XLSX/ODS/CSV) — lidos antes do scope check
     const { docs, promptBlock: documentsBlock } = await parseDocuments(body);
+
+    // Pedido de transferência: devolve o widget de formulário pré-preenchido
+    if (!documentsBlock && isTransferIntent(userText)) {
+      return textStreamResponse(await buildTransferFormMessage(admin, userText));
+    }
 
     if (!documentsBlock && !isInScope(userText)) {
       return textStreamResponse("Sou o Fio, assistente do Pente Fino. Só respondo sobre estoque e logística.");
