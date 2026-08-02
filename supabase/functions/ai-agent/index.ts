@@ -108,6 +108,9 @@ Deno.serve(async (req) => {
     const rawMessages = body?.messages;
     const messages = Array.isArray(rawMessages) ? convertToModelMessages(rawMessages) : [];
     
+    // Log para depuração de entrada
+    console.log(`[ai-agent] Recebidas ${messages.length} mensagens. Thread: ${threadId}`);
+
     if (messages.length === 0) {
       return textStreamResponse("Olá! Como posso ajudar você hoje?");
     }
@@ -117,6 +120,7 @@ Deno.serve(async (req) => {
 
     // Submit de widget de transferência — fluxo determinístico (não passa pelo LLM).
     if (rawLast.startsWith(WIDGET_SUBMIT_PREFIX)) {
+      console.log("[ai-agent] Processando submit de widget...");
       let payload: any = null;
       try { payload = JSON.parse(rawLast.slice(WIDGET_SUBMIT_PREFIX.length)); } catch { /* ignora */ }
       const answer = await routeTransferSubmit(payload, authHeader);

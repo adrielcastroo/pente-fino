@@ -114,7 +114,7 @@ function ChatWindow({
   const transport = useMemo(
     () =>
       new DefaultChatTransport({
-        api: `${SUPABASE_URL.replace(/\.supabase\.co$/, ".functions.supabase.co")}/ai-agent`,
+        api: `${SUPABASE_URL}/functions/v1/ai-agent`,
         headers: {
           apikey: PUBLISHABLE_KEY,
           Authorization: `Bearer ${accessToken ?? PUBLISHABLE_KEY}`,
