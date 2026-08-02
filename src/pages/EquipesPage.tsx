@@ -25,6 +25,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { UserAvatar } from '@/components/UserAvatar';
 import {
   Command,
   CommandEmpty,
@@ -421,12 +422,12 @@ export default function EquipesPage() {
                       )}
                     >
 
-                      <div className="w-10 h-10 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden">
-                        {m.avatar_url ? (
-                          <img src={m.avatar_url} alt={m.display_name} className="w-full h-full object-cover" />
-                        ) : (
-                          <span className="text-sm font-bold text-primary">{m.display_name.charAt(0).toUpperCase()}</span>
-                        )}
+                      <div className="w-10 h-10 rounded-md flex items-center justify-center overflow-hidden">
+                        <UserAvatar 
+                          avatarUrl={m.avatar_url} 
+                          name={m.display_name} 
+                          className="w-full h-full rounded-md"
+                        />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold truncate">{m.display_name}</p>

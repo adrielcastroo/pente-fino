@@ -26,7 +26,7 @@ export function UserAvatar({
     .join('');
 
   return (
-    <div className={cn('flex shrink-0 items-center justify-center overflow-hidden bg-muted', className)}>
+    <div className={cn('flex shrink-0 items-center justify-center overflow-hidden', className)}>
       {resolvedUrl ? (
         <img
           src={resolvedUrl}
