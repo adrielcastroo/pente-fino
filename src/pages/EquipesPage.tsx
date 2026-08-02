@@ -410,7 +410,14 @@ export default function EquipesPage() {
                   }
                   return filtered.map((m) => (
 
-                    <div key={m.user_id} className="flex flex-wrap items-center gap-3 p-3 rounded-md bg-muted/20 border border-border/20">
+                    <div 
+                      key={m.user_id} 
+                      className={cn(
+                        "flex flex-wrap items-center gap-3 p-3 rounded-md bg-muted/20 border border-border/20 transition-opacity",
+                        m.is_optimistic && "opacity-50 pointer-events-none"
+                      )}
+                    >
+
                       <div className="w-10 h-10 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden">
                         {m.avatar_url ? (
                           <img src={m.avatar_url} alt={m.display_name} className="w-full h-full object-cover" />
