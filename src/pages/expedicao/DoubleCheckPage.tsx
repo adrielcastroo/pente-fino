@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { ShieldCheck, Loader2, X, AlertTriangle, Check } from 'lucide-react';
 import { toast } from 'sonner';
+import { bipToast, describeError } from '@/lib/toast-flows';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PageShell, PageHeader } from '@/components/expedicao/ui';

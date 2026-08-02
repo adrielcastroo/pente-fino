@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAlocarPecaNoCarrinho } from '@/hooks/expedicao/useExpedicaoData';
 import { toast } from 'sonner';
+import { bipToast } from '@/lib/toast-flows';
 
 type CarrinhoOpt = { id: string; codigo: string; status: string };
 type Alocacao = { etiqueta: string; carrinho: string; ts: number };
