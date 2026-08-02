@@ -71,7 +71,7 @@ export function useTeamChat() {
             .single();
           
           if (!error && data) {
-            setMessages((prev) => [...prev, data]);
+            setMessages((prev) => [...prev, data as any]);
           }
         }
       )
