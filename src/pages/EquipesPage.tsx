@@ -349,14 +349,23 @@ export default function EquipesPage() {
                 </div>
               </header>
 
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
-                  Membros ({selectedMembers.length})
-                </h3>
-                <Button size="sm" onClick={() => setAddMemberOpen(true)} className="gap-1.5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3 flex-1 max-w-sm">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                    <Input
+                      placeholder="Filtrar membros..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-8 h-8 text-xs bg-muted/50"
+                    />
+                  </div>
+                </div>
+                <Button size="sm" onClick={() => setAddMemberOpen(true)} className="gap-1.5 h-8">
                   <UserPlus className="w-3.5 h-3.5" /> Adicionar membro
                 </Button>
               </div>
+
 
               <div className="space-y-2">
                 {selectedMembers.length === 0 ? (
