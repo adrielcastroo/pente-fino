@@ -226,8 +226,8 @@ function FioFace({ expr }: { expr: FioExpression }) {
     case "analisando":
       return (
         <g className="fio-face">
-          <rect className="fio-scan" x="54" y="66" width="10" height="3" rx="1.5" fill="white" />
-          <rect className="fio-scan" x="76" y="66" width="10" height="3" rx="1.5" fill="white" />
+          <rect className="fio-scan" x="54" y="66" width="10" height="2" rx="1" fill="white" />
+          <rect className="fio-scan" x="76" y="66" width="10" height="2" rx="1" fill="white" />
           <circle className="fio-scan-dot" cx="70" cy="82" r="2" fill="white" opacity="0.6" />
         </g>
       );

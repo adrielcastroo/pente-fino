@@ -118,7 +118,7 @@ const ModuleSidebar = memo(({ config }: ModuleSidebarProps) => {
           aria-label={`Ir para ${config.moduleLabel}`}
         >
           <div className="flex h-9 w-9 shrink-0 items-center justify-center">
-            <img src={logoComb} alt="Pente Fino" className="h-7 w-7 object-contain" />
+            <img src={logoComb} alt="Pente Fino" className="h-7 w-7 object-contain drop-shadow-sm" />
           </div>
           {!isIconCollapsed && (
           <div className="flex min-w-0 flex-col overflow-hidden">
