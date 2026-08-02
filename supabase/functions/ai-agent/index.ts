@@ -1,7 +1,7 @@
 // AI Agent — assistente do Pente Fino/Auge.
-import { streamText, type ModelMessage, type UIMessage, convertToModelMessages } from "npm:ai";
-import { createOpenAICompatible } from "npm:@ai-sdk/openai-compatible";
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { streamText, type ModelMessage, type UIMessage, convertToModelMessages } from "npm:ai@3.1.20";
+import { createOpenAICompatible } from "npm:@ai-sdk/openai-compatible@0.0.8";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { buildTools } from "./tools.ts";
 import { getFioCapabilitiesPrompt } from "./capabilities.ts";
 import { buildMemoryTools, listarMemorias, memoriesToPromptBlock } from "./memory.ts";
