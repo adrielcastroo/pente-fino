@@ -68,7 +68,7 @@ export function NovaTarefaDialog({ open, onOpenChange, statusInicial = 'pendente
     setEnviando(true);
     try {
       const criado = await createPedido.mutateAsync({
-        titulo, fornecedor, numero, descricao, previsao: previsao || null, status,
+        titulo, fornecedor, numero, descricao, previsao: previsao || null, status, modulo,
       });
       for (const file of arquivos) {
         try {
