@@ -381,7 +381,7 @@ export default function EquipesPage() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => removeMember(m)}
+                        onClick={() => setMemberToRemove(m)}
                         className="text-destructive hover:text-destructive"
                       >
                         <UserMinus className="w-3.5 h-3.5" />
