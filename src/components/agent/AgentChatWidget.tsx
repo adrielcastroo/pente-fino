@@ -48,12 +48,22 @@ import { useChatPanel } from "@/store/useChatPanel";
 import { FioAvatar } from "./FioAvatar";
 import type { FioAnimationState, FioExpression } from "@/components/agent/FioAvatar";
 
+/** Emite uma expressão temporária para o avatar do Fio. */
+export function emitFioExpression(expression: FioExpression, duration = 1800) {
+  window.dispatchEvent(
+    new CustomEvent<{ expression: FioExpression; duration: number }>("fio:expression", {
+      detail: { expression, duration },
+    }),
+  );
+}
+
 // Hook: escuta eventos globais para sincronizar o avatar do Fio com o status
 // do chat mesmo quando o componente está fora do <ChatWindow>.
 function useFioAnimationState(): { state: FioAnimationState; expression: FioExpression | undefined } {
   const [state, setState] = useState<FioAnimationState>("idle");
   const [expression, setExpression] = useState<FioExpression | undefined>(undefined);
   const idleTimer = useRef<number | null>(null);
+
 
   useEffect(() => {
     let respondingTimer: number | undefined;
@@ -90,18 +100,36 @@ function useFioAnimationState(): { state: FioAnimationState; expression: FioExpr
       }, 1600);
     };
 
+    // Expressões pontuais: analisando (ferramenta), surpreso (erro),
+    // feliz (resultado), curioso (usuário digitando), confirmando (sucesso).
+    let exprTimer: number | undefined;
+    const onExpression = (e: Event) => {
+      const detail = (e as CustomEvent<{ expression: FioExpression; duration?: number }>).detail;
+      if (!detail?.expression) return;
+      window.clearTimeout(exprTimer);
+      setExpression(detail.expression);
+      exprTimer = window.setTimeout(() => {
+        setExpression(undefined);
+        resetIdleTimer();
+      }, detail.duration ?? 1800);
+    };
+
     window.addEventListener("fio:thinking", onThinking as EventListener);
     window.addEventListener("fio:response", onResponse as EventListener);
-    
+    window.addEventListener("fio:expression", onExpression as EventListener);
+
     resetIdleTimer();
 
     return () => {
       window.removeEventListener("fio:thinking", onThinking as EventListener);
       window.removeEventListener("fio:response", onResponse as EventListener);
+      window.removeEventListener("fio:expression", onExpression as EventListener);
       window.clearTimeout(respondingTimer);
+      window.clearTimeout(exprTimer);
       if (idleTimer.current) window.clearTimeout(idleTimer.current);
     };
   }, []);
+
 
   return { state, expression };
 }
@@ -201,18 +229,38 @@ function ChatWindow({
 
   // Extract all artifacts + widgets from message stream (deduped by id).
   useEffect(() => {
+    let produced = false;
     for (const m of messages) {
       if (m.role !== "assistant") continue;
       const parts = (m as UIMessage).parts ?? [];
       for (const part of parts) {
         if (part.type !== "text") continue;
         const { artifacts } = extractArtifacts(part.text);
-        for (const a of artifacts) onArtifact(a);
+        for (const a of artifacts) {
+          onArtifact(a);
+          produced = true;
+        }
         const { widgets } = extractWidgets(part.text);
-        for (const w of widgets) registerFloatingWidget(w);
+        for (const w of widgets) {
+          registerFloatingWidget(w);
+          produced = true;
+        }
       }
     }
+    // Resultado entregue -> expressão "feliz".
+    if (produced) emitFioExpression("feliz", 2000);
   }, [messages, onArtifact, registerFloatingWidget]);
+
+  // Ferramenta em execução -> expressão "analisando".
+  const toolRunning = messages.some((m) =>
+    ((m as UIMessage).parts ?? []).some((p: any) =>
+      p.type?.startsWith("tool-") && (p.state === "input-streaming" || p.state === "input-available"),
+    ),
+  );
+  useEffect(() => {
+    if (toolRunning) emitFioExpression("analisando", 2500);
+  }, [toolRunning]);
+
 
   /** Comandos locais (não vão para o modelo). */
   const runLocalCommand = (raw: string): boolean => {
@@ -257,8 +305,10 @@ function ChatWindow({
   useEffect(() => {
     if (error) {
       console.error("[fio] Erro detectado:", error);
+      emitFioExpression("surpreso", 2500);
     }
   }, [error]);
+
   const lastMessage = messages[messages.length - 1];
   const lastAssistantHasVisibleContent =
     lastMessage?.role === "assistant" &&
@@ -421,7 +471,12 @@ function ChatWindow({
       >
         <PromptInput onSubmit={handleSubmit}>
           <div className="flex flex-col gap-2">
-            <PromptInputTextarea ref={composerRef} placeholder="Pergunte algo ao Fio…" />
+            <PromptInputTextarea
+              ref={composerRef}
+              placeholder="Pergunte algo ao Fio…"
+              onFocus={() => emitFioExpression("curioso", 1500)}
+            />
+
             <div className="flex items-center justify-between gap-2 px-1 pb-1">
               <div className="flex items-center gap-1">
                 <DropdownMenu>

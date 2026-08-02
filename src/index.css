@@ -651,6 +651,8 @@ iframe[src*="lovable.dev/badge"] {
 @keyframes fio-tilt3d { 0%,100%{ transform: rotateZ(-4deg) rotateY(-8deg); } 50%{ transform: rotateZ(4deg) rotateY(8deg); } }
 @keyframes fio-flow { to { stroke-dashoffset: -120; } }
 @keyframes fio-blink { 0%,92%,100%{ transform: scaleY(1); } 96%{ transform: scaleY(.08); } }
+@keyframes fio-pulse3d { 0%,100%{ transform: scale(1) rotateY(-4deg); } 50%{ transform: scale(1.06) rotateY(4deg); } }
+@keyframes fio-bounce { 0%,100%{ transform: translateY(0) scale(1.02); } 50%{ transform: translateY(-4px) scale(1.06); } }
 
 .fio-flow-slow { animation: fio-flow 6s linear infinite; }
 .fio-flow-fast { animation: fio-flow 1s linear infinite; }
@@ -659,4 +661,5 @@ iframe[src*="lovable.dev/badge"] {
 @media (prefers-reduced-motion: reduce) {
   .fio-flow-slow, .fio-flow-fast, .fio-eye { animation: none !important; }
 }
+
 
