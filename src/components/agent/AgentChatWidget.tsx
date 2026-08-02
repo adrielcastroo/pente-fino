@@ -229,18 +229,38 @@ function ChatWindow({
 
   // Extract all artifacts + widgets from message stream (deduped by id).
   useEffect(() => {
+    let produced = false;
     for (const m of messages) {
       if (m.role !== "assistant") continue;
       const parts = (m as UIMessage).parts ?? [];
       for (const part of parts) {
         if (part.type !== "text") continue;
         const { artifacts } = extractArtifacts(part.text);
-        for (const a of artifacts) onArtifact(a);
+        for (const a of artifacts) {
+          onArtifact(a);
+          produced = true;
+        }
         const { widgets } = extractWidgets(part.text);
-        for (const w of widgets) registerFloatingWidget(w);
+        for (const w of widgets) {
+          registerFloatingWidget(w);
+          produced = true;
+        }
       }
     }
+    // Resultado entregue -> expressão "feliz".
+    if (produced) emitFioExpression("feliz", 2000);
   }, [messages, onArtifact, registerFloatingWidget]);
+
+  // Ferramenta em execução -> expressão "analisando".
+  const toolRunning = messages.some((m) =>
+    ((m as UIMessage).parts ?? []).some((p: any) =>
+      p.type?.startsWith("tool-") && (p.state === "input-streaming" || p.state === "input-available"),
+    ),
+  );
+  useEffect(() => {
+    if (toolRunning) emitFioExpression("analisando", 2500);
+  }, [toolRunning]);
+
 
   /** Comandos locais (não vão para o modelo). */
   const runLocalCommand = (raw: string): boolean => {
