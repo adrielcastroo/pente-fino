@@ -105,8 +105,9 @@ Deno.serve(async (req) => {
       userRole = data?.role || null;
     }
 
-    const rawMessages = Array.isArray(body?.messages) ? body.messages : [];
-    const messages = convertToModelMessages(rawMessages);
+    const rawMessages = body?.messages;
+    console.log("AI-Agent rawMessages type:", typeof rawMessages, Array.isArray(rawMessages));
+    const messages = Array.isArray(rawMessages) ? convertToModelMessages(rawMessages) : [];
     const lastMsg = messages[messages.length - 1];
     const rawLast = (lastMsg && lastMsg.role === "user" && typeof lastMsg.content === "string") ? lastMsg.content : "";
 
