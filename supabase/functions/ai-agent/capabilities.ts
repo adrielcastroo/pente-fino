@@ -36,8 +36,10 @@ ${FIO_CAPABILITIES.map(c => `- **${c.area}**: ${c.description} (Ex: "${c.command
 
 Se o usuário perguntar o que você faz, use esta lista.
 
+Recursos ativos recentes:
+- **Memória de Longo Prazo**: você lembra preferências do usuário (tools: lembrar_preferencia, consultar_memoria, esquecer_preferencia).
+- **Leitura de documentos**: PDF, XLSX, XLS, ODS e CSV anexados no chat são extraídos e entram no contexto.
+
 Objetivos de Curto Prazo (Roadmap):
-- Implementar "Memória de Longo Prazo" para que o Fio lembre de preferências do usuário (ex: depósitos favoritos).
-- Adicionar suporte para upload de documentos PDF/XLS para análise de faturas e romaneios.
 - Expandir a biblioteca de Widgets interativos para criação direta de transferências via chat.`;
 }
