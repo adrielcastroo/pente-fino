@@ -20,6 +20,7 @@ import {
   PromptInputSubmit,
   PromptInputActionAddAttachments,
   PromptInputActionAddScreenshot,
+  PromptInputFooter,
   PromptInputProvider,
   type PromptInputMessage,
 } from "@/components/ai-elements/prompt-input";
@@ -549,14 +550,14 @@ function ChatWindow({
       >
         <PromptInputProvider>
           <PromptInput onSubmit={handleSubmit}>
-            <div className="flex flex-col gap-2">
             <PromptInputTextarea
               ref={composerRef}
+              className="min-h-16 leading-6"
               placeholder="Pergunte algo ao Fio…"
               onFocus={() => emitFioExpression("curioso", 1500)}
             />
 
-            <div className="flex items-center justify-between gap-2 px-1 pb-1">
+            <PromptInputFooter className="justify-between gap-2">
               <div className="flex items-center gap-1">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -590,10 +591,7 @@ function ChatWindow({
                   disabled={isLoading} 
                 />
               )}
-
-
-            </div>
-          </div>
+            </PromptInputFooter>
           </PromptInput>
         </PromptInputProvider>
       </div>
