@@ -643,8 +643,16 @@ export default function CadastrosPage() {
                     )}
                     {!isLoading && filtered.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center text-muted-foreground py-12">
-                          {itens.length === 0 ? 'Nenhum item cadastrado. Sincronize via Auge no /admin.' : 'Nenhum resultado para a busca.'}
+                        <TableCell colSpan={6} className="p-0">
+                          <EmptyState
+                            icon={Package}
+                            title={itens.length === 0 ? 'Nenhum item cadastrado' : 'Nenhum resultado para a busca'}
+                            description={
+                              itens.length === 0
+                                ? 'Cadastre um item ou sincronize a base do Auge no painel admin.'
+                                : 'Tente outro código, descrição ou use * como curinga.'
+                            }
+                          />
                         </TableCell>
                       </TableRow>
                     )}

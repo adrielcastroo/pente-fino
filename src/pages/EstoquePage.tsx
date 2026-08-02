@@ -962,9 +962,13 @@ export default function EstoquePage() {
               {/* Positions List */}
               <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-2 min-h-0">
                 {occupiedCount === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-12 gap-2 border border-dashed border-border rounded-md">
-                    <Box className="w-6 h-6 text-muted-foreground/50" />
-                    <p className="text-sm text-muted-foreground">Nenhuma posição ocupada</p>
+                  <div className="border border-dashed border-border rounded-md">
+                    <EmptyState
+                      icon={Box}
+                      title="Nenhuma posição ocupada"
+                      description="Este endereço está totalmente livre e pronto para receber tecidos."
+                      compact
+                    />
                   </div>
                 ) : (
                   selectedCellItems.sort((a, b) => a.posicao - b.posicao).map((item) => {
@@ -1348,7 +1352,11 @@ export default function EstoquePage() {
                 </div>
                 <div className="flex-1 overflow-y-auto bg-background/40">
                   {itens.length === 0 ? (
-                    <div className="py-16 text-center text-xs text-muted-foreground">Nenhum tecido nesta estrutura.</div>
+                    <EmptyState
+                      icon={Warehouse}
+                      title="Nenhum tecido nesta estrutura"
+                      description="Selecione outra estrutura ou registre uma entrada para ocupar estas posições."
+                    />
                   ) : (
                     <table className="w-full text-xs">
                       <thead className="sticky top-0 bg-card border-b border-border">
