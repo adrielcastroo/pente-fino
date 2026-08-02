@@ -778,11 +778,16 @@ export function AgentChatWidget() {
                     <button
                       type="button"
                       onClick={() => selectThread(t.id)}
-                      className="max-w-[140px] truncate text-left"
+                      className="max-w-[140px] truncate text-left outline-none"
                       title={t.title}
+                      onDoubleClick={() => {
+                        const newTitle = prompt("Novo título:", t.title);
+                        if (newTitle) useAgentThreads.getState().renameThread(t.id, newTitle);
+                      }}
                     >
                       {t.title}
                     </button>
+
                     <button
                       type="button"
                       onClick={() => deleteThread(t.id)}
