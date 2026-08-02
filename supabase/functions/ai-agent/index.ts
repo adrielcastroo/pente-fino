@@ -6,6 +6,7 @@ import { buildTools } from "./tools.ts";
 import { getFioCapabilitiesPrompt } from "./capabilities.ts";
 import { buildMemoryTools, listarMemorias, memoriesToPromptBlock } from "./memory.ts";
 import { parseDocuments } from "./documents.ts";
+import { isTransferIntent, buildTransferFormMessage, routeTransferSubmit } from "./transfer-widget.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
