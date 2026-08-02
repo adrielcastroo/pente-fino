@@ -1,9 +1,11 @@
 import { Card } from "@/components/ui/card";
-import { CheckCircle2, HelpCircle, ListChecks } from "lucide-react";
+import { CheckCircle2, HelpCircle, Layers, ListChecks, PackageSearch } from "lucide-react";
 import { encodeWidgetSubmit, type WidgetSpec } from "@/lib/agent-blocks";
 import { FormWidget } from "./FormWidget";
 import { ChoiceWidget } from "./ChoiceWidget";
 import { ConfirmWidget } from "./ConfirmWidget";
+import { ItemListWidget } from "./ItemListWidget";
+import { LotPickWidget } from "./LotPickWidget";
 
 export function WidgetRenderer({
   spec,
@@ -15,11 +17,21 @@ export function WidgetRenderer({
   onSend: (text: string) => void;
 }) {
   const submit = (values: Record<string, unknown>) => {
-    const context = spec.type === "confirm" ? (spec.values ?? {}) : {};
+    const context =
+      spec.type === "confirm" || spec.type === "lotpick" || spec.type === "itemlist" ? (spec.values ?? {}) : {};
     onSend(encodeWidgetSubmit({ widget_id: spec.id, intent: spec.onSubmitIntent, values: { ...context, ...values } }));
   };
 
-  const Icon = spec.type === "form" ? HelpCircle : spec.type === "choice" ? ListChecks : CheckCircle2;
+  const Icon =
+    spec.type === "form"
+      ? HelpCircle
+      : spec.type === "choice"
+        ? ListChecks
+        : spec.type === "itemlist"
+          ? Layers
+          : spec.type === "lotpick"
+            ? PackageSearch
+            : CheckCircle2;
 
   return (
     <Card className="mt-2 border-primary/40 bg-primary/[0.03] p-3 shadow-sm">
@@ -36,6 +48,8 @@ export function WidgetRenderer({
       {spec.type === "form" && <FormWidget spec={spec} disabled={disabled} onSubmit={submit} />}
       {spec.type === "choice" && <ChoiceWidget spec={spec} disabled={disabled} onSubmit={submit} />}
       {spec.type === "confirm" && <ConfirmWidget spec={spec} disabled={disabled} onSubmit={submit} />}
+      {spec.type === "itemlist" && <ItemListWidget spec={spec} disabled={disabled} onSubmit={submit} />}
+      {spec.type === "lotpick" && <LotPickWidget spec={spec} disabled={disabled} onSubmit={submit} />}
     </Card>
   );
 }
