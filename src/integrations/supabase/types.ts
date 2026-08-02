@@ -2525,6 +2525,101 @@ export type Database = {
         }
         Relationships: []
       }
+      fio_conversations: {
+        Row: {
+          created_at: string
+          id: string
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      fio_memories: {
+        Row: {
+          categoria: string
+          confianca: number
+          created_at: string
+          expires_at: string | null
+          id: string
+          key: string
+          origem: string
+          updated_at: string
+          user_id: string
+          value: string
+        }
+        Insert: {
+          categoria?: string
+          confianca?: number
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          key: string
+          origem?: string
+          updated_at?: string
+          user_id: string
+          value: string
+        }
+        Update: {
+          categoria?: string
+          confianca?: number
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          key?: string
+          origem?: string
+          updated_at?: string
+          user_id?: string
+          value?: string
+        }
+        Relationships: []
+      }
+      fio_messages: {
+        Row: {
+          content: Json
+          conversation_id: string
+          created_at: string
+          id: string
+          role: string
+        }
+        Insert: {
+          content?: Json
+          conversation_id: string
+          created_at?: string
+          id?: string
+          role: string
+        }
+        Update: {
+          content?: Json
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fio_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "fio_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       historico_contagens: {
         Row: {
           conferente_nome: string | null
