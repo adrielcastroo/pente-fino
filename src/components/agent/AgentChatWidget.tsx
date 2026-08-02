@@ -198,11 +198,11 @@ function ChatWindow({
   );
 
 
-  const { messages, sendMessage, setMessages: setChatMessages, status, error } = useChat({
+  const { messages, sendMessage, setMessages: setChatMessages, status, error, stop } = useChat({
     id: threadId,
     messages: initialMessages as any,
     transport,
-    onFinish: () => {
+    onFinish: (message) => {
       window.dispatchEvent(new CustomEvent("fio:response", { detail: { success: true } }));
       window.dispatchEvent(new CustomEvent<boolean>("fio:thinking", { detail: false }));
     },
@@ -210,6 +210,7 @@ function ChatWindow({
       console.error("[ai-agent] erro no chat", err);
     },
   });
+
 
   // Persistência contínua: grava no store a cada mudança (não apenas ao finalizar),
   // para que fechar/reabrir o painel durante o streaming não perca a resposta.
