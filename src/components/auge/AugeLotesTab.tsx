@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { syncToast } from '@/lib/toast-flows';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { RefreshCw, Loader2, Package, Search } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
 import { formatDateBR } from '@/lib/app-utils';
 import AugeDetailDialog from './AugeDetailDialog';
 
@@ -19,24 +20,24 @@ export default function AugeLotesTab() {
   const load = async () => {
     setLoading(true);
     const { data, error } = await (supabase as any).from('auge_lotes').select('*').order('data_validade', { nullsFirst: false }).limit(1000);
-    if (error) toast.error(error.message);
+    if (error) syncToast.erro('lotes', error);
     setRows(data || []);
     setLoading(false);
   };
 
   const sync = async () => {
     setSyncing(true);
-    const t = toast.loading('Sincronizando lotes...');
+    const t = syncToast.iniciado('lotes');
     try {
       const { data, error } = await supabase.functions.invoke('auge-sync?entity=lotes');
       if (error) throw error;
       if (data?.ok === false) throw new Error(data.error);
       const r = (data?.results ?? []).find((x: any) => x.entity === 'lotes');
       if (r?.error) throw new Error(r.error);
-      toast.success(`${r?.upserted ?? 0} lotes sincronizados`, { id: t });
+      syncToast.ok('lotes', r?.upserted ?? 0, 'Lotes atualizados no sistema.', { id: t });
       await load();
     } catch (e: any) {
-      toast.error('Falha: ' + (e.message || ''), { id: t });
+      syncToast.erro('lotes', e, { id: t });
     } finally { setSyncing(false); }
   };
 
@@ -66,10 +67,12 @@ export default function AugeLotesTab() {
       {loading ? (
         <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
       ) : filtered.length === 0 ? (
-        <div className="flex flex-col items-center py-12 gap-3">
-          <Package className="w-10 h-10 text-muted-foreground/40" />
-          <p className="text-sm text-muted-foreground">{rows.length === 0 ? 'Nenhum lote. Endpoint experimental — envie o HAR se falhar.' : 'Sem resultados.'}</p>
-        </div>
+        <EmptyState
+          icon={Package}
+          title={rows.length === 0 ? 'Nenhum lote sincronizado' : 'Nenhum resultado para o filtro'}
+          description={rows.length === 0 ? 'Lotes do Auge aparecerão aqui após a sincronização.' : 'Ajuste a busca para encontrar o lote desejado.'}
+          action={search ? { label: 'Limpar busca', onClick: () => setSearch('') } : undefined}
+        />
       ) : (
         <div className="flex-1 overflow-auto border rounded-lg bg-card">
           <Table>

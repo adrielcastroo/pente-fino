@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { syncToast } from '@/lib/toast-flows';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { RefreshCw, Loader2, Warehouse } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
 import AugeDetailDialog from './AugeDetailDialog';
 
 export default function AugeDepositosTab() {
@@ -16,24 +17,24 @@ export default function AugeDepositosTab() {
   const load = async () => {
     setLoading(true);
     const { data, error } = await (supabase as any).from('auge_depositos').select('*').order('codigo').limit(500);
-    if (error) toast.error(error.message);
+    if (error) syncToast.erro('depósitos', error);
     setRows(data || []);
     setLoading(false);
   };
 
   const sync = async () => {
     setSyncing(true);
-    const t = toast.loading('Sincronizando depósitos...');
+    const t = syncToast.iniciado('depósitos');
     try {
       const { data, error } = await supabase.functions.invoke('auge-sync?entity=depositos');
       if (error) throw error;
       if (data?.ok === false) throw new Error(data.error);
       const r = (data?.results ?? []).find((x: any) => x.entity === 'depositos');
       if (r?.error) throw new Error(r.error);
-      toast.success(`${r?.upserted ?? 0} depósitos sincronizados`, { id: t });
+      syncToast.ok('depósitos', r?.upserted ?? 0, 'Estrutura de depósitos atualizada.', { id: t });
       await load();
     } catch (e: any) {
-      toast.error('Falha: ' + (e.message || ''), { id: t });
+      syncToast.erro('depósitos', e, { id: t });
     } finally { setSyncing(false); }
   };
 
@@ -50,10 +51,11 @@ export default function AugeDepositosTab() {
       {loading ? (
         <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
       ) : rows.length === 0 ? (
-        <div className="flex flex-col items-center py-12 gap-3">
-          <Warehouse className="w-10 h-10 text-muted-foreground/40" />
-          <p className="text-sm text-muted-foreground">Nenhum depósito. Clique em Sincronizar.</p>
-        </div>
+        <EmptyState
+          icon={Warehouse}
+          title="Nenhum depósito sincronizado"
+          description="Sincronize com o Auge para listar os depósitos disponíveis no ERP."
+        />
       ) : (
         <div className="flex-1 overflow-auto border rounded-lg bg-card">
           <Table>
