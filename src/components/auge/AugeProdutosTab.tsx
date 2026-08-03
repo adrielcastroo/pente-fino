@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { syncToast } from '@/lib/toast-flows';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -62,7 +62,7 @@ export default function AugeProdutosTab() {
       setRows(all);
       setLastSync(all[0]?.synced_at ?? null);
     } catch (e: any) {
-      toast.error('Erro ao carregar produtos do Auge: ' + (e.message || ''));
+      syncToast.erro('produtos', e);
     } finally {
       setLoading(false);
     }
@@ -70,7 +70,7 @@ export default function AugeProdutosTab() {
 
   const sync = async () => {
     setSyncing(true);
-    const t = toast.loading('Sincronizando itens do Auge...');
+    const t = syncToast.iniciado('itens do Auge');
     try {
       const { data, error } = await supabase.functions.invoke('auge-sync', {
         body: {},
@@ -79,10 +79,10 @@ export default function AugeProdutosTab() {
       if (error) throw error;
       if (data?.ok === false) throw new Error(data.error || 'Falha na sincronização');
       const prod = (data?.results ?? []).find((r: any) => r.entity === 'produtos');
-      toast.success(`${prod?.upserted ?? 0} itens sincronizados do Auge`, { id: t });
+      syncToast.ok('itens', prod?.upserted ?? 0, 'Produtos sincronizados com o cadastro do Auge.', { id: t });
       await load();
     } catch (e: any) {
-      toast.error('Falha ao sincronizar: ' + (e.message || ''), { id: t });
+      syncToast.erro('produtos', e, { id: t });
     } finally {
       setSyncing(false);
     }
@@ -185,14 +185,19 @@ export default function AugeProdutosTab() {
           <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Carregando...</p>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12 gap-3">
-          <div className="w-12 h-12 rounded-md bg-muted/30 flex items-center justify-center">
-            <Package className="w-6 h-6 text-muted-foreground/40" />
-          </div>
-          <p className="text-muted-foreground text-sm">
-            {rows.length === 0 ? 'Nenhum item sincronizado. Clique em "Sincronizar Auge".' : 'Nenhum resultado para o filtro.'}
-          </p>
-        </div>
+        <EmptyState
+          icon={Package}
+          title={rows.length === 0 ? 'Nenhum item sincronizado' : 'Nenhum resultado para o filtro'}
+          description={
+            rows.length === 0 
+              ? 'Realize a sincronização com o Auge para carregar os produtos.' 
+              : 'Tente ajustar sua busca ou limpar os filtros para encontrar o item.'
+          }
+          action={search || categoria !== 'todos' || ativoFilter !== 'todos' ? {
+            label: 'Limpar filtros',
+            onClick: () => { setSearch(''); setCategoria('todos'); setAtivoFilter('todos'); }
+          } : undefined}
+        />
       ) : (
         <>
           <div className="flex-1 overflow-auto border rounded-lg bg-card">

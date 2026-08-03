@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { syncToast } from '@/lib/toast-flows';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Search, RefreshCw, Loader2, Warehouse } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
 import { formatDateBR } from '@/lib/app-utils';
 import FichaItemDialog from './FichaItemDialog';
 
@@ -45,22 +46,22 @@ export default function AugeSaldoTab() {
       }
       setRows(all);
     } catch (e: any) {
-      toast.error('Erro ao carregar saldo: ' + (e.message || ''));
+      syncToast.erro('saldo', e);
     } finally { setLoading(false); }
   };
 
   const sync = async () => {
     setSyncing(true);
-    const t = toast.loading('Sincronizando saldo do Auge...');
+    const t = syncToast.iniciado('saldo do Auge');
     try {
       const { data, error } = await supabase.functions.invoke('auge-sync?entity=saldo');
       if (error) throw error;
       if (data?.ok === false) throw new Error(data.error);
       const r = (data?.results ?? []).find((x: any) => x.entity === 'saldo');
-      toast.success(`${r?.upserted ?? 0} saldos sincronizados`, { id: t });
+      syncToast.ok('saldos', r?.upserted ?? 0, 'Saldos atualizados conforme o ERP.', { id: t });
       await load();
     } catch (e: any) {
-      toast.error('Falha: ' + (e.message || ''), { id: t });
+      syncToast.erro('saldo', e, { id: t });
     } finally { setSyncing(false); }
   };
 
@@ -113,10 +114,15 @@ export default function AugeSaldoTab() {
       {loading ? (
         <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
       ) : filtered.length === 0 ? (
-        <div className="flex flex-col items-center py-12 gap-3">
-          <Warehouse className="w-10 h-10 text-muted-foreground/40" />
-          <p className="text-sm text-muted-foreground">{rows.length === 0 ? 'Nenhum saldo. Sincronize.' : 'Sem resultados.'}</p>
-        </div>
+        <EmptyState
+          icon={Warehouse}
+          title={rows.length === 0 ? 'Nenhum saldo sincronizado' : 'Nenhum resultado para o filtro'}
+          description={rows.length === 0 ? 'Sincronize com o Auge para carregar os saldos por depósito.' : 'Ajuste a busca ou limpe os filtros para encontrar o item.'}
+          action={search || dep !== 'todos' ? {
+            label: 'Limpar filtros',
+            onClick: () => { setSearch(''); setDep('todos'); }
+          } : undefined}
+        />
       ) : (
         <div className="flex-1 overflow-auto border rounded-lg bg-card">
           <Table>
