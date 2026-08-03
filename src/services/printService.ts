@@ -94,8 +94,7 @@ async function resolverItem(
 
 export type PrintMethod = 'browser' | 'webhook' | 'both';
 
-const DEFAULT_N8N_WEBHOOK_PATH = '/webhook/imprimir-etiqueta';
-const DEFAULT_N8N_WEBHOOK_URL = 'http://localhost:5678' + DEFAULT_N8N_WEBHOOK_PATH;
+const DEFAULT_N8N_WEBHOOK_URL = 'https://primary-production-162eb.up.railway.app/webhook/imprimir-etiqueta';
 
 /**
  * Resolve a URL do webhook usando (em ordem):
@@ -110,7 +109,7 @@ function resolveWebhookUrl(): string {
   const override = localStorage.getItem('n8n_webhook_url');
   if (override && override.trim()) return override.trim();
   const base = localStorage.getItem('n8n_api_url');
-  if (base && base.trim()) return base.replace(/\/+$/, '') + DEFAULT_N8N_WEBHOOK_PATH;
+  if (base && base.trim()) return base.replace(/\/+$/, '') + '/webhook/imprimir-etiqueta';
   return DEFAULT_N8N_WEBHOOK_URL;
 }
 
@@ -417,14 +416,15 @@ async function dispatchPrint(
   // fluxo do n8n faça o roteamento correto e respeite as dimensões enviadas
   // (widthMm/heightMm) em vez de forçar o tamanho de tecido.
   const resolvedWebhook = resolveWebhookUrl();
+  const isDefaultUrl = resolvedWebhook === 'https://primary-production-162eb.up.railway.app/webhook/imprimir-etiqueta';
   const hasWebhook = !!resolvedWebhook && !isWebhookPrintDisabled();
 
   // Regra do usuário: quando a impressão pelo navegador está LIGADA, NÃO
   // enviar ao n8n (evita redundância — o navegador já cuida da impressão).
-  // Só usa n8n quando o navegador está explicitamente desabilitado ou quando
-  // o método foi forçado para 'webhook'.
+  // No entanto, para o novo webhook global seguro, priorizamos o webhook
+  // se ele estiver configurado como o padrão global.
   const explicitMethod: PrintMethod = cfg.printMethod
-    || (!browserDisabled ? 'browser' : (hasWebhook ? 'webhook' : 'browser'));
+    || (isDefaultUrl ? 'webhook' : (!browserDisabled ? 'browser' : (hasWebhook ? 'webhook' : 'browser')));
 
   const tryBrowser = async () => {
     if (browserDisabled) {

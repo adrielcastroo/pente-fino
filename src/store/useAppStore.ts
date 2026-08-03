@@ -246,7 +246,7 @@ export const useAppStore = create<AppState>()(
         showQRCode: true,
         orientation: 'landscape',
         autoPrint: true,
-        webhookUrl: 'http://localhost:5678/webhook/imprimir-etiqueta',
+        webhookUrl: 'https://primary-production-162eb.up.railway.app/webhook/imprimir-etiqueta',
         printOffsetXMm: -5,
         motorPrintOffsetXMm: -5,
         printOffsetYMm: 0,
