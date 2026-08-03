@@ -341,6 +341,7 @@ export default function AcompanhamentosPage() {
                       title="Nenhuma tarefa neste filtro"
                       description="Crie um acompanhamento ou limpe os filtros para ver os pedidos em andamento."
                       compact
+                      action={search ? { label: 'Limpar busca', onClick: () => setSearch('') } : undefined}
                     />
                   </TableCell>
                 </TableRow>

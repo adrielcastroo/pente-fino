@@ -169,6 +169,10 @@ export default function TecidosSemEspacoTab() {
                 ? 'Nenhum tecido do Auge está aguardando espaço no mapa.'
                 : 'Ajuste a busca por item, endereço ou PROC para encontrar o lote.'
             }
+            action={search ? {
+              label: 'Limpar busca',
+              onClick: () => setSearch('')
+            } : undefined}
           />
         ) : (
           <div className="overflow-auto max-h-[calc(100vh-320px)]">

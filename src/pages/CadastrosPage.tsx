@@ -652,6 +652,10 @@ export default function CadastrosPage() {
                                 ? 'Cadastre um item ou sincronize a base do Auge no painel admin.'
                                 : 'Tente outro código, descrição ou use * como curinga.'
                             }
+                            action={search || fornFilter !== 'todos' || editFilter !== 'todos' ? {
+                              label: 'Limpar filtros',
+                              onClick: () => { setSearch(''); setFornFilter('todos'); setEditFilter('todos'); }
+                            } : undefined}
                           />
                         </TableCell>
                       </TableRow>

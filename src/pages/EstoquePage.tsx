@@ -1356,6 +1356,10 @@ export default function EstoquePage() {
                       icon={Warehouse}
                       title="Nenhum tecido nesta estrutura"
                       description="Selecione outra estrutura ou registre uma entrada para ocupar estas posições."
+                      action={locateQuery ? {
+                        label: 'Limpar busca',
+                        onClick: () => setLocateQuery('')
+                      } : undefined}
                     />
                   ) : (
                     <table className="w-full text-xs">

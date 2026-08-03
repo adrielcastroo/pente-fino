@@ -131,3 +131,41 @@ export const transferToast = {
     });
   },
 };
+
+/* ------------------------------------------------------------------ */
+/* Sincronização do Auge                                               */
+/* ------------------------------------------------------------------ */
+
+export const syncToast = {
+  /** Sincronização iniciada. */
+  iniciado(entidade: string, opts?: Opts) {
+    return toast.loading(`Sincronizando ${entidade}…`);
+  },
+
+  /** Sucesso na sincronização. */
+  ok(entidade: string, quantidade: number, detalhe?: string, opts?: Opts) {
+    return toast.success(`${quantidade} ${entidade} sincronizado(s)`, {
+      description: detalhe ?? 'Dados atualizados com sucesso.',
+      duration: DURATION.success,
+      ...opts,
+    });
+  },
+
+  /** Falha na sincronização. */
+  erro(entidade: string, e: unknown, opts?: Opts) {
+    return toast.error(`Falha ao sincronizar ${entidade}`, {
+      description: describeError(e, 'Verifique a conexão e tente novamente.'),
+      duration: DURATION.error,
+      ...opts,
+    });
+  },
+
+  /** Sync em background completado. */
+  background(descricao: string, opts?: Opts) {
+    return toast.success('Sincronização iniciada em background', {
+      description: descricao,
+      duration: DURATION.success,
+      ...opts,
+    });
+  },
+};

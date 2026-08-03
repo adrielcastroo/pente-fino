@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { syncToast } from '@/lib/toast-flows';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -107,45 +108,45 @@ export default function AugeAdminPanel() {
 
   const syncOne = async (entity: string) => {
     setSyncingEntity(entity);
-    const t = toast.loading(`Sincronizando ${entity}...`);
+    const t = syncToast.iniciado(entity);
     try {
       const { data, error } = await supabase.functions.invoke(`auge-sync?entity=${entity}`);
       if (error) throw error;
       if (data?.ok === false) throw new Error(data.error);
       const r = (data?.results ?? []).find((x: any) => x.entity === entity);
       if (r?.error) throw new Error(r.error);
-      toast.success(`${r?.upserted ?? 0} registros de ${entity}`, { id: t });
+      syncToast.ok(entity, r?.upserted ?? 0, `Entidade ${entity} sincronizada com sucesso.`, { id: t });
       await Promise.all([loadRuns(), loadCounts()]);
     } catch (e: any) {
-      toast.error(`${entity}: ${e.message}`, { id: t });
+      syncToast.erro(entity, e, { id: t });
       await loadRuns();
     } finally { setSyncingEntity(null); }
   };
 
   const syncAll = async () => {
     setSyncingEntity('all');
-    const t = toast.loading('Sincronizando tudo...');
+    const t = syncToast.iniciado('todas as entidades');
     try {
       const { data, error } = await supabase.functions.invoke('auge-sync');
       if (error) throw error;
       if (data?.ok === false) throw new Error(data.error);
-      toast.success(`${data?.upserted ?? 0} registros totais`, { id: t });
+      syncToast.ok('registros', data?.upserted ?? 0, 'Sincronização global concluída.', { id: t });
       await Promise.all([loadRuns(), loadCounts()]);
     } catch (e: any) {
-      toast.error('Falha: ' + e.message, { id: t });
+      syncToast.erro('entidades', e, { id: t });
     } finally { setSyncingEntity(null); }
   };
 
   const syncTecidosMap = async () => {
     setSyncingEntity('tecidos_map');
-    const t = toast.loading('Iniciando sincronização de tecidos (roda em background)...');
+    const t = syncToast.iniciado('mapa de tecidos');
     try {
       const { data, error } = await supabase.functions.invoke('auge-sync?action=sync_tecidos_map', { method: 'POST' });
       if (error) throw error;
       if ((data as any)?.ok === false) throw new Error((data as any).error);
-      toast.success(
-        'Sync iniciado em background. Acompanhe o progresso no histórico abaixo (leva ~1-3 min).',
-        { id: t, duration: 6000 },
+      syncToast.background(
+        'Acompanhe o progresso no histórico (leva ~1-3 min).',
+        { id: t }
       );
       await loadRuns();
       // Recarrega periodicamente para acompanhar o run rodando
@@ -162,7 +163,7 @@ export default function AugeAdminPanel() {
 
   const syncEverything = async () => {
     setSyncingEntity('everything');
-    const t = toast.loading('Sincronização completa iniciada — entidades, mapa, acabamentos e TAGs...');
+    const t = syncToast.iniciado('sincronização completa');
     const results: string[] = [];
     const errors: string[] = [];
     try {
@@ -209,12 +210,12 @@ export default function AugeAdminPanel() {
 
 
       if (errors.length === 0) {
-        toast.success(`Sincronização completa iniciada. ${results.length} rotinas disparadas.`, { id: t, duration: 6000 });
+        syncToast.ok('rotinas', results.length, 'Todas as sincronizações disparadas.', { id: t });
       } else if (results.length > 0) {
-        toast.warning(`Parcial: ${results.length} OK, ${errors.length} com erro. Veja o histórico.`, { id: t, duration: 8000 });
+        syncToast.ok('rotinas', results.length, `${errors.length} falharam. Veja o histórico.`, { id: t });
         errors.forEach(msg => toast.error(msg));
       } else {
-        toast.error(`Falha total. Primeiro erro: ${errors[0]}`, { id: t });
+        syncToast.erro('global', errors[0], { id: t });
       }
       await Promise.all([loadRuns(), loadCounts()]);
       // acompanhamento periódico
