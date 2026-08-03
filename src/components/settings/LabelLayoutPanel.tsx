@@ -773,7 +773,7 @@ export function ExpedicaoLayoutSection() {
   );
 }
 
-const DEFAULT_WEBHOOK_URL = 'http://localhost:5678/webhook/imprimir-etiqueta';
+const DEFAULT_WEBHOOK_URL = 'https://primary-production-162eb.up.railway.app/webhook/imprimir-etiqueta';
 const WEBHOOK_LS_KEY = 'n8n_webhook_url';
 
 function WebhookUrlEditor() {
@@ -830,9 +830,9 @@ function WebhookUrlEditor() {
 
   return (
     <div className="space-y-2 pt-2 rounded-md border border-dashed border-border/50 bg-muted/20 px-2.5 py-2">
-      <Label className="text-xs font-bold">Webhook n8n</Label>
+      <Label className="text-xs font-bold">URL do Webhook (Impressão Remota)</Label>
       <p className="text-[10px] opacity-70 leading-tight">
-        URL do endpoint do n8n que recebe a etiqueta. Deixe vazio para usar o padrão.
+        Este será o URL padrão para impressão de etiquetas no pente-fino. Altere de forma global e para todos os usuários.
       </p>
       <Input
         type="url"
