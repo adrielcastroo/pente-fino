@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { transferToast } from '@/lib/toast-flows';
+import { transferToast, syncToast } from '@/lib/toast-flows';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -10,7 +10,7 @@ import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
   DropdownMenuItem, DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { RefreshCw, Loader2, ArrowRightLeft, Search, Plus, Zap, MoreVertical, Pencil, Copy, Trash2, ArrowUpDown, ArrowUp, ArrowDown, CalendarDays, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { RefreshCw, Loader2, ArrowRightLeft, Search, Plus, Zap, MoreVertical, Pencil, Copy, Trash2, ArrowUpDown, ArrowUp, ArrowDown, CalendarDays, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, FilterX } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { formatDateBR } from '@/lib/app-utils';
 import { formatQty } from '@/lib/utils';
@@ -214,7 +214,8 @@ export default function AugeTransferenciasTab({
 
   const sync = async () => {
     setSyncing(true);
-    const t = toast.loading(dateFrom || dateTo ? 'Sincronizando período...' : 'Sincronizando transferências...');
+    const label = dateFrom || dateTo ? 'período no Auge' : 'transferências do Auge';
+    const t = syncToast.iniciado(label);
     try {
       const { data, error } = await supabase.functions.invoke('auge-sync?entity=transferencias', {
         body: { dateFrom: dateFrom || undefined, dateTo: dateTo || undefined },
@@ -223,10 +224,10 @@ export default function AugeTransferenciasTab({
       if (data?.ok === false) throw new Error(data.error);
       const r = (data?.results ?? []).find((x: any) => x.entity === 'transferencias');
       if (r?.error) throw new Error(r.error);
-      toast.success(`${r?.upserted ?? 0} transferências sincronizadas`, { id: t });
+      syncToast.ok('transferências', r?.upserted ?? 0, 'Histórico de movimentações atualizado.', { id: t });
       await load();
     } catch (e: any) {
-      toast.error('Falha: ' + (e.message || ''), { id: t });
+      syncToast.erro('transferências', e, { id: t });
     } finally { setSyncing(false); }
   };
 
@@ -343,10 +344,15 @@ export default function AugeTransferenciasTab({
       {loading ? (
         <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
       ) : filtered.length === 0 ? (
-        <div className="flex flex-col items-center py-12 gap-3">
-          <ArrowRightLeft className="w-10 h-10 text-muted-foreground/40" />
-          <p className="text-sm text-muted-foreground">{rows.length === 0 ? 'Nenhuma transferência.' : 'Sem resultados.'}</p>
-        </div>
+        <EmptyState
+          icon={ArrowRightLeft}
+          title={rows.length === 0 ? 'Nenhuma transferência encontrada' : 'Nenhum resultado para o filtro'}
+          description={rows.length === 0 ? 'Sincronize com o Auge ou crie uma nova transferência.' : 'Ajuste os filtros de busca ou período para encontrar a movimentação.'}
+          action={search || filtro || dateFrom || dateTo ? {
+            label: 'Limpar filtros',
+            onClick: () => { setSearch(''); setFiltro(null); clearDates(); }
+          } : undefined}
+        />
       ) : (
         <div className="flex-1 min-h-0 min-w-0 overflow-auto border rounded-lg bg-card">
           <Table className="min-w-[1080px]">
