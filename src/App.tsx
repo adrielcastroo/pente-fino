@@ -119,8 +119,8 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 60 * 1000,
       gcTime: 5 * 60 * 1000,
-      refetchOnWindowFocus: false,
-      refetchOnReconnect: false,
+      refetchOnWindowFocus: true, // Garante que ao voltar para a aba o app verifique o estado
+      refetchOnReconnect: true,
       retry: 1,
     },
   },
