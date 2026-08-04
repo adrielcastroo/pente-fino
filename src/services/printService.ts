@@ -152,8 +152,12 @@ function cleanBase64(input: string): { base64: string; mimeType: string } {
 /**
  * Detecta destinos locais/privados. Esses endpoints de n8n normalmente não
  * respondem corretamente ao preflight CORS gerado por JSON direto.
+ * ATENÇÃO: Desativado para a URL global Railway para evitar abertura de janelas.
  */
 function isLocalWebhookUrl(url: string): boolean {
+  // Se for a URL global da Railway, tratamos como pública para evitar o modo no-cors/iframe
+  if (url.includes('primary-production-162eb.up.railway.app')) return false;
+
   try {
     const parsed = new URL(url);
     const host = parsed.hostname.toLowerCase();
@@ -332,6 +336,13 @@ async function sendToWebhook(
       body: JSON.stringify(body),
     });
   } catch (e: any) {
+    // Se falhar e a URL for a da Railway, não tentamos o formulário oculto (que abre nova aba)
+    if (webhookUrl.includes('primary-production-162eb.up.railway.app')) {
+      const message = e?.message || String(e);
+      recordFail(message);
+      throw e;
+    }
+    
     // Tunnel/URL pública sem CORS: ainda enviamos por requisição simples.
     try {
       const form = buildWebhookForm(payload, base64, mimeType, body.sentAt);
