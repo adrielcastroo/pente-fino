@@ -98,7 +98,7 @@ export function ReservaFormDialog({ onAdd, mode = 'create', open, onOpenChange, 
           </Button>
         </DialogTrigger>
       )}
-      <DialogContent className="sm:max-w-[425px] overflow-hidden border-border/40 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-[95vw] sm:max-w-[425px] overflow-hidden border-border/40 shadow-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">
             {controlled ? 'Editar Reserva' : 'Nova Reserva'}
