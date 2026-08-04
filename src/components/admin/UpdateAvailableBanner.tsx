@@ -15,9 +15,23 @@ export function UpdateAvailableBanner() {
   const bundleVersion = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0';
 
   useEffect(() => {
+    // Se detectarmos uma versão nova (is_current no banco != build atual),
+    // forçamos o recarregamento imediato sem perguntar, para garantir que
+    // todos os usuários operem na mesma versão canônica.
+    if (current?.version && current.version !== bundleVersion && !dismissed) {
+      console.info(`[update] Nova versão detectada: ${current.version}. Recarregando...`);
+      // Pequeno delay para não interromper um render em progresso crítico,
+      // mas curto o suficiente para ser "automático".
+      const timer = setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
     setDismissed(false);
-  }, [current?.version]);
+  }, [current?.version, bundleVersion, dismissed]);
 
+  // Se for uma atualização crítica (detectada acima), o reload resolverá.
+  // Mantemos o banner apenas como fallback visual rápido se o reload demorar.
   if (!current || dismissed) return null;
   if (current.version === bundleVersion) return null;
 

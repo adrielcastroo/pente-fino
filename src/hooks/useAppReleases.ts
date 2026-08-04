@@ -27,7 +27,8 @@ export function useAppReleases() {
   return useQuery({
     queryKey: ['app_releases'],
     queryFn: fetchReleases,
-    staleTime: 60_000,
+    staleTime: 30_000, // Checa por novas versões a cada 30 segundos
+    refetchInterval: 60_000, // Polling ativo para detectar deploys em background
   });
 }
 
