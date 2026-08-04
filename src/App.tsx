@@ -282,7 +282,8 @@ const App = () => (
                   <Route path="equipes" element={<RequireRole role="supervisor" fallback={<Navigate to="/compras/acompanhamentos" replace />}><EquipesPage /></RequireRole>} />
 
                   {/* Redirects legados — Starcolor removido, histórico virou aba */}
-                  <Route path="acompanhamentos/starcolor/*" element={<Navigate to="/compras/acompanhamentos" replace />} />
+                  <Route path="acompanhamentos/starcolor" element={<ComprasAcompanhamentosPage />} />
+                  <Route path="acompanhamentos/starcolor/*" element={<Navigate to="/compras/acompanhamentos/starcolor" replace />} />
                   <Route path="analise-compra/historico" element={<Navigate to="/compras/analise-compra" replace />} />
 
                   <Route path="configuracoes" element={<SettingsPage />} />
