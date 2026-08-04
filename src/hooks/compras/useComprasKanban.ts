@@ -8,9 +8,9 @@ export type ComprasModulo = 'geral' | 'rma' | 'starcolor' | 'entrega_apos';
 export const KANBAN_COLUNAS: { status: ComprasPedidoStatus; label: string }[] = [
   { status: 'pendente', label: 'Pendente' },
   { status: 'em_andamento', label: 'Em andamento' },
+  { status: 'aguardando_retorno', label: 'Aguardando Retorno' },
   { status: 'atrasado', label: 'Atrasado' },
   { status: 'recebido', label: 'Recebido' },
-  { status: 'aguardando_retorno', label: 'Aguardando Retorno' },
   { status: 'cancelado', label: 'Cancelado' },
 ];
 
