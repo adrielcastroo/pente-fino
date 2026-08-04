@@ -42,8 +42,8 @@ const DialogContent = React.forwardRef<
         "max-w-[95vw] max-h-[90vh]",
         // Desktop (sm+): largura padrão do shadcn
         "sm:max-w-lg sm:p-6 sm:border sm:border-border sm:rounded-lg",
-        // Animações
-        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] duration-200",
+        // Animações: corrigido de 48% para 1/2 (50%) para garantir centralização exata
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-1/2 data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-1/2 duration-200",
         className,
       )}
       {...props}
