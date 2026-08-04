@@ -119,7 +119,7 @@ function KanbanColumn({ status, label, pedidos, onOpen }: ColumnProps) {
     <div
       ref={setNodeRef}
       className={cn(
-        'flex flex-col min-w-[260px] w-[280px] shrink-0 rounded-xl border border-border bg-muted/30 p-2 transition-colors',
+        'flex flex-col min-w-[300px] w-[300px] shrink-0 rounded-xl border border-border bg-muted/30 p-2 transition-colors',
         isOver && 'border-primary/60 bg-primary/5',
       )}
     >
@@ -300,7 +300,7 @@ export default function AcompanhamentosPage() {
           onDragEnd={handleDragEnd}
           onDragCancel={() => setActiveId(null)}
         >
-          <div className="flex gap-3 overflow-x-auto pb-4 -mx-3 px-3 sm:mx-0 sm:px-0">
+          <div className="flex gap-4 overflow-x-auto pb-6 -mx-3 px-3 sm:mx-0 sm:px-0 scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent">
             {KANBAN_COLUNAS.map((col) => (
               <KanbanColumn
                 key={col.status}
@@ -314,7 +314,7 @@ export default function AcompanhamentosPage() {
 
           <DragOverlay>
             {activePedido && (
-              <div className="w-[264px] rotate-1">
+              <div className="w-[300px] rotate-1">
                 <PedidoCardContent pedido={activePedido} onOpen={() => {}} dragging />
               </div>
             )}

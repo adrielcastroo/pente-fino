@@ -10,6 +10,7 @@ export const KANBAN_COLUNAS: { status: ComprasPedidoStatus; label: string }[] = 
   { status: 'em_andamento', label: 'Em andamento' },
   { status: 'atrasado', label: 'Atrasado' },
   { status: 'recebido', label: 'Recebido' },
+  { status: 'aguardando_retorno', label: 'Aguardando Retorno' },
   { status: 'cancelado', label: 'Cancelado' },
 ];
 
