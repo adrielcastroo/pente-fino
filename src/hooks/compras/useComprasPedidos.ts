@@ -6,6 +6,7 @@ export type ComprasPedidoStatus =
   | 'em_andamento'
   | 'recebido'
   | 'atrasado'
+  | 'aguardando_retorno'
   | 'cancelado';
 
 export interface ComprasPedido {
@@ -90,6 +91,7 @@ export function useComprasPedidosKpis() {
         recebidos: rows.filter(r => r.status === 'recebido').length,
         atrasados: rows.filter(r => r.status === 'atrasado').length,
         cancelados: rows.filter(r => r.status === 'cancelado').length,
+        aguardando_retorno: rows.filter(r => r.status === 'aguardando_retorno').length,
       };
     },
   });

@@ -58,8 +58,8 @@ function PedidoCardContent({ pedido, onOpen, dragging }: CardProps) {
       type="button"
       onClick={() => onOpen(pedido)}
       className={cn(
-        'w-full text-left rounded-lg border border-border bg-card p-3 space-y-1.5 transition-colors hover:border-primary/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-        dragging && 'shadow-lg',
+        'w-full text-left rounded-lg border border-border bg-card p-3.5 space-y-2 transition-all hover:border-primary/40 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        dragging && 'shadow-xl scale-[1.02] border-primary/60 bg-accent/5',
       )}
     >
       <div className="flex items-center justify-between gap-2">
@@ -119,12 +119,12 @@ function KanbanColumn({ status, label, pedidos, onOpen }: ColumnProps) {
     <div
       ref={setNodeRef}
       className={cn(
-        'flex flex-col min-w-[260px] w-[280px] shrink-0 rounded-xl border border-border bg-muted/30 p-2 transition-colors',
+        'flex flex-col min-w-[300px] w-[300px] shrink-0 rounded-xl border border-border bg-muted/30 p-2 transition-colors',
         isOver && 'border-primary/60 bg-primary/5',
       )}
     >
       <header className="flex items-center justify-between px-1 py-1.5">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</h2>
+        <h2 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">{label}</h2>
         <Badge variant="secondary" className="tabular-nums">{pedidos.length}</Badge>
       </header>
       <SortableContext items={pedidos.map(p => p.id)} strategy={verticalListSortingStrategy}>
@@ -300,7 +300,7 @@ export default function AcompanhamentosPage() {
           onDragEnd={handleDragEnd}
           onDragCancel={() => setActiveId(null)}
         >
-          <div className="flex gap-3 overflow-x-auto pb-4 -mx-3 px-3 sm:mx-0 sm:px-0">
+          <div className="flex gap-4 overflow-x-auto pb-6 -mx-3 px-3 sm:mx-0 sm:px-0 scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent">
             {KANBAN_COLUNAS.map((col) => (
               <KanbanColumn
                 key={col.status}
@@ -314,7 +314,7 @@ export default function AcompanhamentosPage() {
 
           <DragOverlay>
             {activePedido && (
-              <div className="w-[264px] rotate-1">
+              <div className="w-[300px] rotate-1">
                 <PedidoCardContent pedido={activePedido} onOpen={() => {}} dragging />
               </div>
             )}
