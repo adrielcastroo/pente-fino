@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { LayoutGrid, TrendingDown } from 'lucide-react';
+import { LayoutGrid, TrendingDown, FileText } from 'lucide-react';
 
 import ModuleSidebar, { type ModuleSidebarConfig } from '@/components/ModuleSidebar';
 
@@ -14,6 +14,7 @@ export const COMPRAS_NAV: ModuleSidebarConfig = {
       items: [
         { key: 'acompanhamentos', label: 'Hub Acompanh.', icon: LayoutGrid, path: '/compras/acompanhamentos' },
         { key: 'analise-compra', label: 'Análise de Compra', icon: TrendingDown, path: '/compras/analise-compra' },
+        { key: 'esboco', label: 'Esboço', icon: FileText, path: '/compras/esboco' },
       ],
     },
   ],

@@ -48,6 +48,7 @@ const ComprasLayout = lazy(() => import("@/components/compras/ComprasLayout"));
 const ComprasAcompanhamentosHubPage = lazy(() => import("@/pages/compras/AcompanhamentosHubPage"));
 const ComprasAcompanhamentosPage = lazy(() => import("@/pages/compras/AcompanhamentosPage"));
 const ComprasAnaliseCompraPage = lazy(() => import("@/pages/compras/AnaliseCompraPage"));
+const ComprasEsbocoNfPage = lazy(() => import("@/pages/compras/EsbocoNfPage"));
 
 
 const EntradasPage = lazy(() => import("@/pages/EntradasPage"));
@@ -279,6 +280,7 @@ const App = () => (
                   <Route path="acompanhamentos/:modulo" element={<ComprasAcompanhamentosPage />} />
 
                   <Route path="analise-compra" element={<ComprasAnaliseCompraPage />} />
+                  <Route path="esboco" element={<ComprasEsbocoNfPage />} />
                   <Route path="equipes" element={<RequireRole role="supervisor" fallback={<Navigate to="/compras/acompanhamentos" replace />}><EquipesPage /></RequireRole>} />
 
                   {/* Redirects legados — Starcolor removido, histórico virou aba */}
