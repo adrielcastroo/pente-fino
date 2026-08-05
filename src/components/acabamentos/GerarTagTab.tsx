@@ -1623,9 +1623,29 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
               <div className="px-3 pb-3 space-y-2 border-t pt-2">
                 {configsRanqueadas.length > 0 ? (
                   <>
-                    <div className="text-[10px] text-muted-foreground leading-relaxed">
-                      As configurações abaixo foram identificadas com base no filtro estrito (AND) das suas palavras-chave. As TAGs abaixo serão aplicadas a todos esses itens.
+                    <div className="text-[10px] text-muted-foreground leading-relaxed flex items-center justify-between">
+                      <span>As configurações abaixo foram identificadas e as TAGs configuradas aplicadas automaticamente.</span>
+                      {obrigatorias.length > 0 && (
+                        <Badge variant="outline" className="text-[9px] border-blue-500/30 text-blue-600 bg-blue-50/50">
+                          {obrigatorias.length} TAGs Reconhecidas
+                        </Badge>
+                      )}
                     </div>
+                    
+                    {/* Exibição das TAGs Reconhecidas/Padrão */}
+                    {obrigatorias.length > 0 && (
+                      <div className="flex flex-wrap gap-1 p-2 bg-blue-500/5 rounded border border-blue-500/10">
+                        {obrigatorias.map((o) => (
+                          <div key={o.code} className="flex items-center gap-1.5 px-2 py-0.5 rounded-md border bg-background/80 text-[10px] font-mono shadow-sm">
+                            <span className="text-blue-600 font-bold">{o.code}</span>
+                            <span className="text-muted-foreground">→</span>
+                            <span className="truncate max-w-[100px]">{o.valor}</span>
+                            {o.calculada && <span className="text-[9px] text-emerald-600 font-bold ml-1">[{o.calculada}]</span>}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
                     <div className="flex flex-wrap gap-1.5 max-h-60 overflow-y-auto pr-1">
                       {configsRanqueadas.map((r) => (
                         <Badge 
