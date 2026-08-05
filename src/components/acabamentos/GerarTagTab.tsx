@@ -1293,7 +1293,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   const ehTagCustomNova = useMemo(
     () =>
       !customAberta &&
-      termoBusca.trim().length >= 3 &&
+      termoBusca.trim().length >= 2 &&
       !loadingBusca &&
       !cfgSearch.isSearching &&
       cfgSearch.pesquisou &&
