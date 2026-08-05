@@ -1604,6 +1604,43 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
             </div>
           </div>
         )}
+
+        {/* BLOCO DE RESUMO (Colapsável) - Posicionado abaixo do bloco "Manter Tag Customizada" */}
+        {configsRanqueadas.length > 0 && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-lg border bg-muted/30 overflow-hidden"
+          >
+            <details className="group">
+              <summary className="flex items-center justify-between p-3 cursor-pointer hover:bg-muted/50 transition-colors list-none">
+                <div className="flex items-center gap-2">
+                  <Layers className="h-4 w-4 text-primary" />
+                  <span className="text-[11px] font-semibold uppercase tracking-wider">
+                    Resumo ({configsRanqueadas.length} configurações encontradas)
+                  </span>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-90" />
+              </summary>
+              <div className="px-3 pb-3 space-y-2 border-t pt-2">
+                <div className="text-[10px] text-muted-foreground leading-relaxed">
+                  As configurações abaixo foram identificadas pelas palavras-chave. As TAGs incluídas na composição serão aplicadas a todas simultaneamente.
+                </div>
+                <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto pr-1">
+                  {configsRanqueadas.map((r) => (
+                    <Badge 
+                      key={r.cfg.cd_configuracao} 
+                      variant="outline" 
+                      className="text-[10px] font-normal py-0.5 px-2 bg-background/50"
+                    >
+                      {r.cfg.nm_configuracao}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            </details>
+          </motion.div>
+        )}
       </Card>
 
 
