@@ -1588,7 +1588,24 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           </p>
         </div>
 
-        {/* BLOCO DE RESUMO (Colapsável) */}
+
+        {ehTagCustomNova && (
+          <div className="rounded border border-amber-500/40 bg-amber-500/10 p-2.5 flex items-start gap-2">
+            <Sparkles className="h-3.5 w-3.5 text-amber-600 mt-0.5 shrink-0" />
+            <div className="min-w-0">
+              <div className="text-[11px] font-semibold flex items-center gap-1.5">
+                Nova TAG Custom
+                <Badge className="bg-amber-500 text-amber-950 hover:bg-amber-500 text-[9px]">será criada</Badge>
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                Nenhuma configuração existente casou com “{termoBusca.trim()}”. Ao gravar, o Auge
+                criará uma TAG Custom nova com as TAGs Configuradas da tabela abaixo.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* BLOCO DE RESUMO (Colapsável) - Posicionado abaixo do bloco "Manter Tag Customizada" */}
         {configsRanqueadas.length > 0 && (
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
@@ -1623,22 +1640,6 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
               </div>
             </details>
           </motion.div>
-        )}
-
-        {ehTagCustomNova && (
-          <div className="rounded border border-amber-500/40 bg-amber-500/10 p-2.5 flex items-start gap-2">
-            <Sparkles className="h-3.5 w-3.5 text-amber-600 mt-0.5 shrink-0" />
-            <div className="min-w-0">
-              <div className="text-[11px] font-semibold flex items-center gap-1.5">
-                Nova TAG Custom
-                <Badge className="bg-amber-500 text-amber-950 hover:bg-amber-500 text-[9px]">será criada</Badge>
-              </div>
-              <p className="text-[10px] text-muted-foreground">
-                Nenhuma configuração existente casou com “{termoBusca.trim()}”. Ao gravar, o Auge
-                criará uma TAG Custom nova com as TAGs Configuradas da tabela abaixo.
-              </p>
-            </div>
-          </div>
         )}
       </Card>
 
