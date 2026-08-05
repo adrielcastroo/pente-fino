@@ -115,13 +115,13 @@ function rankConfiguracoes(input: string, cfgs: ConfiguracaoLite[]): RankedConfi
       }
     }
     const coverage = strongHit / strongCount;
-    if (coverage < 0.4 || score < 4) continue;
+    if (coverage < 0.2 || score < 2) continue;
     score += Math.round(coverage * 5);
     results.push({ cfg, score, matched, coverage });
   }
 
   results.sort((a, b) => b.score - a.score);
-  return results.slice(0, 50);
+  return results.slice(0, 500);
 }
 
 function normalizeTagCode(raw: string | null | undefined): string {
@@ -909,7 +909,28 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
   const configsRanqueadas = useMemo(() => {
     if (!termoDeferido.trim() || configuracoes.length === 0) return [];
-    return rankConfiguracoes(termoDeferido, configuracoes);
+    
+    // Tentativa 1: Ranking por relevância de tokens (heurística)
+    const ranked = rankConfiguracoes(termoDeferido, configuracoes);
+    
+    // Tentativa 2: Fallback para busca textual AND simples caso o ranking seja muito restritivo
+    if (ranked.length === 0) {
+      const tokens = tokenize(termoDeferido);
+      if (tokens.length > 0) {
+        const fallback = configuracoes.filter(cfg => {
+          const name = (cfg.nm_configuracao || "").toLowerCase();
+          return tokens.every(t => name.includes(t));
+        }).map(cfg => ({
+          cfg,
+          score: 1,
+          matched: tokens,
+          coverage: 1
+        }));
+        return fallback.slice(0, 100);
+      }
+    }
+    
+    return ranked;
   }, [termoDeferido, configuracoes]);
 
 
