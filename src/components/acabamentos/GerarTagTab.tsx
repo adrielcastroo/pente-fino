@@ -1632,7 +1632,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         )}
 
         {/* BLOCO DE RESUMO (Colapsável) - Posicionado abaixo do bloco "Manter Tag Customizada" */}
-        {termoBusca.trim().length >= 3 && (
+        {termoBusca.trim().length >= 2 && (
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
