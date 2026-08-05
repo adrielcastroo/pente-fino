@@ -59,13 +59,13 @@ function uniqTokens(list: string[]): string[] {
 }
 
 const STRUCTURAL_PATTERNS: Array<{ re: RegExp; weight: number; label: string }> = [
-  { re: /^(rollo|shadow|diamond|romana|celular|wanza|b2h|rollo_light|shadow_light)$/i, weight: 8, label: 'tipo' },
+  { re: /^(rollo|shadow|diamond|romana|celular|wanza|b2h|rollo_light|shadow_light|cortina|persiana)$/i, weight: 8, label: 'tipo' },
   { re: /^t\d{2,3}$/i, weight: 6, label: 'tubo' },
   { re: /^(cm[-_]?\d+|st\d+|lsn\d+|alt\d+)$/i, weight: 5, label: 'motor' },
-  { re: /^(110v|220v|bateria)$/i, weight: 3, label: 'tensão' },
-  { re: /^(rf|auto|manual|monocontrole|basic)$/i, weight: 2, label: 'controle' },
-  { re: /^(abs2|abs20|absolute|basic|sky|day|night|semi|open|standard|nivelador|square|round|fascia)$/i, weight: 2, label: 'opção' },
-  { re: /^(branco|branca|preto|preta|bege|bronze|cinza|grafite|marrom|azul|verde)$/i, weight: 2, label: 'cor' },
+  { re: /^(110v|220v|bateria|pilha)$/i, weight: 3, label: 'tensão' },
+  { re: /^(rf|auto|manual|monocontrole|basic|wifi|zigbee)$/i, weight: 2, label: 'controle' },
+  { re: /^(abs2|abs20|absolute|basic|sky|day|night|semi|open|standard|nivelador|square|round|fascia|blackout|translúcido|dimout|balance)$/i, weight: 2, label: 'opção' },
+  { re: /^(branco|branca|preto|preta|bege|bronze|cinza|grafite|marrom|azul|verde|offwhite)$/i, weight: 2, label: 'cor' },
 ];
 
 interface WeightedToken { token: string; weight: number; structural: boolean }
