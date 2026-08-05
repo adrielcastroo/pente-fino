@@ -597,7 +597,7 @@ function ConfiguracaoSelect({
   // garantindo análise imediata das TAGs obrigatórias.
   const { data: opcoes = [], isFetching, isSuccess } = useQuery({
     queryKey: ['tag-custom-configuracao-busca', padrao, tokens.join('|')],
-    enabled: padrao.length >= 3,
+    enabled: termo.length >= 2,
 
     staleTime: 60 * 1000,
     queryFn: async () => {
@@ -675,7 +675,7 @@ function ConfiguracaoSelect({
       termo,
       hasResults: opcoes.length > 0,
       isSearching: isFetching,
-      pesquisou: isSuccess && !isFetching && padrao.length >= 3,
+      pesquisou: isSuccess && !isFetching && termo.length >= 2,
     });
   }, [termo, opcoes.length, isFetching, isSuccess, padrao.length, onSearchStateChange]);
 
@@ -898,12 +898,23 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     queryKey: ['auge-tag-custom-configuracoes'],
     staleTime: 10 * 60 * 1000,
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from('auge_tag_custom_configuracoes')
-        .select('cd_configuracao, nm_configuracao, qtd_tags')
-        .limit(20000);
-      if (error) throw error;
-      return (data ?? []) as ConfiguracaoLite[];
+      // Consultamos tanto as configurações que já possuem TAGs quanto o scan geral
+      const [resConfig, resScan] = await Promise.all([
+        (supabase as any).from('auge_tag_custom_configuracoes').select('cd_configuracao, nm_configuracao, qtd_tags').limit(15000),
+        (supabase as any).from('auge_tag_custom_scan').select('cd_configuracao, nm_configuracao, qtd_tags').limit(15000)
+      ]);
+
+      const merged = [...(resConfig.data || []), ...(resScan.data || [])];
+      const seen = new Set<string>();
+      const out: ConfiguracaoLite[] = [];
+
+      for (const r of merged) {
+        if (!r.cd_configuracao || seen.has(r.cd_configuracao)) continue;
+        seen.add(r.cd_configuracao);
+        out.push(r as ConfiguracaoLite);
+      }
+      
+      return out;
     },
   });
 
@@ -1164,7 +1175,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         calculada: r.calculada,
         formula: '',
       })));
-    } else if (termoBusca.trim().length < 3) {
+    } else if (termoBusca.trim().length < 2) {
       // Limpa se o termo for removido
       setLinhas([]);
     }
@@ -1282,7 +1293,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   const ehTagCustomNova = useMemo(
     () =>
       !customAberta &&
-      termoBusca.trim().length >= 3 &&
+      termoBusca.trim().length >= 2 &&
       !loadingBusca &&
       !cfgSearch.isSearching &&
       cfgSearch.pesquisou &&
@@ -1621,7 +1632,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         )}
 
         {/* BLOCO DE RESUMO (Colapsável) - Posicionado abaixo do bloco "Manter Tag Customizada" */}
-        {termoBusca.trim().length >= 3 && (
+        {termoBusca.trim().length >= 2 && (
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
