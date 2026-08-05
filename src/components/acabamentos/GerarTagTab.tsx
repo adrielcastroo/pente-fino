@@ -933,8 +933,10 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
     if (tokens.length === 0) return [];
 
-    // 2. Filtro estrito (Lógica AND): a configuração DEVE conter TODOS os tokens pesquisados.
-    // Otimização: Verificamos o nome bruto primeiro e depois o normalizado para máxima cobertura.
+    // 1. Identificar tokens estruturais (pesos maiores) para priorização
+    const weighted = weightTokens(tokens);
+
+    // 2. Filtro Determinístico (Lógica AND): a configuração DEVE conter TODOS os tokens pesquisados.
     let filtrados = configuracoes.filter(cfg => {
       const nmOriginal = (cfg.nm_configuracao || "").toLowerCase();
       const nmNorm = nmOriginal.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -958,13 +960,29 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       }
     }
 
-    // 3. Mapeamento para o formato esperado
-    return filtrados.map(cfg => ({
-      cfg,
-      score: 1, 
-      matched: tokens,
-      coverage: 1
-    })).sort((a, b) => a.cfg.nm_configuracao.localeCompare(b.cfg.nm_configuracao));
+    // 3. Ranking por relevância (Pesagem estatística)
+    const ranked = filtrados.map(cfg => {
+      const nm = (cfg.nm_configuracao || "").toLowerCase();
+      let score = 0;
+      const matched: string[] = [];
+
+      weighted.forEach(w => {
+        if (nm.includes(w.token)) {
+          score += w.weight * 2; // Hit exato
+          matched.push(w.token);
+        }
+      });
+
+      return {
+        cfg,
+        score,
+        matched,
+        coverage: matched.length / tokens.length
+      };
+    });
+
+    // Ordena pelo score de peso (tokens estruturais valem mais)
+    return ranked.sort((a, b) => b.score - a.score || a.cfg.nm_configuracao.localeCompare(b.cfg.nm_configuracao));
   }, [termoDeferido, configuracoes]);
 
 
