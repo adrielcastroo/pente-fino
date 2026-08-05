@@ -1014,18 +1014,9 @@ export const LeftPanel = memo(function LeftPanel() {
      *   em telas pequenas e respiro em telas grandes.
      */
     <div className="bg-background xl:border-r border-border/40 overflow-hidden flex flex-col h-full w-full min-w-0 max-w-full rounded-md border border-border/50 lg:border-none lg:rounded-none">
-      <header className="px-3 sm:px-6 py-3 bg-card border-b border-border/40 flex items-center gap-2 flex-shrink-0">
-        <div className="w-8 h-8 rounded-md bg-primary/10 text-primary flex items-center justify-center">
-          <ScanBarcode className="w-4 h-4" />
-        </div>
-        <div className="flex flex-col leading-tight">
-          <span className="text-sm font-bold text-foreground font-display">Conferência de Tecido</span>
-          <span className="text-[10px] text-muted-foreground/70 font-bold uppercase tracking-wider">Entrada & Bipagem</span>
-        </div>
-      </header>
-
       <div
         className={`flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pb-28 lg:pb-16 ${isTecidoTab ? 'pt-2 gap-3 xl:gap-2' : 'pt-4 gap-[clamp(0.75rem,2.5vw,1.25rem)]'}`}
+
 
         style={{
           paddingLeft: 'clamp(0.75rem, 3vw, 1.5rem)',
