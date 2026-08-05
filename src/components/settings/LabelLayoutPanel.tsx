@@ -1,5 +1,7 @@
 import { useState, useRef, useLayoutEffect, useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
+import { useAuth } from '@/hooks/use-auth';
+import { cn } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -9,7 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Type, Maximize, Layout, Save, RefreshCw, Shirt, Cog, Square, Check, Plus, Minus, RotateCcw, Barcode, AlignLeft, Receipt, Package, MapPin, Calendar, QrCode, Hash, Box, Fingerprint, Ruler, LayoutGrid, Palette, Truck } from 'lucide-react';
+import { Type, Maximize, Layout, Save, RefreshCw, Shirt, Cog, Square, Check, Plus, Minus, RotateCcw, Barcode, AlignLeft, Receipt, Package, MapPin, Calendar, QrCode, Hash, Box, Fingerprint, Ruler, LayoutGrid, Palette, Truck, Info } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { TecidoPreview, MotorPreview, LABEL_PX_PER_MM } from '@/components/labels/LabelTemplates';
@@ -56,6 +58,8 @@ const TECIDO_DEFAULT = ['sku', 'descricao', 'nfe', 'qtd', 'rnp', 'data', 'qr_sku
 const MOTOR_DEFAULT = ['sku', 'descricao', 'serie', 'cx', 'nf', 'nt', 'rnp', 'data', 'qr_lote_sku'];
 
 export default function LabelLayoutPanel() {
+  const { role } = useAuth();
+  const isAdmin = role === 'admin' || role === 'supervisor';
   const { labelSettings, setLabelSettings } = useAppStore();
   const [kind, setKind] = useState<LabelKind>(readPersistedKind);
 
@@ -173,7 +177,13 @@ export default function LabelLayoutPanel() {
   }, [wPx, hPx]);
 
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in relative">
+      {!isAdmin && (
+        <div className="mb-4 rounded-md bg-primary/5 border border-primary/20 p-3 text-xs text-muted-foreground flex items-center gap-2">
+          <Info className="h-4 w-4 text-primary" />
+          <span>Estas configurações são gerenciadas pelo administrador e aplicadas a todos os usuários.</span>
+        </div>
+      )}
       <Tabs value={kind} onValueChange={(v) => setKind(v as LabelKind)}>
         {/* Header compacto: seletor horizontal + info do padrão */}
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3">
@@ -220,7 +230,10 @@ export default function LabelLayoutPanel() {
             página, sem quebrar por overflow de ancestrais.
           */}
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 lg:gap-6 lg:h-[calc(100vh-15rem)] lg:min-h-[560px]">
-            <div className="space-y-4 lg:col-span-3 order-2 lg:order-1 lg:overflow-y-auto lg:pr-3 lg:-mr-2">
+            <div className={cn(
+              "space-y-4 lg:col-span-3 order-2 lg:order-1 lg:overflow-y-auto lg:pr-3 lg:-mr-2",
+              !isAdmin && "pointer-events-none opacity-80"
+            )}>
 
               <Card className="settings-card rounded-md border border-border bg-card shadow-sm overflow-hidden">
                 <CardHeader className="p-5 border-b border-border/40 space-y-2">
@@ -303,8 +316,12 @@ export default function LabelLayoutPanel() {
                     </p>
                   </div>
 
-                  <WebhookUrlEditor />
-                  <SilentPrintPanel />
+                  {isAdmin && (
+                    <>
+                      <WebhookUrlEditor />
+                      <SilentPrintPanel />
+                    </>
+                  )}
 
                 </CardContent>
               </Card>

@@ -106,7 +106,7 @@ const CATEGORY_GROUPS: { id: 'account' | 'system'; label: string; minRole?: Role
       { id: 'users', name: 'Equipe', icon: Users, description: 'Gerencie membros e acessos.', minRole: 'supervisor' },
       { id: 'security', name: 'Segurança', icon: Shield, description: 'Senha, autenticação de dois fatores e sessões.' },
       { id: 'integrations', name: 'Integrações', icon: LinkIcon, description: 'Conecte ferramentas externas.' },
-      { id: 'label-layout', name: 'Layout Etiqueta', icon: QrCode, description: 'Personalize o layout e tamanho da etiqueta de estocagem.', module: 'estoque' },
+      { id: 'label-layout', name: 'Layout Etiqueta', icon: QrCode, description: 'Visualize as configurações de impressão e etiquetas.', module: 'estoque' },
       { id: 'expedicao', name: 'Expedição', icon: Truck, description: 'Transportadoras, webhooks de e-mail e importação automática de NF-e.', minRole: 'supervisor', module: 'expedicao' },
     ],
   },
