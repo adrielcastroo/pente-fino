@@ -1643,6 +1643,21 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         )}
       </Card>
 
+      {/* BLOCO DE RESUMO REPLICADO CONFORME SOLICITAÇÃO (MESMO COM PESQUISA ATIVA) */}
+      {termoBusca.trim().length >= 3 && configsRanqueadas.length === 0 && (
+        <Card className="p-4 bg-muted/20 border-dashed">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Layers className="h-4 w-4 opacity-50" />
+            <span className="text-[11px] font-semibold uppercase tracking-wider opacity-50">
+              Resumo (Nenhuma configuração encontrada para "{termoBusca}")
+            </span>
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-2">
+            O sistema não identificou configurações automáticas para este termo. Você ainda pode criar uma TAG Custom nova se gravar.
+          </p>
+        </Card>
+      )}
+
 
 
       <div className="grid grid-cols-1 gap-4 items-start">
