@@ -1015,19 +1015,18 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     queryFn: async () => {
       const sel =
         'cd_configuracao, nm_configuracao, nm_tag_customizada, ds_tag_customizada, ds_tag_calculada, ds_tag_texto';
-      // Relaxamento progressivo: começa exigindo todas as palavras (AND) e vai
-      // descartando as menos relevantes até encontrar modelos existentes.
-      for (let n = palavras.length; n >= 1; n--) {
-        const usados = palavras.slice(0, n);
-        let q = (supabase as any).from('auge_tag_custom').select(sel);
-        for (const p of usados) q = q.ilike('nm_configuracao', `%${p.token}%`);
-        const { data, error } = await q.limit(4000);
-        if (error) throw error;
-        if ((data ?? []).length > 0) {
-          return { rows: data as CustomTag[], usados: usados.map((u) => u.token) };
-        }
-      }
-      return { rows: [] as CustomTag[], usados: [] as string[] };
+      // A busca por palavras-chave agora é estrita: exige TODOS os tokens (AND)
+      // para garantir que o Resumo seja assertivo e condizente com a pesquisa.
+      const tokens = palavras.map(p => p.token);
+      if (tokens.length === 0) return { rows: [] as CustomTag[], usados: [] as string[] };
+
+      let q = (supabase as any).from('auge_tag_custom').select(sel);
+      for (const t of tokens) q = q.ilike('nm_configuracao', `%${t}%`);
+      
+      const { data, error } = await q.limit(4000);
+      if (error) throw error;
+      
+      return { rows: (data || []) as CustomTag[], usados: tokens };
     },
   });
 
