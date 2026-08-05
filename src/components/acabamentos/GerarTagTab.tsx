@@ -1582,7 +1582,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
             animate={{ opacity: 1, y: 0 }}
             className="rounded-lg border bg-muted/30 overflow-hidden"
           >
-            <details className="group" open>
+            <details className="group">
               <summary className="flex items-center justify-between p-3 cursor-pointer hover:bg-muted/50 transition-colors list-none">
                 <div className="flex items-center gap-2">
                   <Layers className="h-4 w-4 text-primary" />
