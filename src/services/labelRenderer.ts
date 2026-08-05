@@ -15,9 +15,11 @@ import type { LabelSettings } from '@/store/useAppStore';
 const TECIDO_DEFAULT_FIELDS = ['sku', 'descricao', 'nfe', 'qtd', 'rnp', 'data', 'qr_sku', 'qr_lote'];
 const MOTOR_DEFAULT_FIELDS = ['sku', 'descricao', 'serie', 'cx', 'nf', 'nt', 'rnp', 'data', 'qr_lote_sku'];
 
-// 203 dpi (impressoras térmicas comuns) ≈ 8 px/mm. Limitamos para evitar canvas gigante.
-const TARGET_PX_PER_MM = LABEL_PX_PER_MM;
-const PREVIEW_SCALE = LABEL_PX_PER_MM; // mesma escala usada no LabelLayoutPanel (1:1 com o PNG)
+// 300 dpi (padrão industrial premium) ≈ 11.8 px/mm.
+// Aumentar o TARGET_PX_PER_MM melhora a nitidez de textos pequenos e QR codes
+// ao serem processados por impressoras térmicas que esperam alta densidade.
+const TARGET_PX_PER_MM = 12;
+const PREVIEW_SCALE = LABEL_PX_PER_MM; // mantemos o preview em 8 px/mm para performance visual no app
 
 export interface RenderedLabel {
   dataUrl: string;       // "data:image/png;base64,..."
@@ -53,7 +55,7 @@ async function renderToPng(opts: {
 }): Promise<RenderedLabel> {
   const { node, widthMm, heightMm, basePx } = opts;
   const targetPxW = widthMm * TARGET_PX_PER_MM;
-  const pixelRatio = Math.max(2, Math.min(4, targetPxW / basePx.w));
+  const pixelRatio = targetPxW / basePx.w;
 
   await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
 
