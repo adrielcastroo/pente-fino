@@ -819,11 +819,7 @@ export const LeftPanel = memo(function LeftPanel() {
         avariaDescricao: avariaEnabled ? (avariaDescricao || null) : null,
         avariaFotoUrl: avariaEnabled ? avariaFotoUrl : null,
       };
-      addRegistro(reg);
-      bipSuccess();
-      toast.success(`✓ ${item} adicionado (${registros.length + 1} itens)`);
-
-      // Impressão Automática (PNG → n8n)
+      // Prioridade: impressão disparada imediatamente após o bip
       if (labelSettings.autoPrint) {
         printTecidoLabel({
           item: reg.item,
@@ -835,6 +831,10 @@ export const LeftPanel = memo(function LeftPanel() {
           mLinear: reg.mLinear,
         }, labelSettings);
       }
+      addRegistro(reg);
+      bipSuccess();
+      toast.success(`✓ ${item} adicionado (${registros.length + 1} itens)`);
+
 
       resetForm();
       setQuantidade(madeiraDefaults[madeiraTipo].toString());
@@ -918,11 +918,6 @@ export const LeftPanel = memo(function LeftPanel() {
       posicao: resolvedPosicao,
       isNew: true,
     };
-    addRegistro(reg);
-    bipSuccess();
-    toast.success(`✓ ${reg.item} adicionado (${registros.length + 1} rolos)`);
-
-    // Impressão Automática (PNG → n8n)
     if (labelSettings.autoPrint) {
       printTecidoLabel({
         item: reg.item,
@@ -937,6 +932,10 @@ export const LeftPanel = memo(function LeftPanel() {
         endereco: reg.endereco,
       }, labelSettings);
     }
+    addRegistro(reg);
+    bipSuccess();
+    toast.success(`✓ ${reg.item} adicionado (${registros.length + 1} rolos)`);
+
 
     resetForm();
     setTimeout(() => { useAppStore.getState().updateRegistro(reg.id, { isNew: false }); }, 400);

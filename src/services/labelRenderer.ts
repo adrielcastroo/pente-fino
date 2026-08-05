@@ -155,7 +155,7 @@ export async function renderTecidoLabel(
     // Reduzido de 50ms para 10ms: tempo mínimo para o React disparar o commit 
     // inicial no mountOffscreen. Como o TARGET_PX_PER_MM aumentou, o processamento 
     // de imagem é mais pesado, mas o delay de montagem pode ser agressivo.
-    await new Promise((r) => setTimeout(r, 10));
+    await new Promise((r) => setTimeout(r, 0));
     const node = container.firstElementChild as HTMLElement | null;
     if (!node) throw new Error('Falha ao renderizar etiqueta de tecido');
     return await renderToPng({ node, widthMm: w, heightMm: h, basePx: { w: wPx, h: hPx } });
@@ -213,7 +213,7 @@ export async function renderMotorLabel(
         ),
       ),
     );
-    await new Promise((r) => setTimeout(r, 10));
+    await new Promise((r) => setTimeout(r, 0));
     const node = container.firstElementChild as HTMLElement | null;
     if (!node) throw new Error('Falha ao renderizar etiqueta de motor');
     return await renderToPng({ node, widthMm: w, heightMm: h, basePx: { w: wPx, h: hPx } });
@@ -281,7 +281,7 @@ export async function renderZplLabel(
         }),
       ),
     );
-    await new Promise((r) => setTimeout(r, 20));
+    await new Promise((r) => setTimeout(r, 0));
     const node = container.firstElementChild as HTMLElement | null;
     if (!node) throw new Error('Falha ao renderizar etiqueta ZPL');
     return await renderToPng({ node, widthMm: w, heightMm: h, basePx: { w: wPx, h: hPx } });
