@@ -912,17 +912,17 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     if (!termo || configuracoes.length === 0) return [];
     
     // 1. Tokenização rigorosa para filtro exato
-    // Removemos caracteres especiais para comparar apenas o texto
+    // Removemos caracteres especiais e espaços para comparar apenas o texto essencial
     const tokens = termo
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .split(/[\s*_\-/.,;:()\[\]]+/)
-      .filter(t => t.length >= 2);
+      .filter(t => t.length >= 1); // Aceita tokens curtos como "35" ou "CM"
 
     if (tokens.length === 0) return [];
 
-    // 2. Filtro estrito: a configuração DEVE conter TODOS os tokens pesquisados
-    // Isso garante que "Cortina*CM*35" traga apenas itens com Cortina E CM E 35
+    // 2. Filtro estrito (Lógica AND): a configuração DEVE conter TODOS os tokens pesquisados
+    // Isso garante precisão: "cortina*35" traz apenas configurações com Cortina E 35.
     const filtrados = configuracoes.filter(cfg => {
       const nm = (cfg.nm_configuracao || "")
         .toLowerCase()
@@ -932,10 +932,10 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       return tokens.every(t => nm.includes(t));
     });
 
-    // 3. Mapeamento para o formato esperado pelo componente com score básico
+    // 3. Mapeamento para o formato esperado com ranking secundário por proximidade
     return filtrados.map(cfg => ({
       cfg,
-      score: 1,
+      score: 1, // Score base
       matched: tokens,
       coverage: 1
     })).sort((a, b) => a.cfg.nm_configuracao.localeCompare(b.cfg.nm_configuracao));
