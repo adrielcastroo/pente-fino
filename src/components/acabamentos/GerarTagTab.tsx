@@ -909,7 +909,28 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
   const configsRanqueadas = useMemo(() => {
     if (!termoDeferido.trim() || configuracoes.length === 0) return [];
-    return rankConfiguracoes(termoDeferido, configuracoes);
+    
+    // Tentativa 1: Ranking por relevância de tokens (heurística)
+    const ranked = rankConfiguracoes(termoDeferido, configuracoes);
+    
+    // Tentativa 2: Fallback para busca textual AND simples caso o ranking seja muito restritivo
+    if (ranked.length === 0) {
+      const tokens = tokenize(termoDeferido);
+      if (tokens.length > 0) {
+        const fallback = configuracoes.filter(cfg => {
+          const name = (cfg.nm_configuracao || "").toLowerCase();
+          return tokens.every(t => name.includes(t));
+        }).map(cfg => ({
+          cfg,
+          score: 1,
+          matched: tokens,
+          coverage: 1
+        }));
+        return fallback.slice(0, 100);
+      }
+    }
+    
+    return ranked;
   }, [termoDeferido, configuracoes]);
 
 
