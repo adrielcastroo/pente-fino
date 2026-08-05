@@ -1588,7 +1588,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           </p>
         </div>
 
-        {/* BLOCO DE RESUMO (Colapsável) */}
+        {/* O Bloco de Resumo será posicionado aqui, após o bloco de Configuração e Manter Tag Customizada conforme instrução */}
         {configsRanqueadas.length > 0 && (
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
