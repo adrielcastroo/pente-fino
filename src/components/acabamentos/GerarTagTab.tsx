@@ -934,18 +934,16 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     if (tokens.length === 0) return [];
 
     // 2. Filtro estrito (Lógica AND): a configuração DEVE conter TODOS os tokens pesquisados.
-    // Adicionamos um fallback: se a busca AND estrita falhar, tentamos uma busca mais flexível
-    // que verifica se os tokens existem como partes de palavras ou se coincidem com abreviações.
+    // Otimização: Verificamos o nome bruto primeiro e depois o normalizado para máxima cobertura.
     let filtrados = configuracoes.filter(cfg => {
-      const nm = (cfg.nm_configuracao || "")
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '');
+      const nmOriginal = (cfg.nm_configuracao || "").toLowerCase();
+      const nmNorm = nmOriginal.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const nmSemPontuacao = nmNorm.replace(/[^\w\s]/g, ' ');
       
-      // Verifica se cada token da busca está contido no nome da configuração.
-      // Removemos pontuações do nome para facilitar o casamento (ex: "10%" vira "10").
-      const nmClean = nm.replace(/[^\w\s]/g, ' ');
-      return tokens.every(t => nm.includes(t) || nmClean.includes(t));
+      return tokens.every(t => {
+        const tNorm = t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        return nmOriginal.includes(tNorm) || nmNorm.includes(tNorm) || nmSemPontuacao.includes(tNorm);
+      });
     });
 
     // Fallback: Se não encontrou nada com AND estrito, tenta relaxar os tokens
