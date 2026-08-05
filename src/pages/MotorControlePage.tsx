@@ -150,8 +150,9 @@ export default function MotorControlePage() {
       mLinear: 0,
       largura: 0,
     };
-    addRegistro(reg);
     if (labelSettings.autoPrint) printMotorLabel({ item: reg.item, descricao: 'Motor', lote: reg.lote, loteSistema: reg.loteSistema, nf: reg.nf, cx: temCaixa ? (parseInt(caixaNum, 10) || 0) : null }, labelSettings);
+    addRegistro(reg);
+    bipSuccess();
     toast.success(`Motor adicionado: ${cleaned}`);
     resetMotorFormData();
     serieRef.current?.focus();
@@ -190,8 +191,9 @@ export default function MotorControlePage() {
       mLinear: 0,
       largura: 0,
     };
-    addRegistro(reg);
     if (labelSettings.autoPrint) printMotorLabel({ item: reg.item, descricao: 'Controle', lote: reg.lote, loteSistema: reg.loteSistema, nf: reg.nf, sequencial: seq, cx: null }, labelSettings);
+    addRegistro(reg);
+    bipSuccess();
     toast.success(`Controle #${seq} adicionado`);
     resetMotorFormData();
     serieRef.current?.focus();
@@ -226,8 +228,9 @@ export default function MotorControlePage() {
       mLinear: 0,
       largura: 0,
     };
-    addRegistro(reg);
     if (labelSettings.autoPrint) printMotorLabel({ item: reg.item, descricao: 'Coulisse', lote: reg.lote, loteSistema: reg.loteSistema, cx: parsed.cx || null }, labelSettings);
+    addRegistro(reg);
+    bipSuccess();
     toast.success(`Coulisse adicionado: ${coulisseLote}`);
     resetMotorFormData();
     serieRef.current?.focus();
