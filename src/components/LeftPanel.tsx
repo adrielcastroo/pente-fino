@@ -1014,8 +1014,19 @@ export const LeftPanel = memo(function LeftPanel() {
      *   em telas pequenas e respiro em telas grandes.
      */
     <div className="bg-background xl:border-r border-border/40 overflow-hidden flex flex-col h-full w-full min-w-0 max-w-full rounded-md border border-border/50 lg:border-none lg:rounded-none">
+      <header className="px-3 sm:px-6 py-3 bg-card border-b border-border/40 flex items-center gap-2 flex-shrink-0">
+        <div className="w-8 h-8 rounded-md bg-primary/10 text-primary flex items-center justify-center">
+          <ScanBarcode className="w-4 h-4" />
+        </div>
+        <div className="flex flex-col leading-tight">
+          <span className="text-sm font-bold text-foreground font-display">Conferência de Tecido</span>
+          <span className="text-[10px] text-muted-foreground/70 font-bold uppercase tracking-wider">Entrada & Bipagem</span>
+        </div>
+      </header>
+
       <div
-        className={`flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pb-28 lg:pb-16 ${isTecidoTab ? 'pt-3 gap-3 xl:gap-2' : 'pt-[1.3125rem] gap-[clamp(0.75rem,2.5vw,1.25rem)]'}`}
+        className={`flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pb-28 lg:pb-16 ${isTecidoTab ? 'pt-2 gap-3 xl:gap-2' : 'pt-4 gap-[clamp(0.75rem,2.5vw,1.25rem)]'}`}
+
         style={{
           paddingLeft: 'clamp(0.75rem, 3vw, 1.5rem)',
           paddingRight: 'clamp(0.75rem, 3vw, 1.5rem)',
@@ -1024,19 +1035,7 @@ export const LeftPanel = memo(function LeftPanel() {
           flexDirection: 'column',
         }}
       >
-        
-        {/* Botão Limpar — visível apenas quando há dados no formulário */}
-        {(item || nf || m2 || lote || endereco || processo) && !isAI && (
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={resetForm}
-              className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-destructive/70 hover:text-destructive transition-colors px-2.5 py-1 rounded-md hover:bg-destructive/10 border border-transparent hover:border-destructive/20"
-            >
-              Limpar
-            </button>
-          </div>
-        )}
+
 
         {/* Mode Toggle */}
         {!isMadeira && (
@@ -1070,19 +1069,6 @@ export const LeftPanel = memo(function LeftPanel() {
           </div>
         )}
 
-        {/* Action buttons — touch targets aumentados em mobile (h-11 = 44px),
-            voltam ao tamanho compacto h-7 em ≥sm para preservar densidade desktop. */}
-        {hasTopUtilityActions && (
-          <div className="flex items-center justify-end text-xs text-muted-foreground">
-            <div className="flex gap-1">
-              {(item || nf || m2 || lote || endereco || processo) && (
-                <Button variant="ghost" size="sm" onClick={resetForm} className="h-11 sm:h-7 rounded-md text-[11px] sm:text-[10px] font-medium text-destructive/70 hover:bg-destructive/10 hover:text-destructive px-3 sm:px-2">
-                  Limpar campos
-                </Button>
-              )}
-            </div>
-          </div>
-        )}
 
         {/* Diversos categories — subordinate pills (touch-friendly, subtle) */}
         {isDiversos && (
