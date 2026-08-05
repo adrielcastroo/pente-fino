@@ -597,7 +597,7 @@ function ConfiguracaoSelect({
   // garantindo análise imediata das TAGs obrigatórias.
   const { data: opcoes = [], isFetching, isSuccess } = useQuery({
     queryKey: ['tag-custom-configuracao-busca', padrao, tokens.join('|')],
-    enabled: padrao.length >= 3,
+    enabled: termo.length >= 2,
 
     staleTime: 60 * 1000,
     queryFn: async () => {
