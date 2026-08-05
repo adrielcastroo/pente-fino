@@ -237,31 +237,6 @@ export default function MotorControlePage() {
     <FormPageLayout>
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col min-h-screen bg-background">
         <div className="flex-1 overflow-y-auto custom-scrollbar p-3 sm:p-5 space-y-5 pb-24">
-          <motion.div 
-            whileHover={{ scale: 1.01 }}
-            className="rounded-md border bg-card/40 backdrop-blur-md p-5 flex items-center gap-5 shadow-xl shadow-black/5 border-white/10"
-          >
-            <div className="w-14 h-14 rounded-md bg-primary/10 text-primary flex items-center justify-center shrink-0 shadow-inner">
-              <ScanBarcode className="w-7 h-7" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h2 className="text-lg font-semibold text-foreground tracking-tight">Novo registro</h2>
-              <p className="text-xs text-muted-foreground/80 font-medium">
-                {subMode === 'coulisse' ? 'Bipe o lote da Coulisse' : `Bipe a série do ${subMode}`}
-              </p>
-            </div>
-            {(modelo || nf || serie || coulisseModeloProcCx) && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={resetFields} 
-                className="text-xs font-bold text-destructive hover:bg-destructive/10 rounded-full"
-              >
-                LIMPAR
-              </Button>
-            )}
-          </motion.div>
-
           <div className="flex bg-card/50 p-1.5 rounded-[2rem] border border-white/5 shadow-inner">
             {(['motor', 'controle', 'coulisse'] as SubMode[]).map(mode => (
               <button 
