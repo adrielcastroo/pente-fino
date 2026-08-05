@@ -937,18 +937,17 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     const weighted = weightTokens(tokens);
 
     // 2. Filtro Determinístico (Lógica AND): a configuração DEVE conter TODOS os tokens pesquisados.
-    // Usamos o termo original (termoBusca) para garantir que caracteres como "*" não sejam 
-    // apenas separadores, mas guiem a lógica de busca se necessário.
     let filtrados = configuracoes.filter(cfg => {
       const nmOriginal = (cfg.nm_configuracao || "").toLowerCase();
       const nmNorm = nmOriginal.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
       const nmSemPontuacao = nmNorm.replace(/[^\w\s]/g, ' ');
+      const nmSoLetrasNumeros = nmNorm.replace(/[^a-z0-9]/g, '');
       
       // Cada token digitado pelo usuário deve estar presente no nome da configuração
       return tokens.every(t => {
         const tNorm = t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-        // Verifica no nome original, no normalizado e no sem pontuação para máxima abrangência
-        return nmOriginal.includes(tNorm) || nmNorm.includes(tNorm) || nmSemPontuacao.includes(tNorm);
+        // Verifica no nome original, no normalizado, no sem pontuação e na versão limpa (colada)
+        return nmOriginal.includes(tNorm) || nmNorm.includes(tNorm) || nmSemPontuacao.includes(tNorm) || nmSoLetrasNumeros.includes(tNorm);
       });
     });
 
