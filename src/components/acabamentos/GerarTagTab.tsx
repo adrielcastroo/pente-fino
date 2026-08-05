@@ -922,57 +922,57 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     const termo = termoDeferido.trim();
     if (termo.length < 2 || configuracoes.length === 0) return [];
     
-    // 1. Usar a mesma lógica de padrão ILIKE da pesquisa original
+    // 1. Unificar a lógica de filtragem para usar exatamente a mesma pesquisa do ConfiguracaoSelect
     const padrao = toIlikePattern(termo);
     const tokens = toIlikeTokens(termo);
     
-    // Função auxiliar para testar um nome contra os padrões ILIKE (simulando SQL no frontend)
-    const matchesPattern = (name: string, p: string) => {
-      const regexStr = p.replace(/%/g, '.*');
-      const regex = new RegExp(`^${regexStr}$`, 'i');
-      return regex.test(name);
+    // Função para simular o comportamento ILIKE do Postgres no frontend
+    const matchesIlike = (text: string, pattern: string) => {
+      // Converte padrão ILIKE (%termo%) para Regex
+      // Escapa caracteres especiais de regex, mas mantém % como .*
+      const escaped = pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/%/g, '.*');
+      const regex = new RegExp(`^${escaped}$`, 'i');
+      return regex.test(text);
     };
 
     const filtrados = configuracoes.filter(cfg => {
-      const nm = (cfg.nm_configuracao || "").toLowerCase();
+      const nm = cfg.nm_configuracao || "";
       
-      // Se tem tokens (AND), todos devem bater
+      // Lógica idêntica ao ConfiguracaoSelect:
+      // a) padrão ordenado (comportamento SAP B1 clássico)
+      if (matchesIlike(nm, padrao)) return true;
+
+      // b) AND por tokens (ordem livre)
       if (tokens.length > 0) {
-        return tokens.every(t => {
-          const tClean = t.replace(/%/g, '');
-          return nm.includes(tClean.toLowerCase());
-        });
+        return tokens.every(t => matchesIlike(nm, t));
       }
       
-      // Caso contrário, usa o padrão ILIKE simples
-      const pClean = padrao.replace(/%/g, '');
-      return nm.includes(pClean.toLowerCase());
+      return false;
     });
 
-    // 2. Ranking simplificado para manter a ordem alfabética ou por relevância básica
-    const weighted = weightTokens(tokenize(termo));
+    // 2. Ranking por relevância para manter os melhores resultados no topo
     const ranked = filtrados.map(cfg => {
       const nm = (cfg.nm_configuracao || "").toLowerCase();
       let score = 0;
-      weighted.forEach(w => {
-        if (nm.includes(w.token)) score += w.weight;
+      
+      // Peso por palavras exatas
+      const tokensBusca = termo.toLowerCase().split(/[\s*]+/).filter(t => t.length > 0);
+      tokensBusca.forEach(t => {
+        if (nm === t) score += 10;
+        else if (nm.startsWith(t)) score += 5;
+        else if (nm.includes(t)) score += 2;
       });
 
       return {
         cfg,
         score,
+        matched: [],
         coverage: 1
       };
     });
 
     return ranked
       .sort((a, b) => b.score - a.score || a.cfg.nm_configuracao.localeCompare(b.cfg.nm_configuracao))
-      .map(r => ({
-        cfg: r.cfg,
-        score: r.score,
-        matched: [],
-        coverage: r.coverage
-      }))
       .slice(0, 500);
   }, [termoDeferido, configuracoes]);
 
