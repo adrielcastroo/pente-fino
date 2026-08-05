@@ -935,7 +935,6 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
     // 1. Identificar tokens estruturais (pesos maiores) para priorização
     const weighted = weightTokens(tokens);
-    const strongTokens = weighted.filter(w => w.structural).map(w => w.token);
 
     // 2. Filtro Determinístico (Lógica AND): a configuração DEVE conter TODOS os tokens pesquisados.
     let filtrados = configuracoes.filter(cfg => {
@@ -948,6 +947,18 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         return nmOriginal.includes(tNorm) || nmNorm.includes(tNorm) || nmSemPontuacao.includes(tNorm);
       });
     });
+
+    // Fallback: Se não encontrou nada com AND estrito, tenta relaxar os tokens
+    // removendo os muito curtos ou ignorando erros comuns de digitação/sincronia.
+    if (filtrados.length === 0 && tokens.length > 2) {
+      const tokensLongos = tokens.filter(t => t.length >= 3);
+      if (tokensLongos.length > 0) {
+        filtrados = configuracoes.filter(cfg => {
+          const nm = (cfg.nm_configuracao || "").toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+          return tokensLongos.every(t => nm.includes(t));
+        });
+      }
+    }
 
     // 3. Ranking por relevância (Pesagem estatística)
     const ranked = filtrados.map(cfg => {
@@ -972,27 +983,6 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
     // Ordena pelo score de peso (tokens estruturais valem mais)
     return ranked.sort((a, b) => b.score - a.score || a.cfg.nm_configuracao.localeCompare(b.cfg.nm_configuracao));
-    });
-
-    // Fallback: Se não encontrou nada com AND estrito, tenta relaxar os tokens
-    // removendo os muito curtos ou ignorando erros comuns de digitação/sincronia.
-    if (filtrados.length === 0 && tokens.length > 2) {
-      const tokensLongos = tokens.filter(t => t.length >= 3);
-      if (tokensLongos.length > 0) {
-        filtrados = configuracoes.filter(cfg => {
-          const nm = (cfg.nm_configuracao || "").toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-          return tokensLongos.every(t => nm.includes(t));
-        });
-      }
-    }
-
-    // 3. Mapeamento para o formato esperado
-    return filtrados.map(cfg => ({
-      cfg,
-      score: 1, 
-      matched: tokens,
-      coverage: 1
-    })).sort((a, b) => a.cfg.nm_configuracao.localeCompare(b.cfg.nm_configuracao));
   }, [termoDeferido, configuracoes]);
 
 
