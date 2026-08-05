@@ -260,7 +260,7 @@ function submitHiddenForm(webhookUrl: string, form: URLSearchParams): Promise<vo
     document.body.appendChild(iframe);
     document.body.appendChild(htmlForm);
     htmlForm.submit();
-    window.setTimeout(cleanup, 500);
+    window.setTimeout(cleanup, 50);
   });
 }
 
