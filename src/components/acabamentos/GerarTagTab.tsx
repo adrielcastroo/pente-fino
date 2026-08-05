@@ -1576,7 +1576,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         )}
 
         {/* BLOCO DE RESUMO (Colapsável) - Posicionado abaixo do bloco "Manter Tag Customizada" */}
-        {configsRanqueadas.length > 0 && (
+        {termoBusca.trim().length >= 3 && (
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1587,46 +1587,41 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                 <div className="flex items-center gap-2">
                   <Layers className="h-4 w-4 text-primary" />
                   <span className="text-[11px] font-semibold uppercase tracking-wider">
-                    Resumo ({configsRanqueadas.length} configurações encontradas)
+                    Resumo {configsRanqueadas.length > 0 ? `(${configsRanqueadas.length} configurações encontradas)` : `(Nenhuma configuração encontrada)`}
                   </span>
                 </div>
                 <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-90" />
               </summary>
               <div className="px-3 pb-3 space-y-2 border-t pt-2">
-                <div className="text-[10px] text-muted-foreground leading-relaxed">
-                  As configurações abaixo foram identificadas pelas palavras-chave. As TAGs incluídas na composição serão aplicadas a todas simultaneamente.
-                </div>
-                <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto pr-1">
-                  {configsRanqueadas.map((r) => (
-                    <Badge 
-                      key={r.cfg.cd_configuracao} 
-                      variant="outline" 
-                      className="text-[10px] font-normal py-0.5 px-2 bg-background/50"
-                    >
-                      {r.cfg.nm_configuracao}
-                    </Badge>
-                  ))}
-                </div>
+                {configsRanqueadas.length > 0 ? (
+                  <>
+                    <div className="text-[10px] text-muted-foreground leading-relaxed">
+                      As configurações abaixo foram identificadas pelas palavras-chave. As TAGs incluídas na composição serão aplicadas a todas simultaneamente.
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto pr-1">
+                      {configsRanqueadas.map((r) => (
+                        <Badge 
+                          key={r.cfg.cd_configuracao} 
+                          variant="outline" 
+                          className="text-[10px] font-normal py-0.5 px-2 bg-background/50"
+                        >
+                          {r.cfg.nm_configuracao}
+                        </Badge>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <div className="py-2">
+                    <p className="text-[10px] text-muted-foreground">
+                      O sistema não identificou configurações automáticas para o termo "{termoBusca}". Você ainda pode criar uma TAG Custom nova se gravar.
+                    </p>
+                  </div>
+                )}
               </div>
             </details>
           </motion.div>
         )}
       </Card>
-
-      {/* BLOCO DE RESUMO REPLICADO CONFORME SOLICITAÇÃO (MESMO COM PESQUISA ATIVA) */}
-      {termoBusca.trim().length >= 3 && configsRanqueadas.length === 0 && (
-        <Card className="p-4 bg-muted/20 border-dashed">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Layers className="h-4 w-4 opacity-50" />
-            <span className="text-[11px] font-semibold uppercase tracking-wider opacity-50">
-              Resumo (Nenhuma configuração encontrada para "{termoBusca}")
-            </span>
-          </div>
-          <p className="text-[10px] text-muted-foreground mt-2">
-            O sistema não identificou configurações automáticas para este termo. Você ainda pode criar uma TAG Custom nova se gravar.
-          </p>
-        </Card>
-      )}
 
 
 
