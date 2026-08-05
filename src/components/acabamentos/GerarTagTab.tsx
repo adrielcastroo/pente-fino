@@ -919,71 +919,59 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   });
 
   const configsRanqueadas = useMemo(() => {
-    const termo = termoDeferido.trim().toLowerCase();
-    if (!termo || configuracoes.length === 0) return [];
+    const termo = termoDeferido.trim();
+    if (termo.length < 2 || configuracoes.length === 0) return [];
     
-    // 1. Tokenização: tratamos "*" e espaços como separadores
-    const tokens = termo
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .split(/[\s*_\-/.,;:()\[\]]+/)
-      .filter(t => t.length >= 1); 
+    // 1. Usar a mesma lógica de padrão ILIKE da pesquisa original
+    const padrao = toIlikePattern(termo);
+    const tokens = toIlikeTokens(termo);
+    
+    // Função auxiliar para testar um nome contra os padrões ILIKE (simulando SQL no frontend)
+    const matchesPattern = (name: string, p: string) => {
+      const regexStr = p.replace(/%/g, '.*');
+      const regex = new RegExp(`^${regexStr}$`, 'i');
+      return regex.test(name);
+    };
 
-    if (tokens.length === 0) return [];
-
-    // 2. Pré-processamento das configurações para busca rápida
-    // Filtro Estrito (AND): A configuração DEVE conter TODOS os tokens pesquisados.
     const filtrados = configuracoes.filter(cfg => {
-      const nmOriginal = (cfg.nm_configuracao || "").toLowerCase();
-      const nmNorm = nmOriginal.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const nm = (cfg.nm_configuracao || "").toLowerCase();
       
-      // Removemos TUDO que não for letra ou número para comparação de "colados"
-      const nmClean = nmNorm.replace(/[^a-z0-9]/g, '');
+      // Se tem tokens (AND), todos devem bater
+      if (tokens.length > 0) {
+        return tokens.every(t => {
+          const tClean = t.replace(/%/g, '');
+          return nm.includes(tClean.toLowerCase());
+        });
+      }
       
-      return tokens.every(t => {
-        const tNorm = t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-        if (!tNorm) return true;
-        
-        // Verifica se o token existe no nome (com ou sem pontuação)
-        // O includes garante que "35" encontre "T35" ou "L35"
-        return nmNorm.includes(tNorm) || nmClean.includes(tNorm);
-      });
+      // Caso contrário, usa o padrão ILIKE simples
+      const pClean = padrao.replace(/%/g, '');
+      return nm.includes(pClean.toLowerCase());
     });
 
-    // 3. Ranking por similaridade e tokens estruturais
-    const weighted = weightTokens(tokens);
+    // 2. Ranking simplificado para manter a ordem alfabética ou por relevância básica
+    const weighted = weightTokens(tokenize(termo));
     const ranked = filtrados.map(cfg => {
       const nm = (cfg.nm_configuracao || "").toLowerCase();
-      const nmNorm = nm.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
       let score = 0;
-      let matches = 0;
-
       weighted.forEach(w => {
-        if (nmNorm.includes(w.token)) {
-          score += w.weight * 5; // Peso alto para tokens estruturais
-          matches++;
-        }
+        if (nm.includes(w.token)) score += w.weight;
       });
-
-      // Bonus por proximidade de tamanho (evita que "cortina" traga nomes gigantes irrelevantes primeiro)
-      const diffLen = Math.abs(nm.length - termo.length);
-      score -= diffLen * 0.1;
 
       return {
         cfg,
         score,
-        matchedCount: matches
+        coverage: 1
       };
     });
 
-    // Ordenação final: maior score primeiro, depois alfabético
     return ranked
       .sort((a, b) => b.score - a.score || a.cfg.nm_configuracao.localeCompare(b.cfg.nm_configuracao))
       .map(r => ({
         cfg: r.cfg,
         score: r.score,
-        matched: [], // Mantido por compatibilidade de interface
-        coverage: r.matchedCount / tokens.length
+        matched: [],
+        coverage: r.coverage
       }))
       .slice(0, 500);
   }, [termoDeferido, configuracoes]);
