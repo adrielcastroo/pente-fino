@@ -937,38 +937,31 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     const weighted = weightTokens(tokens);
 
     // 2. Filtro Determinístico (Lógica AND): a configuração DEVE conter TODOS os tokens pesquisados.
+    // Usamos o termo original (termoBusca) para garantir que caracteres como "*" não sejam 
+    // apenas separadores, mas guiem a lógica de busca se necessário.
     let filtrados = configuracoes.filter(cfg => {
       const nmOriginal = (cfg.nm_configuracao || "").toLowerCase();
       const nmNorm = nmOriginal.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
       const nmSemPontuacao = nmNorm.replace(/[^\w\s]/g, ' ');
       
+      // Cada token digitado pelo usuário deve estar presente no nome da configuração
       return tokens.every(t => {
         const tNorm = t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        // Verifica no nome original, no normalizado e no sem pontuação para máxima abrangência
         return nmOriginal.includes(tNorm) || nmNorm.includes(tNorm) || nmSemPontuacao.includes(tNorm);
       });
     });
 
-    // Fallback: Se não encontrou nada com AND estrito, tenta relaxar os tokens
-    // removendo os muito curtos ou ignorando erros comuns de digitação/sincronia.
-    if (filtrados.length === 0 && tokens.length > 2) {
-      const tokensLongos = tokens.filter(t => t.length >= 3);
-      if (tokensLongos.length > 0) {
-        filtrados = configuracoes.filter(cfg => {
-          const nm = (cfg.nm_configuracao || "").toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-          return tokensLongos.every(t => nm.includes(t));
-        });
-      }
-    }
-
     // 3. Ranking por relevância (Pesagem estatística)
     const ranked = filtrados.map(cfg => {
       const nm = (cfg.nm_configuracao || "").toLowerCase();
+      const nmNorm = nm.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
       let score = 0;
       const matched: string[] = [];
 
       weighted.forEach(w => {
-        if (nm.includes(w.token)) {
-          score += w.weight * 2; // Hit exato
+        if (nm.includes(w.token) || nmNorm.includes(w.token)) {
+          score += w.weight * 2; // Hit exato/relevante
           matched.push(w.token);
         }
       });
@@ -981,8 +974,9 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       };
     });
 
-    // Ordena pelo score de peso (tokens estruturais valem mais)
+    // Ordena pelo score de peso (tokens estruturais valem mais) e depois por ordem alfabética
     return ranked.sort((a, b) => b.score - a.score || a.cfg.nm_configuracao.localeCompare(b.cfg.nm_configuracao));
+  }, [termoDeferido, configuracoes]);
   }, [termoDeferido, configuracoes]);
 
 
