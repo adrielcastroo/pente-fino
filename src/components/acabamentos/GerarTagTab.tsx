@@ -1212,7 +1212,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       }
     }
     // Com um único modelo de referência, todas as suas TAGs são o padrão.
-    const minimo = totalModelos === 1 ? 1 : Math.max(2, Math.ceil(totalModelos * 0.9));
+    const minimo = totalModelos === 1 ? 1 : Math.max(1, Math.ceil(totalModelos * 0.7));
     const out: Array<{ code: string; valor: string; calculada: string; freq: number; total: number }> = [];
     for (const [code, info] of acc) {
       if (info.n < minimo) continue;
