@@ -679,20 +679,8 @@ function ConfiguracaoSelect({
     });
   }, [termo, opcoes.length, isFetching, isSuccess, padrao.length, onSearchStateChange]);
 
-  if (valor && !aberto) {
-    return (
-      <div className="flex items-center gap-2 rounded border px-2 py-2">
-        <Layers className="h-3.5 w-3.5 text-primary shrink-0" />
-        <span className="text-[11px] font-medium break-all flex-1">{valor.nm}</span>
-        <Button size="sm" variant="ghost" className="h-6 px-2 text-[10px]" onClick={() => { setAberto(true); setBusca(valor.nm); }}>
-          Trocar
-        </Button>
-        <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => onChange(null)} aria-label="Limpar configuração">
-          <X className="h-3 w-3" />
-        </Button>
-      </div>
-    );
-  }
+  // A exibição de valor selecionado individualmente foi removida para priorizar o fluxo automatizado global
+  // que atua sobre todas as configurações encontradas pelo termo de busca.
 
   const mostrarDropdown = false; // Desativado para remover seleção individual conforme solicitado
 
