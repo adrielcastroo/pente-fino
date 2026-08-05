@@ -934,18 +934,16 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     if (tokens.length === 0) return [];
 
     // 2. Filtro estrito (Lógica AND): a configuração DEVE conter TODOS os tokens pesquisados.
-    // Adicionamos um fallback: se a busca AND estrita falhar, tentamos uma busca mais flexível
-    // que verifica se os tokens existem como partes de palavras ou se coincidem com abreviações.
+    // Otimização: Verificamos o nome bruto primeiro e depois o normalizado para máxima cobertura.
     let filtrados = configuracoes.filter(cfg => {
-      const nm = (cfg.nm_configuracao || "")
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '');
+      const nmOriginal = (cfg.nm_configuracao || "").toLowerCase();
+      const nmNorm = nmOriginal.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const nmSemPontuacao = nmNorm.replace(/[^\w\s]/g, ' ');
       
-      // Verifica se cada token da busca está contido no nome da configuração.
-      // Removemos pontuações do nome para facilitar o casamento (ex: "10%" vira "10").
-      const nmClean = nm.replace(/[^\w\s]/g, ' ');
-      return tokens.every(t => nm.includes(t) || nmClean.includes(t));
+      return tokens.every(t => {
+        const tNorm = t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        return nmOriginal.includes(tNorm) || nmNorm.includes(tNorm) || nmSemPontuacao.includes(tNorm);
+      });
     });
 
     // Fallback: Se não encontrou nada com AND estrito, tenta relaxar os tokens
@@ -1043,13 +1041,24 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     queryFn: async () => {
       const sel =
         'cd_configuracao, nm_configuracao, nm_tag_customizada, ds_tag_customizada, ds_tag_calculada, ds_tag_texto';
-      // A busca por palavras-chave agora é estrita: exige TODOS os tokens (AND)
-      // para garantir que o Resumo seja assertivo e condizente com a pesquisa.
+      
       const tokens = palavras.map(p => p.token);
       if (tokens.length === 0) return { rows: [] as CustomTag[], usados: [] as string[] };
 
+      // Se houver configurações já filtradas pelo rankConfiguracoes no frontend,
+      // podemos usar seus IDs para buscar as TAGs no banco, garantindo consistência
+      // entre o bloco Resumo e as recomendações de TAGs.
+      const codes = configsRanqueadas.slice(0, 500).map(r => r.cfg.cd_configuracao);
+      
       let q = (supabase as any).from('auge_tag_custom').select(sel);
-      for (const t of tokens) q = q.ilike('nm_configuracao', `%${t}%`);
+      
+      if (codes.length > 0) {
+        // Busca as tags especificamente para as configurações que apareceram no resumo
+        q = q.in('cd_configuracao', codes);
+      } else {
+        // Fallback: Busca AND por tokens se não houver códigos (ou muitos códigos)
+        for (const t of tokens) q = q.ilike('nm_configuracao', `%${t}%`);
+      }
       
       const { data, error } = await q.limit(4000);
       if (error) throw error;
