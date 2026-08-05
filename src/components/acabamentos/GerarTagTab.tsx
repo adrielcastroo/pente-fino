@@ -1175,7 +1175,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         calculada: r.calculada,
         formula: '',
       })));
-    } else if (termoBusca.trim().length < 3) {
+    } else if (termoBusca.trim().length < 2) {
       // Limpa se o termo for removido
       setLinhas([]);
     }
