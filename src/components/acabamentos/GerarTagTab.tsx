@@ -898,12 +898,23 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     queryKey: ['auge-tag-custom-configuracoes'],
     staleTime: 10 * 60 * 1000,
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from('auge_tag_custom_configuracoes')
-        .select('cd_configuracao, nm_configuracao, qtd_tags')
-        .limit(20000);
-      if (error) throw error;
-      return (data ?? []) as ConfiguracaoLite[];
+      // Consultamos tanto as configurações que já possuem TAGs quanto o scan geral
+      const [resConfig, resScan] = await Promise.all([
+        (supabase as any).from('auge_tag_custom_configuracoes').select('cd_configuracao, nm_configuracao, qtd_tags').limit(15000),
+        (supabase as any).from('auge_tag_custom_scan').select('cd_configuracao, nm_configuracao, qtd_tags').limit(15000)
+      ]);
+
+      const merged = [...(resConfig.data || []), ...(resScan.data || [])];
+      const seen = new Set<string>();
+      const out: ConfiguracaoLite[] = [];
+
+      for (const r of merged) {
+        if (!r.cd_configuracao || seen.has(r.cd_configuracao)) continue;
+        seen.add(r.cd_configuracao);
+        out.push(r as ConfiguracaoLite);
+      }
+      
+      return out;
     },
   });
 
