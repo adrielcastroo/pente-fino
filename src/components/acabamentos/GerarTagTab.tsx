@@ -1624,14 +1624,14 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                 {configsRanqueadas.length > 0 ? (
                   <>
                     <div className="text-[10px] text-muted-foreground leading-relaxed">
-                      As configurações abaixo foram identificadas pelas palavras-chave. As TAGs incluídas na composição serão aplicadas a todas simultaneamente.
+                      As configurações abaixo foram identificadas com base no filtro estrito (AND) das suas palavras-chave. As TAGs abaixo serão aplicadas a todos esses itens.
                     </div>
-                    <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto pr-1">
+                    <div className="flex flex-wrap gap-1.5 max-h-60 overflow-y-auto pr-1">
                       {configsRanqueadas.map((r) => (
                         <Badge 
                           key={r.cfg.cd_configuracao} 
                           variant="outline" 
-                          className="text-[10px] font-normal py-0.5 px-2 bg-background/50"
+                          className="text-[10px] font-mono py-0.5 px-2 bg-background/50 border-primary/20 hover:bg-muted transition-colors"
                         >
                           {r.cfg.nm_configuracao}
                         </Badge>
@@ -1639,9 +1639,13 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                     </div>
                   </>
                 ) : (
-                  <div className="py-2">
-                    <p className="text-[10px] text-muted-foreground">
-                      O sistema não identificou configurações automáticas para o termo "{termoBusca}". Você ainda pode criar uma TAG Custom nova se gravar.
+                  <div className="py-4 flex flex-col items-center justify-center text-center bg-muted/20 rounded-md border border-dashed border-muted-foreground/20">
+                    <Search className="h-5 w-5 mb-2 text-muted-foreground opacity-20" />
+                    <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">
+                      (Nenhuma configuração exata encontrada)
+                    </p>
+                    <p className="text-[9px] text-muted-foreground/60 max-w-[200px] mt-1">
+                      Certifique-se de que os termos pesquisados (como "{termoBusca}") existem exatamente no cadastro.
                     </p>
                   </div>
                 )}
