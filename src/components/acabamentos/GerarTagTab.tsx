@@ -1017,12 +1017,26 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     queryFn: async () => {
       const sel =
         'cd_configuracao, nm_configuracao, nm_tag_customizada, ds_tag_customizada, ds_tag_calculada, ds_tag_texto';
-      // Relaxamento progressivo: começa exigindo todas as palavras (AND) e vai
-      // descartando as menos relevantes até encontrar modelos existentes.
+      // Mesmas colunas pesquisadas no fluxo do `tagsBusca` (campos editáveis da
+      // TAG Custom): o usuário pode digitar "cortina*cm*35*10*balance*" mas a
+      // configuração pode estar grafada como "CORTINA ROLLO CM 35 BALANCE 10"
+      // em `ds_tag_customizada` ou `nm_tag_customizada`. Antes o AND era feito
+      // só em `nm_configuracao`, então o bloco resumo voltava vazio para casos
+      // onde as palavras-chave existem em outras colunas da TAG.
+      const colsPalavras = ['nm_configuracao', 'ds_tag_customizada', 'nm_tag_customizada', 'ds_tag_texto', 'ds_tag_calculada'];
+
+      // Relaxamento progressivo: começa exigindo todas as palavras (AND entre
+      // tokens, OR entre colunas) e vai descartando as menos relevantes até
+      // encontrar modelos existentes.
       for (let n = palavras.length; n >= 1; n--) {
         const usados = palavras.slice(0, n);
         let q = (supabase as any).from('auge_tag_custom').select(sel);
-        for (const p of usados) q = q.ilike('nm_configuracao', `%${p.token}%`);
+        for (const p of usados) {
+          const ilikeGroup = colsPalavras
+            .map((c) => `${c}.ilike.%${p.token}%`)
+            .join(',');
+          q = q.or(ilikeGroup);
+        }
         const { data, error } = await q.limit(4000);
         if (error) throw error;
         if ((data ?? []).length > 0) {
