@@ -115,7 +115,7 @@ function rankConfiguracoes(input: string, cfgs: ConfiguracaoLite[]): RankedConfi
       }
     }
     const coverage = strongHit / strongCount;
-    if (coverage < 0.4 || score < 4) continue;
+    if (coverage < 0.2 || score < 2) continue;
     score += Math.round(coverage * 5);
     results.push({ cfg, score, matched, coverage });
   }
