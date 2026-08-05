@@ -319,7 +319,6 @@ export default function LabelLayoutPanel() {
                   {isAdmin && (
                     <>
                       <WebhookUrlEditor />
-                      <SilentPrintPanel />
                     </>
                   )}
 
@@ -1019,42 +1018,6 @@ const SILENT_PRINT_KEY = 'pref_silent_browser_print';
  * Chrome/Edge é iniciado com a flag `--kiosk-printing`. Este painel expõe o
  * toggle da preferência e um passo-a-passo para configurar o atalho.
  */
-function SilentPrintPanel() {
-  const [enabled, setEnabled] = useState<boolean>(() => {
-    if (typeof localStorage === 'undefined') return false;
-    return localStorage.getItem(SILENT_PRINT_KEY) === 'true';
-  });
-
-  const toggle = (v: boolean) => {
-    setEnabled(v);
-    try {
-      if (v) localStorage.setItem(SILENT_PRINT_KEY, 'true');
-      else localStorage.removeItem(SILENT_PRINT_KEY);
-      const webhookUrl = localStorage.getItem('n8n_webhook_url');
-      saveGlobalSetting(GLOBAL_PRINT_CONFIG_KEY, { webhookUrl: webhookUrl || null, silentPrint: v })
-        .catch((e) => console.warn('[global-settings] impressão silenciosa', e));
-      toast.success(v
-        ? 'Impressão direta habilitada'
-        : 'Impressão direta desabilitada');
-    } catch { /* noop */ }
-  };
-
-  return (
-    <div className="space-y-2 pt-2 rounded-md border border-dashed border-primary/30 bg-primary/5 px-2.5 py-2">
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          <Label className="text-xs font-bold flex items-center gap-1.5">
-            🖨️ Impressão Direta (sem diálogo)
-          </Label>
-          <p className="text-[10px] opacity-70 leading-tight mt-0.5">
-            Tenta imprimir diretamente na impressora padrão sem mostrar o diálogo do navegador. 
-          </p>
-        </div>
-        <Switch checked={enabled} onCheckedChange={toggle} />
-      </div>
-    </div>
-  );
-}
 
 
 
