@@ -908,29 +908,37 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   });
 
   const configsRanqueadas = useMemo(() => {
-    if (!termoDeferido.trim() || configuracoes.length === 0) return [];
+    const termo = termoDeferido.trim().toLowerCase();
+    if (!termo || configuracoes.length === 0) return [];
     
-    // Tentativa 1: Ranking por relevância de tokens (heurística)
-    const ranked = rankConfiguracoes(termoDeferido, configuracoes);
-    
-    // Tentativa 2: Fallback para busca textual AND simples caso o ranking seja muito restritivo
-    if (ranked.length === 0) {
-      const tokens = tokenize(termoDeferido);
-      if (tokens.length > 0) {
-        const fallback = configuracoes.filter(cfg => {
-          const name = (cfg.nm_configuracao || "").toLowerCase();
-          return tokens.every(t => name.includes(t));
-        }).map(cfg => ({
-          cfg,
-          score: 1,
-          matched: tokens,
-          coverage: 1
-        }));
-        return fallback.slice(0, 100);
-      }
-    }
-    
-    return ranked;
+    // 1. Tokenização rigorosa para filtro exato
+    // Removemos caracteres especiais para comparar apenas o texto
+    const tokens = termo
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .split(/[\s*_\-/.,;:()\[\]]+/)
+      .filter(t => t.length >= 2);
+
+    if (tokens.length === 0) return [];
+
+    // 2. Filtro estrito: a configuração DEVE conter TODOS os tokens pesquisados
+    // Isso garante que "Cortina*CM*35" traga apenas itens com Cortina E CM E 35
+    const filtrados = configuracoes.filter(cfg => {
+      const nm = (cfg.nm_configuracao || "")
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+      
+      return tokens.every(t => nm.includes(t));
+    });
+
+    // 3. Mapeamento para o formato esperado pelo componente com score básico
+    return filtrados.map(cfg => ({
+      cfg,
+      score: 1,
+      matched: tokens,
+      coverage: 1
+    })).sort((a, b) => a.cfg.nm_configuracao.localeCompare(b.cfg.nm_configuracao));
   }, [termoDeferido, configuracoes]);
 
 
