@@ -977,7 +977,6 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     // Ordena pelo score de peso (tokens estruturais valem mais) e depois por ordem alfabética
     return ranked.sort((a, b) => b.score - a.score || a.cfg.nm_configuracao.localeCompare(b.cfg.nm_configuracao));
   }, [termoDeferido, configuracoes]);
-  }, [termoDeferido, configuracoes]);
 
 
   const topCfgCodes = useMemo(
