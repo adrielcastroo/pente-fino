@@ -18,9 +18,7 @@ import {
   Sparkles,
   Pencil,
   History,
-
-
-
+  ChevronRight,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { normalizeTagFormatC } from '@/lib/tag-utils';
@@ -1119,7 +1117,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     return arr;
   }, [tagsUnificadas, configsRanqueadas]);
 
-  /** TAGs necessárias (bloco da esquerda): melhor item de cada categoria. */
+  /** TAGs necessárias: melhor item de cada categoria. */
   const recomendadas = useMemo(() => {
     const out: Array<{ id: string; code: string; valor: string; cfgNome: string; calculada: string }> = [];
     for (const cat of categorias) {
@@ -1138,6 +1136,23 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     }
     return out;
   }, [categorias]);
+
+  // Sincroniza automaticamente a tabela com as recomendações do sistema
+  useEffect(() => {
+    if (recomendadas.length > 0) {
+      setLinhas(recomendadas.map(r => ({
+        id: r.id,
+        code: r.code,
+        valor: r.valor,
+        cfgNome: r.cfgNome,
+        calculada: r.calculada,
+        formula: '',
+      })));
+    } else if (termoBusca.trim().length < 3) {
+      // Limpa se o termo for removido
+      setLinhas([]);
+    }
+  }, [recomendadas, termoBusca]);
 
   // ---------- Padrão obrigatório de TAGs ----------
   /**
@@ -1432,7 +1447,8 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     try {
       const { data, error } = await supabase.functions.invoke('auge-sync?action=criar_tag_custom', {
         body: {
-          // Configuração (Pente Fino) -> Configuração (Auge)
+          // Lista de configurações detectadas no Resumo
+          cdConfiguracoes: configsRanqueadas.map(r => r.cfg.cd_configuracao),
           cdConfiguracao: customAberta?.cd ?? '',
           descricao: descricaoFinal,
           itens: linhas.map((l) => {
@@ -1545,7 +1561,6 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
   return (
     <div className="space-y-4">
-      
       {/* Espelha o diálogo "Manter Tag Customizada" do Auge */}
       <Card className="p-4 space-y-4">
         <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
@@ -1559,7 +1574,6 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
             {ehTagCustomNova && (
               <Badge className="bg-amber-500 text-amber-950 hover:bg-amber-500 text-[9px]">Nova TAG Custom</Badge>
             )}
-
           </div>
           <ConfiguracaoSelect
             valor={customAberta}
@@ -1567,17 +1581,48 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
             onSearchStateChange={setCfgSearch}
           />
           <p className="text-[10px] text-muted-foreground">
-            Digite aqui (ex.: <code className="font-mono">Rollo Pro</code>) — o app analisa todas as TAGs
-            Custom com esse texto e exige as TAGs Configuradas que são padrão nelas.
-            <span className="font-semibold text-foreground"> Curinga:</span> <code className="font-mono">*</code> como
-            no SAP B1 (mín. 3 caracteres).
+            Digite aqui (ex.: <code className="font-mono">Rollo Pro</code>) — o sistema selecionará todas as configurações 
+            e TAGs correspondentes automaticamente.
+            <span className="font-semibold text-foreground"> Curinga:</span> <code className="font-mono">*</code> como no SAP B1.
           </p>
-
         </div>
 
-
-
-
+        {/* BLOCO DE RESUMO (Colapsável) */}
+        {configsRanqueadas.length > 0 && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-lg border bg-muted/30 overflow-hidden"
+          >
+            <details className="group">
+              <summary className="flex items-center justify-between p-3 cursor-pointer hover:bg-muted/50 transition-colors list-none">
+                <div className="flex items-center gap-2">
+                  <Layers className="h-4 w-4 text-primary" />
+                  <span className="text-[11px] font-semibold uppercase tracking-wider">
+                    Resumo ({configsRanqueadas.length} configurações encontradas)
+                  </span>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-90" />
+              </summary>
+              <div className="px-3 pb-3 space-y-2 border-t pt-2">
+                <div className="text-[10px] text-muted-foreground leading-relaxed">
+                  As configurações abaixo foram identificadas pelas palavras-chave. As TAGs incluídas na composição serão aplicadas a todas simultaneamente.
+                </div>
+                <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto pr-1">
+                  {configsRanqueadas.map((r) => (
+                    <Badge 
+                      key={r.cfg.cd_configuracao} 
+                      variant="outline" 
+                      className="text-[10px] font-normal py-0.5 px-2 bg-background/50"
+                    >
+                      {r.cfg.nm_configuracao}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            </details>
+          </motion.div>
+        )}
 
         {ehTagCustomNova && (
           <div className="rounded border border-amber-500/40 bg-amber-500/10 p-2.5 flex items-start gap-2">
@@ -1589,82 +1634,11 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
               </div>
               <p className="text-[10px] text-muted-foreground">
                 Nenhuma configuração existente casou com “{termoBusca.trim()}”. Ao gravar, o Auge
-                criará uma TAG Custom nova com as TAGs Configuradas da tabela ao lado.
+                criará uma TAG Custom nova com as TAGs Configuradas da tabela abaixo.
               </p>
             </div>
           </div>
         )}
-
-        {obrigatorias.length > 0 && (
-          <div className="rounded border border-blue-500/50 bg-blue-500/5 p-2.5 space-y-2">
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <div className="text-[11px] font-semibold flex items-center gap-1.5 text-blue-700 dark:text-blue-400">
-                  {obrigatoriasFaltando.length > 0
-                    ? <AlertTriangle className="h-3.5 w-3.5" />
-                    : <CheckCircle2 className="h-3.5 w-3.5" />}
-                  TAGs Configuradas obrigatórias
-                  <Badge variant="outline" className="text-[9px] border-blue-500/50 text-blue-700 dark:text-blue-400">
-                    {obrigatorias.length - obrigatoriasFaltando.length}/{obrigatorias.length}
-                  </Badge>
-                </div>
-                <p className="text-[10px] text-muted-foreground">
-                  Padrão detectado em {obrigatorias[0]?.total ?? 0} TAG(s) Custom existentes que compartilham as
-                  palavras-chave da configuração. As TAGs em{' '}
-                  <span className="text-blue-700 dark:text-blue-400 font-medium">azul</span> são obrigatórias — a
-                  gravação fica bloqueada enquanto faltar alguma.
-                </p>
-                {escopoPadrao.tokens.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-1 pt-1">
-                    <span className="text-[9px] uppercase tracking-wide text-muted-foreground">Palavras-chave:</span>
-                    {escopoPadrao.tokens.map((t) => (
-                      <span
-                        key={t}
-                        className="rounded bg-blue-500/10 border border-blue-500/30 px-1.5 py-0.5 font-mono text-[9px] text-blue-700 dark:text-blue-400"
-                      >
-                        {t}
-                      </span>
-                    ))}
-                    {palavrasUsadas.length > 0 && palavrasUsadas.length < palavras.length && (
-                      <span className="text-[9px] text-muted-foreground">
-                        (busca relaxada para {palavrasUsadas.length} de {palavras.length})
-                      </span>
-                    )}
-                  </div>
-                )}
-
-
-
-
-              </div>
-              {obrigatoriasFaltando.length > 0 && (
-                <Button size="sm" variant="outline" className="h-7 px-2 text-[10px] shrink-0 border-blue-500/50 text-blue-700 dark:text-blue-400" onClick={adicionarObrigatoriasFaltando}>
-                  <Plus className="h-3 w-3 mr-1" /> Adicionar faltantes
-                </Button>
-              )}
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {obrigatorias.map((o) => {
-                const ok = codigosNaTabela.has(o.code);
-                return (
-                  <span
-                    key={o.code}
-                    title={`${o.valor} · obrigatória · presente em ${o.freq}/${o.total} modelos`}
-                    className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 font-mono text-[10px] text-blue-700 dark:text-blue-400 ${
-                      ok
-                        ? 'border-blue-500/50 bg-blue-500/15'
-                        : 'border-blue-500/60 bg-blue-500/5 border-dashed'
-                    }`}
-                  >
-                    {ok ? <CheckCircle2 className="h-3 w-3" /> : <AlertTriangle className="h-3 w-3" />}
-                    {o.code}
-                  </span>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
       </Card>
 
 
