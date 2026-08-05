@@ -260,7 +260,7 @@ function submitHiddenForm(webhookUrl: string, form: URLSearchParams): Promise<vo
     document.body.appendChild(iframe);
     document.body.appendChild(htmlForm);
     htmlForm.submit();
-    window.setTimeout(cleanup, 1500);
+    window.setTimeout(cleanup, 500);
   });
 }
 
@@ -332,9 +332,11 @@ async function sendToWebhook(
   try {
     res = await fetch(webhookUrl, {
       method: 'POST',
+      mode: 'cors', // Forçamos CORS para evitar preflights lentos quando possível
       headers: { 'Content-Type': 'application/json; charset=utf-8' },
       body: JSON.stringify(body),
-    });
+      priority: 'high' // Prioridade de rede máxima
+    } as any);
   } catch (e: any) {
     // Se falhar e a URL for a da Railway, não tentamos o formulário oculto (que abre nova aba)
     if (webhookUrl.includes('primary-production-162eb.up.railway.app')) {
