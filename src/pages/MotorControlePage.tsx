@@ -235,7 +235,7 @@ export default function MotorControlePage() {
 
   return (
     <FormPageLayout>
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col min-h-screen bg-background">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col min-h-screen bg-background pt-3 sm:pt-4">
         <div className="flex-1 overflow-y-auto custom-scrollbar p-3 sm:p-5 space-y-5 pb-24">
           <div className="flex bg-card/50 p-1.5 rounded-[2rem] border border-white/5 shadow-inner">
             {(['motor', 'controle', 'coulisse'] as SubMode[]).map(mode => (
