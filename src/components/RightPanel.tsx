@@ -421,7 +421,19 @@ export default function RightPanel() {
   return (
     <div className="flex flex-col h-full overflow-hidden bg-background rounded-md border border-border/50 shadow-2xl transition-all duration-500 min-h-0">
 
-      <div className="px-3 xs:px-4 sm:px-6 py-3 sm:py-5 bg-card/60 border-b border-border/40 flex flex-col gap-4 flex-shrink-0 min-w-0">
+      <div className="px-3 xs:px-4 sm:px-6 py-3 bg-card border-b border-border/40 flex flex-col gap-3 flex-shrink-0 min-w-0">
+        <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-md bg-primary/10 text-primary flex items-center justify-center">
+              <ScanBarcode className="w-4 h-4" />
+            </div>
+            <div className="flex flex-col leading-tight">
+              <span className="text-sm font-bold text-foreground font-display">Itens Conferidos</span>
+              <span className="text-[10px] text-muted-foreground/70 font-bold uppercase tracking-wider">Preview da Tabela</span>
+            </div>
+          </div>
+        </div>
+
         <div className="flex flex-row flex-wrap items-center gap-2 sm:gap-4 min-w-0">
           <div className="relative flex-1 min-w-[160px] group">
             <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within:text-primary group-focus-within:scale-110 transition-all duration-300" />
@@ -454,21 +466,6 @@ export default function RightPanel() {
               </SelectContent>
             </Select>
 
-            {registros.length > 0 && !isGuest && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={handleClearAll}
-                    className="h-11 w-11 sm:h-12 sm:w-12 rounded-md border-border/50 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 hover:rotate-12 transition-all active:scale-95 shadow-sm"
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Limpar Tabela</TooltipContent>
-              </Tooltip>
-            )}
 
           </div>
         </div>
