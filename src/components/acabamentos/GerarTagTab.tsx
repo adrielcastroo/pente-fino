@@ -121,7 +121,7 @@ function rankConfiguracoes(input: string, cfgs: ConfiguracaoLite[]): RankedConfi
   }
 
   results.sort((a, b) => b.score - a.score);
-  return results.slice(0, 30);
+  return results.slice(0, 50);
 }
 
 function normalizeTagCode(raw: string | null | undefined): string {
