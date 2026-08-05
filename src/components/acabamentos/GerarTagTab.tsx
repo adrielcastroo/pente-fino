@@ -694,7 +694,7 @@ function ConfiguracaoSelect({
     );
   }
 
-  const mostrarDropdown = aberto && padrao.length >= 3 && (isFetching || opcoes.length > 0);
+  const mostrarDropdown = false; // Desativado para remover seleção individual conforme solicitado
 
   return (
     <div className="space-y-1" ref={wrapRef}>
