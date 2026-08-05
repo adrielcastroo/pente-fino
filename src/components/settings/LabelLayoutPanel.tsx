@@ -1024,8 +1024,6 @@ function SilentPrintPanel() {
     if (typeof localStorage === 'undefined') return false;
     return localStorage.getItem(SILENT_PRINT_KEY) === 'true';
   });
-  const [showHelp, setShowHelp] = useState(false);
-  const [copied, setCopied] = useState<string | null>(null);
 
   const toggle = (v: boolean) => {
     setEnabled(v);
@@ -1036,96 +1034,24 @@ function SilentPrintPanel() {
       saveGlobalSetting(GLOBAL_PRINT_CONFIG_KEY, { webhookUrl: webhookUrl || null, silentPrint: v })
         .catch((e) => console.warn('[global-settings] impressão silenciosa', e));
       toast.success(v
-        ? 'Impressão silenciosa habilitada — requer Chrome/Edge em modo kiosk-printing'
-        : 'Impressão silenciosa desabilitada');
+        ? 'Impressão direta habilitada'
+        : 'Impressão direta desabilitada');
     } catch { /* noop */ }
   };
 
-
-  const copyToClipboard = async (text: string, id: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(id);
-      setTimeout(() => setCopied(null), 1500);
-      toast.success('Copiado');
-    } catch {
-      toast.error('Não foi possível copiar');
-    }
-  };
-
-  const chromeFlag = '--kiosk-printing --no-first-run --disable-print-preview';
-
   return (
-    <div className="space-y-2 pt-2 rounded-md border border-dashed border-amber-500/30 bg-amber-500/5 px-2.5 py-2">
+    <div className="space-y-2 pt-2 rounded-md border border-dashed border-primary/30 bg-primary/5 px-2.5 py-2">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <Label className="text-xs font-bold flex items-center gap-1.5">
-            🖨️ Impressão silenciosa (sem diálogo)
+            🖨️ Impressão Direta (sem diálogo)
           </Label>
           <p className="text-[10px] opacity-70 leading-tight mt-0.5">
-            Imprime direto na impressora padrão do Windows sem mostrar o diálogo. <b>Requer configuração do atalho do navegador.</b>
+            Tenta imprimir diretamente na impressora padrão sem mostrar o diálogo do navegador. 
           </p>
         </div>
         <Switch checked={enabled} onCheckedChange={toggle} />
       </div>
-
-      {enabled && (
-        <div className="rounded-md bg-amber-500/10 border border-amber-500/20 px-2 py-1.5 text-[10px] leading-tight">
-          <b className="text-warning dark:text-warning">Atenção:</b> se o Chrome/Edge não foi aberto com a flag <span className="font-mono">--kiosk-printing</span>, o diálogo ainda aparecerá.
-        </div>
-      )}
-
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        className="h-7 text-[11px] gap-1 w-full justify-start px-2 hover:bg-amber-500/10"
-        onClick={() => setShowHelp(v => !v)}
-      >
-        {showHelp ? '▼' : '▶'} Como configurar (passo-a-passo)
-      </Button>
-
-      {showHelp && (
-        <div className="space-y-2 pt-1 pb-1 px-2 text-[10.5px] leading-relaxed">
-          <div>
-            <div className="font-bold text-foreground mb-0.5">1. Defina a impressora de etiquetas como padrão</div>
-            <div className="opacity-75">Windows → <i>Configurações → Bluetooth e dispositivos → Impressoras</i> → clique na impressora → <b>Definir como padrão</b>. Ajuste o tamanho do papel para <span className="font-mono">{'{largura×altura}'}</span> mm nas <i>Preferências de impressão</i>.</div>
-          </div>
-          <div>
-            <div className="font-bold text-foreground mb-0.5">2. Crie um atalho especial do Chrome (ou Edge)</div>
-            <div className="opacity-75">Clique com o botão direito no atalho → <b>Propriedades</b> → no campo <i>Destino</i>, adicione ao final:</div>
-            <div className="mt-1 flex items-center gap-1">
-              <code className="flex-1 font-mono text-[10px] bg-background/80 border border-border/60 rounded px-2 py-1 break-all">
-                {chromeFlag}
-              </code>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="h-7 px-2 text-[10px] shrink-0"
-                onClick={() => copyToClipboard(chromeFlag, 'flag')}
-              >
-                {copied === 'flag' ? <Check className="w-3 h-3" /> : 'Copiar'}
-              </Button>
-            </div>
-            <div className="opacity-60 mt-1">
-              Exemplo do campo Destino completo:<br />
-              <span className="font-mono text-[9.5px] break-all">"C:\Program Files\Google\Chrome\Application\chrome.exe" {chromeFlag}</span>
-            </div>
-          </div>
-          <div>
-            <div className="font-bold text-foreground mb-0.5">3. Abra o app SEMPRE por esse atalho</div>
-            <div className="opacity-75">Se abrir o Chrome pelo atalho normal (menu iniciar, taskbar padrão), o modo kiosk não estará ativo e o diálogo voltará. Fixe esse atalho especial na barra de tarefas.</div>
-          </div>
-          <div>
-            <div className="font-bold text-foreground mb-0.5">4. Ative o toggle acima</div>
-            <div className="opacity-75">Com o toggle ligado e o navegador em modo kiosk, cada etiqueta imprime direto sem confirmação.</div>
-          </div>
-          <div className="mt-2 rounded-md bg-primary/5 border border-primary/15 px-2 py-1.5">
-            <b className="text-primary">Alternativa recomendada:</b> use o webhook do n8n. É <b>100% silencioso</b>, não depende de configuração do navegador e imprime direto pelo spooler do sistema.
-          </div>
-        </div>
-      )}
     </div>
   );
 }
