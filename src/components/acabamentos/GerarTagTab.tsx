@@ -928,55 +928,41 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     enabled: termoDeferido.trim().length >= 2,
     staleTime: 60 * 1000,
     queryFn: async () => {
-      const sel = 'cd_configuracao, nm_configuracao, nm_tag_customizada, ds_tag_customizada, ds_tag_calculada, ds_tag_texto';
-      const termo = termoDeferido.trim();
-      const tokensIlike = toIlikeTokens(termo);
-      const tokensPuros = termo.split(/[\s*]+/).map(t => t.trim().toLowerCase()).filter(t => t.length >= 2);
+      const sel =
+        'cd_configuracao, nm_configuracao, nm_tag_customizada, ds_tag_customizada, ds_tag_calculada, ds_tag_texto';
+      // Mesmas colunas pesquisadas no fluxo do `tagsBusca` (campos editáveis da
+      // TAG Custom): o usuário pode digitar "cortina*cm*35*10*balance*" mas a
+      // configuração pode estar grafada como "CORTINA ROLLO CM 35 BALANCE 10"
+      // em `ds_tag_customizada` ou `nm_tag_customizada`. Antes o AND era feito
+      // só em `nm_configuracao`, então o bloco resumo voltava vazio para casos
+      // onde as palavras-chave existem em outras colunas da TAG.
+      const colsPalavras = ['nm_configuracao', 'ds_tag_customizada', 'nm_tag_customizada', 'ds_tag_texto', 'ds_tag_calculada'];
 
-      if (tokensPuros.length === 0) return { configs: [], tags: [] };
-
-      // 1) Match por NOME DA CONFIGURAÇÃO (nm_configuracao)
-      // Aplicamos o filtro AND para garantir que todos os tokens estejam presentes no nome.
-      let qCfg = (supabase as any).from('auge_tag_custom').select(sel);
-      for (const t of tokensIlike) {
-        qCfg = qCfg.ilike('nm_configuracao', t);
+      // Relaxamento progressivo: começa exigindo todas as palavras (AND entre
+      // tokens, OR entre colunas) e vai descartando as menos relevantes até
+      // encontrar modelos existentes.
+      for (let n = palavras.length; n >= 1; n--) {
+        const usados = palavras.slice(0, n);
+        let q = (supabase as any).from('auge_tag_custom').select(sel);
+        for (const p of usados) {
+          const ilikeGroup = colsPalavras
+            .map((c) => `${c}.ilike.%${p.token}%`)
+            .join(',');
+          q = q.or(ilikeGroup);
+        }
+        const { data, error } = await q.limit(4000);
+        if (error) throw error;
+        if ((data ?? []).length > 0) {
+          return { rows: data as CustomTag[], usados: usados.map((u) => u.token) };
+        }
       }
-      
-      const { data: dataCfg, error: errorCfg } = await qCfg.limit(4000);
-      let acc: CustomTag[] = errorCfg ? [] : (dataCfg ?? []);
 
-      // 2) Deduplicação rigorosa e Validação Final no Cliente (Double Check)
-      // Para o bloco RESUMO, só aceitamos se bater no NOME DA CONFIGURAÇÃO.
-      const seenTag = new Set<string>();
-      const validRows = acc.filter((t) => {
-        const k = `${t.cd_configuracao}|${t.ds_tag_customizada ?? t.nm_tag_customizada ?? ''}|${t.ds_tag_texto ?? ''}`;
-        if (seenTag.has(k)) return false;
-        seenTag.add(k);
-
-        const nm = (t.nm_configuracao || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-        return tokensPuros.every(tk => nm.includes(tk));
-      });
-
-      // Deriva as configurações distintas
-      const cfgMap = new Map<string, ConfiguracaoLite>();
-      for (const t of validRows) {
-        const cd = String(t.cd_configuracao ?? '').trim();
-        if (!cd) continue;
-        const cur = cfgMap.get(cd) ?? {
-          cd_configuracao: cd,
-          nm_configuracao: t.nm_configuracao ?? cd,
-          qtd_tags: 0,
-        };
-        cur.qtd_tags += 1;
-        cfgMap.set(cd, cur);
-      }
-      
-      return { 
-        configs: Array.from(cfgMap.values()).sort((a, b) => a.nm_configuracao.localeCompare(b.nm_configuracao)), 
-        tags: validRows 
-      };
+      return { rows: [], usados: [] };
     },
   });
+  const resumoConfigs = useMemo(() => buscaPalavras?.rows ?? [], [buscaPalavras]);
+  const tagsPalavras = useMemo(() => buscaPalavras?.rows ?? [], [buscaPalavras]);
+  const tagsReconhecidas = useMemo(() => buscaPalavras?.rows ?? [], [buscaPalavras]);
   const resumoConfigs = useMemo(() => buscaPalavras?.configs ?? [], [buscaPalavras]);
   const tagsPalavras = useMemo(() => buscaPalavras?.tags ?? [], [buscaPalavras]);
   const tagsReconhecidas = useMemo(() => buscaPalavras?.tags ?? [], [buscaPalavras]);
