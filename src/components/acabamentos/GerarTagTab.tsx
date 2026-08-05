@@ -675,7 +675,7 @@ function ConfiguracaoSelect({
       termo,
       hasResults: opcoes.length > 0,
       isSearching: isFetching,
-      pesquisou: isSuccess && !isFetching && padrao.length >= 3,
+      pesquisou: isSuccess && !isFetching && termo.length >= 2,
     });
   }, [termo, opcoes.length, isFetching, isSuccess, padrao.length, onSearchStateChange]);
 
