@@ -1041,13 +1041,24 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     queryFn: async () => {
       const sel =
         'cd_configuracao, nm_configuracao, nm_tag_customizada, ds_tag_customizada, ds_tag_calculada, ds_tag_texto';
-      // A busca por palavras-chave agora é estrita: exige TODOS os tokens (AND)
-      // para garantir que o Resumo seja assertivo e condizente com a pesquisa.
+      
       const tokens = palavras.map(p => p.token);
       if (tokens.length === 0) return { rows: [] as CustomTag[], usados: [] as string[] };
 
+      // Se houver configurações já filtradas pelo rankConfiguracoes no frontend,
+      // podemos usar seus IDs para buscar as TAGs no banco, garantindo consistência
+      // entre o bloco Resumo e as recomendações de TAGs.
+      const codes = configsRanqueadas.slice(0, 500).map(r => r.cfg.cd_configuracao);
+      
       let q = (supabase as any).from('auge_tag_custom').select(sel);
-      for (const t of tokens) q = q.ilike('nm_configuracao', `%${t}%`);
+      
+      if (codes.length > 0) {
+        // Busca as tags especificamente para as configurações que apareceram no resumo
+        q = q.in('cd_configuracao', codes);
+      } else {
+        // Fallback: Busca AND por tokens se não houver códigos (ou muitos códigos)
+        for (const t of tokens) q = q.ilike('nm_configuracao', `%${t}%`);
+      }
       
       const { data, error } = await q.limit(4000);
       if (error) throw error;
