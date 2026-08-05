@@ -912,30 +912,47 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     if (!termo || configuracoes.length === 0) return [];
     
     // 1. Tokenização rigorosa para filtro exato
-    // Removemos caracteres especiais e espaços para comparar apenas o texto essencial
+    // Removemos caracteres especiais e espaços para comparar apenas o texto essencial.
+    // O caractere "*" é explicitamente tratado como separador.
     const tokens = termo
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .split(/[\s*_\-/.,;:()\[\]]+/)
-      .filter(t => t.length >= 1); // Aceita tokens curtos como "35" ou "CM"
+      .filter(t => t.length >= 1); 
 
     if (tokens.length === 0) return [];
 
-    // 2. Filtro estrito (Lógica AND): a configuração DEVE conter TODOS os tokens pesquisados
-    // Isso garante precisão: "cortina*35" traz apenas configurações com Cortina E 35.
-    const filtrados = configuracoes.filter(cfg => {
+    // 2. Filtro estrito (Lógica AND): a configuração DEVE conter TODOS os tokens pesquisados.
+    // Adicionamos um fallback: se a busca AND estrita falhar, tentamos uma busca mais flexível
+    // que verifica se os tokens existem como partes de palavras ou se coincidem com abreviações.
+    let filtrados = configuracoes.filter(cfg => {
       const nm = (cfg.nm_configuracao || "")
         .toLowerCase()
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '');
       
-      return tokens.every(t => nm.includes(t));
+      // Verifica se cada token da busca está contido no nome da configuração.
+      // Removemos pontuações do nome para facilitar o casamento (ex: "10%" vira "10").
+      const nmClean = nm.replace(/[^\w\s]/g, ' ');
+      return tokens.every(t => nm.includes(t) || nmClean.includes(t));
     });
 
-    // 3. Mapeamento para o formato esperado com ranking secundário por proximidade
+    // Fallback: Se não encontrou nada com AND estrito, tenta relaxar os tokens
+    // removendo os muito curtos ou ignorando erros comuns de digitação/sincronia.
+    if (filtrados.length === 0 && tokens.length > 2) {
+      const tokensLongos = tokens.filter(t => t.length >= 3);
+      if (tokensLongos.length > 0) {
+        filtrados = configuracoes.filter(cfg => {
+          const nm = (cfg.nm_configuracao || "").toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+          return tokensLongos.every(t => nm.includes(t));
+        });
+      }
+    }
+
+    // 3. Mapeamento para o formato esperado
     return filtrados.map(cfg => ({
       cfg,
-      score: 1, // Score base
+      score: 1, 
       matched: tokens,
       coverage: 1
     })).sort((a, b) => a.cfg.nm_configuracao.localeCompare(b.cfg.nm_configuracao));
