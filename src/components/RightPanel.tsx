@@ -180,7 +180,7 @@ const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCo
                       aria-label="Remover registro"
                       className="h-9 w-9 rounded-md hover:bg-destructive/10 hover:text-destructive transition-all active:scale-90 shadow-none hover:shadow-sm"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <X className="w-4 h-4" />
                     </Button>
                   </AlertDialogTrigger>
                 </TooltipTrigger>
@@ -568,7 +568,7 @@ export default function RightPanel() {
                                   <Tooltip>
                                     <TooltipTrigger asChild>
                                       <Button variant="ghost" size="icon" onClick={() => deleteRegistro(r.id)} className="h-9 w-9 rounded-md hover:bg-destructive/10 hover:text-destructive transition-all active:scale-90 shadow-none hover:shadow-sm">
-                                        <Trash2 className="w-4 h-4" />
+                                        <X className="w-4 h-4" />
                                       </Button>
                                     </TooltipTrigger>
                                     <TooltipContent className="rounded-lg shadow-xl border-border/40">Remover Registro</TooltipContent>
