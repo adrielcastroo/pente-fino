@@ -709,25 +709,7 @@ function ConfiguracaoSelect({
           className="h-10 pl-7 text-[11px]"
         />
       </div>
-      {mostrarDropdown && (
-        <div className="rounded border bg-background max-h-48 overflow-auto">
-          {isFetching && (
-            <div className="p-2 text-[10px] text-muted-foreground flex items-center gap-1">
-              <Loader2 className="h-3 w-3 animate-spin" /> Buscando…
-            </div>
-          )}
-          {!isFetching && opcoes.map((o) => (
-            <button
-              key={o.cd_configuracao}
-              onClick={() => { onChange({ cd: o.cd_configuracao, nm: o.nm_configuracao }); setAberto(false); }}
-              className="w-full text-left px-2 py-1 hover:bg-muted/60 transition"
-            >
-              <div className="text-[11px] break-all">{o.nm_configuracao}</div>
-              <div className="text-[9px] text-muted-foreground">{o.qtd_tags} TAG(s)</div>
-            </button>
-          ))}
-        </div>
-      )}
+      {/* A opção de selecionar uma configuração individual foi removida para priorizar a automação por palavras-chave */}
     </div>
   );
 }
