@@ -912,17 +912,17 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     if (!termo || configuracoes.length === 0) return [];
     
     // 1. Tokenização rigorosa para filtro exato
-    // Removemos caracteres especiais para comparar apenas o texto
+    // Removemos caracteres especiais e espaços para comparar apenas o texto essencial
     const tokens = termo
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .split(/[\s*_\-/.,;:()\[\]]+/)
-      .filter(t => t.length >= 2);
+      .filter(t => t.length >= 1); // Aceita tokens curtos como "35" ou "CM"
 
     if (tokens.length === 0) return [];
 
-    // 2. Filtro estrito: a configuração DEVE conter TODOS os tokens pesquisados
-    // Isso garante que "Cortina*CM*35" traga apenas itens com Cortina E CM E 35
+    // 2. Filtro estrito (Lógica AND): a configuração DEVE conter TODOS os tokens pesquisados
+    // Isso garante precisão: "cortina*35" traz apenas configurações com Cortina E 35.
     const filtrados = configuracoes.filter(cfg => {
       const nm = (cfg.nm_configuracao || "")
         .toLowerCase()
@@ -932,10 +932,10 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       return tokens.every(t => nm.includes(t));
     });
 
-    // 3. Mapeamento para o formato esperado pelo componente com score básico
+    // 3. Mapeamento para o formato esperado com ranking secundário por proximidade
     return filtrados.map(cfg => ({
       cfg,
-      score: 1,
+      score: 1, // Score base
       matched: tokens,
       coverage: 1
     })).sort((a, b) => a.cfg.nm_configuracao.localeCompare(b.cfg.nm_configuracao));
@@ -1015,19 +1015,18 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     queryFn: async () => {
       const sel =
         'cd_configuracao, nm_configuracao, nm_tag_customizada, ds_tag_customizada, ds_tag_calculada, ds_tag_texto';
-      // Relaxamento progressivo: começa exigindo todas as palavras (AND) e vai
-      // descartando as menos relevantes até encontrar modelos existentes.
-      for (let n = palavras.length; n >= 1; n--) {
-        const usados = palavras.slice(0, n);
-        let q = (supabase as any).from('auge_tag_custom').select(sel);
-        for (const p of usados) q = q.ilike('nm_configuracao', `%${p.token}%`);
-        const { data, error } = await q.limit(4000);
-        if (error) throw error;
-        if ((data ?? []).length > 0) {
-          return { rows: data as CustomTag[], usados: usados.map((u) => u.token) };
-        }
-      }
-      return { rows: [] as CustomTag[], usados: [] as string[] };
+      // A busca por palavras-chave agora é estrita: exige TODOS os tokens (AND)
+      // para garantir que o Resumo seja assertivo e condizente com a pesquisa.
+      const tokens = palavras.map(p => p.token);
+      if (tokens.length === 0) return { rows: [] as CustomTag[], usados: [] as string[] };
+
+      let q = (supabase as any).from('auge_tag_custom').select(sel);
+      for (const t of tokens) q = q.ilike('nm_configuracao', `%${t}%`);
+      
+      const { data, error } = await q.limit(4000);
+      if (error) throw error;
+      
+      return { rows: (data || []) as CustomTag[], usados: tokens };
     },
   });
 
@@ -1625,14 +1624,14 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                 {configsRanqueadas.length > 0 ? (
                   <>
                     <div className="text-[10px] text-muted-foreground leading-relaxed">
-                      As configurações abaixo foram identificadas pelas palavras-chave. As TAGs incluídas na composição serão aplicadas a todas simultaneamente.
+                      As configurações abaixo foram identificadas com base no filtro estrito (AND) das suas palavras-chave. As TAGs abaixo serão aplicadas a todos esses itens.
                     </div>
-                    <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto pr-1">
+                    <div className="flex flex-wrap gap-1.5 max-h-60 overflow-y-auto pr-1">
                       {configsRanqueadas.map((r) => (
                         <Badge 
                           key={r.cfg.cd_configuracao} 
                           variant="outline" 
-                          className="text-[10px] font-normal py-0.5 px-2 bg-background/50"
+                          className="text-[10px] font-mono py-0.5 px-2 bg-background/50 border-primary/20 hover:bg-muted transition-colors"
                         >
                           {r.cfg.nm_configuracao}
                         </Badge>
@@ -1640,9 +1639,13 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                     </div>
                   </>
                 ) : (
-                  <div className="py-2">
-                    <p className="text-[10px] text-muted-foreground">
-                      O sistema não identificou configurações automáticas para o termo "{termoBusca}". Você ainda pode criar uma TAG Custom nova se gravar.
+                  <div className="py-4 flex flex-col items-center justify-center text-center bg-muted/20 rounded-md border border-dashed border-muted-foreground/20">
+                    <Search className="h-5 w-5 mb-2 text-muted-foreground opacity-20" />
+                    <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">
+                      (Nenhuma configuração exata encontrada)
+                    </p>
+                    <p className="text-[9px] text-muted-foreground/60 max-w-[200px] mt-1">
+                      Certifique-se de que os termos pesquisados (como "{termoBusca}") existem exatamente no cadastro.
                     </p>
                   </div>
                 )}
