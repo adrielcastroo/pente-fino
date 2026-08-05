@@ -1582,8 +1582,8 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
             onSearchStateChange={setCfgSearch}
           />
           <p className="text-[10px] text-muted-foreground">
-            Digite aqui (ex.: <code className="font-mono">Rollo Pro</code>) — o sistema selecionará todas as configurações 
-            e TAGs correspondentes automaticamente.
+            Digite aqui (ex.: <code className="font-mono">Rollo Pro</code>) — o sistema reconhecerá todas as configurações 
+            e TAGs correspondentes e as listará no bloco "Resumo" abaixo automaticamente.
             <span className="font-semibold text-foreground"> Curinga:</span> <code className="font-mono">*</code> como no SAP B1.
           </p>
         </div>
