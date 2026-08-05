@@ -922,9 +922,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     const termo = termoDeferido.trim().toLowerCase();
     if (!termo || configuracoes.length === 0) return [];
     
-    // 1. Tokenização rigorosa para filtro exato
-    // Removemos caracteres especiais e espaços para comparar apenas o texto essencial.
-    // O caractere "*" é explicitamente tratado como separador.
+    // 1. Tokenização: tratamos "*" e espaços como separadores
     const tokens = termo
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
@@ -933,48 +931,61 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
     if (tokens.length === 0) return [];
 
-    // 1. Identificar tokens estruturais (pesos maiores) para priorização
-    const weighted = weightTokens(tokens);
-
-    // 2. Filtro Determinístico (Lógica AND): a configuração DEVE conter TODOS os tokens pesquisados.
-    let filtrados = configuracoes.filter(cfg => {
+    // 2. Pré-processamento das configurações para busca rápida
+    // Filtro Estrito (AND): A configuração DEVE conter TODOS os tokens pesquisados.
+    const filtrados = configuracoes.filter(cfg => {
       const nmOriginal = (cfg.nm_configuracao || "").toLowerCase();
       const nmNorm = nmOriginal.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-      const nmSemPontuacao = nmNorm.replace(/[^\w\s]/g, ' ');
-      const nmSoLetrasNumeros = nmNorm.replace(/[^a-z0-9]/g, '');
       
-      // Cada token digitado pelo usuário deve estar presente no nome da configuração
+      // Removemos TUDO que não for letra ou número para comparação de "colados"
+      const nmClean = nmNorm.replace(/[^a-z0-9]/g, '');
+      
       return tokens.every(t => {
         const tNorm = t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-        // Verifica no nome original, no normalizado, no sem pontuação e na versão limpa (colada)
-        return nmOriginal.includes(tNorm) || nmNorm.includes(tNorm) || nmSemPontuacao.includes(tNorm) || nmSoLetrasNumeros.includes(tNorm);
+        if (!tNorm) return true;
+        
+        // Verifica se o token existe no nome (com ou sem pontuação)
+        // O includes garante que "35" encontre "T35" ou "L35"
+        return nmNorm.includes(tNorm) || nmClean.includes(tNorm);
       });
     });
 
-    // 3. Ranking por relevância (Pesagem estatística)
+    // 3. Ranking por similaridade e tokens estruturais
+    const weighted = weightTokens(tokens);
     const ranked = filtrados.map(cfg => {
       const nm = (cfg.nm_configuracao || "").toLowerCase();
       const nmNorm = nm.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
       let score = 0;
-      const matched: string[] = [];
+      let matches = 0;
 
       weighted.forEach(w => {
-        if (nm.includes(w.token) || nmNorm.includes(w.token)) {
-          score += w.weight * 2; // Hit exato/relevante
-          matched.push(w.token);
+        if (nmNorm.includes(w.token)) {
+          score += w.weight * 5; // Peso alto para tokens estruturais
+          matches++;
         }
       });
+
+      // Bonus por proximidade de tamanho (evita que "cortina" traga nomes gigantes irrelevantes primeiro)
+      const diffLen = Math.abs(nm.length - termo.length);
+      score -= diffLen * 0.1;
 
       return {
         cfg,
         score,
-        matched,
-        coverage: matched.length / tokens.length
+        matchedCount: matches
       };
     });
 
-    // Ordena pelo score de peso (tokens estruturais valem mais) e depois por ordem alfabética
-    return ranked.sort((a, b) => b.score - a.score || a.cfg.nm_configuracao.localeCompare(b.cfg.nm_configuracao));
+    // Ordenação final: maior score primeiro, depois alfabético
+    return ranked
+      .sort((a, b) => b.score - a.score || a.cfg.nm_configuracao.localeCompare(b.cfg.nm_configuracao))
+      .map(r => ({
+        cfg: r.cfg,
+        score: r.score,
+        matched: [], // Mantido por compatibilidade de interface
+        coverage: r.matchedCount / tokens.length
+      }))
+      .slice(0, 500);
   }, [termoDeferido, configuracoes]);
 
 
