@@ -175,7 +175,7 @@ export function MotorPreview({ wPx, hPx, fs, has, data = MOTOR_SAMPLE, borderWid
         fontSize: `${fs}px`,
         boxSizing: 'border-box',
         WebkitFontSmoothing: 'antialiased',
-        textRendering: 'geometricPrecision',
+        textRendering: 'optimizeLegibility',
         margin: `${my}px auto`,
         transform: offsetX ? `translateX(${offsetX}px)` : undefined,
         padding: `${padding}px`,
