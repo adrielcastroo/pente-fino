@@ -1667,7 +1667,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                 <div className="flex items-center gap-2">
                   <Layers className="h-4 w-4 text-primary" />
                   <span className="text-[11px] font-semibold uppercase tracking-wider">
-                    Resumo {configsRanqueadas.length > 0 ? `(${configsRanqueadas.length} configurações encontradas)` : `(Nenhuma configuração encontrada)`}
+                    Resumo {configsRanqueadas.length > 0 ? `(${configsRanqueadas.length} configurações filtradas em cache)` : `(Nenhuma configuração em cache)`}
                   </span>
                 </div>
                 <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-90" />
