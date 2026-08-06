@@ -57,6 +57,13 @@ const MOTOR_FIELDS: { id: string; label: string; icon: LucideIcon; hint: string 
 const TECIDO_DEFAULT = ['sku', 'descricao', 'nfe', 'qtd', 'rnp', 'data', 'qr_sku', 'qr_lote'];
 const MOTOR_DEFAULT = ['sku', 'descricao', 'serie', 'cx', 'nf', 'nt', 'rnp', 'data', 'qr_lote_sku'];
 
+const MOTOR_PRESETS = [
+  { id: 'standard', name: 'Padrão Unilux', w: 60, h: 50, orientation: 'landscape' as const },
+  { id: 'compact', name: 'Compacto Somfy', w: 50, h: 30, orientation: 'landscape' as const },
+  { id: 'large', name: 'Grande Importado', w: 100, h: 60, orientation: 'landscape' as const },
+  { id: 'square', name: 'Quadrada', w: 50, h: 50, orientation: 'portrait' as const },
+];
+
 export default function LabelLayoutPanel() {
   const { role } = useAuth();
   const isAdmin = role === 'admin' || role === 'supervisor';
@@ -239,15 +246,58 @@ export default function LabelLayoutPanel() {
                 <CardHeader className="p-5 border-b border-border/40 space-y-2">
                   <div className="flex items-center gap-3">
                     <div className="p-2 rounded-md bg-primary/10 border border-primary/20 text-primary shrink-0">
+                      <LayoutGrid className="w-4 h-4" />
+                    </div>
+                    <CardTitle className="text-sm font-semibold tracking-tight text-foreground">Modelo de Etiqueta (Motores)</CardTitle>
+                  </div>
+                  <CardDescription className="text-xs text-muted-foreground pl-11">
+                    Selecione um modelo pré-definido para aplicar dimensões e orientação automaticamente.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-3">
+                    <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-1">Selecione o Modelo</Label>
+                    <Select 
+                      value={labelSettings.motorTemplateId || 'standard'} 
+                      onValueChange={(val) => {
+                        const preset = MOTOR_PRESETS.find(p => p.id === val);
+                        if (preset) {
+                          setLabelSettings({ 
+                            motorTemplateId: val,
+                            motorWidth: preset.w,
+                            motorHeight: preset.h,
+                            motorOrientation: preset.orientation
+                          });
+                          toast.success(`Modelo "${preset.name}" aplicado!`);
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="h-12 border-primary/20 bg-primary/5 font-bold text-primary">
+                        <SelectValue placeholder="Selecione um modelo..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {MOTOR_PRESETS.map(p => (
+                          <SelectItem key={p.id} value={p.id} className="font-semibold">
+                            {p.name} ({p.w}×{p.h}mm)
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <Separator className="bg-border/40" />
+
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-md bg-primary/10 border border-primary/20 text-primary shrink-0">
                       <Ruler className="w-4 h-4" />
                     </div>
-                    <CardTitle className="text-sm font-semibold tracking-tight text-foreground">Dimensões (mm)</CardTitle>
+                    <CardTitle className="text-sm font-semibold tracking-tight text-foreground">Dimensões Personalizadas (mm)</CardTitle>
                   </div>
                   <CardDescription className="text-xs text-muted-foreground pl-11">
                     {isMotor ? 'Padrão Motores: 60mm × 50mm.' : 'Padrão Tecidos: 100mm × 60mm.'}
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 pt-0">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label className="text-xs font-bold">Largura</Label>
