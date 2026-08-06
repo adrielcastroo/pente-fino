@@ -562,7 +562,10 @@ async function printImageInBrowser(
     // imagem preenchendo 100% da página SEM stretch (object-fit: contain
     // mantém o aspect ratio caso o driver decida escalar).
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>${safeTitle}</title><style>
-      @page { size: ${widthMm}mm ${heightMm}mm; margin: 0 !important; }
+      @page { size: auto; margin: 0 !important; }
+      @media print {
+        html, body { width: initial !important; height: initial !important; }
+      }
       * { box-sizing: border-box; margin: 0; padding: 0; }
       html, body {
         margin: 0 !important;
