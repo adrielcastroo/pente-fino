@@ -993,8 +993,8 @@ async function printReactLabelsInBrowserBatch(pages: DirectBrowserPage[], title:
                 style: {
                   width: `${page.widthMm}mm`,
                   height: `${page.heightMm}mm`,
-                  pageBreakAfter: index < pages.length - 1 ? 'always' : undefined,
-                  breakAfter: index < pages.length - 1 ? 'page' : undefined,
+                  pageBreakAfter: 'always',
+                  breakAfter: 'page',
                 },
               }, createElement('div', {
                 className: 'label-scale',
