@@ -156,10 +156,7 @@ export default function MotorControlePage() {
       lote: reg.lote, 
       loteSistema: reg.loteSistema, 
       nf: reg.nf, 
-      cx: temCaixa ? (parseInt(caixaNum, 10) || 0) : null,
-      widthMm: labelSettings.motorWidth,
-      heightMm: labelSettings.motorHeight,
-      orientation: labelSettings.motorOrientation || labelSettings.orientation
+      cx: temCaixa ? (parseInt(caixaNum, 10) || 0) : null
     }, labelSettings);
     addRegistro(reg);
     toast.success(`Motor adicionado: ${cleaned}`);
@@ -207,10 +204,7 @@ export default function MotorControlePage() {
       loteSistema: reg.loteSistema, 
       nf: reg.nf, 
       sequencial: seq, 
-      cx: null,
-      widthMm: labelSettings.motorWidth,
-      heightMm: labelSettings.motorHeight,
-      orientation: labelSettings.motorOrientation || labelSettings.orientation
+      cx: null
     }, labelSettings);
     addRegistro(reg);
     toast.success(`Controle #${seq} adicionado`);
@@ -252,10 +246,7 @@ export default function MotorControlePage() {
       descricao: 'Coulisse', 
       lote: reg.lote, 
       loteSistema: reg.loteSistema, 
-      cx: parsed.cx || null,
-      widthMm: labelSettings.motorWidth,
-      heightMm: labelSettings.motorHeight,
-      orientation: labelSettings.motorOrientation || labelSettings.orientation
+      cx: parsed.cx || null
     }, labelSettings);
     addRegistro(reg);
     toast.success(`Coulisse adicionado: ${coulisseLote}`);
