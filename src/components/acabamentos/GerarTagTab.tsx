@@ -929,8 +929,8 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     // Função para simular o comportamento ILIKE do Postgres no frontend
     const matchesIlike = (text: string, pattern: string) => {
       // Converte padrão ILIKE (%termo%) para Regex
-      // Escapa caracteres especiais de regex, mas mantém % como .*
-      const escaped = pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/%/g, '.*');
+      // Escapa caracteres especiais de regex, mas trata % e * como .*
+      const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/[%*]/g, '.*');
       const regex = new RegExp(`^${escaped}$`, 'i');
       return regex.test(text);
     };
