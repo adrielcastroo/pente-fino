@@ -562,7 +562,10 @@ async function printImageInBrowser(
     // imagem preenchendo 100% da página SEM stretch (object-fit: contain
     // mantém o aspect ratio caso o driver decida escalar).
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>${safeTitle}</title><style>
-      @page { size: ${widthMm}mm ${heightMm}mm; margin: 0 !important; }
+      @page { size: auto; margin: 0 !important; }
+      @media print {
+        html, body { width: initial !important; height: initial !important; }
+      }
       * { box-sizing: border-box; margin: 0; padding: 0; }
       html, body {
         margin: 0 !important;
@@ -933,7 +936,10 @@ async function printReactLabelsInBrowserBatch(pages: DirectBrowserPage[], title:
     const styles = collectPrintableStyles();
     const baseHref = typeof window !== 'undefined' ? `${window.location.origin}/` : '/';
     const html = `<!doctype html><html><head><meta charset="utf-8"><base href="${baseHref}"><title>${safeTitle}</title>${styles}<style>
-      @page { size: ${maxW}mm ${maxH}mm; margin: 0 !important; }
+      @page { size: auto; margin: 0 !important; }
+      @media print {
+        section.page { width: initial !important; height: initial !important; }
+      }
       * { box-sizing: border-box; }
       html, body, #label-root { margin: 0 !important; padding: 0 !important; background: #fff; }
       body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
@@ -990,8 +996,8 @@ async function printReactLabelsInBrowserBatch(pages: DirectBrowserPage[], title:
                 style: {
                   width: `${page.widthMm}mm`,
                   height: `${page.heightMm}mm`,
-                  pageBreakAfter: index < pages.length - 1 ? 'always' : undefined,
-                  breakAfter: index < pages.length - 1 ? 'page' : undefined,
+                  pageBreakAfter: 'always',
+                  breakAfter: 'page',
                 },
               }, createElement('div', {
                 className: 'label-scale',
@@ -1041,11 +1047,14 @@ export async function printImagesInBrowserBatch(pages: BatchPage[], title: strin
     const maxW = Math.max(...pages.map(p => p.widthMm));
     const maxH = Math.max(...pages.map(p => p.heightMm));
     const sections = pages.map((p, i) => `
-      <section class="page" style="width:${p.widthMm}mm;height:${p.heightMm}mm;${i < pages.length - 1 ? 'page-break-after:always;' : ''}">
+      <section class="page" style="width:${p.widthMm}mm;height:${p.heightMm}mm;page-break-after:always;break-after:page;">
         <img class="lbl" src="${p.dataUrl}" style="width:${p.widthMm}mm;height:${p.heightMm}mm">
       </section>`).join('');
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>${safeTitle}</title><style>
-      @page { size: ${maxW}mm ${maxH}mm; margin: 0 !important; }
+      @page { size: auto; margin: 0 !important; }
+      @media print {
+        section.page { width: initial !important; height: initial !important; }
+      }
       * { box-sizing: border-box; }
       html, body {
         margin: 0 !important; padding: 0 !important; background: #fff;

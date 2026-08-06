@@ -57,6 +57,7 @@ export interface LabelSettings {
   expedicaoLineStyle?: 'solid' | 'dashed' | 'dotted';
   expedicaoLineColor?: string;
   expedicaoFontFamily?: string;
+  motorTemplateId?: string;
 }
 
 export interface AppState {
@@ -275,6 +276,7 @@ export const useAppStore = create<AppState>()(
         expedicaoLineStyle: 'solid',
         expedicaoLineColor: '#111111',
         expedicaoFontFamily: 'monospace',
+        motorTemplateId: 'standard',
       },
       
       isArchiving: false,
