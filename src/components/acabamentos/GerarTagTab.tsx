@@ -1066,11 +1066,12 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       
       let q = (supabase as any).from('auge_tag_custom').select(sel);
       
+      // Sempre buscamos as tags especificamente para as configurações que apareceram no resumo (AND tokens do Auge)
+      // para garantir que as TAGs sugeridas sejam as mesmas dos itens listados.
       if (codes.length > 0) {
-        // Busca as tags especificamente para as configurações que apareceram no resumo
         q = q.in('cd_configuracao', codes);
       } else {
-        // Fallback: Busca AND por tokens se não houver códigos (ou muitos códigos)
+        // Se não houver nada filtrado localmente, usamos a lógica AND global
         for (const t of tokens) q = q.ilike('nm_configuracao', `%${t}%`);
       }
       
