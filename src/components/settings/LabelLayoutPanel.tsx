@@ -287,16 +287,20 @@ export default function LabelLayoutPanel() {
 
                   <Separator className="bg-border/40" />
 
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-md bg-primary/10 border border-primary/20 text-primary shrink-0">
-                      <Ruler className="w-4 h-4" />
+                  <Separator className="bg-border/40" />
+                  
+                  <div className="pt-2">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="p-2 rounded-md bg-primary/10 border border-primary/20 text-primary shrink-0">
+                        <Ruler className="w-4 h-4" />
+                      </div>
+                      <CardTitle className="text-sm font-semibold tracking-tight text-foreground">Dimensões Personalizadas (mm)</CardTitle>
                     </div>
-                    <CardTitle className="text-sm font-semibold tracking-tight text-foreground">Dimensões Personalizadas (mm)</CardTitle>
+                    <CardDescription className="text-xs text-muted-foreground pl-11 mb-4">
+                      {isMotor ? 'Padrão Motores: 60mm × 50mm.' : 'Padrão Tecidos: 100mm × 60mm.'}
+                    </CardDescription>
                   </div>
-                  <CardDescription className="text-xs text-muted-foreground pl-11">
-                    {isMotor ? 'Padrão Motores: 60mm × 50mm.' : 'Padrão Tecidos: 100mm × 60mm.'}
-                  </CardDescription>
-                </CardHeader>
+                </CardContent>
                 <CardContent className="space-y-4 pt-0">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
