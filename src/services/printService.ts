@@ -933,7 +933,10 @@ async function printReactLabelsInBrowserBatch(pages: DirectBrowserPage[], title:
     const styles = collectPrintableStyles();
     const baseHref = typeof window !== 'undefined' ? `${window.location.origin}/` : '/';
     const html = `<!doctype html><html><head><meta charset="utf-8"><base href="${baseHref}"><title>${safeTitle}</title>${styles}<style>
-      @page { size: ${maxW}mm ${maxH}mm; margin: 0 !important; }
+      @page { size: auto; margin: 0 !important; }
+      @media print {
+        section.page { width: initial !important; height: initial !important; }
+      }
       * { box-sizing: border-box; }
       html, body, #label-root { margin: 0 !important; padding: 0 !important; background: #fff; }
       body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
