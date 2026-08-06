@@ -928,11 +928,16 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     
     // Função para simular o comportamento ILIKE do Postgres no frontend
     const matchesIlike = (text: string, pattern: string) => {
+      if (!pattern) return true;
+      // Normalizamos ambos para ignorar acentos e case
+      const normText = (text || "").toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const normPattern = (pattern || "").toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      
       // Converte padrão ILIKE (%termo%) para Regex
       // Escapa caracteres especiais de regex, mas trata % e * como .*
-      const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/[%*]/g, '.*');
+      const escaped = normPattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/[%*]/g, '.*');
       const regex = new RegExp(`^${escaped}$`, 'i');
-      return regex.test(text);
+      return regex.test(normText);
     };
 
     const filtrados = configuracoes.filter(cfg => {
@@ -1061,11 +1066,12 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       
       let q = (supabase as any).from('auge_tag_custom').select(sel);
       
+      // Sempre buscamos as tags especificamente para as configurações que apareceram no resumo (AND tokens do Auge)
+      // para garantir que as TAGs sugeridas sejam as mesmas dos itens listados.
       if (codes.length > 0) {
-        // Busca as tags especificamente para as configurações que apareceram no resumo
         q = q.in('cd_configuracao', codes);
       } else {
-        // Fallback: Busca AND por tokens se não houver códigos (ou muitos códigos)
+        // Se não houver nada filtrado localmente, usamos a lógica AND global
         for (const t of tokens) q = q.ilike('nm_configuracao', `%${t}%`);
       }
       
@@ -1661,7 +1667,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                 <div className="flex items-center gap-2">
                   <Layers className="h-4 w-4 text-primary" />
                   <span className="text-[11px] font-semibold uppercase tracking-wider">
-                    Resumo {configsRanqueadas.length > 0 ? `(${configsRanqueadas.length} configurações encontradas)` : `(Nenhuma configuração encontrada)`}
+                    Resumo {configsRanqueadas.length > 0 ? `(${configsRanqueadas.length} configurações filtradas em cache)` : `(Nenhuma configuração em cache)`}
                   </span>
                 </div>
                 <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-90" />
