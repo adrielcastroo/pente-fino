@@ -1044,7 +1044,7 @@ export async function printImagesInBrowserBatch(pages: BatchPage[], title: strin
     const maxW = Math.max(...pages.map(p => p.widthMm));
     const maxH = Math.max(...pages.map(p => p.heightMm));
     const sections = pages.map((p, i) => `
-      <section class="page" style="width:${p.widthMm}mm;height:${p.heightMm}mm;${i < pages.length - 1 ? 'page-break-after:always;' : ''}">
+      <section class="page" style="width:${p.widthMm}mm;height:${p.heightMm}mm;page-break-after:always;break-after:page;">
         <img class="lbl" src="${p.dataUrl}" style="width:${p.widthMm}mm;height:${p.heightMm}mm">
       </section>`).join('');
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>${safeTitle}</title><style>
