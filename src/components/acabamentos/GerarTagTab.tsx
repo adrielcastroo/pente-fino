@@ -1686,7 +1686,14 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                             <span className="text-blue-600 font-bold">{o.code}</span>
                             <span className="text-muted-foreground">→</span>
                             <span className="truncate max-w-[100px]">{o.valor}</span>
-                            {o.calculada && <span className="text-[9px] text-emerald-600 font-bold ml-1">[{o.calculada}]</span>}
+                            {o.calculada && (
+                              <span className="text-[9px] text-emerald-600 font-bold ml-1 bg-emerald-500/10 px-1 rounded">
+                                {o.calculada}
+                              </span>
+                            )}
+                            <Badge variant="secondary" className="text-[8px] h-3.5 px-1 bg-blue-100 text-blue-700 hover:bg-blue-100">
+                              {Math.round((o.freq / o.total) * 100)}%
+                            </Badge>
                           </div>
                         ))}
                       </div>
