@@ -1048,7 +1048,10 @@ export async function printImagesInBrowserBatch(pages: BatchPage[], title: strin
         <img class="lbl" src="${p.dataUrl}" style="width:${p.widthMm}mm;height:${p.heightMm}mm">
       </section>`).join('');
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>${safeTitle}</title><style>
-      @page { size: ${maxW}mm ${maxH}mm; margin: 0 !important; }
+      @page { size: auto; margin: 0 !important; }
+      @media print {
+        section.page { width: initial !important; height: initial !important; }
+      }
       * { box-sizing: border-box; }
       html, body {
         margin: 0 !important; padding: 0 !important; background: #fff;
