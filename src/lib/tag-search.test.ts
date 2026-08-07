@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   extrairPalavras,
   filtrarPorIlike,
+  ilikeAnd,
   ilikeCacheKey,
   ilikeOr,
   matchesIlike,
@@ -15,31 +16,33 @@ import {
   weightTokens,
 } from '@/lib/tag-search';
 
-describe('tag-search - normalização e tokens', () => {
-  it('normKey remove acentos e baixa caixa', () => {
+describe('tag-search / normKey + tokenize + uniqTokens', () => {
+  it('normKey remove acentos, baixa caixa e colapsa símbolos', () => {
     expect(normKey('Cortina Persiana')).toBe('cortina persiana');
     expect(normKey('Aço Inox')).toBe('aco inox');
+    expect(normKey('Aço Inóx')).toBe('aco inox');
     expect(normKey('  múltiplos   espaços  ')).toBe('multiplos espacos');
+    expect(normKey('Foo, Bar (Baz)')).toBe('foo bar baz');
+    expect(normKey(null as unknown as string)).toBe('');
   });
 
-  it('tokenize quebra em palavras >= 2 caracteres', () => {
-    expect(tokenize('Rollo Pro T45 Branco')).toEqual(['rollo', 'pro', 't45', 'branco']);
-    expect(tokenize('CM-35_Liso/10')).toEqual(['cm', '35', 'liso', '10']);
+  it('tokenize remove tokens com menos de 2 caracteres', () => {
+    expect(tokenize('A B 12 CD')).toEqual(['12', 'cd']);
     expect(tokenize('')).toEqual([]);
   });
 
-  it('uniqTokens mantém ordem e remove duplicatas', () => {
+  it('uniqTokens preserva ordem', () => {
     expect(uniqTokens(['a', 'b', 'a', 'c'])).toEqual(['a', 'b', 'c']);
   });
 });
 
-describe('tag-search - curingas SAP B1', () => {
+describe('tag-search / curingas SAP B1', () => {
   it('toIlikePattern envolve termo simples em % (mantém capitalização)', () => {
     expect(toIlikePattern('motor')).toBe('%motor%');
     expect(toIlikePattern('  Cortina  ')).toBe('%Cortina%');
   });
 
-  it('toIlikePattern preserva asteriscos como %', () => {
+  it('toIlikePattern preserva asterisco como % literal', () => {
     expect(toIlikePattern('TUB*')).toBe('TUB%');
     expect(toIlikePattern('*MOTOR')).toBe('%MOTOR');
     expect(toIlikePattern('T*42')).toBe('T%42');
@@ -49,14 +52,18 @@ describe('tag-search - curingas SAP B1', () => {
     expect(toIlikePattern('Foo, Bar (Baz)')).toBe('%Foo Bar Baz%');
   });
 
+  it('toIlikePattern colapsa % existentes em espaço (evita ataques)', () => {
+    expect(toIlikePattern('100%%off')).toBe('%100 off%');
+  });
+
   it('toIlikeTokens quebra AND por tokens (mantém capitalização)', () => {
     expect(toIlikeTokens('cortina*35*liso')).toEqual(['%cortina%', '%35%', '%liso%']);
     expect(toIlikeTokens('Rollo Pro')).toEqual(['%Rollo%', '%Pro%']);
+    expect(toIlikeTokens('')).toEqual([]);
   });
 
   it('toIlikeTokens limita a 12 tokens', () => {
-    const tokens = toIlikeTokens('a b c d e f g h i j k l m n o p');
-    expect(tokens.length).toBe(12);
+    expect(toIlikeTokens('a b c d e f g h i j k l m n o p').length).toBe(12);
   });
 
   it('sanitizeTerm remove vírgulas/aspas mas preserva asterisco', () => {
@@ -64,7 +71,7 @@ describe('tag-search - curingas SAP B1', () => {
   });
 });
 
-describe('tag-search - matchesIlike (regex cliente)', () => {
+describe('tag-search / matchesIlike (cliente)', () => {
   it('combina ignorando acentos e case', () => {
     expect(matchesIlike('Persiana Alumínio', '%aluminio%')).toBe(true);
     expect(matchesIlike('Aço Inox', '%aco%')).toBe(true);
@@ -77,12 +84,16 @@ describe('tag-search - matchesIlike (regex cliente)', () => {
     expect(matchesIlike('Rollo Pro T45', 'Rollo%T45')).toBe(true);
   });
 
-  it('não combina quando não contém o padrão', () => {
+  it('não combina quando não há match', () => {
     expect(matchesIlike('Rollo Pro', '%shadow%')).toBe(false);
+  });
+
+  it('pattern vazio retorna true', () => {
+    expect(matchesIlike('qualquer', '')).toBe(true);
   });
 });
 
-describe('tag-search - filtrarPorIlike (AND)', () => {
+describe('tag-search / filtrarPorIlike (AND por tokens)', () => {
   const configuracoes = [
     { nm_configuracao: 'Rollo Pro T45 Branco' },
     { nm_configuracao: 'Cortina CM-35 Liso' },
@@ -92,57 +103,52 @@ describe('tag-search - filtrarPorIlike (AND)', () => {
     { nm_configuracao: 'Rollo Light T55' },
   ];
 
-  it('busca por substring única', () => {
-    const padrao = toIlikePattern('aluminio');
-    const resultado = filtrarPorIlike(configuracoes, padrao, []);
+  it('substring única', () => {
+    const resultado = filtrarPorIlike(configuracoes, toIlikePattern('aluminio'), []);
     expect(resultado.map((r) => r.nm_configuracao)).toEqual(['Persiana Alumínio 25mm']);
   });
 
-  it('AND por tokens retorna item que contém ambos', () => {
-    const tokens = toIlikeTokens('cortina*35');
-    const resultado = filtrarPorIlike(configuracoes, '', tokens);
+  it('AND por tokens (coringa * como separador)', () => {
+    const resultado = filtrarPorIlike(configuracoes, '', toIlikeTokens('cortina*35'));
     expect(resultado.map((r) => r.nm_configuracao)).toEqual(['Cortina CM-35 Liso']);
   });
 
-  it('AND por tokens cobre "%" no nome', () => {
-    const padrao = toIlikePattern('10%');
-    const resultado = filtrarPorIlike(configuracoes, padrao, []);
+  it('lida com % no nome do item', () => {
+    const resultado = filtrarPorIlike(configuracoes, toIlikePattern('10%'), []);
     expect(resultado.map((r) => r.nm_configuracao)).toEqual(['Kit 10% Desconto']);
   });
 
-  it('AND por tokens em ordem livre', () => {
-    const tokens = toIlikeTokens('T45*rollo*branco');
-    const resultado = filtrarPorIlike(configuracoes, '', tokens);
+  it('AND por tokens em qualquer ordem', () => {
+    const resultado = filtrarPorIlike(configuracoes, '', toIlikeTokens('T45*rollo*branco'));
     expect(resultado.map((r) => r.nm_configuracao)).toEqual(['Rollo Pro T45 Branco']);
   });
 
-  it('retorna vazio quando nenhum termo bate', () => {
-    const tokens = toIlikeTokens('xyz123');
-    const resultado = filtrarPorIlike(configuracoes, '', tokens);
-    expect(resultado).toEqual([]);
+  it('retorna vazio sem match', () => {
+    expect(filtrarPorIlike(configuracoes, '', toIlikeTokens('xyz123'))).toEqual([]);
   });
 });
 
-describe('tag-search - rankByRelevance', () => {
-  const configuracoes = [
+describe('tag-search / rankByRelevance', () => {
+  const rows = [
     { nm_configuracao: 'Rollo Pro T45 Branco' },
     { nm_configuracao: 'Rollo Light T55' },
     { nm_configuracao: 'Persiana Cinza T35' },
   ];
 
   it('match exato vence prefixo vence substring', () => {
-    const ranked = rankByRelevance(configuracoes, 'Rollo');
-    expect(ranked[0].cfg.nm_configuracao).toMatch(/^Rollo/);
+    const ranked = rankByRelevance(rows, 'Rollo');
+    expect(ranked[0].cfg.nm_configuracao.startsWith('Rollo')).toBe(true);
+    expect(ranked.some((r) => r.cfg.nm_configuracao === 'Persiana Cinza T35')).toBe(true);
   });
 
   it('empate vai para ordem alfabética', () => {
-    const ranked = rankByRelevance(configuracoes, 'Rollo');
+    const ranked = rankByRelevance(rows, 'Rollo');
     expect(ranked[0].cfg.nm_configuracao).toBe('Rollo Light T55');
     expect(ranked[1].cfg.nm_configuracao).toBe('Rollo Pro T45 Branco');
   });
 });
 
-describe('tag-search - extrairPalavras / weightTokens', () => {
+describe('tag-search / extrairPalavras + weightTokens', () => {
   it('identifica tokens estruturais (tipo, tubo, motor)', () => {
     const p = extrairPalavras('Rollo Pro T45 CM-35 Branco');
     const tokens = p.map((x) => x.token);
@@ -151,11 +157,10 @@ describe('tag-search - extrairPalavras / weightTokens', () => {
     expect(tokens).toContain('branco');
   });
 
-  it('orden por peso (mais relevante primeiro)', () => {
+  it('orden por peso decrescente', () => {
     const p = extrairPalavras('Rollo T45');
-    const pesos = p.map((x) => x.weight);
-    for (let i = 1; i < pesos.length; i++) {
-      expect(pesos[i]).toBeLessThanOrEqual(pesos[i - 1]);
+    for (let i = 1; i < p.length; i++) {
+      expect(p[i].weight).toBeLessThanOrEqual(p[i - 1].weight);
     }
   });
 
@@ -166,25 +171,36 @@ describe('tag-search - extrairPalavras / weightTokens', () => {
   });
 });
 
-describe('tag-search - ilikeCacheKey / ilikeOr', () => {
-  it('ilikeCacheKey é estável para mesma entrada', () => {
-    const k1 = ilikeCacheKey('%foo%', ['%bar%']);
-    const k2 = ilikeCacheKey('%foo%', ['%bar%']);
-    expect(k1).toBe(k2);
+describe('tag-search / builders PostgREST', () => {
+  it('ilikeCacheKey é determinístico', () => {
+    expect(ilikeCacheKey('%foo%', ['%bar%'])).toBe(ilikeCacheKey('%foo%', ['%bar%']));
+    expect(ilikeCacheKey('%foo%', ['%bar%'])).not.toBe(ilikeCacheKey('%foo%', ['%baz%']));
   });
 
-  it('ilikeCacheKey muda quando entrada muda', () => {
-    const k1 = ilikeCacheKey('%foo%', ['%bar%']);
-    const k2 = ilikeCacheKey('%foo%', ['%baz%']);
-    expect(k1).not.toBe(k2);
-  });
-
-  it('ilikeOr monta cláusulas separadas por vírgula (coluna → padrão → tokens)', () => {
+  it('ilikeOr monta cláusulas separadas por vírgula (ordem coluna → padrão → tokens)', () => {
     const or = ilikeOr(['nm_configuracao', 'ds_tag_customizada'], '%preto%', ['%t45%']);
-    expect(or).toBe('nm_configuracao.ilike."%preto%",nm_configuracao.ilike."%t45%",ds_tag_customizada.ilike."%preto%",ds_tag_customizada.ilike."%t45%"');
+    expect(or).toBe(
+      'nm_configuracao.ilike."%preto%",nm_configuracao.ilike."%t45%",ds_tag_customizada.ilike."%preto%",ds_tag_customizada.ilike."%t45%"',
+    );
   });
 
   it('ilikeOr retorna string vazia sem padrão nem tokens', () => {
     expect(ilikeOr(['x'], '', [])).toBe('');
+  });
+
+  it('ilikeAnd adiciona um ilike para o padrao + um por token', () => {
+    const fakeQuery = { calls: [] as Array<[string, string]>, ilike(col: string, val: string) { this.calls.push([col, val]); return this; } };
+    ilikeAnd(fakeQuery as any, 'nm_configuracao', '%foo%', ['%bar%', '%baz%']);
+    expect(fakeQuery.calls).toEqual([
+      ['nm_configuracao', '%foo%'],
+      ['nm_configuracao', '%bar%'],
+      ['nm_configuracao', '%baz%'],
+    ]);
+  });
+
+  it('ilikeAnd não emite nada se padrao e tokens vazios', () => {
+    const fakeQuery = { calls: [] as Array<[string, string]>, ilike(col: string, val: string) { this.calls.push([col, val]); return this; } };
+    ilikeAnd(fakeQuery as any, 'nm_configuracao', '', []);
+    expect(fakeQuery.calls).toEqual([]);
   });
 });

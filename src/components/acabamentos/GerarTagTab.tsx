@@ -1,5 +1,5 @@
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
@@ -9,7 +9,6 @@ import { Badge } from '@/components/ui/badge';
 import {
   Loader2,
   Wand2,
-  Tag as TagIcon,
   Layers,
   X,
   CheckCircle2,
@@ -24,6 +23,18 @@ import {
 import { toast } from 'sonner';
 import { normalizeTagFormatC } from '@/lib/tag-utils';
 import { registrarEventoTag, type TagEventoTipo } from '@/lib/tag-historico';
+import {
+  extrairPalavras,
+  filtrarPorIlike,
+  ilikeAnd,
+  ilikeCacheKey,
+  ilikeOr,
+  normKey,
+  rankByRelevance,
+  sanitizeTerm,
+  toIlikePattern,
+  toIlikeTokens,
+} from '@/lib/tag-search';
 
 interface ConfiguracaoLite {
   cd_configuracao: string;
@@ -40,155 +51,9 @@ interface CustomTag {
   ds_tag_texto: string | null;
 }
 
-// ============================================================
-// Tokenização e ranking
-// ============================================================
-
-function tokenize(input: string): string[] {
-  if (!input) return [];
-  return input
-    .toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    .split(/[\s_\-/.,;:()\[\]]+/)
-    .map((t) => t.trim())
-    .filter((t) => t.length >= 2);
-}
-
-function uniqTokens(list: string[]): string[] {
-  return Array.from(new Set(list));
-}
-
-const STRUCTURAL_PATTERNS: Array<{ re: RegExp; weight: number; label: string }> = [
-  { re: /^(rollo|shadow|diamond|romana|celular|wanza|b2h|rollo_light|shadow_light|cortina|persiana)$/i, weight: 8, label: 'tipo' },
-  { re: /^t\d{2,3}$/i, weight: 6, label: 'tubo' },
-  { re: /^(cm[-_]?\d+|st\d+|lsn\d+|alt\d+)$/i, weight: 5, label: 'motor' },
-  { re: /^(110v|220v|bateria|pilha)$/i, weight: 3, label: 'tensão' },
-  { re: /^(rf|auto|manual|monocontrole|basic|wifi|zigbee)$/i, weight: 2, label: 'controle' },
-  { re: /^(abs2|abs20|absolute|basic|sky|day|night|semi|open|standard|nivelador|square|round|fascia|blackout|translúcido|dimout|balance)$/i, weight: 2, label: 'opção' },
-  { re: /^(branco|branca|preto|preta|bege|bronze|cinza|grafite|marrom|azul|verde|offwhite)$/i, weight: 2, label: 'cor' },
-];
-
-interface WeightedToken { token: string; weight: number; structural: boolean }
-
-function weightTokens(tokens: string[]): WeightedToken[] {
-  return tokens.map((t) => {
-    const norm = t.replace(/\./g, '');
-    for (const p of STRUCTURAL_PATTERNS) {
-      if (p.re.test(norm)) return { token: norm, weight: p.weight, structural: true };
-    }
-    return { token: norm, weight: 1, structural: false };
-  });
-}
-
-interface RankedConfig {
-  cfg: ConfiguracaoLite;
-  score: number;
-  matched: string[];
-  coverage: number;
-}
-
-function rankConfiguracoes(input: string, cfgs: ConfiguracaoLite[]): RankedConfig[] {
-  const raw = uniqTokens(tokenize(input));
-  if (raw.length === 0) return [];
-  const weighted = weightTokens(raw);
-  const strongCount = weighted.filter((w) => w.structural).length || 1;
-
-  const results: RankedConfig[] = [];
-  for (const cfg of cfgs) {
-    const nm = cfg.nm_configuracao ?? '';
-    if (!nm) continue;
-    const hayTokens = new Set(tokenize(nm).map((t) => t.replace(/\./g, '')));
-    const hayLower = nm.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-
-    let score = 0;
-    let strongHit = 0;
-    const matched: string[] = [];
-    for (const w of weighted) {
-      if (hayTokens.has(w.token)) {
-        score += w.weight * 2;
-        matched.push(w.token);
-        if (w.structural) strongHit++;
-      } else if (w.token.length >= 3 && hayLower.includes(w.token)) {
-        score += w.weight;
-        matched.push(w.token);
-        if (w.structural) strongHit++;
-      }
-    }
-    const coverage = strongHit / strongCount;
-    if (coverage < 0.2 || score < 2) continue;
-    score += Math.round(coverage * 5);
-    results.push({ cfg, score, matched, coverage });
-  }
-
-  results.sort((a, b) => b.score - a.score);
-  return results.slice(0, 500);
-}
-
 function normalizeTagCode(raw: string | null | undefined): string {
   if (!raw) return '';
   return raw.replace(/&/g, '').trim().toUpperCase().replace(/\s+/g, '');
-}
-
-// ============================================================
-// Curinga estilo SAP B1
-// ============================================================
-
-function sanitizeTerm(raw: string): string {
-  return raw.replace(/[,()"'\\]/g, ' ').replace(/\s+/g, ' ').trim();
-}
-
-/**
- * "TUB*" → "TUB%" · "*MOTOR" → "%MOTOR" · "T*42" → "T%42" · "MOTOR" → "%MOTOR%".
- */
-function toIlikePattern(raw: string): string {
-  const clean = sanitizeTerm(raw);
-  if (!clean) return '';
-  const escaped = clean.replace(/%/g, ' ').replace(/\s+/g, ' ').trim();
-  if (escaped.includes('*')) return escaped.replace(/\*/g, '%');
-  return `%${escaped}%`;
-}
-
-/**
- * Quebra o termo em tokens para busca AND (cada token precisa existir na
- * configuração, em qualquer ordem). Evita falhas quando o usuário digita a
- * descrição com espaçamento/ordem levemente diferente do cadastro no Auge.
- *
- * O curinga `*` também é tratado como separador: "Cortina*CM*35*Liso*10*"
- * vira os tokens `%cortina%`, `%cm%`, `%35%`, `%liso%`, `%10%`, todos exigidos
- * (AND) mas sem impor a ORDEM em que aparecem no nome — que era exatamente o
- * motivo de a busca com curinga não retornar todos os itens esperados.
- */
-function toIlikeTokens(raw: string): string[] {
-  const clean = sanitizeTerm(raw).replace(/%/g, ' ');
-  return clean
-    .split(/[\s*]+/)
-    .map((t) => t.trim())
-    .filter((t) => t.length >= 1)
-    .slice(0, 12)
-    .map((t) => `%${t}%`);
-}
-
-
-/** Normalização usada nas comparações por palavra-chave. */
-function normKey(s: string): string {
-  return (s ?? '')
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, ' ')
-    .trim();
-}
-
-export interface Palavra { token: string; weight: number; structural: boolean }
-
-/**
- * Palavras-chave da configuração digitada, ordenadas da mais relevante
- * (tipo/tubo/motor) para a menos relevante. Usadas para descobrir quais TAGs
- * Configuradas são obrigatórias.
- */
-function extrairPalavras(input: string): Palavra[] {
-  const raw = uniqTokens(normKey(input).split(' ').filter((t) => t.length >= 2));
-  return weightTokens(raw).sort((a, b) => b.weight - a.weight || a.token.localeCompare(b.token));
 }
 
 
@@ -375,7 +240,7 @@ function TagCalculadaCell({
   const padrao = useMemo(() => toIlikePattern(termo), [termo]);
 
   const { data: opcoes = [], isFetching } = useQuery({
-    queryKey: ['tag-calculada-busca', termo, padrao],
+    queryKey: ['tag-calculada-busca', ilikeCacheKey(padrao, [])],
     enabled: aberto && termo.length >= 2,
     staleTime: 60 * 1000,
     queryFn: async () => {
@@ -596,7 +461,7 @@ function ConfiguracaoSelect({
   // A busca roda sempre que houver termo suficiente (mesmo com a lista fechada),
   // garantindo análise imediata das TAGs obrigatórias.
   const { data: opcoes = [], isFetching, isSuccess } = useQuery({
-    queryKey: ['tag-custom-configuracao-busca', padrao, tokens.join('|')],
+    queryKey: ['tag-custom-configuracao-busca', ilikeCacheKey(padrao, tokens)],
     enabled: termo.length >= 2,
 
     staleTime: 60 * 1000,
@@ -615,43 +480,28 @@ function ConfiguracaoSelect({
 
       // A busca NÃO pode ser curto-circuitada pelo padrão ordenado: com curinga
       // ("Cortina*CM*35*Liso*10*") o usuário espera TODOS os itens que contêm
-      // essas informações, em qualquer ordem. Por isso unimos os resultados do
-      // padrão ordenado com os do AND por tokens, nas duas fontes locais.
+      // essas informações, em qualquer ordem. Por isso unificamos padrão ordenado
+      // e AND por tokens numa única query: o PostgREST avalia as duas condições
+      // como um AND lógico no servidor, eliminando as chamadas duplicadas e o
+      // curto-circuito do "primeiro resultado ganhar".
       const acumulado: ConfiguracaoLite[] = [];
+      const tabelas = ['auge_tag_custom_configuracoes', 'auge_tag_custom_scan'];
 
-      const buscarEm = async (tabela: string) => {
-        // a) padrão ordenado (comportamento SAP B1 clássico)
-        const exata = await (supabase as any)
-          .from(tabela)
-          .select('cd_configuracao, nm_configuracao, qtd_tags')
-          .ilike('nm_configuracao', padrao)
-          .limit(100);
-        if (!exata.error) acumulado.push(...((exata.data ?? []) as ConfiguracaoLite[]));
-
-        // b) AND por tokens (ordem livre) — cobre o caso do curinga
-        if (tokens.length > 0) {
-          let q = (supabase as any)
+      await Promise.all(
+        tabelas.map(async (tabela) => {
+          const q = (supabase as any)
             .from(tabela)
             .select('cd_configuracao, nm_configuracao, qtd_tags');
-          for (const t of tokens) q = q.ilike('nm_configuracao', t);
-          const { data, error } = await q.limit(100);
+          const { data, error } = await ilikeAnd(q, 'nm_configuracao', padrao, tokens).limit(200);
           if (!error) acumulado.push(...((data ?? []) as ConfiguracaoLite[]));
-        }
-      };
-
-      // 1) View local (configurações que já têm linhas de TAG gravadas).
-      await buscarEm('auge_tag_custom_configuracoes');
-      // 2) Varredura completa: esta fonte também contém configurações ainda sem
-      // TAGs locais. Ela deve ser consultada SEMPRE; antes, um único resultado
-      // na view local impedia a leitura dos demais cadastros conhecidos no Auge.
-      await buscarEm('auge_tag_custom_scan');
+        }),
+      );
 
       if (acumulado.length > 0) {
         return dedupe(acumulado).sort((a, b) =>
           (a.nm_configuracao ?? '').localeCompare(b.nm_configuracao ?? '', 'pt-BR'),
         );
       }
-
 
       // 4) Último recurso: lookup ao vivo no Auge (fonte oficial).
       try {
@@ -681,8 +531,6 @@ function ConfiguracaoSelect({
 
   // A exibição de valor selecionado individualmente foi removida para priorizar o fluxo automatizado global
   // que atua sobre todas as configurações encontradas pelo termo de busca.
-
-  const mostrarDropdown = false; // Desativado para remover seleção individual conforme solicitado
 
   return (
     <div className="space-y-1" ref={wrapRef}>
@@ -729,29 +577,26 @@ function TagConfiguradaSearch({
   const tokens = useMemo(() => toIlikeTokens(termo), [termo]);
 
   const { data: opcoes = [], isFetching } = useQuery({
-    queryKey: ['tag-configurada-manual', padrao, tokens.join('|')],
+    queryKey: ['tag-configurada-manual', ilikeCacheKey(padrao, tokens)],
     enabled: termo.length >= 2,
     staleTime: 60 * 1000,
     queryFn: async () => {
       const sel = 'nm_configuracao, nm_tag_customizada, ds_tag_customizada, ds_tag_calculada, ds_tag_texto';
       const acc: any[] = [];
 
-      const { data, error } = await (supabase as any)
-        .from('auge_tag_custom')
-        .select(sel)
-        .or(
-          ['ds_tag_customizada', 'nm_tag_customizada']
-            .map((c) => `${c}.ilike.${JSON.stringify(padrao)}`)
-            .join(','),
-        )
-        .limit(300);
+      const qBase = (supabase as any).from('auge_tag_custom').select(sel);
+      const { data, error } = await ilikeAnd(qBase, 'ds_tag_customizada', padrao, tokens).limit(300);
       if (!error) acc.push(...(data ?? []));
 
-      if (tokens.length > 0) {
-        let q = (supabase as any).from('auge_tag_custom').select(sel);
-        for (const t of tokens) q = q.ilike('ds_tag_customizada', t);
-        const alt = await q.limit(300);
-        if (!alt.error) acc.push(...(alt.data ?? []));
+      if (padrao) {
+        const cols = ['ds_tag_customizada', 'nm_tag_customizada'];
+        const or = ilikeOr(cols, padrao, []);
+        const { data: alt, error: altErr } = await (supabase as any)
+          .from('auge_tag_custom')
+          .select(sel)
+          .or(or)
+          .limit(300);
+        if (!altErr) acc.push(...(alt ?? []));
       }
 
       const seen = new Set<string>();
@@ -921,64 +766,19 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   const configsRanqueadas = useMemo(() => {
     const termo = termoDeferido.trim();
     if (termo.length < 2 || configuracoes.length === 0) return [];
-    
-    // 1. Unificar a lógica de filtragem para usar exatamente a mesma pesquisa do ConfiguracaoSelect
+
     const padrao = toIlikePattern(termo);
     const tokens = toIlikeTokens(termo);
-    
-    // Função para simular o comportamento ILIKE do Postgres no frontend
-    const matchesIlike = (text: string, pattern: string) => {
-      if (!pattern) return true;
-      // Normalizamos ambos para ignorar acentos e case
-      const normText = (text || "").toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-      const normPattern = (pattern || "").toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-      
-      // Converte padrão ILIKE (%termo%) para Regex
-      // Escapa caracteres especiais de regex, mas trata % e * como .*
-      const escaped = normPattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/[%*]/g, '.*');
-      const regex = new RegExp(`^${escaped}$`, 'i');
-      return regex.test(normText);
-    };
 
-    const filtrados = configuracoes.filter(cfg => {
-      const nm = cfg.nm_configuracao || "";
-      
-      // Lógica idêntica ao ConfiguracaoSelect:
-      // a) padrão ordenado (comportamento SAP B1 clássico)
-      if (matchesIlike(nm, padrao)) return true;
+    const filtrados = filtrarPorIlike(configuracoes, padrao, tokens);
+    const ranked = rankByRelevance(filtrados, termo).map(({ cfg, score }) => ({
+      cfg,
+      score,
+      matched: [],
+      coverage: 1,
+    }));
 
-      // b) AND por tokens (ordem livre)
-      if (tokens.length > 0) {
-        return tokens.every(t => matchesIlike(nm, t));
-      }
-      
-      return false;
-    });
-
-    // 2. Ranking por relevância para manter os melhores resultados no topo
-    const ranked = filtrados.map(cfg => {
-      const nm = (cfg.nm_configuracao || "").toLowerCase();
-      let score = 0;
-      
-      // Peso por palavras exatas
-      const tokensBusca = termo.toLowerCase().split(/[\s*]+/).filter(t => t.length > 0);
-      tokensBusca.forEach(t => {
-        if (nm === t) score += 10;
-        else if (nm.startsWith(t)) score += 5;
-        else if (nm.includes(t)) score += 2;
-      });
-
-      return {
-        cfg,
-        score,
-        matched: [],
-        coverage: 1
-      };
-    });
-
-    return ranked
-      .sort((a, b) => b.score - a.score || a.cfg.nm_configuracao.localeCompare(b.cfg.nm_configuracao))
-      .slice(0, 500);
+    return ranked.slice(0, 500);
   }, [termoDeferido, configuracoes]);
 
 
@@ -1006,28 +806,35 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   const tokensBusca = useMemo(() => toIlikeTokens(termoBusca), [termoBusca]);
 
   const { data: tagsBusca = [], isFetching: loadingBusca } = useQuery({
-    queryKey: ['auge-tag-custom-busca', padraoBusca, tokensBusca.join('|')],
-    enabled: padraoBusca.length >= 3,
+    queryKey: ['auge-tag-custom-busca', ilikeCacheKey(padraoBusca, tokensBusca)],
+    enabled: termoBusca.trim().length >= 2,
     staleTime: 60 * 1000,
     queryFn: async () => {
       const sel = 'cd_configuracao, nm_configuracao, nm_tag_customizada, ds_tag_customizada, ds_tag_calculada, ds_tag_texto';
-      const cols = ['nm_configuracao', 'ds_tag_customizada', 'nm_tag_customizada', 'ds_tag_texto', 'ds_tag_calculada'];
       const acc: CustomTag[] = [];
 
-      const { data, error } = await (supabase as any)
-        .from('auge_tag_custom')
-        .select(sel)
-        .or(cols.map((c) => `${c}.ilike.${JSON.stringify(padraoBusca)}`).join(','))
-        .limit(300);
+      // O bloco "Resumo" precisa enxergar as TAGs Custom de TODAS as
+      // configurações que casem com o termo (coringa SAP B1 ou AND por
+      // tokens). Antes essa busca exigia >= 3 caracteres e só rodava o AND
+      // por tokens em `nm_configuracao`, o que deixava de fora TAGs cujo
+      // nome bate mas a config não. Agora usamos o mesmo predicado em
+      // `nm_configuracao` e mantemos o OR nas outras colunas para o curinga.
+      const qBase = (supabase as any).from('auge_tag_custom').select(sel);
+      const { data, error } = await ilikeAnd(qBase, 'nm_configuracao', padraoBusca, tokensBusca).limit(500);
       if (!error) acc.push(...((data ?? []) as CustomTag[]));
 
-      // AND por tokens (ordem livre) — sempre somado, nunca só fallback:
-      // é o que faz o curinga "A*B*C*" trazer tudo que contém A, B e C.
-      if (tokensBusca.length > 0) {
-        let q = (supabase as any).from('auge_tag_custom').select(sel);
-        for (const t of tokensBusca) q = q.ilike('nm_configuracao', t);
-        const alt = await q.limit(300);
-        if (!alt.error) acc.push(...((alt.data ?? []) as CustomTag[]));
+      // Match amplo nas colunas de TAG (não de configuração) — mantém o
+      // comportamento do curinga livre: digitar "preto" pode trazer TAGs
+      // cujo valor é "preto" mesmo que a config não mencione isso.
+      if (padraoBusca) {
+        const cols = ['ds_tag_customizada', 'nm_tag_customizada', 'ds_tag_texto', 'ds_tag_calculada'];
+        const or = ilikeOr(cols, padraoBusca, []);
+        const { data: alt, error: altErr } = await (supabase as any)
+          .from('auge_tag_custom')
+          .select(sel)
+          .or(or)
+          .limit(300);
+        if (!altErr) acc.push(...((alt ?? []) as CustomTag[]));
       }
 
       const seen = new Set<string>();
@@ -1043,47 +850,76 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   });
 
   // ---------- Busca por PALAVRAS-CHAVE (item 1 e 2 do fluxo) ----------
-  // Independe da lista suspensa: sempre que houver palavras-chave, buscamos
-  // TODAS as TAGs Custom cujas configurações contenham essas palavras, para
-  // então deduzir as TAGs Configuradas obrigatórias.
+  // Sempre que houver palavras-chave, buscamos TODAS as TAGs Custom cujos
+  // VALORES (ds_tag_customizada, nm_tag_customizada, ds_tag_texto,
+  // ds_tag_calculada) casem com o termo — exatamente a mesma lógica do
+  // "Tags Configuradas" manual, que funciona. A partir das TAGs encontradas
+  // derivamos a lista distinta de configurações para alimentar o bloco Resumo,
+  // permitindo ao usuário alterar todas as TAGs da família de uma só vez.
   const palavras = useMemo(() => extrairPalavras(termoDeferido), [termoDeferido]);
 
   const { data: buscaPalavras, isFetching: loadingPalavras } = useQuery({
-    queryKey: ['auge-tag-custom-palavras', palavras.map((p) => p.token).join('|')],
+    queryKey: [
+      'auge-tag-custom-palavras',
+      ilikeCacheKey(toIlikePattern(termoDeferido), toIlikeTokens(termoDeferido)),
+    ],
     enabled: palavras.length > 0,
     staleTime: 60 * 1000,
     queryFn: async () => {
       const sel =
         'cd_configuracao, nm_configuracao, nm_tag_customizada, ds_tag_customizada, ds_tag_calculada, ds_tag_texto';
-      
-      const tokens = palavras.map(p => p.token);
-      if (tokens.length === 0) return { rows: [] as CustomTag[], usados: [] as string[] };
-
-      // Se houver configurações já filtradas pelo rankConfiguracoes no frontend,
-      // podemos usar seus IDs para buscar as TAGs no banco, garantindo consistência
-      // entre o bloco Resumo e as recomendações de TAGs.
-      const codes = configsRanqueadas.slice(0, 500).map(r => r.cfg.cd_configuracao);
-      
-      let q = (supabase as any).from('auge_tag_custom').select(sel);
-      
-      // Sempre buscamos as tags especificamente para as configurações que apareceram no resumo (AND tokens do Auge)
-      // para garantir que as TAGs sugeridas sejam as mesmas dos itens listados.
-      if (codes.length > 0) {
-        q = q.in('cd_configuracao', codes);
-      } else {
-        // Se não houver nada filtrado localmente, usamos a lógica AND global
-        for (const t of tokens) q = q.ilike('nm_configuracao', `%${t}%`);
+      const tokens = palavras.map((p) => p.token);
+      if (tokens.length === 0) {
+        return { rows: [] as CustomTag[], configs: [] as ConfiguracaoLite[], usados: [] as string[] };
       }
-      
-      const { data, error } = await q.limit(4000);
+
+      const padrao = toIlikePattern(termoDeferido);
+      const tokensIlike = toIlikeTokens(termoDeferido);
+
+      // Mesma lógica do "Tags Configuradas" manual: OR nas colunas das TAGs,
+      // combinando padrão ordenado + tokens AND. Aplicada direto no Postgres
+      // para não depender do catálogo em memória.
+      const cols = ['ds_tag_customizada', 'nm_tag_customizada', 'ds_tag_texto', 'ds_tag_calculada'];
+      const or = ilikeOr(cols, padrao, tokensIlike);
+      if (!or) return { rows: [] as CustomTag[], configs: [] as ConfiguracaoLite[], usados: tokens };
+
+      const { data, error } = await (supabase as any)
+        .from('auge_tag_custom')
+        .select(sel)
+        .or(or)
+        .limit(4000);
       if (error) throw error;
-      
-      return { rows: (data || []) as CustomTag[], usados: tokens };
+
+      const rows = (data ?? []) as CustomTag[];
+
+      // Deriva as configurações distintas a partir das TAGs encontradas.
+      // Cada config pode aparecer várias vezes (uma por TAG) — aqui contamos
+      // quantas TAGs daquela família casaram e exibimos isso no Resumo.
+      const cfgMap = new Map<string, ConfiguracaoLite>();
+      for (const t of rows) {
+        const cd = String(t.cd_configuracao ?? '').trim();
+        if (!cd) continue;
+        const cur = cfgMap.get(cd) ?? {
+          cd_configuracao: cd,
+          nm_configuracao: t.nm_configuracao ?? cd,
+          qtd_tags: 0,
+        };
+        cur.qtd_tags += 1;
+        cfgMap.set(cd, cur);
+      }
+      const configs = Array.from(cfgMap.values()).sort((a, b) =>
+        (a.nm_configuracao ?? '').localeCompare(b.nm_configuracao ?? '', 'pt-BR'),
+      );
+
+      return { rows, configs, usados: tokens };
     },
   });
 
-  const tagsPalavras = buscaPalavras?.rows ?? [];
-  const palavrasUsadas = buscaPalavras?.usados ?? [];
+  const tagsPalavras = useMemo(() => buscaPalavras?.rows ?? [], [buscaPalavras]);
+  const configsPalavras = useMemo<ConfiguracaoLite[]>(
+    () => buscaPalavras?.configs ?? [],
+    [buscaPalavras],
+  );
 
 
 
@@ -1656,82 +1492,113 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         )}
 
         {/* BLOCO DE RESUMO (Colapsável) - Posicionado abaixo do bloco "Manter Tag Customizada" */}
-        {termoBusca.trim().length >= 2 && (
-          <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="rounded-lg border bg-muted/30 overflow-hidden"
-          >
-            <details className="group">
-              <summary className="flex items-center justify-between p-3 cursor-pointer hover:bg-muted/50 transition-colors list-none">
-                <div className="flex items-center gap-2">
-                  <Layers className="h-4 w-4 text-primary" />
-                  <span className="text-[11px] font-semibold uppercase tracking-wider">
-                    Resumo {configsRanqueadas.length > 0 ? `(${configsRanqueadas.length} configurações filtradas em cache)` : `(Nenhuma configuração em cache)`}
-                  </span>
-                </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-90" />
-              </summary>
-              <div className="px-3 pb-3 space-y-2 border-t pt-2">
-                {configsRanqueadas.length > 0 ? (
-                  <>
-                    <div className="text-[10px] text-muted-foreground leading-relaxed flex items-center justify-between">
-                      <span>As configurações abaixo foram identificadas e as TAGs configuradas aplicadas automaticamente.</span>
+        {termoBusca.trim().length >= 2 && (() => {
+          // Fonte 1 (prioritária): configurações derivadas das TAGs Custom cujos
+          // valores casaram com o termo (mesma lógica do "Tags Configuradas"
+          // manual). Fonte 2 (fallback): catálogo local filtrado por nome de
+          // configuração. O Resumo mostra a primeira fonte com resultados.
+          const fonteTags = configsPalavras.length > 0;
+          const fonteNome = !fonteTags && configsRanqueadas.length > 0;
+          const configsResumo = fonteTags
+            ? configsPalavras
+            : fonteNome
+              ? configsRanqueadas.map((r) => r.cfg)
+              : [];
+          const carregandoResumo = loadingPalavras || loadingCfgs;
+          return (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-lg border bg-muted/30 overflow-hidden"
+            >
+              <details className="group">
+                <summary className="flex items-center justify-between p-3 cursor-pointer hover:bg-muted/50 transition-colors list-none">
+                  <div className="flex items-center gap-2">
+                    <Layers className="h-4 w-4 text-primary" />
+                    <span className="text-[11px] font-semibold uppercase tracking-wider">
+                      Resumo{' '}
+                      {configsResumo.length > 0
+                        ? fonteTags
+                          ? `(${configsResumo.length} configurações com TAGs casadas)`
+                          : `(${configsResumo.length} configurações filtradas por nome)`
+                        : carregandoResumo
+                          ? '(buscando…)'
+                          : '(nenhuma configuração encontrada)'}
+                    </span>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-90" />
+                </summary>
+                <div className="px-3 pb-3 space-y-2 border-t pt-2">
+                  {configsResumo.length > 0 ? (
+                    <>
+                      <div className="text-[10px] text-muted-foreground leading-relaxed flex items-center justify-between">
+                        <span>
+                          {fonteTags
+                            ? `Configurações cujas TAGs Custom casaram com "${termoBusca.trim()}" — alterações serão aplicadas em todas de uma vez.`
+                            : 'As configurações abaixo foram identificadas e as TAGs configuradas aplicadas automaticamente.'}
+                        </span>
+                        {obrigatorias.length > 0 && (
+                          <Badge variant="outline" className="text-[9px] border-blue-500/30 text-blue-600 bg-blue-50/50">
+                            {obrigatorias.length} TAGs Reconhecidas
+                          </Badge>
+                        )}
+                      </div>
+
+                      {/* Exibição das TAGs Reconhecidas/Padrão */}
                       {obrigatorias.length > 0 && (
-                        <Badge variant="outline" className="text-[9px] border-blue-500/30 text-blue-600 bg-blue-50/50">
-                          {obrigatorias.length} TAGs Reconhecidas
-                        </Badge>
+                        <div className="flex flex-wrap gap-1 p-2 bg-blue-500/5 rounded border border-blue-500/10">
+                          {obrigatorias.map((o) => (
+                            <div key={o.code} className="flex items-center gap-1.5 px-2 py-0.5 rounded-md border bg-background/80 text-[10px] font-mono shadow-sm">
+                              <span className="text-blue-600 font-bold">{o.code}</span>
+                              <span className="text-muted-foreground">→</span>
+                              <span className="truncate max-w-[100px]">{o.valor}</span>
+                              {o.calculada && (
+                                <span className="text-[9px] text-emerald-600 font-bold ml-1 bg-emerald-500/10 px-1 rounded">
+                                  {o.calculada}
+                                </span>
+                              )}
+                              <Badge variant="secondary" className="text-[8px] h-3.5 px-1 bg-blue-100 text-blue-700 hover:bg-blue-100">
+                                {Math.round((o.freq / o.total) * 100)}%
+                              </Badge>
+                            </div>
+                          ))}
+                        </div>
                       )}
-                    </div>
-                    
-                    {/* Exibição das TAGs Reconhecidas/Padrão */}
-                    {obrigatorias.length > 0 && (
-                      <div className="flex flex-wrap gap-1 p-2 bg-blue-500/5 rounded border border-blue-500/10">
-                        {obrigatorias.map((o) => (
-                          <div key={o.code} className="flex items-center gap-1.5 px-2 py-0.5 rounded-md border bg-background/80 text-[10px] font-mono shadow-sm">
-                            <span className="text-blue-600 font-bold">{o.code}</span>
-                            <span className="text-muted-foreground">→</span>
-                            <span className="truncate max-w-[100px]">{o.valor}</span>
-                            {o.calculada && (
-                              <span className="text-[9px] text-emerald-600 font-bold ml-1 bg-emerald-500/10 px-1 rounded">
-                                {o.calculada}
-                              </span>
+
+                      <div className="flex flex-wrap gap-1.5 max-h-60 overflow-y-auto pr-1">
+                        {configsResumo.map((cfg) => (
+                          <Badge
+                            key={cfg.cd_configuracao}
+                            variant="outline"
+                            title={fonteTags ? `${cfg.qtd_tags} TAG(s) casaram` : undefined}
+                            className="text-[10px] font-mono py-0.5 px-2 bg-background/50 border-primary/20 hover:bg-muted transition-colors"
+                          >
+                            {cfg.nm_configuracao}
+                            {fonteTags && cfg.qtd_tags > 1 && (
+                              <span className="ml-1 text-[9px] text-primary/70">×{cfg.qtd_tags}</span>
                             )}
-                            <Badge variant="secondary" className="text-[8px] h-3.5 px-1 bg-blue-100 text-blue-700 hover:bg-blue-100">
-                              {Math.round((o.freq / o.total) * 100)}%
-                            </Badge>
-                          </div>
+                          </Badge>
                         ))}
                       </div>
-                    )}
-
-                    <div className="flex flex-wrap gap-1.5 max-h-60 overflow-y-auto pr-1">
-                      {configsRanqueadas.map((r) => (
-                        <Badge 
-                          key={r.cfg.cd_configuracao} 
-                          variant="outline" 
-                          className="text-[10px] font-mono py-0.5 px-2 bg-background/50 border-primary/20 hover:bg-muted transition-colors"
-                        >
-                          {r.cfg.nm_configuracao}
-                        </Badge>
-                      ))}
+                    </>
+                  ) : (
+                    <div className="py-4 flex flex-col items-center justify-center text-center bg-muted/20 rounded-md border border-dashed border-muted-foreground/20">
+                      <Search className="h-5 w-5 mb-2 text-muted-foreground opacity-20" />
+                      <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">
+                        (Nenhuma configuração exata encontrada)
+                      </p>
+                      <p className="text-[9px] text-muted-foreground/60 max-w-[200px] mt-1">
+                        {carregandoResumo
+                          ? 'Buscando TAGs Custom que casem com o termo…'
+                          : `Certifique-se de que os termos pesquisados (como "${termoBusca}") existem exatamente no cadastro.`}
+                      </p>
                     </div>
-                  </>
-                ) : (
-                  <div className="py-4 flex flex-col items-center justify-center text-center bg-muted/20 rounded-md border border-dashed border-muted-foreground/20">
-                    <Search className="h-5 w-5 mb-2 text-muted-foreground opacity-20" />
-                    <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">
-                      (Nenhuma configuração exata encontrada)
-                    </p>
-                    <p className="text-[9px] text-muted-foreground/60 max-w-[200px] mt-1">
-                      Certifique-se de que os termos pesquisados (como "{termoBusca}") existem exatamente no cadastro.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </details>
-          </motion.div>
-        )}
+                  )}
+                </div>
+              </details>
+            </motion.div>
+          );
+        })()}
       </Card>
 
 
