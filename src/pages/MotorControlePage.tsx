@@ -257,13 +257,13 @@ export default function MotorControlePage() {
   return (
     <FormPageLayout>
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col min-h-screen bg-background pt-3 sm:pt-4">
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-3 sm:p-5 space-y-5 pb-24">
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-2 sm:p-5 space-y-4 sm:space-y-5 pb-24">
           <div className="flex bg-card/50 p-1.5 rounded-[2rem] border border-white/5 shadow-inner">
             {(['motor', 'controle', 'coulisse'] as SubMode[]).map(mode => (
               <button 
                 key={mode} 
                 onClick={() => handleSubModeChange(mode)} 
-                className={`flex-1 py-3.5 rounded-full text-[11px] font-semibold uppercase tracking-[0.1em] transition-all duration-300 relative ${
+                className={`flex-1 py-2 sm:py-3.5 rounded-full text-[9px] sm:text-[11px] font-semibold uppercase tracking-[0.1em] transition-all duration-300 relative ${
                   subMode === mode 
                     ? 'text-primary-foreground' 
                     : 'text-muted-foreground hover:text-foreground'
@@ -335,7 +335,8 @@ export default function MotorControlePage() {
                         value={coulisseModeloProcCx} 
                         onChange={e => setCoulisseModeloProcCx(sanitize(e.target.value))} 
                         placeholder="Ex: MOTION CM-01 PROC 1234 CX01" 
-                        className={`w-full h-14 px-5 rounded-md border bg-card/50 text-sm font-bold focus:ring-4 focus:ring-primary/10 outline-none transition-all ${lockMotorModelo ? 'border-amber-500/30 text-warning' : 'border-white/5'}`} 
+                        className={`w-full h-12 sm:h-14 px-4 sm:px-5 rounded-md border bg-card/50 text-xs sm:text-sm font-bold focus:ring-4 focus:ring-primary/10 outline-none transition-all ${lockMotorModelo ? 'border-amber-500/30 text-warning' : 'border-white/5'}`} 
+
                       />
                     </div>
                     {coulisseModeloProcCx.trim() && (
