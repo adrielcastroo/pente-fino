@@ -636,10 +636,10 @@ export default function CadastrosPage() {
                           className="h-5 w-5"
                         />
                       </TableHead>
-                      <SortableHead k="codigo_interno" className="w-[200px]">Código interno</SortableHead>
+                      <SortableHead k="codigo_interno" className="w-[150px] lg:w-[200px]">Código interno</SortableHead>
                       <SortableHead k="descricao">Descrição</SortableHead>
-                      <SortableHead k="codigo_fornecedor" className="w-[200px]">Código fornecedor</SortableHead>
-                      <SortableHead k="updated_at" className="w-[140px]">Atualizado</SortableHead>
+                      <SortableHead k="codigo_fornecedor" className="hidden lg:table-cell w-[200px]">Código fornecedor</SortableHead>
+                      <SortableHead k="updated_at" className="hidden xl:table-cell w-[140px]">Atualizado</SortableHead>
                       <TableHead className="w-[100px] text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -703,7 +703,7 @@ export default function CadastrosPage() {
                               <span>{item.descricao}</span>
                             </div>
                           </TableCell>
-                          <TableCell className={cn((editedCol('codigo_fornecedor') || editedCol('codigos_fornecedor')) && 'bg-amber-500/5')}>
+                          <TableCell className={cn("hidden lg:table-cell", (editedCol('codigo_fornecedor') || editedCol('codigos_fornecedor')) && 'bg-amber-500/5')}>
                             <div className="inline-flex items-start gap-1.5 flex-wrap max-w-[240px]">
                               {(editedCol('codigo_fornecedor') || editedCol('codigos_fornecedor')) && (
                                 <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
@@ -730,7 +730,7 @@ export default function CadastrosPage() {
                               })()}
                             </div>
                           </TableCell>
-                          <TableCell className="text-xs text-muted-foreground">
+                          <TableCell className="hidden xl:table-cell text-xs text-muted-foreground">
                             {new Date(item.updated_at).toLocaleDateString('pt-BR')}
                           </TableCell>
                           <TableCell className="text-right">
