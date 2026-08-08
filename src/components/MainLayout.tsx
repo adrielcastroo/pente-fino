@@ -86,7 +86,7 @@ export default function MainLayout({
 
   return (
     <SidebarProvider defaultOpen={defaultOpen} onOpenChange={handleOpenChange}>
-      <div className="h-[100dvh] flex flex-row w-full bg-background overflow-hidden relative app-bg-pattern">
+      <div className="h-[100dvh] flex flex-row w-full bg-background overflow-hidden relative app-bg-pattern supports-[height:100cqh]:h-[100cqh]">
         {sidebar}
 
         {navRail}
