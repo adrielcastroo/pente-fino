@@ -37,9 +37,9 @@ const DialogContent = React.forwardRef<
       ref={ref}
       className={cn(
         // Posição base centralizada (funciona em mobile e desktop)
-        "fixed left-[50%] top-[50%] z-50 flex flex-col w-full -translate-x-1/2 -translate-y-1/2 gap-3 border border-border bg-card p-4 shadow-2xl rounded-lg overflow-y-auto",
+        "fixed left-[50%] top-[50%] z-50 flex flex-col w-[95vw] -translate-x-1/2 -translate-y-1/2 gap-3 border border-border bg-card p-4 shadow-2xl rounded-lg overflow-hidden",
         // Mobile-first: max-width para telas pequenas, mobile height
-        "max-w-[95vw] max-h-[90vh]",
+        "max-h-[92vh] sm:max-h-[85vh]",
         // Desktop (sm+): largura padrão do shadcn
         "sm:max-w-lg sm:p-6 sm:border sm:border-border sm:rounded-lg",
         // Animações: corrigido de 48% para 1/2 (50%) para garantir centralização exata
@@ -50,7 +50,9 @@ const DialogContent = React.forwardRef<
     >
       {/* Grab handle visual (somente mobile) */}
       
-      {children}
+      <div className="flex-1 overflow-y-auto custom-scrollbar -mx-1 px-1">
+        {children}
+      </div>
       <DialogPrimitive.Close className="absolute right-3 top-3 sm:right-4 sm:top-4 p-1.5 rounded-md text-muted-foreground ring-offset-background transition-colors hover:bg-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 disabled:pointer-events-none">
         <X className="h-4 w-4" strokeWidth={2} />
         <span className="sr-only">Fechar</span>
