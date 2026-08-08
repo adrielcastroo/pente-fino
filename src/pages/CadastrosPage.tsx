@@ -334,34 +334,40 @@ export default function CadastrosPage() {
       <PageHeader
         title="Cadastro de Itens"
         actions={
-          <>
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <Button
               variant="outline"
+              size="sm"
               onClick={() => setImportOpen(true)}
-              className="gap-2 h-10"
+              className="h-9 sm:h-10 px-2 sm:px-3 gap-1.5"
               aria-label="Importar itens"
             >
               <Upload className="h-4 w-4 shrink-0" />
-              <span className="truncate">Importar</span>
+              <span className="hidden xs:inline">Importar</span>
             </Button>
-            <Button onClick={handleNew} className="gap-2 h-10" aria-label="Novo item">
+            <Button 
+              size="sm"
+              onClick={handleNew} 
+              className="h-9 sm:h-10 px-2 sm:px-3 gap-1.5" 
+              aria-label="Novo item"
+            >
               <Plus className="h-4 w-4 shrink-0" />
-              <span className="truncate">Novo item</span>
+              <span className="hidden xs:inline">Novo item</span>
+              <span className="xs:hidden">Novo</span>
             </Button>
-          </>
+          </div>
         }
       />
 
       <Tabs defaultValue="interno" className="flex-1 flex flex-col overflow-hidden gap-3 sm:gap-4 min-w-0">
         <TabsContent value="interno" className="flex-1 flex flex-col gap-3 sm:gap-4 overflow-hidden mt-0 min-w-0">
-          <div className="flex flex-col md:flex-row md:items-center gap-2 sm:gap-3 min-w-0 rounded-md border border-border/40 bg-card/60 p-2 sm:p-3 shadow-sm">
-
-            <div className="relative w-full md:flex-1 md:max-w-md">
+          <div className="flex flex-col lg:flex-row lg:items-center gap-2 sm:gap-3 min-w-0 rounded-md border border-border/40 bg-card/60 p-2 sm:p-3 shadow-sm">
+            <div className="relative w-full lg:flex-1 lg:max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Buscar em Cadastro + Auge (código, descrição, fornecedor)..."
+                placeholder="Buscar em Cadastro + Auge..."
                 className="pl-9 pr-9 h-10 w-full"
                 aria-label="Buscar itens (inclui Auge)"
               />
@@ -369,9 +375,9 @@ export default function CadastrosPage() {
                 <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground animate-spin" />
               )}
             </div>
-            <div className="flex flex-wrap items-center gap-2 md:contents min-w-0">
+            <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 lg:contents min-w-0">
               <Select value={fornFilter} onValueChange={(v) => setFornFilter(v as FornFilter)}>
-                <SelectTrigger className="flex-1 min-w-[140px] md:w-[200px] md:flex-none h-10" aria-label="Filtrar por fornecedor">
+                <SelectTrigger className="h-10 min-w-0 sm:min-w-[140px] sm:w-[200px]" aria-label="Filtrar por fornecedor">
                   <SelectValue placeholder="Fornecedor" />
                 </SelectTrigger>
                 <SelectContent>
@@ -382,7 +388,7 @@ export default function CadastrosPage() {
                 </SelectContent>
               </Select>
               <Select value={editFilter} onValueChange={(v) => setEditFilter(v as EditFilter)}>
-                <SelectTrigger className="flex-1 min-w-[140px] md:w-[170px] md:flex-none h-10" aria-label="Filtrar por edição">
+                <SelectTrigger className="h-10 min-w-0 sm:min-w-[140px] sm:w-[170px]" aria-label="Filtrar por edição">
                   <SelectValue placeholder="Edição" />
                 </SelectTrigger>
                 <SelectContent>
@@ -391,7 +397,7 @@ export default function CadastrosPage() {
                   <SelectItem value="nao_editados">Nunca editados</SelectItem>
                 </SelectContent>
               </Select>
-              <div className="flex flex-wrap items-center gap-2 w-full md:w-auto md:ml-auto">
+              <div className="col-span-2 sm:col-auto flex flex-wrap items-center gap-2 sm:ml-auto">
                 <Badge variant="secondary" className="text-[10px] sm:text-xs">{filtered.length} de {itens.length}</Badge>
                 {semFornecedorCount > 0 && (
                   <Badge variant="outline" className="text-[10px] sm:text-xs text-warning dark:text-warning border-amber-500/30">
@@ -630,10 +636,10 @@ export default function CadastrosPage() {
                           className="h-5 w-5"
                         />
                       </TableHead>
-                      <SortableHead k="codigo_interno" className="w-[200px]">Código interno</SortableHead>
+                      <SortableHead k="codigo_interno" className="w-[150px] lg:w-[200px]">Código interno</SortableHead>
                       <SortableHead k="descricao">Descrição</SortableHead>
-                      <SortableHead k="codigo_fornecedor" className="w-[200px]">Código fornecedor</SortableHead>
-                      <SortableHead k="updated_at" className="w-[140px]">Atualizado</SortableHead>
+                      <SortableHead k="codigo_fornecedor" className="hidden lg:table-cell w-[200px]">Código fornecedor</SortableHead>
+                      <SortableHead k="updated_at" className="hidden xl:table-cell w-[140px]">Atualizado</SortableHead>
                       <TableHead className="w-[100px] text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -697,7 +703,7 @@ export default function CadastrosPage() {
                               <span>{item.descricao}</span>
                             </div>
                           </TableCell>
-                          <TableCell className={cn((editedCol('codigo_fornecedor') || editedCol('codigos_fornecedor')) && 'bg-amber-500/5')}>
+                          <TableCell className={cn("hidden lg:table-cell", (editedCol('codigo_fornecedor') || editedCol('codigos_fornecedor')) && 'bg-amber-500/5')}>
                             <div className="inline-flex items-start gap-1.5 flex-wrap max-w-[240px]">
                               {(editedCol('codigo_fornecedor') || editedCol('codigos_fornecedor')) && (
                                 <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
@@ -724,7 +730,7 @@ export default function CadastrosPage() {
                               })()}
                             </div>
                           </TableCell>
-                          <TableCell className="text-xs text-muted-foreground">
+                          <TableCell className="hidden xl:table-cell text-xs text-muted-foreground">
                             {new Date(item.updated_at).toLocaleDateString('pt-BR')}
                           </TableCell>
                           <TableCell className="text-right">

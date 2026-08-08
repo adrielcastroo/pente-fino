@@ -35,13 +35,13 @@ export function ModuleCard({
         onMouseEnter={onMouseEnter}
         aria-label={ariaLabel}
         className={cn(
-          "flex flex-col min-h-[168px] p-[1.375rem] bg-card border border-border rounded-md transition-all duration-100 text-left relative group",
+          "flex flex-col min-h-[168px] w-full p-[1.375rem] bg-card border border-border rounded-md transition-all duration-100 text-left relative group",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
           isActive && "border-primary ring-1 ring-primary/50",
           "hover:border-primary/45",
           "active:bg-secondary",
           // Mobile adjustments
-          "max-md:min-h-[200px] max-md:p-6"
+          "max-md:min-h-[180px] max-md:p-5"
         )}
       >
         <div className="flex items-center justify-between w-full">

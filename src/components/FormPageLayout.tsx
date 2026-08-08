@@ -21,10 +21,10 @@ export default function FormPageLayout({ children, showRightPanel = true }: Form
   if (showRightPanel) {
     if (!isNarrow) {
       return (
-        <div className="flex flex-row h-full w-full min-w-0 gap-4 lg:gap-6 overflow-hidden">
+        <div className="flex flex-col md:flex-row h-full w-full min-w-0 gap-4 lg:gap-6 overflow-hidden">
           <div
-            className="shrink-0 h-full min-w-0 overflow-hidden"
-            style={{ flexBasis: 'clamp(380px, 30vw, 520px)' }}
+            className="shrink-0 h-full min-w-0 overflow-y-auto custom-scrollbar"
+            style={{ flexBasis: 'clamp(380px, 30vw, 550px)' }}
           >
             {children}
           </div>
