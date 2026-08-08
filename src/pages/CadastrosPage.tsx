@@ -334,21 +334,28 @@ export default function CadastrosPage() {
       <PageHeader
         title="Cadastro de Itens"
         actions={
-          <>
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <Button
               variant="outline"
+              size="sm"
               onClick={() => setImportOpen(true)}
-              className="gap-2 h-10"
+              className="h-9 sm:h-10 px-2 sm:px-3 gap-1.5"
               aria-label="Importar itens"
             >
               <Upload className="h-4 w-4 shrink-0" />
-              <span className="truncate">Importar</span>
+              <span className="hidden xs:inline">Importar</span>
             </Button>
-            <Button onClick={handleNew} className="gap-2 h-10" aria-label="Novo item">
+            <Button 
+              size="sm"
+              onClick={handleNew} 
+              className="h-9 sm:h-10 px-2 sm:px-3 gap-1.5" 
+              aria-label="Novo item"
+            >
               <Plus className="h-4 w-4 shrink-0" />
-              <span className="truncate">Novo item</span>
+              <span className="hidden xs:inline">Novo item</span>
+              <span className="xs:hidden">Novo</span>
             </Button>
-          </>
+          </div>
         }
       />
 
@@ -369,9 +376,9 @@ export default function CadastrosPage() {
                 <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground animate-spin" />
               )}
             </div>
-            <div className="flex flex-wrap items-center gap-2 md:contents min-w-0">
+            <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 lg:contents min-w-0">
               <Select value={fornFilter} onValueChange={(v) => setFornFilter(v as FornFilter)}>
-                <SelectTrigger className="flex-1 min-w-[140px] md:w-[200px] md:flex-none h-10" aria-label="Filtrar por fornecedor">
+                <SelectTrigger className="h-10 min-w-0 sm:min-w-[140px] sm:w-[200px]" aria-label="Filtrar por fornecedor">
                   <SelectValue placeholder="Fornecedor" />
                 </SelectTrigger>
                 <SelectContent>
@@ -382,7 +389,7 @@ export default function CadastrosPage() {
                 </SelectContent>
               </Select>
               <Select value={editFilter} onValueChange={(v) => setEditFilter(v as EditFilter)}>
-                <SelectTrigger className="flex-1 min-w-[140px] md:w-[170px] md:flex-none h-10" aria-label="Filtrar por edição">
+                <SelectTrigger className="h-10 min-w-0 sm:min-w-[140px] sm:w-[170px]" aria-label="Filtrar por edição">
                   <SelectValue placeholder="Edição" />
                 </SelectTrigger>
                 <SelectContent>
@@ -391,7 +398,7 @@ export default function CadastrosPage() {
                   <SelectItem value="nao_editados">Nunca editados</SelectItem>
                 </SelectContent>
               </Select>
-              <div className="flex flex-wrap items-center gap-2 w-full md:w-auto md:ml-auto">
+              <div className="col-span-2 sm:col-auto flex flex-wrap items-center gap-2 sm:ml-auto">
                 <Badge variant="secondary" className="text-[10px] sm:text-xs">{filtered.length} de {itens.length}</Badge>
                 {semFornecedorCount > 0 && (
                   <Badge variant="outline" className="text-[10px] sm:text-xs text-warning dark:text-warning border-amber-500/30">
