@@ -57,11 +57,11 @@ export default function BottomTabBar() {
 
   return (
     <nav
-      className="flex md:hidden fixed bottom-0 left-0 right-0 z-50 h-16 border-t border-border/40 bg-background/95 backdrop-blur shadow-2xl pb-[env(safe-area-inset-bottom,0px)]"
+      className="flex md:hidden fixed bottom-0 left-0 right-0 z-50 h-16 border-t border-border/40 bg-background/95 backdrop-blur shadow-2xl pb-[env(safe-area-inset-bottom,0px)] w-full overflow-x-hidden"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       aria-label="Navegação principal"
     >
-      <div className="flex w-full items-stretch">
+      <div className="flex w-full items-stretch justify-around max-w-full mx-auto px-1">
         {primary.map(({ to, label, icon: Icon }) => {
           const active = isActive(to);
           return (
