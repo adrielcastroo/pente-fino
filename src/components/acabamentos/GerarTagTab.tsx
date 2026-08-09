@@ -1580,41 +1580,30 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                         </div>
                       </div>
 
-                      {/* Exibição das TAGs Reconhecidas/Padrão */}
-                      {obrigatorias.length > 0 && (
-                        <div className="flex flex-wrap gap-1 p-2 bg-blue-500/5 rounded border border-blue-500/10">
-                          {obrigatorias.map((o) => (
-                            <div key={o.code} className="flex items-center gap-1.5 px-2 py-0.5 rounded-md border bg-background/80 text-[10px] font-mono shadow-sm">
-                              <span className="text-blue-600 font-bold">{o.code}</span>
-                              <span className="text-muted-foreground">→</span>
-                              <span className="truncate max-w-[100px]">{o.valor}</span>
-                              {o.calculada && (
-                                <span className="text-[9px] text-emerald-600 font-bold ml-1 bg-emerald-500/10 px-1 rounded">
-                                  {o.calculada}
-                                </span>
-                              )}
-                              <Badge variant="secondary" className="text-[8px] h-3.5 px-1 bg-blue-100 text-blue-700 hover:bg-blue-100">
-                                {Math.round((o.freq / o.total) * 100)}%
-                              </Badge>
-                            </div>
-                          ))}
+                      <div className="space-y-1">
+                        <div className="text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-1.5 px-1">
+                          <CheckCircle2 className="h-2.5 w-2.5 text-emerald-500" /> TAGs Recomendadas pela Família
                         </div>
-                      )}
-
-                      <div className="flex flex-wrap gap-1.5 max-h-60 overflow-y-auto pr-1">
-                        {configsResumo.map((cfg) => (
-                          <Badge
-                            key={cfg.cd_configuracao}
-                            variant="outline"
-                            title={fonteTags ? `${cfg.qtd_tags} TAG(s) casaram` : undefined}
-                            className="text-[10px] font-mono py-0.5 px-2 bg-background/50 border-primary/20 hover:bg-muted transition-colors"
-                          >
-                            {cfg.nm_configuracao}
-                            {fonteTags && cfg.qtd_tags > 1 && (
-                              <span className="ml-1 text-[9px] text-primary/70">×{cfg.qtd_tags}</span>
-                            )}
-                          </Badge>
-                        ))}
+                        {/* Exibição das TAGs Reconhecidas/Padrão */}
+                        {obrigatorias.length > 0 && (
+                          <div className="flex flex-wrap gap-1 p-2 bg-blue-500/5 rounded border border-blue-500/10">
+                            {obrigatorias.map((o) => (
+                              <div key={o.code} className="flex items-center gap-1.5 px-2 py-0.5 rounded-md border bg-background/80 text-[10px] font-mono shadow-sm">
+                                <span className="text-blue-600 font-bold">{o.code}</span>
+                                <span className="text-muted-foreground">→</span>
+                                <span className="truncate max-w-[100px]">{o.valor}</span>
+                                {o.calculada && (
+                                  <span className="text-[9px] text-emerald-600 font-bold ml-1 bg-emerald-500/10 px-1 rounded">
+                                    {o.calculada}
+                                  </span>
+                                )}
+                                <Badge variant="secondary" className="text-[8px] h-3.5 px-1 bg-blue-100 text-blue-700 hover:bg-blue-100">
+                                  {Math.round((o.freq / o.total) * 100)}%
+                                </Badge>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </>
                   ) : (
