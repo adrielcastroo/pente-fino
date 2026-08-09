@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import {
   Loader2,
   Wand2,
@@ -1528,57 +1529,81 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-90" />
                 </summary>
-                <div className="px-3 pb-3 space-y-2 border-t pt-2">
+                <div className="px-3 pb-3 space-y-3 border-t pt-2">
                   {configsResumo.length > 0 ? (
                     <>
-                      <div className="text-[10px] text-muted-foreground leading-relaxed flex items-center justify-between">
-                        <span>
-                          {fonteTags
-                            ? `Configurações cujas TAGs Custom casaram com "${termoBusca.trim()}" — alterações serão aplicadas em todas de uma vez.`
-                            : 'As configurações abaixo foram identificadas e as TAGs configuradas aplicadas automaticamente.'}
-                        </span>
-                        {obrigatorias.length > 0 && (
-                          <Badge variant="outline" className="text-[9px] border-blue-500/30 text-blue-600 bg-blue-50/50">
-                            {obrigatorias.length} TAGs Reconhecidas
-                          </Badge>
-                        )}
+                      <div className="space-y-2">
+                        <div className="text-[10px] text-muted-foreground leading-relaxed flex items-center justify-between">
+                          <span>
+                            {fonteTags
+                              ? `Configurações cujas TAGs Custom casaram com "${termoBusca.trim()}" — alterações serão aplicadas em todas de uma vez.`
+                              : 'As configurações abaixo foram identificadas e as TAGs configuradas aplicadas automaticamente.'}
+                          </span>
+                          {obrigatorias.length > 0 && (
+                            <Badge variant="outline" className="text-[9px] border-blue-500/30 text-blue-600 bg-blue-50/50">
+                              {obrigatorias.length} TAGs Reconhecidas
+                            </Badge>
+                          )}
+                        </div>
+
+                        {/* Bloco de "Configurações Encontradas" interativas */}
+                        <div className="space-y-1">
+                          <div className="text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-1.5 px-1">
+                            <Sparkles className="h-2.5 w-2.5" /> Configurações Encontradas
+                          </div>
+                          <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto pr-1 p-1 bg-background/40 rounded-md border border-dashed">
+                            {configsResumo.map((cfg) => {
+                              const isSelected = customAberta?.cd === cfg.cd_configuracao;
+                              return (
+                                <button
+                                  key={cfg.cd_configuracao}
+                                  onClick={() => setCustomAberta({ cd: cfg.cd_configuracao, nm: cfg.nm_configuracao })}
+                                  className={cn(
+                                    "text-[10px] font-mono py-0.5 px-2 rounded-md border transition-all flex items-center gap-1.5",
+                                    isSelected 
+                                      ? "bg-primary text-primary-foreground border-primary shadow-sm" 
+                                      : "bg-background/80 border-primary/20 hover:bg-muted text-foreground"
+                                  )}
+                                  title={fonteTags ? `${cfg.qtd_tags} TAG(s) casaram` : undefined}
+                                >
+                                  {isSelected && <CheckCircle2 className="h-2.5 w-2.5" />}
+                                  {cfg.nm_configuracao}
+                                  {fonteTags && cfg.qtd_tags > 1 && (
+                                    <span className={cn("text-[9px]", isSelected ? "text-primary-foreground/70" : "text-primary/70")}>
+                                      ×{cfg.qtd_tags}
+                                    </span>
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
                       </div>
 
-                      {/* Exibição das TAGs Reconhecidas/Padrão */}
-                      {obrigatorias.length > 0 && (
-                        <div className="flex flex-wrap gap-1 p-2 bg-blue-500/5 rounded border border-blue-500/10">
-                          {obrigatorias.map((o) => (
-                            <div key={o.code} className="flex items-center gap-1.5 px-2 py-0.5 rounded-md border bg-background/80 text-[10px] font-mono shadow-sm">
-                              <span className="text-blue-600 font-bold">{o.code}</span>
-                              <span className="text-muted-foreground">→</span>
-                              <span className="truncate max-w-[100px]">{o.valor}</span>
-                              {o.calculada && (
-                                <span className="text-[9px] text-emerald-600 font-bold ml-1 bg-emerald-500/10 px-1 rounded">
-                                  {o.calculada}
-                                </span>
-                              )}
-                              <Badge variant="secondary" className="text-[8px] h-3.5 px-1 bg-blue-100 text-blue-700 hover:bg-blue-100">
-                                {Math.round((o.freq / o.total) * 100)}%
-                              </Badge>
-                            </div>
-                          ))}
+                      <div className="space-y-1">
+                        <div className="text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-1.5 px-1">
+                          <CheckCircle2 className="h-2.5 w-2.5 text-emerald-500" /> TAGs Recomendadas pela Família
                         </div>
-                      )}
-
-                      <div className="flex flex-wrap gap-1.5 max-h-60 overflow-y-auto pr-1">
-                        {configsResumo.map((cfg) => (
-                          <Badge
-                            key={cfg.cd_configuracao}
-                            variant="outline"
-                            title={fonteTags ? `${cfg.qtd_tags} TAG(s) casaram` : undefined}
-                            className="text-[10px] font-mono py-0.5 px-2 bg-background/50 border-primary/20 hover:bg-muted transition-colors"
-                          >
-                            {cfg.nm_configuracao}
-                            {fonteTags && cfg.qtd_tags > 1 && (
-                              <span className="ml-1 text-[9px] text-primary/70">×{cfg.qtd_tags}</span>
-                            )}
-                          </Badge>
-                        ))}
+                        {/* Exibição das TAGs Reconhecidas/Padrão */}
+                        {obrigatorias.length > 0 && (
+                          <div className="flex flex-wrap gap-1 p-2 bg-blue-500/5 rounded border border-blue-500/10">
+                            {obrigatorias.map((o) => (
+                              <div key={o.code} className="flex items-center gap-1.5 px-2 py-0.5 rounded-md border bg-background/80 text-[10px] font-mono shadow-sm">
+                                <span className="text-blue-600 font-bold">{o.code}</span>
+                                <span className="text-muted-foreground">→</span>
+                                <span className="truncate max-w-[100px]">{o.valor}</span>
+                                {o.calculada && (
+                                  <span className="text-[9px] text-emerald-600 font-bold ml-1 bg-emerald-500/10 px-1 rounded">
+                                    {o.calculada}
+                                  </span>
+                                )}
+                                <Badge variant="secondary" className="text-[8px] h-3.5 px-1 bg-blue-100 text-blue-700 hover:bg-blue-100">
+                                  {Math.round((o.freq / o.total) * 100)}%
+                                </Badge>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </>
                   ) : (
