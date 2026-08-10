@@ -877,19 +877,35 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       
       // 1) Match por NOME DA CONFIGURAÇÃO (nm_configuracao)
       // Mesma lógica que o Auge usa para listar as configurações da família.
+      // Aplicamos o filtro AND para garantir que todos os tokens estejam presentes no nome.
       const qCfg = (supabase as any).from('auge_tag_custom').select(sel);
       const { data: dataCfg, error: errorCfg } = await ilikeAnd(qCfg, 'nm_configuracao', padrao, tokensIlike).limit(4000);
       if (!errorCfg) acc.push(...((dataCfg ?? []) as CustomTag[]));
 
-      // 2) Match por VALORES DAS TAGS (mesma lógica do "Tags Configuradas" manual)
-      // Isso permite encontrar a família mesmo pesquisando pelo valor de uma TAG (ex: "preto").
+      // 2) Match por VALORES DAS TAGS (lógica AND entre colunas)
+      // Um item é retornado se para CADA token pesquisado, ele existir em pelo menos UMA das colunas.
       const cols = ['ds_tag_customizada', 'nm_tag_customizada', 'ds_tag_texto', 'ds_tag_calculada'];
-      const or = ilikeOr(cols, padrao, tokensIlike);
-      if (or) {
+      
+      if (tokensIlike.length > 0) {
+        // Constrói a cláusula AND para os tokens. O PostgREST interpreta a vírgula 
+        // no .or() como OR, mas se envolvermos em and() vira lógica de interseção.
+        const andClause = tokensIlike.map(t => {
+          const orGroup = cols.map(c => `${c}.ilike.${JSON.stringify(t)}`).join(',');
+          return `and(${orGroup})`;
+        }).join(',');
+
         const { data: dataTags, error: errorTags } = await (supabase as any)
           .from('auge_tag_custom')
           .select(sel)
-          .or(or)
+          .or(andClause)
+          .limit(4000);
+        if (!errorTags) acc.push(...((dataTags ?? []) as CustomTag[]));
+      } else if (padrao) {
+        const orClause = cols.map(c => `${c}.ilike.${JSON.stringify(padrao)}`).join(',');
+        const { data: dataTags, error: errorTags } = await (supabase as any)
+          .from('auge_tag_custom')
+          .select(sel)
+          .or(orClause)
           .limit(4000);
         if (!errorTags) acc.push(...((dataTags ?? []) as CustomTag[]));
       }
@@ -1609,7 +1625,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                     <div className="py-4 flex flex-col items-center justify-center text-center bg-muted/20 rounded-md border border-dashed border-muted-foreground/20">
                       <Search className="h-5 w-5 mb-2 text-muted-foreground opacity-20" />
                       <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">
-                        Ajustar a lógica de tokenização caso o resultado ainda traga itens indesejados.
+                        Ainda não está com o resultado esperado.\n\nQuando o usuario pesquisar: \"Cortina\", precisa aparecer somente TAGs Custom/Configurações que contenham cortina na sua descrição. e assim por diante, \"cm\", somente TAGs Custom/configurações que contenham \"cortina+cm\"...
                       </p>
                       <p className="text-[9px] text-muted-foreground/60 max-w-[200px] mt-1">
                         {carregandoResumo
