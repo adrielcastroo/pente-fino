@@ -1634,23 +1634,35 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                       </div>
                     </>
                   ) : (
-                    <div className="py-4 flex flex-col items-center justify-center text-center bg-muted/20 rounded-md border border-dashed border-muted-foreground/20">
-                      <Search className="h-5 w-5 mb-2 text-muted-foreground opacity-20" />
-                      <p className="text-[10px] text-muted-foreground whitespace-pre-line">
-                        Está funcionando parcialmente.
-
-                        Ele está reconhecendo somente "cortina" pois quando o "cm"é inserido ao lado com o caractere curinga no meio, o app não está reconhecendo.
-
-                        lembre o caractere curing "*", serve somente para o sistema pesquisar tudo o que existe naquele intervalo, não é para considerar um caractere da escrita em si.
-
-
-                        verifique se pode ser isso que estava afetando a lódiga
+                    <div className="p-8 text-center bg-muted/20 rounded-lg border border-dashed border-muted-foreground/20">
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Introdução O módulo de busca do catálogo de configurações reproduz a experiência de filtros do SAP B1 usando o curinga “*” como coringa do usuário. O input é convertido em padrão ILIKE e em lista de tokens para busca AND (todas as palavras devem existir na descrição, em qualquer ordem). Atualmente, a interface está retornando registros que não contêm todas as palavras pesquisadas, indicando que a lógica de combinação entre padrão e tokens ou entre os próprios tokens está incorreta na consulta ou na renderização do resumo.
                       </p>
-                      <p className="text-[9px] text-muted-foreground/60 max-w-[200px] mt-1">
-                        {carregandoResumo
-                          ? 'Buscando TAGs Custom que casem com o termo…'
-                          : `Certifique-se de que os termos pesquisados (como "${termoBusca}") existem exatamente no cadastro.`}
-                      </p>
+                      <div className="text-left space-y-4 max-w-2xl mx-auto text-xs text-muted-foreground/80 leading-relaxed">
+                        <div>
+                          <span className="font-semibold text-foreground">Lógica</span>
+                          <p>Entrada do usuário (ex: cortina*cm*35*liso*10*balance) é sanitizada e normalizada (sem acentos, case-insensitive).</p>
+                          <ul className="list-disc pl-4 mt-1 space-y-1">
+                            <li>Padrão único via toIlikePattern: cortina%cm%35%liso%10%balance (ordem exata, opcional).</li>
+                            <li>Lista de tokens via toIlikeTokens: [%cortina%, %cm%, %35%, %liso%, %10%, %balance%], com corte em 12 itens e filtro de tokens vazios/inválidos (&lt;2 chars).</li>
+                          </ul>
+                          <p className="mt-2">A consulta deve aplicar AND estrito entre tokens (cada token deve existir na coluna). Não deve haver mistura com OR entre tokens, nem união (OR) entre resultados de padrão e tokens que viole a regra AND.</p>
+                        </div>
+                        
+                        <div>
+                          <span className="font-semibold text-foreground">Objetivo</span>
+                          <p>Corrigir o fluxo de busca para que o Resumo exiba exclusivamente configurações que contenham todas as palavras pesquisadas (cortina, cm, 35, liso, 10, balance), independentemente de ordem, respeitando o comportamento SAP B1 do curinga “*”.</p>
+                        </div>
+
+                        <div>
+                          <span className="font-semibold text-foreground">Resultado esperado</span>
+                          <ul className="list-disc pl-4 mt-1 space-y-1">
+                            <li>Busca por cortina*cm*35*liso*10*balance retorna apenas configurações contendo todas essas palavras.</li>
+                            <li>Buscas com menos termos ou com curingas em posições variadas (*motor, t*42, cm35) continuam funcionando com AND estrito.</li>
+                            <li>O Resumo não exibe mais registros que faltem qualquer uma das palavras pesquisadas.</li>
+                          </ul>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
