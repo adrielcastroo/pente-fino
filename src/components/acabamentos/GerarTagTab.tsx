@@ -1522,9 +1522,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                     <span className="text-[11px] font-semibold uppercase tracking-wider">
                       Resumo{' '}
                       {configsResumo.length > 0
-                        ? fonteTags
-                          ? `(${configsResumo.length} configurações com TAGs casadas)`
-                          : `(${configsResumo.length} configurações filtradas por nome)`
+                        ? `(${configsResumo.length} configurações encontradas)`
                         : carregandoResumo
                           ? '(buscando…)'
                           : '(nenhuma configuração encontrada)'}
