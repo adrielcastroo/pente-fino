@@ -112,7 +112,7 @@ export function toIlikeTokens(raw: string): string[] {
   return clean
     .split(/[\s*]+/)
     .map((t) => t.trim())
-    .filter((t) => t.length >= 1)
+    .filter((t) => t.length >= 2)
     .slice(0, 12)
     .map((t) => `%${t}%`);
 }
@@ -149,9 +149,14 @@ export function filtrarPorIlike<T extends { nm_configuracao?: string | null }>(
   if (!padrao && tokens.length === 0) return rows;
   return rows.filter((r) => {
     const nm = r.nm_configuracao ?? '';
-    if (padrao && matchesIlike(nm, padrao)) return true;
-    if (tokens.length > 0 && tokens.every((t) => matchesIlike(nm, t))) return true;
-    return false;
+    // Se temos tokens, o filtro deve ser AND estrito entre ELES.
+    // O 'padrao' é apenas uma forma diferente de expressar a mesma busca,
+    // então se temos tokens (AND), ignoramos o 'padrao' (OR/Seq) para não trazer lixo.
+    if (tokens.length > 0) {
+      return tokens.every((t) => matchesIlike(nm, t));
+    }
+    // Fallback apenas para padrão único
+    return padrao ? matchesIlike(nm, padrao) : true;
   });
 }
 
@@ -200,7 +205,9 @@ export function ilikeAnd<T extends IlikeBuilder>(query: T, col: string, padrao: 
   let q: T = query;
   // Se houver tokens, aplicamos AND (cada token precisa estar na coluna)
   if (tokens.length > 0) {
-    for (const t of tokens) q = q.ilike(col, t) as T;
+    for (const t of tokens) {
+      if (t && t !== '%%') q = q.ilike(col, t) as T;
+    }
     return q;
   }
   // Fallback para padrao único se não houver tokens
