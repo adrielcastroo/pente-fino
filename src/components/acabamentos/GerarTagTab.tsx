@@ -1609,7 +1609,12 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                     <div className="py-4 flex flex-col items-center justify-center text-center bg-muted/20 rounded-md border border-dashed border-muted-foreground/20">
                       <Search className="h-5 w-5 mb-2 text-muted-foreground opacity-20" />
                       <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">
-                        Revisar a lógica de busca buscaPalavras. Pois mesmo eu pesquisando "cortina" ou "persiana", aparecem as mesmas configurações.
+                        A pesquisa não está refinada como esperado.
+                        
+                        
+                        A ideia é o usuário pesquisar incluiondo palavras e o app ir filtrando e mantendo somente as configurações que contenham tudo o que o usuario pesquisou.
+                        
+                        me diga se isso existe hoje e se ainda não foi implementado, ou se está implementado de forma errada.
                       </p>
                       <p className="text-[9px] text-muted-foreground/60 max-w-[200px] mt-1">
                         {carregandoResumo
