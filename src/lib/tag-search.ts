@@ -199,10 +199,20 @@ export function ilikeAnd<T extends IlikeBuilder>(query: T, col: string, padrao: 
 
 /** Combina `padrao` + `tokens` em uma única cláusula `or(...)` do PostgREST. */
 export function ilikeOr(cols: string[], padrao: string, tokens: string[]): string {
+  if (tokens.length > 0) {
+    // Para implementar lógica AND entre tokens em várias colunas, o PostgREST
+    // exige que todos os tokens casem com pelo menos UMA das colunas.
+    // Ex: (col1.ilike.%A% | col2.ilike.%A%) & (col1.ilike.%B% | col2.ilike.%B%)
+    const groups = tokens.map(t => {
+      const orGroup = cols.map(c => `${c}.ilike.${JSON.stringify(t)}`).join(',');
+      return `and(${orGroup})`;
+    });
+    return groups.join(',');
+  }
+
   const parts: string[] = [];
   for (const c of cols) {
     if (padrao) parts.push(`${c}.ilike.${JSON.stringify(padrao)}`);
-    for (const t of tokens) parts.push(`${c}.ilike.${JSON.stringify(t)}`);
   }
   return parts.join(',');
 }
