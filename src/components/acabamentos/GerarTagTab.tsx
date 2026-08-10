@@ -1536,9 +1536,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                       <div className="space-y-2">
                         <div className="text-[10px] text-muted-foreground leading-relaxed flex items-center justify-between">
                           <span>
-                            {fonteTags
-                              ? `Configurações cujas TAGs Custom casaram com "${termoBusca.trim()}" — alterações serão aplicadas em todas de uma vez.`
-                              : 'As configurações abaixo foram identificadas e as TAGs configuradas aplicadas automaticamente.'}
+                            Configurações que casaram com "{termoBusca.trim()}" — as TAGs recomendadas abaixo foram extraídas desta família.
                           </span>
                           {obrigatorias.length > 0 && (
                             <Badge variant="outline" className="text-[9px] border-blue-500/30 text-blue-600 bg-blue-50/50">
@@ -1565,11 +1563,11 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                                       ? "bg-primary text-primary-foreground border-primary shadow-sm" 
                                       : "bg-background/80 border-primary/20 hover:bg-muted text-foreground"
                                   )}
-                                  title={fonteTags ? `${cfg.qtd_tags} TAG(s) casaram` : undefined}
+                                  title={`${cfg.qtd_tags} TAG(s) casaram`}
                                 >
                                   {isSelected && <CheckCircle2 className="h-2.5 w-2.5" />}
                                   {cfg.nm_configuracao}
-                                  {fonteTags && cfg.qtd_tags > 1 && (
+                                  {cfg.qtd_tags > 1 && (
                                     <span className={cn("text-[9px]", isSelected ? "text-primary-foreground/70" : "text-primary/70")}>
                                       ×{cfg.qtd_tags}
                                     </span>
