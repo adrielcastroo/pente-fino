@@ -943,8 +943,11 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       const tokensNorm = termoNorm.split(/[\s*]+/).filter(t => t.length > 0);
 
       const configs = uniqueConfigs.filter(cfg => {
-        const nm = (cfg.nm_configuracao ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-        return tokensNorm.every(token => nm.includes(token));
+        const nm = cfg.nm_configuracao ?? '';
+        if (tokensIlike.length > 0) {
+          return tokensIlike.every((t) => matchesIlike(nm, t));
+        }
+        return padrao ? matchesIlike(nm, padrao) : true;
       }).sort((a, b) =>
         (a.nm_configuracao ?? '').localeCompare(b.nm_configuracao ?? '', 'pt-BR'),
       );
