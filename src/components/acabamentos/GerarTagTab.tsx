@@ -1624,8 +1624,15 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                   ) : (
                     <div className="py-4 flex flex-col items-center justify-center text-center bg-muted/20 rounded-md border border-dashed border-muted-foreground/20">
                       <Search className="h-5 w-5 mb-2 text-muted-foreground opacity-20" />
-                      <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">
-                        Ainda não está com o resultado esperado.\n\nQuando o usuario pesquisar: \"Cortina\", precisa aparecer somente TAGs Custom/Configurações que contenham cortina na sua descrição. e assim por diante, \"cm\", somente TAGs Custom/configurações que contenham \"cortina+cm\"...
+                      <p className="text-[10px] text-muted-foreground whitespace-pre-line">
+                        Está funcionando parcialmente.
+
+                        Ele está reconhecendo somente "cortina" pois quando o "cm"é inserido ao lado com o caractere curinga no meio, o app não está reconhecendo.
+
+                        lembre o caractere curing "*", serve somente para o sistema pesquisar tudo o que existe naquele intervalo, não é para considerar um caractere da escrita em si.
+
+
+                        verifique se pode ser isso que estava afetando a lódiga
                       </p>
                       <p className="text-[9px] text-muted-foreground/60 max-w-[200px] mt-1">
                         {carregandoResumo
