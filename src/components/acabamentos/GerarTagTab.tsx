@@ -1609,7 +1609,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                     <div className="py-4 flex flex-col items-center justify-center text-center bg-muted/20 rounded-md border border-dashed border-muted-foreground/20">
                       <Search className="h-5 w-5 mb-2 text-muted-foreground opacity-20" />
                       <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">
-                        pelo o que testei, o filtro de AND não está funcionando, porém vejo que vc entendeu o problema, e qual solução implementar
+                        A regra no campo de busca das configurações não parece ter sido implementada completamente, ou não foi implementada de forma correta.\n\n\nObjetivo: Inserir caracteres para definir quais configurações terão alteração em suas TAGs calculadas ou que terão TAGs calculadas inseridas. Mantendo a regra que será somente nas TAGs Custom que possuem as palavras inseridas pelo usuario no campo de busca da aba Gerar TAG.
                       </p>
                       <p className="text-[9px] text-muted-foreground/60 max-w-[200px] mt-1">
                         {carregandoResumo
