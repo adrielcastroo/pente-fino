@@ -112,7 +112,7 @@ export function toIlikeTokens(raw: string): string[] {
   return clean
     .split(/[\s*]+/)
     .map((t) => t.trim())
-    .filter((t) => t.length >= 1)
+    .filter((t) => t.length >= 2)
     .slice(0, 12)
     .map((t) => `%${t}%`);
 }
