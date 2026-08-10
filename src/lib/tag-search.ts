@@ -198,8 +198,13 @@ export interface IlikeBuilder {
  */
 export function ilikeAnd<T extends IlikeBuilder>(query: T, col: string, padrao: string, tokens: string[]): T {
   let q: T = query;
+  // Se houver tokens, aplicamos AND (cada token precisa estar na coluna)
+  if (tokens.length > 0) {
+    for (const t of tokens) q = q.ilike(col, t) as T;
+    return q;
+  }
+  // Fallback para padrao único se não houver tokens
   if (padrao) q = q.ilike(col, padrao) as T;
-  for (const t of tokens) q = q.ilike(col, t) as T;
   return q;
 }
 
