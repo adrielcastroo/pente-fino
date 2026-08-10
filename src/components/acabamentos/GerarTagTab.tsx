@@ -493,8 +493,10 @@ function ConfiguracaoSelect({
           const q = (supabase as any)
             .from(tabela)
             .select('cd_configuracao, nm_configuracao, qtd_tags');
-          const { data, error } = await ilikeAnd(q, 'nm_configuracao', padrao, tokens).limit(200);
-          if (!error) acumulado.push(...((data ?? []) as ConfiguracaoLite[]));
+          
+          // Se houver tokens (AND), aplicamos a restrição total na query
+          const { data, error } = await ilikeAnd(q, 'nm_configuracao', padrao, tokens).limit(1000);
+          if (!error && data) acumulado.push(...(data as ConfiguracaoLite[]));
         }),
       );
 
@@ -933,7 +935,17 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         cfgMap.set(cd, cur);
       }
       
-      const configs = Array.from(cfgMap.values()).sort((a, b) =>
+      const uniqueConfigs = Array.from(cfgMap.values());
+
+      // Filtro universal final no cliente: cada palavra pesquisada DEVE estar no nome da configuração.
+      // Isso garante que se o usuário pesquisou "cortina", somente itens com "cortina" apareçam.
+      const termoNorm = termo.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const tokensNorm = termoNorm.split(/[\s*]+/).filter(t => t.length > 0);
+
+      const configs = uniqueConfigs.filter(cfg => {
+        const nm = (cfg.nm_configuracao ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        return tokensNorm.every(token => nm.includes(token));
+      }).sort((a, b) =>
         (a.nm_configuracao ?? '').localeCompare(b.nm_configuracao ?? '', 'pt-BR'),
       );
 
