@@ -885,12 +885,20 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       // Isso permite encontrar a família mesmo pesquisando pelo valor de uma TAG (ex: "preto").
       const cols = ['ds_tag_customizada', 'nm_tag_customizada', 'ds_tag_texto', 'ds_tag_calculada'];
       const or = ilikeOr(cols, padrao, tokensIlike);
+      // Se tivermos múltiplos tokens, usamos a cláusula 'and' do PostgREST para garantir
+      // que CADA token seja encontrado em pelo menos uma das colunas (lógica AND global).
       if (or) {
-        const { data: dataTags, error: errorTags } = await (supabase as any)
-          .from('auge_tag_custom')
-          .select(sel)
-          .or(or)
-          .limit(4000);
+        let queryTags = (supabase as any).from('auge_tag_custom').select(sel);
+        
+        if (tokensIlike.length > 1) {
+          // O ilikeOr retornou algo como "and(col1.ilike.%A%,col2.ilike.%A%),and(col1.ilike.%B%,col2.ilike.%B%)"
+          // O PostgREST 'or' com vírgulas externas funciona como AND quando as partes são 'and(...)'.
+          queryTags = queryTags.or(or);
+        } else {
+          queryTags = queryTags.or(or);
+        }
+        
+        const { data: dataTags, error: errorTags } = await queryTags.limit(4000);
         if (!errorTags) acc.push(...((dataTags ?? []) as CustomTag[]));
       }
 
