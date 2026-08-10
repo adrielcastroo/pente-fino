@@ -31,6 +31,7 @@ import {
   ilikeCacheKey,
   ilikeOr,
   normKey,
+  matchesIlike,
   rankByRelevance,
   sanitizeTerm,
   toIlikePattern,
