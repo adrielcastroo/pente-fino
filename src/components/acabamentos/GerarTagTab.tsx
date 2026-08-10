@@ -1507,14 +1507,8 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           // valores casaram com o termo (mesma lógica do "Tags Configuradas"
           // manual). Fonte 2 (fallback): catálogo local filtrado por nome de
           // configuração. O Resumo mostra a primeira fonte com resultados.
-          const fonteTags = configsPalavras.length > 0;
-          const fonteNome = !fonteTags && configsRanqueadas.length > 0;
-          const configsResumo = fonteTags
-            ? configsPalavras
-            : fonteNome
-              ? configsRanqueadas.map((r) => r.cfg)
-              : [];
-          const carregandoResumo = loadingPalavras || loadingCfgs;
+          const configsResumo = configsPalavras;
+          const carregandoResumo = loadingPalavras;
           return (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
