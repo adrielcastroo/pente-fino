@@ -1609,7 +1609,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                     <div className="py-4 flex flex-col items-center justify-center text-center bg-muted/20 rounded-md border border-dashed border-muted-foreground/20">
                       <Search className="h-5 w-5 mb-2 text-muted-foreground opacity-20" />
                       <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">
-                        teste vc e me diga.\n\nPesquise: cortina*cm*35*10*balance*\n\n\n\nprecisa aparecer somente configurações que contenham essas palavras, e nada mais e nada menos. caso não seja esse o resultado verifique o código novamente e me diga o que precisa ser feito que te guio em seguida
+                        Ajustar a lógica de tokenização caso o resultado ainda traga itens indesejados.
                       </p>
                       <p className="text-[9px] text-muted-foreground/60 max-w-[200px] mt-1">
                         {carregandoResumo
