@@ -149,9 +149,14 @@ export function filtrarPorIlike<T extends { nm_configuracao?: string | null }>(
   if (!padrao && tokens.length === 0) return rows;
   return rows.filter((r) => {
     const nm = r.nm_configuracao ?? '';
-    if (padrao && matchesIlike(nm, padrao)) return true;
-    if (tokens.length > 0 && tokens.every((t) => matchesIlike(nm, t))) return true;
-    return false;
+    // Se temos tokens, o filtro deve ser AND estrito entre ELES.
+    // O 'padrao' é apenas uma forma diferente de expressar a mesma busca,
+    // então se temos tokens (AND), ignoramos o 'padrao' (OR/Seq) para não trazer lixo.
+    if (tokens.length > 0) {
+      return tokens.every((t) => matchesIlike(nm, t));
+    }
+    // Fallback apenas para padrão único
+    return padrao ? matchesIlike(nm, padrao) : true;
   });
 }
 
