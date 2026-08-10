@@ -493,8 +493,10 @@ function ConfiguracaoSelect({
           const q = (supabase as any)
             .from(tabela)
             .select('cd_configuracao, nm_configuracao, qtd_tags');
-          const { data, error } = await ilikeAnd(q, 'nm_configuracao', padrao, tokens).limit(200);
-          if (!error) acumulado.push(...((data ?? []) as ConfiguracaoLite[]));
+          
+          // Se houver tokens (AND), aplicamos a restrição total na query
+          const { data, error } = await ilikeAnd(q, 'nm_configuracao', padrao, tokens).limit(1000);
+          if (!error && data) acumulado.push(...(data as ConfiguracaoLite[]));
         }),
       );
 
