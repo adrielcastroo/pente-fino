@@ -1609,7 +1609,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                     <div className="py-4 flex flex-col items-center justify-center text-center bg-muted/20 rounded-md border border-dashed border-muted-foreground/20">
                       <Search className="h-5 w-5 mb-2 text-muted-foreground opacity-20" />
                       <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">
-                        Ajustar a lógica de tokenização caso o resultado ainda traga itens indesejados.
+                        Ainda não está com o resultado esperado.\n\nQuando o usuario pesquisar: \"Cortina\", precisa aparecer somente TAGs Custom/Configurações que contenham cortina na sua descrição. e assim por diante, \"cm\", somente TAGs Custom/configurações que contenham \"cortina+cm\"...
                       </p>
                       <p className="text-[9px] text-muted-foreground/60 max-w-[200px] mt-1">
                         {carregandoResumo
