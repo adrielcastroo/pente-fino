@@ -864,38 +864,46 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       'auge-tag-custom-palavras',
       ilikeCacheKey(toIlikePattern(termoDeferido), toIlikeTokens(termoDeferido)),
     ],
-    enabled: palavras.length > 0,
+    enabled: termoDeferido.trim().length >= 2,
     staleTime: 60 * 1000,
     queryFn: async () => {
       const sel =
         'cd_configuracao, nm_configuracao, nm_tag_customizada, ds_tag_customizada, ds_tag_calculada, ds_tag_texto';
-      const tokens = palavras.map((p) => p.token);
-      if (tokens.length === 0) {
-        return { rows: [] as CustomTag[], configs: [] as ConfiguracaoLite[], usados: [] as string[] };
-      }
+      const termo = termoDeferido.trim();
+      const padrao = toIlikePattern(termo);
+      const tokensIlike = toIlikeTokens(termo);
 
-      const padrao = toIlikePattern(termoDeferido);
-      const tokensIlike = toIlikeTokens(termoDeferido);
+      const acc: CustomTag[] = [];
+      
+      // 1) Match por NOME DA CONFIGURAÇÃO (nm_configuracao)
+      // Mesma lógica que o Auge usa para listar as configurações da família.
+      const qCfg = (supabase as any).from('auge_tag_custom').select(sel);
+      const { data: dataCfg, error: errorCfg } = await ilikeAnd(qCfg, 'nm_configuracao', padrao, tokensIlike).limit(4000);
+      if (!errorCfg) acc.push(...((dataCfg ?? []) as CustomTag[]));
 
-      // Mesma lógica do "Tags Configuradas" manual: OR nas colunas das TAGs,
-      // combinando padrão ordenado + tokens AND. Aplicada direto no Postgres
-      // para não depender do catálogo em memória.
+      // 2) Match por VALORES DAS TAGS (mesma lógica do "Tags Configuradas" manual)
+      // Isso permite encontrar a família mesmo pesquisando pelo valor de uma TAG (ex: "preto").
       const cols = ['ds_tag_customizada', 'nm_tag_customizada', 'ds_tag_texto', 'ds_tag_calculada'];
       const or = ilikeOr(cols, padrao, tokensIlike);
-      if (!or) return { rows: [] as CustomTag[], configs: [] as ConfiguracaoLite[], usados: tokens };
+      if (or) {
+        const { data: dataTags, error: errorTags } = await (supabase as any)
+          .from('auge_tag_custom')
+          .select(sel)
+          .or(or)
+          .limit(4000);
+        if (!errorTags) acc.push(...((dataTags ?? []) as CustomTag[]));
+      }
 
-      const { data, error } = await (supabase as any)
-        .from('auge_tag_custom')
-        .select(sel)
-        .or(or)
-        .limit(4000);
-      if (error) throw error;
-
-      const rows = (data ?? []) as CustomTag[];
+      // Deduplicação de TAGs Custom
+      const seenTag = new Set<string>();
+      const rows = acc.filter((t) => {
+        const k = `${t.cd_configuracao}|${t.ds_tag_customizada ?? t.nm_tag_customizada ?? ''}|${t.ds_tag_texto ?? ''}`;
+        if (seenTag.has(k)) return false;
+        seenTag.add(k);
+        return true;
+      });
 
       // Deriva as configurações distintas a partir das TAGs encontradas.
-      // Cada config pode aparecer várias vezes (uma por TAG) — aqui contamos
-      // quantas TAGs daquela família casaram e exibimos isso no Resumo.
       const cfgMap = new Map<string, ConfiguracaoLite>();
       for (const t of rows) {
         const cd = String(t.cd_configuracao ?? '').trim();
@@ -908,11 +916,12 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         cur.qtd_tags += 1;
         cfgMap.set(cd, cur);
       }
+      
       const configs = Array.from(cfgMap.values()).sort((a, b) =>
         (a.nm_configuracao ?? '').localeCompare(b.nm_configuracao ?? '', 'pt-BR'),
       );
 
-      return { rows, configs, usados: tokens };
+      return { rows, configs, usados: tokensIlike };
     },
   });
 
