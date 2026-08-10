@@ -864,38 +864,46 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       'auge-tag-custom-palavras',
       ilikeCacheKey(toIlikePattern(termoDeferido), toIlikeTokens(termoDeferido)),
     ],
-    enabled: palavras.length > 0,
+    enabled: termoDeferido.trim().length >= 2,
     staleTime: 60 * 1000,
     queryFn: async () => {
       const sel =
         'cd_configuracao, nm_configuracao, nm_tag_customizada, ds_tag_customizada, ds_tag_calculada, ds_tag_texto';
-      const tokens = palavras.map((p) => p.token);
-      if (tokens.length === 0) {
-        return { rows: [] as CustomTag[], configs: [] as ConfiguracaoLite[], usados: [] as string[] };
-      }
+      const termo = termoDeferido.trim();
+      const padrao = toIlikePattern(termo);
+      const tokensIlike = toIlikeTokens(termo);
 
-      const padrao = toIlikePattern(termoDeferido);
-      const tokensIlike = toIlikeTokens(termoDeferido);
+      const acc: CustomTag[] = [];
+      
+      // 1) Match por NOME DA CONFIGURAÇÃO (nm_configuracao)
+      // Mesma lógica que o Auge usa para listar as configurações da família.
+      const qCfg = (supabase as any).from('auge_tag_custom').select(sel);
+      const { data: dataCfg, error: errorCfg } = await ilikeAnd(qCfg, 'nm_configuracao', padrao, tokensIlike).limit(4000);
+      if (!errorCfg) acc.push(...((dataCfg ?? []) as CustomTag[]));
 
-      // Mesma lógica do "Tags Configuradas" manual: OR nas colunas das TAGs,
-      // combinando padrão ordenado + tokens AND. Aplicada direto no Postgres
-      // para não depender do catálogo em memória.
+      // 2) Match por VALORES DAS TAGS (mesma lógica do "Tags Configuradas" manual)
+      // Isso permite encontrar a família mesmo pesquisando pelo valor de uma TAG (ex: "preto").
       const cols = ['ds_tag_customizada', 'nm_tag_customizada', 'ds_tag_texto', 'ds_tag_calculada'];
       const or = ilikeOr(cols, padrao, tokensIlike);
-      if (!or) return { rows: [] as CustomTag[], configs: [] as ConfiguracaoLite[], usados: tokens };
+      if (or) {
+        const { data: dataTags, error: errorTags } = await (supabase as any)
+          .from('auge_tag_custom')
+          .select(sel)
+          .or(or)
+          .limit(4000);
+        if (!errorTags) acc.push(...((dataTags ?? []) as CustomTag[]));
+      }
 
-      const { data, error } = await (supabase as any)
-        .from('auge_tag_custom')
-        .select(sel)
-        .or(or)
-        .limit(4000);
-      if (error) throw error;
-
-      const rows = (data ?? []) as CustomTag[];
+      // Deduplicação de TAGs Custom
+      const seenTag = new Set<string>();
+      const rows = acc.filter((t) => {
+        const k = `${t.cd_configuracao}|${t.ds_tag_customizada ?? t.nm_tag_customizada ?? ''}|${t.ds_tag_texto ?? ''}`;
+        if (seenTag.has(k)) return false;
+        seenTag.add(k);
+        return true;
+      });
 
       // Deriva as configurações distintas a partir das TAGs encontradas.
-      // Cada config pode aparecer várias vezes (uma por TAG) — aqui contamos
-      // quantas TAGs daquela família casaram e exibimos isso no Resumo.
       const cfgMap = new Map<string, ConfiguracaoLite>();
       for (const t of rows) {
         const cd = String(t.cd_configuracao ?? '').trim();
@@ -908,11 +916,12 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         cur.qtd_tags += 1;
         cfgMap.set(cd, cur);
       }
+      
       const configs = Array.from(cfgMap.values()).sort((a, b) =>
         (a.nm_configuracao ?? '').localeCompare(b.nm_configuracao ?? '', 'pt-BR'),
       );
 
-      return { rows, configs, usados: tokens };
+      return { rows, configs, usados: tokensIlike };
     },
   });
 
@@ -1498,14 +1507,8 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           // valores casaram com o termo (mesma lógica do "Tags Configuradas"
           // manual). Fonte 2 (fallback): catálogo local filtrado por nome de
           // configuração. O Resumo mostra a primeira fonte com resultados.
-          const fonteTags = configsPalavras.length > 0;
-          const fonteNome = !fonteTags && configsRanqueadas.length > 0;
-          const configsResumo = fonteTags
-            ? configsPalavras
-            : fonteNome
-              ? configsRanqueadas.map((r) => r.cfg)
-              : [];
-          const carregandoResumo = loadingPalavras || loadingCfgs;
+          const configsResumo = configsPalavras;
+          const carregandoResumo = loadingPalavras;
           return (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -1519,9 +1522,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                     <span className="text-[11px] font-semibold uppercase tracking-wider">
                       Resumo{' '}
                       {configsResumo.length > 0
-                        ? fonteTags
-                          ? `(${configsResumo.length} configurações com TAGs casadas)`
-                          : `(${configsResumo.length} configurações filtradas por nome)`
+                        ? `(${configsResumo.length} configurações encontradas)`
                         : carregandoResumo
                           ? '(buscando…)'
                           : '(nenhuma configuração encontrada)'}
@@ -1535,9 +1536,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                       <div className="space-y-2">
                         <div className="text-[10px] text-muted-foreground leading-relaxed flex items-center justify-between">
                           <span>
-                            {fonteTags
-                              ? `Configurações cujas TAGs Custom casaram com "${termoBusca.trim()}" — alterações serão aplicadas em todas de uma vez.`
-                              : 'As configurações abaixo foram identificadas e as TAGs configuradas aplicadas automaticamente.'}
+                            Configurações que casaram com "{termoBusca.trim()}" — as TAGs recomendadas abaixo foram extraídas desta família.
                           </span>
                           {obrigatorias.length > 0 && (
                             <Badge variant="outline" className="text-[9px] border-blue-500/30 text-blue-600 bg-blue-50/50">
@@ -1564,11 +1563,11 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                                       ? "bg-primary text-primary-foreground border-primary shadow-sm" 
                                       : "bg-background/80 border-primary/20 hover:bg-muted text-foreground"
                                   )}
-                                  title={fonteTags ? `${cfg.qtd_tags} TAG(s) casaram` : undefined}
+                                  title={`${cfg.qtd_tags} TAG(s) casaram`}
                                 >
                                   {isSelected && <CheckCircle2 className="h-2.5 w-2.5" />}
                                   {cfg.nm_configuracao}
-                                  {fonteTags && cfg.qtd_tags > 1 && (
+                                  {cfg.qtd_tags > 1 && (
                                     <span className={cn("text-[9px]", isSelected ? "text-primary-foreground/70" : "text-primary/70")}>
                                       ×{cfg.qtd_tags}
                                     </span>
