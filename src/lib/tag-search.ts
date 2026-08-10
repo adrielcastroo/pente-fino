@@ -90,7 +90,11 @@ export function toIlikePattern(raw: string): string {
   const clean = sanitizeTerm(raw);
   if (!clean) return '';
   const escaped = clean.replace(/%/g, ' ').replace(/\s+/g, ' ').trim();
-  if (escaped.includes('*')) return escaped.replace(/\*/g, '%');
+  if (escaped.includes('*')) {
+    // Se o usuário digitou "*" no final, como "CORTINA*", tratamos como prefixo.
+    // Se digitou no meio, como "CORTINA*CM", tratamos como "CORTINA%CM%".
+    return escaped.replace(/\*/g, '%');
+  }
   return `%${escaped}%`;
 }
 
@@ -103,6 +107,8 @@ export function toIlikePattern(raw: string): string {
  */
 export function toIlikeTokens(raw: string): string[] {
   const clean = sanitizeTerm(raw).replace(/%/g, ' ');
+  // Tratamos o "*" como um separador de tokens, mas preservamos a intenção de AND.
+  // Ex: "cortina*cm" -> ["%cortina%", "%cm%"]
   return clean
     .split(/[\s*]+/)
     .map((t) => t.trim())
