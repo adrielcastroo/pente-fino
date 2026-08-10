@@ -1609,7 +1609,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                     <div className="py-4 flex flex-col items-center justify-center text-center bg-muted/20 rounded-md border border-dashed border-muted-foreground/20">
                       <Search className="h-5 w-5 mb-2 text-muted-foreground opacity-20" />
                       <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">
-                        (vamos refinar melhor. Me explique o motivo de vc não estar conseguindo implementar a mesma lógica e regras já existentes para o app encontrar a tag configurada?)
+                        Revisar a lógica de busca buscaPalavras. Pois mesmo eu pesquisando "cortina" ou "persiana", aparecem as mesmas configurações.
                       </p>
                       <p className="text-[9px] text-muted-foreground/60 max-w-[200px] mt-1">
                         {carregandoResumo
