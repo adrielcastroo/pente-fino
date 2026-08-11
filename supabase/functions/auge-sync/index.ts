@@ -5566,11 +5566,12 @@ Deno.serve(async (req) => {
       const rawAcao = String(payload?.acao ?? 'preview').toLowerCase().trim();
       const acao =
         rawAcao === 'preview' || rawAcao === 'atualizar' ||
-        rawAcao === 'adicionar' || rawAcao === 'remover'
-          ? rawAcao as 'preview' | 'atualizar' | 'adicionar' | 'remover'
+        rawAcao === 'adicionar' || rawAcao === 'remover' ||
+        rawAcao === 'restringir_largura'
+          ? rawAcao as 'preview' | 'atualizar' | 'adicionar' | 'remover' | 'restringir_largura'
           : null;
       if (!codigoItem) throw new Error('codigo_item é obrigatório.');
-      if (!acao) throw new Error('acao inválida (use preview | atualizar | adicionar | remover).');
+      if (!acao) throw new Error('acao inválida (use preview | atualizar | adicionar | remover | restringir_largura).');
 
       // Normaliza a nova data para o formato DD/MM/AA.
       const normalizarData = (s: string | undefined | null): string | null => {
@@ -5582,9 +5583,14 @@ Deno.serve(async (req) => {
         const yy = m[3].length === 4 ? m[3].slice(-2) : m[3].padStart(2, '0');
         return `${dd}/${mm}/${yy}`;
       };
-      const novaData = acao !== 'remover' ? normalizarData(payload?.nova_data) : null;
+      const novaData = (acao !== 'remover' && acao !== 'restringir_largura') ? normalizarData(payload?.nova_data) : null;
+      const restricao = acao === 'restringir_largura' ? String(payload?.nova_data ?? '').trim().replace(',', '.') : null;
+
       if ((acao === 'atualizar' || acao === 'adicionar') && !novaData) {
         throw new Error('nova_data é obrigatória e deve estar no formato DD/MM/AA.');
+      }
+      if (acao === 'restringir_largura' && (!restricao || !/^[\d\.]+$/.test(restricao))) {
+        throw new Error('Restrição de largura inválida. Use um número (ex: 2.1).');
       }
 
       const longToken = (d: string) => `(Ent_Ap_${d})`;
@@ -5592,10 +5598,20 @@ Deno.serve(async (req) => {
         const [dd, mm] = d.split('/');
         return `E${dd}/${parseInt(mm, 10)}`;
       };
+      const LARG_MAX_RE = /\s*-\s*Largura\s*Máxima\s*([\d\.,]+)\s*/gi;
+      const LMAX_ABREV_RE = /\s*LMax([\d\.,]+)\s*$/i;
+
       const stripLong = (s: string) =>
-        (s ?? '').replace(/\s*\(\s*Ent[_\s]?Ap[_\s]?\d{1,2}\/\d{1,2}\/\d{2,4}\s*\)/gi, '').trim();
+        (s ?? '')
+          .replace(/\s*\(\s*Ent[_\s]?Ap[_\s]?\d{1,2}\/\d{1,2}\/\d{2,4}\s*\)/gi, '')
+          .replace(LARG_MAX_RE, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
       const stripShort = (s: string) =>
-        (s ?? '').replace(/\s*E\d{1,2}\/\d{1,2}\s*$/i, '').trim();
+        (s ?? '')
+          .replace(/\s*E\d{1,2}\/\d{1,2}\s*$/i, '')
+          .replace(LMAX_ABREV_RE, '')
+          .trim();
 
       // Constrói o conjunto de variantes do código informado.
       // Aceita qualquer tipo de código (interno, fornecedor, cd_item_acabamento etc).
@@ -5665,7 +5681,8 @@ Deno.serve(async (req) => {
             cancelado: r.auge_acabamentos?.id_cancelado === 'S',
             descricao_atual: desc,
             descricao_reduzida: r.ds_item_acabamento_reduzida ?? '',
-            entrega_apos_atual: m ? m[1] : null,
+            entrega_apos_atual: m ? m[1] : (desc.match(LARG_MAX_RE) ? desc.match(LARG_MAX_RE)?.[0] : null),
+            restricao_largura: desc.match(LARG_MAX_RE)?.[1] || null,
           };
         });
         return new Response(JSON.stringify({
@@ -5691,7 +5708,12 @@ Deno.serve(async (req) => {
           let newLongOrig = baseLong;
           let newLong = baseLongCurr;
           let newShort = baseShort;
-          if (acao !== 'remover' && novaData) {
+
+          if (acao === 'restringir_largura' && restricao) {
+            newLongOrig = `${baseLong} - Largura Máxima ${restricao}`.trim();
+            newLong = `${baseLongCurr} - Largura Máxima ${restricao}`.trim();
+            newShort = `${baseShort} LMax${restricao}`.trim();
+          } else if (acao !== 'remover' && novaData) {
             newLongOrig = `${baseLong} ${longToken(novaData)}`.trim();
             newLong = `${baseLongCurr} ${longToken(novaData)}`.trim();
             newShort = `${baseShort}${shortToken(novaData)}`;
@@ -5742,10 +5764,10 @@ Deno.serve(async (req) => {
 
       // Cria/atualiza abreviação Ent_Ap_DD/MM/AA → E{dd}/{m} (apenas em atualizar/adicionar)
       let abreviacao: any = null;
-      if ((acao === 'atualizar' || acao === 'adicionar') && novaData) {
+      if ((acao === 'atualizar' || acao === 'adicionar' || acao === 'restringir_largura') && (novaData || restricao)) {
         try {
-          const dsAtual = `(Ent_Ap_${novaData})`;
-          const dsAbreviada = shortToken(novaData);
+          const dsAtual = acao === 'restringir_largura' ? `- Largura Máxima ${restricao}` : `(Ent_Ap_${novaData})`;
+          const dsAbreviada = acao === 'restringir_largura' ? `LMax${restricao}` : shortToken(novaData!);
           const { data: existente } = await admin
             .from('auge_abreviacoes')
             .select('cd_abreviacao, ds_abreviada')
