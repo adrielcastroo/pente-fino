@@ -36,7 +36,9 @@ function extractEntregaApos(desc: string | null | undefined): string | null {
 }
 
 const ENT_AP_RE = /\s*\(\s*Ent[_ ]?Ap[_ ]?(\d{2}\/\d{2}\/\d{2,4})\s*\)\s*/gi;
+const LARG_MAX_RE = /\s*-\s*Largura\s*Máxima\s*([\d\.,]+)\s*/gi;
 const ABREV_RE = /\s*E\d{1,2}\/\d{1,2}\s*$/i;
+const LMAX_ABREV_RE = /\s*LMax([\d\.,]+)\s*$/i;
 
 function abbrevFromDate(data: string): string {
   const m = data.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
