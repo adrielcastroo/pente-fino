@@ -5707,7 +5707,12 @@ Deno.serve(async (req) => {
           let newLongOrig = baseLong;
           let newLong = baseLongCurr;
           let newShort = baseShort;
-          if (acao !== 'remover' && novaData) {
+
+          if (acao === 'restringir_largura' && restricao) {
+            newLongOrig = `${baseLong} - Largura Máxima ${restricao}`.trim();
+            newLong = `${baseLongCurr} - Largura Máxima ${restricao}`.trim();
+            newShort = `${baseShort} LMax${restricao}`.trim();
+          } else if (acao !== 'remover' && novaData) {
             newLongOrig = `${baseLong} ${longToken(novaData)}`.trim();
             newLong = `${baseLongCurr} ${longToken(novaData)}`.trim();
             newShort = `${baseShort}${shortToken(novaData)}`;
