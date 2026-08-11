@@ -1639,43 +1639,9 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                     </>
                   ) : (
                     <div className="p-8 text-center bg-muted/20 rounded-lg border border-dashed border-muted-foreground/20">
-                      <p className="text-sm text-muted-foreground mb-4 font-sora">
-                        me explique a lógica que é usada para o pente fino, recomendar as Tags configuradas no bloco "composição da TAG Custom"
+                      <p className="text-sm text-muted-foreground mb-4">
+                        lembra da nossa automação entrega após?
                       </p>
-                      <div className="text-left space-y-4 max-w-2xl mx-auto text-xs text-muted-foreground/80 leading-relaxed">
-                        <div className="bg-background/50 p-4 rounded-md border border-muted-foreground/10 space-y-3">
-                          <p>
-                            A recomendação do Pente Fino baseia-se em <strong>Análise Estatística de Padrão</strong> e <strong>Extração de Pesos Estruturais</strong>:
-                          </p>
-                          
-                          <div className="space-y-2">
-                            <span className="font-semibold text-foreground flex items-center gap-1.5">
-                              <Wand2 className="h-3 w-3 text-primary" /> 1. Escopo por Palavras-Chave (Relevância)
-                            </span>
-                            <p>
-                              O sistema tokeniza sua pesquisa e atribui pesos (ex: <em>rollo</em> = 8, <em>t45</em> = 6). Ele identifica o grupo de configurações existentes que possui a <strong>maior cobertura</strong> desses termos. Se você pesquisar "Rollo Pro T45", ele prioriza modelos que tenham as três palavras antes de cair para modelos com apenas duas.
-                            </p>
-                          </div>
-
-                          <div className="space-y-2">
-                            <span className="font-semibold text-foreground flex items-center gap-1.5">
-                              <Layers className="h-3 w-3 text-primary" /> 2. Frequência de Ocorrência (Consenso)
-                            </span>
-                            <p>
-                              Dentro desse grupo mais específico, o app calcula a frequência de cada TAG Configurada. Uma TAG é considerada <strong>Obrigatória</strong> se estiver presente em pelo menos <strong>70%</strong> dos modelos encontrados (ou 100% se houver apenas um modelo de referência).
-                            </p>
-                          </div>
-
-                          <div className="space-y-2">
-                            <span className="font-semibold text-foreground flex items-center gap-1.5">
-                              <CheckCircle2 className="h-3 w-3 text-primary" /> 3. Resultado Final
-                            </span>
-                            <p>
-                              O "Consenso" de valor e TAG Calculada é automaticamente injetado na sua composição, garantindo que novas criações sigam o padrão histórico da Unilux, eliminando variações indesejadas.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
                     </div>
                   )}
                 </div>
