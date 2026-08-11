@@ -47,14 +47,20 @@ function abbrevFromDate(data: string): string {
 }
 
 function previewDescricao(desc: string, acao: Acao, novaData: string | null): string {
-  const base = (desc || '').replace(ENT_AP_RE, ' ').replace(/\s+/g, ' ').trim();
+  let base = (desc || '').replace(ENT_AP_RE, ' ').replace(LARG_MAX_RE, ' ').replace(/\s+/g, ' ').trim();
   if (acao === 'remover' || !novaData) return base;
+  if (acao === 'restringir_largura') {
+    return `${base} - Largura Máxima ${novaData}`;
+  }
   return `${base} (Ent_Ap_${novaData})`;
 }
 
 function previewReduzida(reduz: string, acao: Acao, novaData: string | null): string {
-  const base = (reduz || '').replace(ABREV_RE, '').trim();
+  let base = (reduz || '').replace(ABREV_RE, '').replace(LMAX_ABREV_RE, '').trim();
   if (acao === 'remover' || !novaData) return base;
+  if (acao === 'restringir_largura') {
+    return `${base} LMax${novaData}`;
+  }
   return `${base}${abbrevFromDate(novaData)}`;
 }
 
