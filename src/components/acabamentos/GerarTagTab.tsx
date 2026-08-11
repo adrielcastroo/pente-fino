@@ -1639,32 +1639,41 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                     </>
                   ) : (
                     <div className="p-8 text-center bg-muted/20 rounded-lg border border-dashed border-muted-foreground/20">
-                      <p className="text-sm text-muted-foreground mb-4">
-                        Introdução O módulo de busca do catálogo de configurações reproduz a experiência de filtros do SAP B1 usando o curinga “*” como coringa do usuário. O input é convertido em padrão ILIKE e em lista de tokens para busca AND (todas as palavras devem existir na descrição, em qualquer ordem). Atualmente, a interface está retornando registros que não contêm todas as palavras pesquisadas, indicando que a lógica de combinação entre padrão e tokens ou entre os próprios tokens está incorreta na consulta ou na renderização do resumo.
+                      <p className="text-sm text-muted-foreground mb-4 font-sora">
+                        me explique a lógica que é usada para o pente fino, recomendar as Tags configuradas no bloco "composição da TAG Custom"
                       </p>
                       <div className="text-left space-y-4 max-w-2xl mx-auto text-xs text-muted-foreground/80 leading-relaxed">
-                        <div>
-                          <span className="font-semibold text-foreground">Lógica</span>
-                          <p>Entrada do usuário (ex: cortina*cm*35*liso*10*balance) é sanitizada e normalizada (sem acentos, case-insensitive).</p>
-                          <ul className="list-disc pl-4 mt-1 space-y-1">
-                            <li>Padrão único via toIlikePattern: cortina%cm%35%liso%10%balance (ordem exata, opcional).</li>
-                            <li>Lista de tokens via toIlikeTokens: [%cortina%, %cm%, %35%, %liso%, %10%, %balance%], com corte em 12 itens e filtro de tokens vazios/inválidos (&lt;2 chars).</li>
-                          </ul>
-                          <p className="mt-2">A consulta deve aplicar AND estrito entre tokens (cada token deve existir na coluna). Não deve haver mistura com OR entre tokens, nem união (OR) entre resultados de padrão e tokens que viole a regra AND.</p>
-                        </div>
-                        
-                        <div>
-                          <span className="font-semibold text-foreground">Objetivo</span>
-                          <p>Corrigir o fluxo de busca para que o Resumo exiba exclusivamente configurações que contenham todas as palavras pesquisadas (cortina, cm, 35, liso, 10, balance), independentemente de ordem, respeitando o comportamento SAP B1 do curinga “*”.</p>
-                        </div>
+                        <div className="bg-background/50 p-4 rounded-md border border-muted-foreground/10 space-y-3">
+                          <p>
+                            A recomendação do Pente Fino baseia-se em <strong>Análise Estatística de Padrão</strong> e <strong>Extração de Pesos Estruturais</strong>:
+                          </p>
+                          
+                          <div className="space-y-2">
+                            <span className="font-semibold text-foreground flex items-center gap-1.5">
+                              <Wand2 className="h-3 w-3 text-primary" /> 1. Escopo por Palavras-Chave (Relevância)
+                            </span>
+                            <p>
+                              O sistema tokeniza sua pesquisa e atribui pesos (ex: <em>rollo</em> = 8, <em>t45</em> = 6). Ele identifica o grupo de configurações existentes que possui a <strong>maior cobertura</strong> desses termos. Se você pesquisar "Rollo Pro T45", ele prioriza modelos que tenham as três palavras antes de cair para modelos com apenas duas.
+                            </p>
+                          </div>
 
-                        <div>
-                          <span className="font-semibold text-foreground">Resultado esperado</span>
-                          <ul className="list-disc pl-4 mt-1 space-y-1">
-                            <li>Busca por cortina*cm*35*liso*10*balance retorna apenas configurações contendo todas essas palavras.</li>
-                            <li>Buscas com menos termos ou com curingas em posições variadas (*motor, t*42, cm35) continuam funcionando com AND estrito.</li>
-                            <li>O Resumo não exibe mais registros que faltem qualquer uma das palavras pesquisadas.</li>
-                          </ul>
+                          <div className="space-y-2">
+                            <span className="font-semibold text-foreground flex items-center gap-1.5">
+                              <Layers className="h-3 w-3 text-primary" /> 2. Frequência de Ocorrência (Consenso)
+                            </span>
+                            <p>
+                              Dentro desse grupo mais específico, o app calcula a frequência de cada TAG Configurada. Uma TAG é considerada <strong>Obrigatória</strong> se estiver presente em pelo menos <strong>70%</strong> dos modelos encontrados (ou 100% se houver apenas um modelo de referência).
+                            </p>
+                          </div>
+
+                          <div className="space-y-2">
+                            <span className="font-semibold text-foreground flex items-center gap-1.5">
+                              <CheckCircle2 className="h-3 w-3 text-primary" /> 3. Resultado Final
+                            </span>
+                            <p>
+                              O "Consenso" de valor e TAG Calculada é automaticamente injetado na sua composição, garantindo que novas criações sigam o padrão histórico da Unilux, eliminando variações indesejadas.
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
