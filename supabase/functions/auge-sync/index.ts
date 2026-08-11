@@ -5764,10 +5764,10 @@ Deno.serve(async (req) => {
 
       // Cria/atualiza abreviação Ent_Ap_DD/MM/AA → E{dd}/{m} (apenas em atualizar/adicionar)
       let abreviacao: any = null;
-      if ((acao === 'atualizar' || acao === 'adicionar') && novaData) {
+      if ((acao === 'atualizar' || acao === 'adicionar' || acao === 'restringir_largura') && (novaData || restricao)) {
         try {
-          const dsAtual = `(Ent_Ap_${novaData})`;
-          const dsAbreviada = shortToken(novaData);
+          const dsAtual = acao === 'restringir_largura' ? `- Largura Máxima ${restricao}` : `(Ent_Ap_${novaData})`;
+          const dsAbreviada = acao === 'restringir_largura' ? `LMax${restricao}` : shortToken(novaData!);
           const { data: existente } = await admin
             .from('auge_abreviacoes')
             .select('cd_abreviacao, ds_abreviada')
