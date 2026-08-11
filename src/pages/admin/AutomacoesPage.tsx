@@ -27,7 +27,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 const AUGE_BASE_URL = 'https://unilux.auge.app';
 
-type Acao = 'atualizar' | 'adicionar' | 'remover';
+type Acao = 'atualizar' | 'adicionar' | 'remover' | 'restringir_largura';
 
 function extractEntregaApos(desc: string | null | undefined): string | null {
   if (!desc) return null;
@@ -36,7 +36,9 @@ function extractEntregaApos(desc: string | null | undefined): string | null {
 }
 
 const ENT_AP_RE = /\s*\(\s*Ent[_ ]?Ap[_ ]?(\d{2}\/\d{2}\/\d{2,4})\s*\)\s*/gi;
+const LARG_MAX_RE = /\s*-\s*Largura\s*Máxima\s*([\d\.,]+)\s*/gi;
 const ABREV_RE = /\s*E\d{1,2}\/\d{1,2}\s*$/i;
+const LMAX_ABREV_RE = /\s*LMax([\d\.,]+)\s*$/i;
 
 function abbrevFromDate(data: string): string {
   const m = data.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
@@ -45,14 +47,20 @@ function abbrevFromDate(data: string): string {
 }
 
 function previewDescricao(desc: string, acao: Acao, novaData: string | null): string {
-  const base = (desc || '').replace(ENT_AP_RE, ' ').replace(/\s+/g, ' ').trim();
+  let base = (desc || '').replace(ENT_AP_RE, ' ').replace(LARG_MAX_RE, ' ').replace(/\s+/g, ' ').trim();
   if (acao === 'remover' || !novaData) return base;
+  if (acao === 'restringir_largura') {
+    return `${base} - Largura Máxima ${novaData}`;
+  }
   return `${base} (Ent_Ap_${novaData})`;
 }
 
 function previewReduzida(reduz: string, acao: Acao, novaData: string | null): string {
-  const base = (reduz || '').replace(ABREV_RE, '').trim();
+  let base = (reduz || '').replace(ABREV_RE, '').replace(LMAX_ABREV_RE, '').trim();
   if (acao === 'remover' || !novaData) return base;
+  if (acao === 'restringir_largura') {
+    return `${base} LMax${novaData}`;
+  }
   return `${base}${abbrevFromDate(novaData)}`;
 }
 
@@ -125,8 +133,16 @@ function normalizeCodigo(v: string): string | null {
   return s;
 }
 
-function normalizeData(v: string): string | null {
-  const m = v.trim().match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/);
+function normalizeData(v: string, acao?: Acao): string | null {
+  const val = v.trim();
+  if (!val) return null;
+  
+  if (acao === 'restringir_largura') {
+    // Para largura, apenas retorna o valor se for número/decimal válido
+    return val.replace(',', '.').match(/^[\d\.]+$/) ? val : null;
+  }
+
+  const m = val.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/);
   if (!m) return null;
   const dd = m[1].padStart(2, '0');
   const mm = m[2].padStart(2, '0');
@@ -164,8 +180,8 @@ function EntregaAposCard() {
   const [result, setResult] = useState<ExecPayload | null>(null);
 
   const codigoNormalizado = useMemo(() => normalizeCodigo(codigoInput), [codigoInput]);
-  const dataNormalizada = useMemo(() => normalizeData(dataInput), [dataInput]);
-  const precisaData = acao === 'atualizar' || acao === 'adicionar';
+  const dataNormalizada = useMemo(() => normalizeData(dataInput, acao), [dataInput, acao]);
+  const precisaData = acao === 'atualizar' || acao === 'adicionar' || acao === 'restringir_largura';
   const mostraPreview = acao === 'remover' || !!dataNormalizada;
 
   const [execProgress, setExecProgress] = useState(0);
@@ -313,7 +329,7 @@ function EntregaAposCard() {
   const runExecute = async () => {
     if (!previewCodigo) return;
     if (precisaData && !dataNormalizada) {
-      toast.error('Informe a nova data no formato DD/MM/AA.');
+      toast.error(acao === 'restringir_largura' ? 'Informe a largura máxima.' : 'Informe a nova data no formato DD/MM/AA.');
       return;
     }
     setExecLoading(true);
@@ -564,28 +580,31 @@ function EntregaAposCard() {
           <div className="grid gap-3 sm:grid-cols-[200px_1fr_auto] items-end">
             <div className="grid gap-1.5">
               <Label className="text-xs">Ação</Label>
-              <Select value={acao} onValueChange={(v) => setAcao(v as Acao)}>
+              <Select value={acao} onValueChange={(v) => { setAcao(v as Acao); setDataInput(''); }}>
                 <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="atualizar">Atualizar data</SelectItem>
                   <SelectItem value="adicionar">Adicionar</SelectItem>
                   <SelectItem value="remover">Remover</SelectItem>
+                  <SelectItem value="restringir_largura">Restringir largura</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="grid gap-1.5">
               <Label className="text-xs">
-                Nova data (DD/MM/AA) {precisaData && <span className="text-destructive">*</span>}
+                {acao === 'restringir_largura' ? 'Restrição' : `Nova data (DD/MM/AA) ${precisaData ? '*' : ''}`}
               </Label>
               <Input
                 value={dataInput}
                 onChange={(e) => setDataInput(e.target.value)}
-                placeholder="10/09/26"
+                placeholder={acao === 'restringir_largura' ? "Ex: 2.1" : "10/09/26"}
                 disabled={!precisaData}
                 className="h-10 font-mono"
               />
               {precisaData && dataInput && !dataNormalizada && (
-                <span className="text-[11px] text-destructive">Data inválida.</span>
+                <span className="text-[11px] text-destructive">
+                  {acao === 'restringir_largura' ? 'Valor inválido.' : 'Data inválida.'}
+                </span>
               )}
             </div>
             <Button onClick={runExecute} disabled={!canExecute} className="gap-2 h-10">
