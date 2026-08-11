@@ -5681,7 +5681,8 @@ Deno.serve(async (req) => {
             cancelado: r.auge_acabamentos?.id_cancelado === 'S',
             descricao_atual: desc,
             descricao_reduzida: r.ds_item_acabamento_reduzida ?? '',
-            entrega_apos_atual: m ? m[1] : null,
+            entrega_apos_atual: m ? m[1] : (desc.match(LARG_MAX_RE) ? desc.match(LARG_MAX_RE)?.[0] : null),
+            restricao_largura: desc.match(LARG_MAX_RE)?.[1] || null,
           };
         });
         return new Response(JSON.stringify({
