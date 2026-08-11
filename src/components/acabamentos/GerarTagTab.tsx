@@ -1640,8 +1640,47 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                   ) : (
                     <div className="p-8 text-center bg-muted/20 rounded-lg border border-dashed border-muted-foreground/20">
                       <p className="text-sm text-muted-foreground mb-4">
-                        lembra da nossa automação entrega após?
+                        Forneça uma explicação técnica detalhada e didática sobre o funcionamento deste código. Descreva o papel de cada função, componente e lógica de negócio, facilitando a compreensão do fluxo de dados e a arquitetura da solução para outros desenvolvedores.
                       </p>
+                      <div className="text-left space-y-6 max-w-4xl mx-auto text-xs text-muted-foreground/80 leading-relaxed">
+                        <section>
+                          <h3 className="font-semibold text-foreground text-sm mb-2">1. Arquitetura e Fluxo de Dados</h3>
+                          <p>
+                            O componente <code className="bg-muted px-1 rounded">GerarTagTab</code> gerencia a criação e vínculo de TAGs Customizadas a configurações do sistema (Auge/SAP B1). 
+                            O fluxo inicia com a seleção de uma <strong>Configuração</strong>, seguida pela definição de <strong>TAGs Configuradas</strong> e suas respectivas <strong>TAGs Calculadas</strong>. 
+                            O estado é persistido em um rascunho em memória para evitar perda de dados durante a navegação.
+                          </p>
+                        </section>
+
+                        <section>
+                          <h3 className="font-semibold text-foreground text-sm mb-2">2. Mecanismo de Busca (SAP B1 Emulation)</h3>
+                          <p>
+                            A busca utiliza uma lógica híbrida para reproduzir o comportamento do SAP B1:
+                          </p>
+                          <ul className="list-disc pl-4 mt-2 space-y-2">
+                            <li><strong>toIlikePattern:</strong> Converte o input (ex: <code className="bg-muted px-1 rounded">t*42</code>) em um padrão SQL <code className="bg-muted px-1 rounded">t%42</code> para buscas posicionais.</li>
+                            <li><strong>toIlikeTokens:</strong> Quebra o termo em tokens independentes para aplicar uma lógica <strong>AND estrita</strong>. Cada palavra pesquisada deve existir no destino, independente da ordem.</li>
+                            <li><strong>filtrarPorIlike:</strong> Realiza a filtragem final no lado do cliente usando expressões regulares para garantir que os resultados em memória correspondam exatamente ao que seria retornado pelo banco de dados.</li>
+                          </ul>
+                        </section>
+
+                        <section>
+                          <h3 className="font-semibold text-foreground text-sm mb-2">3. Componentes Principais</h3>
+                          <ul className="list-disc pl-4 mt-2 space-y-2">
+                            <li><strong>ConfiguracaoSelect:</strong> Campo de busca avançada que consulta as tabelas de espelho do Auge para encontrar a configuração base.</li>
+                            <li><strong>TagCalculadaCell:</strong> Célula inteligente que busca fórmulas de TAGs calculadas em tempo real, inclusive completando fórmulas truncadas via Edge Function.</li>
+                            <li><strong>Resumo (Bloco de Recomendações):</strong> Analisa a frequência de uso de TAGs para sugerir vínculos obrigatórios baseados no histórico de outros usuários para a mesma configuração.</li>
+                          </ul>
+                        </section>
+
+                        <section>
+                          <h3 className="font-semibold text-foreground text-sm mb-2">4. Persistência e Integração</h3>
+                          <p>
+                            As gravações são enviadas para a Edge Function <code className="bg-muted px-1 rounded">auge-sync</code>, que orquestra a inserção no banco de dados local e a sincronização com o ERP Auge. 
+                            O histórico de operações é mantido no <code className="bg-muted px-1 rounded">localStorage</code> para permitir reedições rápidas ("Últimos registros").
+                          </p>
+                        </section>
+                      </div>
                     </div>
                   )}
                 </div>

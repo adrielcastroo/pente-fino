@@ -236,38 +236,26 @@ export function ilikeOr(cols: string[], padrao: string, tokens: string[]): strin
 }
 
 /**
- * PROMPT PARA DESENVOLVIMENTO - CORREÇÃO DE FILTRAGEM NO BLOCO RESUMO
+ * EXPLICAÇÃO TÉCNICA - ARQUITETURA DE BUSCA (TAGS E CONFIGURAÇÕES)
  * 
- * === INTRODUÇÃO ===
- * O módulo de busca do catálogo de configurações reproduz a experiência de filtros do 
- * SAP B1 usando o curinga “*” como coringa do usuário. O input é convertido em 
- * padrão ILIKE e em lista de tokens para busca AND (todas as palavras devem existir 
- * na descrição, em qualquer ordem). Atualmente, a interface está retornando registros 
- * que não contêm todas as palavras pesquisadas, indicando que a lógica de combinação 
- * entre padrão e tokens ou entre os próprios tokens está incorreta na consulta ou na 
- * renderização do resumo.
- *
- * === LÓGICA ===
- * 1. Entrada do usuário (ex: cortina*cm*35*liso*10*balance) é sanitizada e normalizada 
- *    (sem acentos, case-insensitive).
- * 2. Duas representações são geradas:
- *    - Padrão único via toIlikePattern: cortina%cm%35%liso%10%balance (ordem exata, opcional).
- *    - Lista de tokens via toIlikeTokens: [%cortina%, %cm%, %35%, %liso%, %10%, %balance%], 
- *      com corte em 12 itens e filtro de tokens vazios/inválidos (<2 chars).
- *
- * A consulta deve aplicar AND estrito entre tokens (cada token deve existir na coluna).
- * Não deve haver mistura com OR entre tokens, nem união (OR) entre resultados de padrão 
- * e tokens que viole a regra AND.
- *
- * === OBJETIVO ===
- * Corrigir o fluxo de busca para que o Resumo exiba exclusivamente configurações que 
- * contenham todas as palavras pesquisadas (cortina, cm, 35, liso, 10, balance), 
- * independentemente de ordem, respeitando o comportamento SAP B1 do curinga “*”.
+ * 1. TRATAMENTO DE INPUT (Tokenização e Normalização)
+ *    O input do usuário é normalizado (removendo acentos e caracteres especiais) e sanitizado.
+ *    - toIlikePattern: Cria uma string única para busca posicional (ex: "A*B" vira "A%B").
+ *    - toIlikeTokens: Quebra o input em uma lista de termos (ex: ["%A%", "%B%"]) para busca AND.
  * 
- * === RESULTADO ESPERADO ===
- * - Busca por cortina*cm*35*liso*10*balance retorna apenas configurações contendo 
- *   todas essas palavras.
- * - Buscas com menos termos ou com curingas em posições variadas (*motor, t*42, cm35) 
- *   continuam funcionando com AND estrito quando múltiplos tokens estão presentes.
- * - O Resumo não exibe mais registros que faltem qualquer uma das palavras pesquisadas.
+ * 2. LÓGICA DE COMPARAÇÃO (Matches e Filtragem)
+ *    - matchesIlike: Implementa a lógica ILIKE do Postgres no JavaScript usando Regex.
+ *    - filtrarPorIlike: Aplica a interseção (AND) de todos os tokens sobre uma lista de objetos.
+ *      Se múltiplos tokens existem, todos devem dar match no campo 'nm_configuracao'.
+ * 
+ * 3. INTEGRAÇÃO COM SUPABASE (PostgREST Builders)
+ *    - ilikeAnd: Concatena múltiplas cláusulas .ilike() em um builder do Supabase, 
+ *      forçando o banco de dados a realizar um AND lógico entre todos os termos.
+ *    - ilikeOr: Constrói uma string de filtro complexa para o parâmetro 'or' do PostgREST,
+ *      permitindo que múltiplos tokens sejam validados em várias colunas simultaneamente.
+ * 
+ * 4. RELEVÂNCIA (Ranking)
+ *    - rankByRelevance: Atribui pesos aos resultados baseados na proximidade com o termo 
+ *      pesquisado (match exato > prefixo > inclusão), garantindo que os itens mais 
+ *      prováveis apareçam no topo da lista.
  */
