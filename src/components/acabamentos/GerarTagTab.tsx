@@ -963,6 +963,60 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     [buscaPalavras],
   );
 
+  // ---------- Configurações do bloco "Resumo" (alvo da alteração em massa) ----------
+  // Busca DEDICADA e PAGINADA sobre `auge_tag_custom`, aplicando AND estrito de
+  // todos os tokens digitados diretamente em `nm_configuracao`. Diferente da
+  // busca por valores de TAG (limitada a 4.000 linhas), aqui paginamos até
+  // esgotar o resultado para garantir que o Resumo liste TODAS as
+  // configurações que serão alteradas em massa.
+  const { data: configsMassa = [], isFetching: loadingMassa } = useQuery({
+    queryKey: [
+      'auge-tag-custom-configs-massa',
+      ilikeCacheKey(toIlikePattern(termoDeferido), toIlikeTokens(termoDeferido)),
+    ],
+    enabled: termoDeferido.trim().length >= 2,
+    staleTime: 60 * 1000,
+    queryFn: async () => {
+      const termo = termoDeferido.trim();
+      const padrao = toIlikePattern(termo);
+      const tokens = toIlikeTokens(termo);
+
+      const map = new Map<string, ConfiguracaoLite>();
+      const PAGE = 1000;
+      const MAX = 80000;
+
+      for (let from = 0; from < MAX; from += PAGE) {
+        const q = (supabase as any)
+          .from('auge_tag_custom')
+          .select('cd_configuracao, nm_configuracao');
+        const { data, error } = await ilikeAnd(q, 'nm_configuracao', padrao, tokens)
+          .order('cd_configuracao', { ascending: true })
+          .range(from, from + PAGE - 1);
+        if (error) break;
+        const rows = (data ?? []) as Array<{ cd_configuracao: string; nm_configuracao: string | null }>;
+        for (const r of rows) {
+          const cd = String(r.cd_configuracao ?? '').trim();
+          if (!cd) continue;
+          const nm = r.nm_configuracao ?? cd;
+          // Guarda de segurança no cliente: cada palavra pesquisada DEVE estar
+          // presente no nome da configuração (AND estrito, sem acentos/case).
+          if (tokens.length > 0 && !tokens.every((t) => matchesIlike(nm, t))) continue;
+          if (tokens.length === 0 && padrao && !matchesIlike(nm, padrao)) continue;
+          const cur = map.get(cd) ?? { cd_configuracao: cd, nm_configuracao: nm, qtd_tags: 0 };
+          cur.qtd_tags += 1;
+          map.set(cd, cur);
+        }
+        if (rows.length < PAGE) break;
+      }
+
+      return Array.from(map.values()).sort((a, b) =>
+        (a.nm_configuracao ?? '').localeCompare(b.nm_configuracao ?? '', 'pt-BR'),
+      );
+    },
+  });
+
+
+
 
 
   // TAGs Custom existentes que casam com o termo pesquisado.
