@@ -1589,12 +1589,13 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
         {/* BLOCO DE RESUMO (Colapsável) - Posicionado abaixo do bloco "Manter Tag Customizada" */}
         {termoBusca.trim().length >= 2 && (() => {
-          // Fonte 1 (prioritária): configurações derivadas das TAGs Custom cujos
-          // valores casaram com o termo (mesma lógica do "Tags Configuradas"
-          // manual). Fonte 2 (fallback): catálogo local filtrado por nome de
-          // configuração. O Resumo mostra a primeira fonte com resultados.
-          const configsResumo = configsPalavras;
-          const carregandoResumo = loadingPalavras;
+          // Fonte única e estrita: configurações cujo NOME contém TODAS as
+          // palavras digitadas (AND, curinga "*" como separador, sem acentos).
+          // A lista é paginada no servidor, então representa exatamente o
+          // universo de configurações que serão alteradas em massa.
+          const configsResumo = configsMassa;
+          const carregandoResumo = loadingMassa;
+          const totalTagsMassa = configsResumo.reduce((s, c) => s + (c.qtd_tags ?? 0), 0);
           return (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -1608,7 +1609,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                     <span className="text-[11px] font-semibold uppercase tracking-wider">
                       Resumo{' '}
                       {configsResumo.length > 0
-                        ? `(${configsResumo.length} configurações encontradas)`
+                        ? `(${configsResumo.length} configurações · ${totalTagsMassa} TAGs)`
                         : carregandoResumo
                           ? '(buscando…)'
                           : '(nenhuma configuração encontrada)'}
@@ -1622,7 +1623,8 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                       <div className="space-y-2">
                         <div className="text-[10px] text-muted-foreground leading-relaxed flex items-center justify-between">
                           <span>
-                            Configurações que casaram com "{termoBusca.trim()}" — as TAGs recomendadas abaixo foram extraídas desta família.
+                            Todas as configurações que contêm <strong>todas</strong> as palavras de "{termoBusca.trim()}" —
+                            estas são as configurações que serão alteradas em massa.
                           </span>
                           {obrigatorias.length > 0 && (
                             <Badge variant="outline" className="text-[9px] border-blue-500/30 text-blue-600 bg-blue-50/50">
@@ -1634,10 +1636,11 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                         {/* Bloco de "Configurações Encontradas" interativas */}
                         <div className="space-y-1">
                           <div className="text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-1.5 px-1">
-                            <Sparkles className="h-2.5 w-2.5" /> Configurações Encontradas
+                            <Sparkles className="h-2.5 w-2.5" /> Configurações que serão alteradas ({configsResumo.length})
                           </div>
-                          <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto pr-1 p-1 bg-background/40 rounded-md border border-dashed">
+                          <div className="flex flex-wrap gap-1.5 max-h-64 overflow-y-auto pr-1 p-1 bg-background/40 rounded-md border border-dashed">
                             {configsResumo.map((cfg) => {
+
                               const isSelected = customAberta?.cd === cfg.cd_configuracao;
                               return (
                                 <button
