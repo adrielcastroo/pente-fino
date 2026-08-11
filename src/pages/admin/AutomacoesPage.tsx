@@ -592,17 +592,19 @@ function EntregaAposCard() {
             </div>
             <div className="grid gap-1.5">
               <Label className="text-xs">
-                Nova data (DD/MM/AA) {precisaData && <span className="text-destructive">*</span>}
+                {acao === 'restringir_largura' ? 'Restrição' : `Nova data (DD/MM/AA) ${precisaData ? '*' : ''}`}
               </Label>
               <Input
                 value={dataInput}
                 onChange={(e) => setDataInput(e.target.value)}
-                placeholder="10/09/26"
+                placeholder={acao === 'restringir_largura' ? "Ex: 2.1" : "10/09/26"}
                 disabled={!precisaData}
                 className="h-10 font-mono"
               />
               {precisaData && dataInput && !dataNormalizada && (
-                <span className="text-[11px] text-destructive">Data inválida.</span>
+                <span className="text-[11px] text-destructive">
+                  {acao === 'restringir_largura' ? 'Valor inválido.' : 'Data inválida.'}
+                </span>
               )}
             </div>
             <Button onClick={runExecute} disabled={!canExecute} className="gap-2 h-10">
