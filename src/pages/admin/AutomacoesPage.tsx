@@ -27,7 +27,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 const AUGE_BASE_URL = 'https://unilux.auge.app';
 
-type Acao = 'atualizar' | 'adicionar' | 'remover';
+type Acao = 'atualizar' | 'adicionar' | 'remover' | 'restringir_largura';
 
 function extractEntregaApos(desc: string | null | undefined): string | null {
   if (!desc) return null;
