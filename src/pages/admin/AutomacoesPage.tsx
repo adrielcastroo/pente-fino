@@ -329,7 +329,7 @@ function EntregaAposCard() {
   const runExecute = async () => {
     if (!previewCodigo) return;
     if (precisaData && !dataNormalizada) {
-      toast.error('Informe a nova data no formato DD/MM/AA.');
+      toast.error(acao === 'restringir_largura' ? 'Informe a largura máxima.' : 'Informe a nova data no formato DD/MM/AA.');
       return;
     }
     setExecLoading(true);
