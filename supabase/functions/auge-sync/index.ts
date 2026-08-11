@@ -5583,9 +5583,14 @@ Deno.serve(async (req) => {
         const yy = m[3].length === 4 ? m[3].slice(-2) : m[3].padStart(2, '0');
         return `${dd}/${mm}/${yy}`;
       };
-      const novaData = acao !== 'remover' ? normalizarData(payload?.nova_data) : null;
+      const novaData = (acao !== 'remover' && acao !== 'restringir_largura') ? normalizarData(payload?.nova_data) : null;
+      const restricao = acao === 'restringir_largura' ? String(payload?.nova_data ?? '').trim().replace(',', '.') : null;
+
       if ((acao === 'atualizar' || acao === 'adicionar') && !novaData) {
         throw new Error('nova_data é obrigatória e deve estar no formato DD/MM/AA.');
+      }
+      if (acao === 'restringir_largura' && (!restricao || !/^[\d\.]+$/.test(restricao))) {
+        throw new Error('Restrição de largura inválida. Use um número (ex: 2.1).');
       }
 
       const longToken = (d: string) => `(Ent_Ap_${d})`;
@@ -5593,10 +5598,20 @@ Deno.serve(async (req) => {
         const [dd, mm] = d.split('/');
         return `E${dd}/${parseInt(mm, 10)}`;
       };
+      const LARG_MAX_RE = /\s*-\s*Largura\s*Máxima\s*([\d\.,]+)\s*/gi;
+      const LMAX_ABREV_RE = /\s*LMax([\d\.,]+)\s*$/i;
+
       const stripLong = (s: string) =>
-        (s ?? '').replace(/\s*\(\s*Ent[_\s]?Ap[_\s]?\d{1,2}\/\d{1,2}\/\d{2,4}\s*\)/gi, '').trim();
+        (s ?? '')
+          .replace(/\s*\(\s*Ent[_\s]?Ap[_\s]?\d{1,2}\/\d{1,2}\/\d{2,4}\s*\)/gi, '')
+          .replace(LARG_MAX_RE, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
       const stripShort = (s: string) =>
-        (s ?? '').replace(/\s*E\d{1,2}\/\d{1,2}\s*$/i, '').trim();
+        (s ?? '')
+          .replace(/\s*E\d{1,2}\/\d{1,2}\s*$/i, '')
+          .replace(LMAX_ABREV_RE, '')
+          .trim();
 
       // Constrói o conjunto de variantes do código informado.
       // Aceita qualquer tipo de código (interno, fornecedor, cd_item_acabamento etc).
