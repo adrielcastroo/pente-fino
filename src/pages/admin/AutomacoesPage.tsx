@@ -580,12 +580,13 @@ function EntregaAposCard() {
           <div className="grid gap-3 sm:grid-cols-[200px_1fr_auto] items-end">
             <div className="grid gap-1.5">
               <Label className="text-xs">Ação</Label>
-              <Select value={acao} onValueChange={(v) => setAcao(v as Acao)}>
+              <Select value={acao} onValueChange={(v) => { setAcao(v as Acao); setDataInput(''); }}>
                 <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="atualizar">Atualizar data</SelectItem>
                   <SelectItem value="adicionar">Adicionar</SelectItem>
                   <SelectItem value="remover">Remover</SelectItem>
+                  <SelectItem value="restringir_largura">Restringir largura</SelectItem>
                 </SelectContent>
               </Select>
             </div>
