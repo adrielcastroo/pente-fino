@@ -180,8 +180,8 @@ function EntregaAposCard() {
   const [result, setResult] = useState<ExecPayload | null>(null);
 
   const codigoNormalizado = useMemo(() => normalizeCodigo(codigoInput), [codigoInput]);
-  const dataNormalizada = useMemo(() => normalizeData(dataInput), [dataInput]);
-  const precisaData = acao === 'atualizar' || acao === 'adicionar';
+  const dataNormalizada = useMemo(() => normalizeData(dataInput, acao), [dataInput, acao]);
+  const precisaData = acao === 'atualizar' || acao === 'adicionar' || acao === 'restringir_largura';
   const mostraPreview = acao === 'remover' || !!dataNormalizada;
 
   const [execProgress, setExecProgress] = useState(0);
