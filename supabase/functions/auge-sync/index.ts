@@ -5566,11 +5566,12 @@ Deno.serve(async (req) => {
       const rawAcao = String(payload?.acao ?? 'preview').toLowerCase().trim();
       const acao =
         rawAcao === 'preview' || rawAcao === 'atualizar' ||
-        rawAcao === 'adicionar' || rawAcao === 'remover'
-          ? rawAcao as 'preview' | 'atualizar' | 'adicionar' | 'remover'
+        rawAcao === 'adicionar' || rawAcao === 'remover' ||
+        rawAcao === 'restringir_largura'
+          ? rawAcao as 'preview' | 'atualizar' | 'adicionar' | 'remover' | 'restringir_largura'
           : null;
       if (!codigoItem) throw new Error('codigo_item é obrigatório.');
-      if (!acao) throw new Error('acao inválida (use preview | atualizar | adicionar | remover).');
+      if (!acao) throw new Error('acao inválida (use preview | atualizar | adicionar | remover | restringir_largura).');
 
       // Normaliza a nova data para o formato DD/MM/AA.
       const normalizarData = (s: string | undefined | null): string | null => {
