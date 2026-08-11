@@ -963,6 +963,60 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     [buscaPalavras],
   );
 
+  // ---------- Configurações do bloco "Resumo" (alvo da alteração em massa) ----------
+  // Busca DEDICADA e PAGINADA sobre `auge_tag_custom`, aplicando AND estrito de
+  // todos os tokens digitados diretamente em `nm_configuracao`. Diferente da
+  // busca por valores de TAG (limitada a 4.000 linhas), aqui paginamos até
+  // esgotar o resultado para garantir que o Resumo liste TODAS as
+  // configurações que serão alteradas em massa.
+  const { data: configsMassa = [], isFetching: loadingMassa } = useQuery({
+    queryKey: [
+      'auge-tag-custom-configs-massa',
+      ilikeCacheKey(toIlikePattern(termoDeferido), toIlikeTokens(termoDeferido)),
+    ],
+    enabled: termoDeferido.trim().length >= 2,
+    staleTime: 60 * 1000,
+    queryFn: async () => {
+      const termo = termoDeferido.trim();
+      const padrao = toIlikePattern(termo);
+      const tokens = toIlikeTokens(termo);
+
+      const map = new Map<string, ConfiguracaoLite>();
+      const PAGE = 1000;
+      const MAX = 80000;
+
+      for (let from = 0; from < MAX; from += PAGE) {
+        const q = (supabase as any)
+          .from('auge_tag_custom')
+          .select('cd_configuracao, nm_configuracao');
+        const { data, error } = await ilikeAnd(q, 'nm_configuracao', padrao, tokens)
+          .order('cd_configuracao', { ascending: true })
+          .range(from, from + PAGE - 1);
+        if (error) break;
+        const rows = (data ?? []) as Array<{ cd_configuracao: string; nm_configuracao: string | null }>;
+        for (const r of rows) {
+          const cd = String(r.cd_configuracao ?? '').trim();
+          if (!cd) continue;
+          const nm = r.nm_configuracao ?? cd;
+          // Guarda de segurança no cliente: cada palavra pesquisada DEVE estar
+          // presente no nome da configuração (AND estrito, sem acentos/case).
+          if (tokens.length > 0 && !tokens.every((t) => matchesIlike(nm, t))) continue;
+          if (tokens.length === 0 && padrao && !matchesIlike(nm, padrao)) continue;
+          const cur = map.get(cd) ?? { cd_configuracao: cd, nm_configuracao: nm, qtd_tags: 0 };
+          cur.qtd_tags += 1;
+          map.set(cd, cur);
+        }
+        if (rows.length < PAGE) break;
+      }
+
+      return Array.from(map.values()).sort((a, b) =>
+        (a.nm_configuracao ?? '').localeCompare(b.nm_configuracao ?? '', 'pt-BR'),
+      );
+    },
+  });
+
+
+
 
 
   // TAGs Custom existentes que casam com o termo pesquisado.
@@ -1535,12 +1589,13 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
         {/* BLOCO DE RESUMO (Colapsável) - Posicionado abaixo do bloco "Manter Tag Customizada" */}
         {termoBusca.trim().length >= 2 && (() => {
-          // Fonte 1 (prioritária): configurações derivadas das TAGs Custom cujos
-          // valores casaram com o termo (mesma lógica do "Tags Configuradas"
-          // manual). Fonte 2 (fallback): catálogo local filtrado por nome de
-          // configuração. O Resumo mostra a primeira fonte com resultados.
-          const configsResumo = configsPalavras;
-          const carregandoResumo = loadingPalavras;
+          // Fonte única e estrita: configurações cujo NOME contém TODAS as
+          // palavras digitadas (AND, curinga "*" como separador, sem acentos).
+          // A lista é paginada no servidor, então representa exatamente o
+          // universo de configurações que serão alteradas em massa.
+          const configsResumo = configsMassa;
+          const carregandoResumo = loadingMassa;
+          const totalTagsMassa = configsResumo.reduce((s, c) => s + (c.qtd_tags ?? 0), 0);
           return (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -1554,7 +1609,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                     <span className="text-[11px] font-semibold uppercase tracking-wider">
                       Resumo{' '}
                       {configsResumo.length > 0
-                        ? `(${configsResumo.length} configurações encontradas)`
+                        ? `(${configsResumo.length} configurações · ${totalTagsMassa} TAGs)`
                         : carregandoResumo
                           ? '(buscando…)'
                           : '(nenhuma configuração encontrada)'}
@@ -1568,7 +1623,8 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                       <div className="space-y-2">
                         <div className="text-[10px] text-muted-foreground leading-relaxed flex items-center justify-between">
                           <span>
-                            Configurações que casaram com "{termoBusca.trim()}" — as TAGs recomendadas abaixo foram extraídas desta família.
+                            Todas as configurações que contêm <strong>todas</strong> as palavras de "{termoBusca.trim()}" —
+                            estas são as configurações que serão alteradas em massa.
                           </span>
                           {obrigatorias.length > 0 && (
                             <Badge variant="outline" className="text-[9px] border-blue-500/30 text-blue-600 bg-blue-50/50">
@@ -1580,10 +1636,11 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                         {/* Bloco de "Configurações Encontradas" interativas */}
                         <div className="space-y-1">
                           <div className="text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-1.5 px-1">
-                            <Sparkles className="h-2.5 w-2.5" /> Configurações Encontradas
+                            <Sparkles className="h-2.5 w-2.5" /> Configurações que serão alteradas ({configsResumo.length})
                           </div>
-                          <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto pr-1 p-1 bg-background/40 rounded-md border border-dashed">
+                          <div className="flex flex-wrap gap-1.5 max-h-64 overflow-y-auto pr-1 p-1 bg-background/40 rounded-md border border-dashed">
                             {configsResumo.map((cfg) => {
+
                               const isSelected = customAberta?.cd === cfg.cd_configuracao;
                               return (
                                 <button
