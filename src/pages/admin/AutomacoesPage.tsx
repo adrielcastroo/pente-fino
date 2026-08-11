@@ -133,8 +133,16 @@ function normalizeCodigo(v: string): string | null {
   return s;
 }
 
-function normalizeData(v: string): string | null {
-  const m = v.trim().match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/);
+function normalizeData(v: string, acao?: Acao): string | null {
+  const val = v.trim();
+  if (!val) return null;
+  
+  if (acao === 'restringir_largura') {
+    // Para largura, apenas retorna o valor se for número/decimal válido
+    return val.replace(',', '.').match(/^[\d\.]+$/) ? val : null;
+  }
+
+  const m = val.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/);
   if (!m) return null;
   const dd = m[1].padStart(2, '0');
   const mm = m[2].padStart(2, '0');
