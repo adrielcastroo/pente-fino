@@ -1696,9 +1696,9 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                     </>
                   ) : (
                     <div className="p-8 text-center bg-muted/20 rounded-lg border border-dashed border-muted-foreground/20">
-                      <p className="text-sm text-muted-foreground mb-4 font-sora">
-                        me explique a lógica que é usada para o pente fino, recomendar as Tags configuradas no bloco "composição da TAG Custom"
-                      </p>
+                        <p className="text-sm text-muted-foreground mb-4 font-sora">
+                          A imagem mostra o resultado esperado
+                        </p>
                       <div className="text-left space-y-4 max-w-2xl mx-auto text-xs text-muted-foreground/80 leading-relaxed">
                         <div className="bg-background/50 p-4 rounded-md border border-muted-foreground/10 space-y-3">
                           <p>

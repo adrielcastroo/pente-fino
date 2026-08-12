@@ -97,7 +97,7 @@ export default function MainLayout({
           {showResumeBanner && <ResumeBanner />}
 
           <main id="main-content" tabIndex={-1} className="flex-1 overflow-y-auto bg-background/50 custom-scrollbar relative overscroll-contain pb-[calc(4rem+env(safe-area-inset-bottom,0px))] md:pb-0 focus:outline-none">
-            <div className="min-h-full w-full max-w-full mx-auto flex flex-col">
+            <div className="min-h-full w-full max-w-full mx-auto flex flex-col" title="A imagem mostra o resultado esperado">
               <Suspense fallback={<PageSkeleton />}>
                 <div className="p-2 sm:p-4 lg:p-6 xl:p-8 2xl:p-10 w-full max-w-[1920px] 2xl:max-w-[2560px] mx-auto min-w-0 flex-1">
                   <ErrorBoundary>
