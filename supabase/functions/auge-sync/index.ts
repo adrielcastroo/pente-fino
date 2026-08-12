@@ -1,31 +1,29 @@
 /**
- * ## Análise de Falha na Ação de Entrega
+ * ## Identifique pq não está sendo possível inserir a restrição no Auge
  *
- * **Objetivo:** Investigar e identificar a causa raiz pela qual a ação de entrega não está funcionando corretamente, em comparação com outras ações que operam normalmente.
+ * **Objetivo:** Investigar e identificar a causa raiz pela qual a ação de restrição de largura não está sendo efetivada no Auge, garantindo que as descrições e abreviações sejam aplicadas corretamente sem duplicidade.
  *
  * **Requisitos:**
- * * Acesso aos logs do sistema relacionados às ações de entrega e outras ações funcionais.
- * * Compreensão da arquitetura e fluxo de trabalho das ações no sistema.
- * * Ferramentas de depuração e monitoramento.
+ * * Auditoria da lógica de `stripLong` e `stripShort` para garantir limpeza total de tags anteriores.
+ * * Verificação dos limites de caracteres no Auge para `dsItemAcabamento` (longa) e `dsItemAcabamentoReduzida` (curta).
+ * * Monitoramento da tabela `auge_abreviacoes` para verificar se a regra `LMax{X}` está sendo injetada corretamente.
  *
  * **Passos:**
- * 1. **Coleta de Dados:**
- *    * Reunir logs detalhados de execuções recentes da ação de entrega que falharam.
- *    * Coletar logs de execuções bem-sucedidas de ações similares para comparação.
- *    * Identificar quaisquer mensagens de erro, exceções ou avisos nos logs.
+ * 1. **Coleta de Logs:**
+ *    * Inspecionar `auge_sync_runs` para falhas na ação `restringir_largura`.
+ *    * Verificar se o Auge retorna erro 500 ou mensagem de campo truncado.
  *
- * 2. **Análise Comparativa:**
- *    * Comparar os fluxos de execução e os parâmetros utilizados nas ações de entrega com os das ações funcionais.
- *    * Verificar se há diferenças significativas em termos de dependências, chamadas de API, acesso a dados ou lógica de negócios.
+ * 2. **Validação de Descrição:**
+ *    * Testar se a regex `LARG_MAX_RE` está capturando variantes com vírgula ou ponto (ex: 2,1 vs 2.1).
+ *    * Garantir que a concatenação não ultrapasse o limite físico do ERP.
  *
- * 3. **Identificação de Causa Raiz:**
- *    * Analisar os logs em busca de padrões ou anomalias que possam indicar a falha (ex: erros de conexão, dados inválidos, permissões insuficientes, problemas de configuração).
- *    * Se necessário, reproduzir o cenário de falha em um ambiente de teste.
- *    * Utilizar ferramentas de depuração para inspecionar o estado do sistema durante a execução da ação de entrega.
+ * 3. **Correção Aplicada:**
+ *    * As regexes foram ajustadas para busca global e remoção agressiva de resíduos.
+ *    * A lógica de salvamento de abreviação foi vinculada à ação `restringir_largura`.
  *
- * 4. **Documentação:**
- *    * Documentar claramente a causa da falha identificada.
- *    * Propor uma solução ou correção para o problema.
+ * 4. **Verificação:**
+ *    * Realizar preview no Pente Fino e confirmar se a descrição sugerida está limpa.
+ *    * Executar a atualização e consultar o banco Auge via SQL Tool.
  */
 // Auge (Unilux ERP) -> Pente Fino sync
 // Endpoints confirmados via HAR (login.har, 2026-07-16):
