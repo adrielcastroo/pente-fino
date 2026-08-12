@@ -979,6 +979,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
       for (let from = 0; from < MAX; from += PAGE) {
         // Fonte 1: auge_tag_custom_configuracoes (Configurações com TAGs vinculadas)
+        // CRITICAL: We MUST search only in nm_configuracao to respect the "Configuration" input filter
         const q1 = (supabase as any)
           .from('auge_tag_custom_configuracoes')
           .select('cd_configuracao, nm_configuracao');
@@ -1036,14 +1037,24 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   // TAGs Custom existentes que casam com o termo pesquisado.
   const customsEncontradas = useMemo(() => {
     const byCfg = new Map<string, { cd: string; nm: string; qtd: number }>();
-    for (const t of tagsBusca) {
+    const tokens = toIlikeTokens(termoDeferido);
+    
+    // Filtramos tagsBusca para garantir que só apareçam se o nome da CONFIGURAÇÃO casar.
+    // Isso corrige a discrepância visual onde o usuário busca por uma configuração
+    // mas os resultados mostram itens cujos nomes de TAG batem mas a config não.
+    const filteredTags = tagsBusca.filter(t => {
+      const nm = t.nm_configuracao || '';
+      return tokens.every(tk => matchesIlike(nm, tk));
+    });
+
+    for (const t of filteredTags) {
       const cd = t.cd_configuracao;
       const cur = byCfg.get(cd) ?? { cd, nm: t.nm_configuracao ?? cd, qtd: 0 };
       cur.qtd += 1;
       byCfg.set(cd, cur);
     }
     return Array.from(byCfg.values()).sort((a, b) => a.nm.localeCompare(b.nm)).slice(0, 30);
-  }, [tagsBusca]);
+  }, [tagsBusca, termoDeferido]);
 
   const { data: tagsDaCustom = [], isFetching: loadingCustom } = useQuery({
     queryKey: ['auge-tag-custom-detalhe', customAberta?.cd ?? ''],
