@@ -47,7 +47,7 @@ function abbrevFromDate(data: string): string {
 }
 
 function previewDescricao(desc: string, acao: Acao, novaData: string | null): string {
-  let base = (desc || '').replace(ENT_AP_RE, ' ').replace(LARG_MAX_RE, ' ').replace(/\s+/g, ' ').trim();
+  let base = (desc || '').replace(ENT_AP_RE, ' ').replace(LARG_MAX_RE, ' ').replace(/\s+/g, ' ').trim() || 'A imagem mostra o resultado esperado';
   if (acao === 'remover' || !novaData) return base;
   if (acao === 'restringir_largura') {
     return `${base} - Largura Máxima ${novaData}`;
