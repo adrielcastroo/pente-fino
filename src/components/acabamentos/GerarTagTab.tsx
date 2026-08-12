@@ -1636,8 +1636,8 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                       <div className="space-y-2">
                         <div className="text-[10px] text-muted-foreground leading-relaxed flex items-center justify-between">
                           <span>
-                            Todas as configurações que contêm <strong>todas</strong> as palavras de "{termoBusca.trim()}" —
-                            estas são as configurações que serão alteradas em massa.
+                            Exibindo configurações que possuam <strong>TODOS</strong> os tokens/palavras inseridas na busca (Curinga SAP B1).
+                            As alterações realizadas na composição abaixo serão aplicadas a todas as configurações listadas aqui.
                           </span>
                           {obrigatorias.length > 0 && (
                             <Badge variant="outline" className="text-[9px] border-blue-500/30 text-blue-600 bg-blue-50/50">
