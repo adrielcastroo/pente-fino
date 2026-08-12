@@ -943,21 +943,8 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         tags: validRows 
       };
     },
-  });
-        return tokensParaValidar.every((t) => matchesIlike(nm, t));
-      }).sort((a, b) =>
-        (a.nm_configuracao ?? '').localeCompare(b.nm_configuracao ?? '', 'pt-BR'),
-      );
-
-      return { rows, configs, usados: tokensIlike };
-    },
-  });
-
-  const tagsPalavras = useMemo(() => buscaPalavras?.rows ?? [], [buscaPalavras]);
-  const configsPalavras = useMemo<ConfiguracaoLite[]>(
-    () => buscaPalavras?.configs ?? [],
-    [buscaPalavras],
-  );
+  const resumoConfigs = useMemo(() => buscaPalavras?.configs ?? [], [buscaPalavras]);
+  const tagsReconhecidas = useMemo(() => buscaPalavras?.tags ?? [], [buscaPalavras]);
 
   // ---------- Configurações do bloco "Resumo" (alvo da alteração em massa) ----------
   // Busca DEDICADA e PAGINADA sobre `auge_tag_custom`, aplicando AND estrito de
