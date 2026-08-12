@@ -943,6 +943,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         tags: validRows 
       };
     },
+  });
   const resumoConfigs = useMemo(() => buscaPalavras?.configs ?? [], [buscaPalavras]);
   const tagsReconhecidas = useMemo(() => buscaPalavras?.tags ?? [], [buscaPalavras]);
 
