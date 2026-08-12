@@ -990,6 +990,8 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         const q1 = (supabase as any)
           .from('auge_tag_custom_configuracoes')
           .select('cd_configuracao, nm_configuracao');
+        
+        // CORREÇÃO: Aplicar ilikeAnd garante que todos os tokens sejam filtrados no SELECT
         const res1 = await ilikeAnd(q1, 'nm_configuracao', padrao, tokens)
           .order('cd_configuracao', { ascending: true })
           .range(from, from + PAGE - 1);
@@ -998,27 +1000,35 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         const q2 = (supabase as any)
           .from('auge_tag_custom_scan')
           .select('cd_configuracao, nm_configuracao');
+          
         const res2 = await ilikeAnd(q2, 'nm_configuracao', padrao, tokens)
           .order('cd_configuracao', { ascending: true })
           .range(from, from + PAGE - 1);
 
-        const data = [...(res1.data || []), ...(res2.data || [])];
+        const data1 = res1.data || [];
+        const data2 = res2.data || [];
+        const data = [...data1, ...data2];
+        
         if (data.length === 0 && from > 0) break;
 
-        const rows = (data ?? []) as Array<{ cd_configuracao: string; nm_configuracao: string | null }>;
-        for (const r of rows) {
+        for (const r of data) {
           const cd = String(r.cd_configuracao ?? '').trim();
           if (!cd) continue;
           const nm = r.nm_configuracao ?? cd;
-          // Guarda de segurança no cliente: cada palavra pesquisada DEVE estar
-          // presente no nome da configuração (AND estrito, sem acentos/case).
-          if (tokens.length > 0 && !tokens.every((t) => matchesIlike(nm, t))) continue;
-          if (tokens.length === 0 && padrao && !matchesIlike(nm, padrao)) continue;
-          const cur = map.get(cd) ?? { cd_configuracao: cd, nm_configuracao: nm, qtd_tags: 0 };
-          cur.qtd_tags += 1;
-          map.set(cd, cur);
+          
+          // Validação extra no cliente para garantir 100% de precisão (lógica AND estrita)
+          const tokensParaValidar = tokens.length > 0 ? tokens : (padrao ? [padrao] : []);
+          const passaNoFiltro = tokensParaValidar.every(t => matchesIlike(nm, t));
+          
+          if (!passaNoFiltro) continue;
+
+          if (!map.has(cd)) {
+            map.set(cd, { cd_configuracao: cd, nm_configuracao: nm, qtd_tags: 0 });
+          }
         }
-        if (rows.length < PAGE) break;
+        
+        // Se ambos os resultados vieram menores que a página, terminamos
+        if (data1.length < PAGE && data2.length < PAGE) break;
       }
 
       return Array.from(map.values()).sort((a, b) =>
