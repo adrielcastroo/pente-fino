@@ -5628,7 +5628,7 @@ Deno.serve(async (req) => {
         return `E${dd}/${parseInt(mm, 10)}`;
       };
       const LARG_MAX_RE = /\s*-\s*Largura\s*Máxima\s*([\d\.,]+)\s*/gi;
-      const LMAX_ABREV_RE = /\s*LMax([\d\.,]+)\s*$/i;
+      const LMAX_ABREV_RE = /\s*LMax([\d\.,]+)/gi;
 
       const stripLong = (s: string) =>
         (s ?? '')
