@@ -979,35 +979,33 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       for (let from = 0; from < MAX; from += PAGE) {
         // Fonte 1: auge_tag_custom_configuracoes (Configurações com TAGs vinculadas)
         // CRITICAL: We MUST search only in nm_configuracao to respect the "Configuration" input filter
-        const q1 = (supabase as any)
-          .from('auge_tag_custom_configuracoes')
-          .select('cd_configuracao, nm_configuracao');
-        
         // CORREÇÃO: Aplicar ilikeAnd garante que todos os tokens sejam filtrados no SELECT
         // Garantimos que o filtro seja aplicado APENAS em nm_configuracao para o bloco Resumo
-        let q1 = (supabase as any)
+        let query1 = (supabase as any)
           .from('auge_tag_custom_configuracoes')
           .select('cd_configuracao, nm_configuracao');
         
         for (const t of tokens) {
-          q1 = q1.ilike('nm_configuracao', t);
+          query1 = query1.ilike('nm_configuracao', t);
         }
         if (tokens.length === 0 && padrao) {
-          q1 = q1.ilike('nm_configuracao', padrao);
+          query1 = query1.ilike('nm_configuracao', padrao);
         }
 
-        const res1 = await q1
+        const res1 = await query1
           .order('cd_configuracao', { ascending: true })
           .range(from, from + PAGE - 1);
         
-        let q2 = (supabase as any)
+        let query2 = (supabase as any)
           .from('auge_tag_custom_scan')
           .select('cd_configuracao, nm_configuracao');
           
         for (const t of tokens) {
-          q2 = q2.ilike('nm_configuracao', t);
+          query2 = query2.ilike('nm_configuracao', t);
         }
         if (tokens.length === 0 && padrao) {
+          query2 = query2.ilike('nm_configuracao', padrao);
+        }
           q2 = q2.ilike('nm_configuracao', padrao);
         }
 
