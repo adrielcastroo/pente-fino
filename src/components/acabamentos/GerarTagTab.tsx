@@ -1577,7 +1577,8 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           />
           <p className="text-[10px] text-muted-foreground">
             Digite aqui (ex.: <code className="font-mono">Rollo Pro</code>) — o sistema reconhecerá todas as configurações 
-            e TAGs correspondentes e as listará no bloco "Resumo" abaixo automaticamente.
+            e TAGs correspondentes e as listará no bloco "Resumo" abaixo automaticamente. O usuário terá capacidade de 
+            poder incluir, excluir, editar e alterar todas as configurações que estão exibidas no bloco "resumo" de uma vez só no Auge.
             <span className="font-semibold text-foreground"> Curinga:</span> <code className="font-mono">*</code> como no SAP B1.
           </p>
         </div>
