@@ -986,13 +986,25 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       const MAX = 80000;
 
       for (let from = 0; from < MAX; from += PAGE) {
-        const q = (supabase as any)
-          .from('auge_tag_custom')
+        // Fonte 1: auge_tag_custom_configuracoes (Configurações com TAGs vinculadas)
+        const q1 = (supabase as any)
+          .from('auge_tag_custom_configuracoes')
           .select('cd_configuracao, nm_configuracao');
-        const { data, error } = await ilikeAnd(q, 'nm_configuracao', padrao, tokens)
+        const res1 = await ilikeAnd(q1, 'nm_configuracao', padrao, tokens)
           .order('cd_configuracao', { ascending: true })
           .range(from, from + PAGE - 1);
-        if (error) break;
+        
+        // Fonte 2: auge_tag_custom_scan (Configurações do catálogo geral)
+        const q2 = (supabase as any)
+          .from('auge_tag_custom_scan')
+          .select('cd_configuracao, nm_configuracao');
+        const res2 = await ilikeAnd(q2, 'nm_configuracao', padrao, tokens)
+          .order('cd_configuracao', { ascending: true })
+          .range(from, from + PAGE - 1);
+
+        const data = [...(res1.data || []), ...(res2.data || [])];
+        if (data.length === 0 && from > 0) break;
+
         const rows = (data ?? []) as Array<{ cd_configuracao: string; nm_configuracao: string | null }>;
         for (const r of rows) {
           const cd = String(r.cd_configuracao ?? '').trim();
