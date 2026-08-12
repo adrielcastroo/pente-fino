@@ -823,8 +823,14 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       // por tokens em `nm_configuracao`, o que deixava de fora TAGs cujo
       // nome bate mas a config não. Agora usamos o mesmo predicado em
       // `nm_configuracao` e mantemos o OR nas outras colunas para o curinga.
-      const qBase = (supabase as any).from('auge_tag_custom').select(sel);
-      const { data, error } = await ilikeAnd(qBase, 'nm_configuracao', padraoBusca, tokensBusca).limit(2000);
+      let qBase = (supabase as any).from('auge_tag_custom').select(sel);
+      for (const t of tokensBusca) {
+        qBase = qBase.ilike('nm_configuracao', t);
+      }
+      if (tokensBusca.length === 0 && padraoBusca) {
+        qBase = qBase.ilike('nm_configuracao', padraoBusca);
+      }
+      const { data, error } = await qBase.limit(2000);
       if (!error) acc.push(...((data ?? []) as CustomTag[]));
 
       // Match amplo nas colunas de TAG (não de configuração) — mantém o
@@ -978,16 +984,34 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           .select('cd_configuracao, nm_configuracao');
         
         // CORREÇÃO: Aplicar ilikeAnd garante que todos os tokens sejam filtrados no SELECT
-        const res1 = await ilikeAnd(q1, 'nm_configuracao', padrao, tokens)
+        // Garantimos que o filtro seja aplicado APENAS em nm_configuracao para o bloco Resumo
+        let q1 = (supabase as any)
+          .from('auge_tag_custom_configuracoes')
+          .select('cd_configuracao, nm_configuracao');
+        
+        for (const t of tokens) {
+          q1 = q1.ilike('nm_configuracao', t);
+        }
+        if (tokens.length === 0 && padrao) {
+          q1 = q1.ilike('nm_configuracao', padrao);
+        }
+
+        const res1 = await q1
           .order('cd_configuracao', { ascending: true })
           .range(from, from + PAGE - 1);
         
-        // Fonte 2: auge_tag_custom_scan (Configurações do catálogo geral)
-        const q2 = (supabase as any)
+        let q2 = (supabase as any)
           .from('auge_tag_custom_scan')
           .select('cd_configuracao, nm_configuracao');
           
-        const res2 = await ilikeAnd(q2, 'nm_configuracao', padrao, tokens)
+        for (const t of tokens) {
+          q2 = q2.ilike('nm_configuracao', t);
+        }
+        if (tokens.length === 0 && padrao) {
+          q2 = q2.ilike('nm_configuracao', padrao);
+        }
+
+        const res2 = await q2
           .order('cd_configuracao', { ascending: true })
           .range(from, from + PAGE - 1);
 
@@ -1003,8 +1027,11 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           const nm = r.nm_configuracao ?? cd;
           
           // Validação extra no cliente para garantir 100% de precisão (lógica AND estrita)
-          const tokensParaValidar = tokens.length > 0 ? tokens : (padrao ? [padrao] : []);
-          const passaNoFiltro = tokensParaValidar.every(t => matchesIlike(nm, t));
+          // Normalizamos ambos para garantir que espaços e acentos não quebrem a busca
+          const nmNorm = nm.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+          const tokensNorm = tokens.map(t => t.replace(/%/g, '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
+          
+          const passaNoFiltro = tokensNorm.every(tk => nmNorm.includes(tk));
           
           if (!passaNoFiltro) continue;
 
@@ -1013,7 +1040,6 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           }
         }
         
-        // Se ambos os resultados vieram menores que a página, terminamos
         if (data1.length < PAGE && data2.length < PAGE) break;
       }
 
