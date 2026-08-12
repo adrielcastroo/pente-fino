@@ -5633,7 +5633,7 @@ Deno.serve(async (req) => {
       const stripLong = (s: string) =>
         (s ?? '')
           .replace(/\s*\(\s*Ent[_\s]?Ap[_\s]?\d{1,2}\/\d{1,2}\/\d{2,4}\s*\)/gi, '')
-          .replace(LARG_MAX_RE, ' ')
+          .replace(LARG_MAX_RE, '')
           .replace(/\s+/g, ' ')
           .trim();
       const stripShort = (s: string) =>
