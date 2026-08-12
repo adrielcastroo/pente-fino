@@ -1,21 +1,23 @@
-import { useMemo } from "react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Legend,
-  Line,
-  LineChart,
-  Pie,
-  PieChart,
-  Area,
-  AreaChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { useMemo, lazy, Suspense } from "react";
+import { cn } from "@/lib/utils";
+import type { ArtifactSpec, DashboardKpi, DashboardChart } from "@/lib/agent-blocks";
+
+// Lazy load Rechargs to avoid early initialization errors
+const Bar = lazy(() => import("recharts").then(m => ({ default: m.Bar })));
+const BarChart = lazy(() => import("recharts").then(m => ({ default: m.BarChart })));
+const CartesianGrid = lazy(() => import("recharts").then(m => ({ default: m.CartesianGrid })));
+const Cell = lazy(() => import("recharts").then(m => ({ default: m.Cell })));
+const Legend = lazy(() => import("recharts").then(m => ({ default: m.Legend })));
+const Line = lazy(() => import("recharts").then(m => ({ default: m.Line })));
+const LineChart = lazy(() => import("recharts").then(m => ({ default: m.LineChart })));
+const Pie = lazy(() => import("recharts").then(m => ({ default: m.Pie })));
+const PieChart = lazy(() => import("recharts").then(m => ({ default: m.PieChart })));
+const Area = lazy(() => import("recharts").then(m => ({ default: m.Area })));
+const AreaChart = lazy(() => import("recharts").then(m => ({ default: m.AreaChart })));
+const ResponsiveContainer = lazy(() => import("recharts").then(m => ({ default: m.ResponsiveContainer })));
+const Tooltip = lazy(() => import("recharts").then(m => ({ default: m.Tooltip })));
+const XAxis = lazy(() => import("recharts").then(m => ({ default: m.XAxis })));
+const YAxis = lazy(() => import("recharts").then(m => ({ default: m.YAxis })));
 import { cn } from "@/lib/utils";
 import type { ArtifactSpec, DashboardKpi, DashboardChart } from "@/lib/agent-blocks";
 
