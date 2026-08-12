@@ -311,13 +311,12 @@ const App = () => (
 
                 <Route path="*" element={<NotFound />} />
               </Routes>
-              <UpdateAvailableBanner />
-              <ReleaseRegistrar />
-              <AgentChatWidget />
             </Suspense>
             </PageAccessProvider>
           </AuthProvider>
-
+          <UpdateAvailableBanner />
+          <ReleaseRegistrar />
+          <AgentChatWidget />
           <Toaster position="top-right" closeButton duration={2000} visibleToasts={1} />
         </BrowserRouter>
       </TooltipProvider>
