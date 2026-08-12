@@ -937,18 +937,10 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       }
       
       const uniqueConfigs = Array.from(cfgMap.values());
-
-      // Filtro universal final no cliente: cada palavra pesquisada DEVE estar no nome da configuração.
-      // Isso garante que se o usuário pesquisou "cortina", somente itens com "cortina" apareçam.
-      const termoNorm = termo.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-      const tokensNorm = termoNorm.split(/[\s*]+/).filter(t => t.length > 0);
-
       const configs = uniqueConfigs.filter(cfg => {
         const nm = cfg.nm_configuracao ?? '';
-        if (tokensIlike.length > 0) {
-          return tokensIlike.every((t) => matchesIlike(nm, t));
-        }
-        return padrao ? matchesIlike(nm, padrao) : true;
+        const tokensParaValidar = tokensIlike.length > 0 ? tokensIlike : (padrao ? [padrao] : []);
+        return tokensParaValidar.every((t) => matchesIlike(nm, t));
       }).sort((a, b) =>
         (a.nm_configuracao ?? '').localeCompare(b.nm_configuracao ?? '', 'pt-BR'),
       );
