@@ -833,19 +833,9 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       const { data, error } = await qBase.limit(2000);
       if (!error) acc.push(...((data ?? []) as CustomTag[]));
 
-      // Match amplo nas colunas de TAG (não de configuração) — mantém o
-      // comportamento do curinga livre: digitar "preto" pode trazer TAGs
-      // cujo valor é "preto" mesmo que a config não mencione isso.
-      if (padraoBusca || tokensBusca.length > 0) {
-        const cols = ['ds_tag_customizada', 'nm_tag_customizada', 'ds_tag_texto', 'ds_tag_calculada'];
-        const or = ilikeOr(cols, padraoBusca, tokensBusca);
-        const { data: alt, error: altErr } = await (supabase as any)
-          .from('auge_tag_custom')
-          .select(sel)
-          .or(or)
-          .limit(2000);
-        if (!altErr) acc.push(...((alt ?? []) as CustomTag[]));
-      }
+      // CORREÇÃO: Removido o match amplo em colunas de TAG (ds_tag_customizada, etc)
+      // para garantir que a busca por "Configuração" retorne apenas o que bota no nome da config.
+      // Se o usuário quiser buscar por tag, ele deve usar a busca manual de tags.
 
       const seen = new Set<string>();
       return acc.filter((t) => {
