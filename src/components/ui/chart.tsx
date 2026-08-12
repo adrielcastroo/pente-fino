@@ -53,7 +53,7 @@ const ChartContainer = React.forwardRef<
       >
         <ChartStyle id={chartId} config={config} />
         {RechartsPrimitive?.ResponsiveContainer ? (
-          <RechartsPrimitive.ResponsiveContainer>{children}</RechartsPrimitive.ResponsiveContainer>
+          <RechartsPrimitive.ResponsiveContainer>{children as React.ReactElement}</RechartsPrimitive.ResponsiveContainer>
         ) : (
           <div className="w-full h-full flex items-center justify-center text-muted-foreground">
             Carregando gráficos...
