@@ -1006,10 +1006,8 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         if (tokens.length === 0 && padrao) {
           query2 = query2.ilike('nm_configuracao', padrao);
         }
-          q2 = q2.ilike('nm_configuracao', padrao);
-        }
 
-        const res2 = await q2
+        const res2 = await query2
           .order('cd_configuracao', { ascending: true })
           .range(from, from + PAGE - 1);
 
