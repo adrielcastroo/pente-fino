@@ -823,23 +823,19 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       // por tokens em `nm_configuracao`, o que deixava de fora TAGs cujo
       // nome bate mas a config não. Agora usamos o mesmo predicado em
       // `nm_configuracao` e mantemos o OR nas outras colunas para o curinga.
-      const qBase = (supabase as any).from('auge_tag_custom').select(sel);
-      const { data, error } = await ilikeAnd(qBase, 'nm_configuracao', padraoBusca, tokensBusca).limit(2000);
+      let qBase = (supabase as any).from('auge_tag_custom').select(sel);
+      for (const t of tokensBusca) {
+        qBase = qBase.ilike('nm_configuracao', t);
+      }
+      if (tokensBusca.length === 0 && padraoBusca) {
+        qBase = qBase.ilike('nm_configuracao', padraoBusca);
+      }
+      const { data, error } = await qBase.limit(2000);
       if (!error) acc.push(...((data ?? []) as CustomTag[]));
 
-      // Match amplo nas colunas de TAG (não de configuração) — mantém o
-      // comportamento do curinga livre: digitar "preto" pode trazer TAGs
-      // cujo valor é "preto" mesmo que a config não mencione isso.
-      if (padraoBusca || tokensBusca.length > 0) {
-        const cols = ['ds_tag_customizada', 'nm_tag_customizada', 'ds_tag_texto', 'ds_tag_calculada'];
-        const or = ilikeOr(cols, padraoBusca, tokensBusca);
-        const { data: alt, error: altErr } = await (supabase as any)
-          .from('auge_tag_custom')
-          .select(sel)
-          .or(or)
-          .limit(2000);
-        if (!altErr) acc.push(...((alt ?? []) as CustomTag[]));
-      }
+      // CORREÇÃO: Removido o match amplo em colunas de TAG (ds_tag_customizada, etc)
+      // para garantir que a busca por "Configuração" retorne apenas o que bota no nome da config.
+      // Se o usuário quiser buscar por tag, ele deve usar a busca manual de tags.
 
       const seen = new Set<string>();
       return acc.filter((t) => {
@@ -887,41 +883,16 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       const { data: dataCfg, error: errorCfg } = await qCfg.limit(4000);
       let acc: CustomTag[] = errorCfg ? [] : (dataCfg ?? []);
 
-      // 2) Match por VALORES DAS TAGS (lógica AND global entre colunas)
-      // "Encontre registros onde PARA CADA TOKEN, ele exista em (ColA OR ColB OR ColC...)"
-      const cols = ['ds_tag_customizada', 'nm_tag_customizada', 'ds_tag_texto', 'ds_tag_calculada', 'nm_configuracao'];
-      
-      // Construção da cláusula AND(OR, OR, OR) manual para o PostgREST
-      const andClause = tokensIlike.map(t => {
-        const orGroup = cols.map(c => `${c}.ilike.${JSON.stringify(t)}`).join(',');
-        return `and(${orGroup})`;
-      }).join(',');
-
-      const { data: dataTags, error: errorTags } = await (supabase as any)
-        .from('auge_tag_custom')
-        .select(sel)
-        .or(andClause)
-        .limit(4000);
-      
-      if (!errorTags && dataTags) acc.push(...(dataTags as CustomTag[]));
-
-      // 3) Deduplicação rigorosa e Validação Final no Cliente (Double Check)
+      // 2) Deduplicação rigorosa e Validação Final no Cliente (Double Check)
+      // Para o bloco RESUMO, só aceitamos se bater no NOME DA CONFIGURAÇÃO.
       const seenTag = new Set<string>();
       const validRows = acc.filter((t) => {
         const k = `${t.cd_configuracao}|${t.ds_tag_customizada ?? t.nm_tag_customizada ?? ''}|${t.ds_tag_texto ?? ''}`;
         if (seenTag.has(k)) return false;
         seenTag.add(k);
 
-        // Validação AND rigorosa: todos os tokens devem estar em ALGUMA das colunas deste registro específico
-        const searchPool = [
-          t.nm_configuracao,
-          t.nm_tag_customizada,
-          t.ds_tag_customizada,
-          t.ds_tag_texto,
-          t.ds_tag_calculada
-        ].map(v => (v || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')).join(' ');
-
-        return tokensPuros.every(tk => searchPool.includes(tk));
+        const nm = (t.nm_configuracao || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        return tokensPuros.every(tk => nm.includes(tk));
       });
 
       // Deriva as configurações distintas
@@ -973,21 +944,35 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       for (let from = 0; from < MAX; from += PAGE) {
         // Fonte 1: auge_tag_custom_configuracoes (Configurações com TAGs vinculadas)
         // CRITICAL: We MUST search only in nm_configuracao to respect the "Configuration" input filter
-        const q1 = (supabase as any)
+        // CORREÇÃO: Aplicar ilikeAnd garante que todos os tokens sejam filtrados no SELECT
+        // Garantimos que o filtro seja aplicado APENAS em nm_configuracao para o bloco Resumo
+        let query1 = (supabase as any)
           .from('auge_tag_custom_configuracoes')
           .select('cd_configuracao, nm_configuracao');
         
-        // CORREÇÃO: Aplicar ilikeAnd garante que todos os tokens sejam filtrados no SELECT
-        const res1 = await ilikeAnd(q1, 'nm_configuracao', padrao, tokens)
+        for (const t of tokens) {
+          query1 = query1.ilike('nm_configuracao', t);
+        }
+        if (tokens.length === 0 && padrao) {
+          query1 = query1.ilike('nm_configuracao', padrao);
+        }
+
+        const res1 = await query1
           .order('cd_configuracao', { ascending: true })
           .range(from, from + PAGE - 1);
         
-        // Fonte 2: auge_tag_custom_scan (Configurações do catálogo geral)
-        const q2 = (supabase as any)
+        let query2 = (supabase as any)
           .from('auge_tag_custom_scan')
           .select('cd_configuracao, nm_configuracao');
           
-        const res2 = await ilikeAnd(q2, 'nm_configuracao', padrao, tokens)
+        for (const t of tokens) {
+          query2 = query2.ilike('nm_configuracao', t);
+        }
+        if (tokens.length === 0 && padrao) {
+          query2 = query2.ilike('nm_configuracao', padrao);
+        }
+
+        const res2 = await query2
           .order('cd_configuracao', { ascending: true })
           .range(from, from + PAGE - 1);
 
@@ -1003,8 +988,11 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           const nm = r.nm_configuracao ?? cd;
           
           // Validação extra no cliente para garantir 100% de precisão (lógica AND estrita)
-          const tokensParaValidar = tokens.length > 0 ? tokens : (padrao ? [padrao] : []);
-          const passaNoFiltro = tokensParaValidar.every(t => matchesIlike(nm, t));
+          // Normalizamos ambos para garantir que espaços e acentos não quebrem a busca
+          const nmNorm = nm.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+          const tokensNorm = tokens.map(t => t.replace(/%/g, '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
+          
+          const passaNoFiltro = tokensNorm.every(tk => nmNorm.includes(tk));
           
           if (!passaNoFiltro) continue;
 
@@ -1013,7 +1001,6 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           }
         }
         
-        // Se ambos os resultados vieram menores que a página, terminamos
         if (data1.length < PAGE && data2.length < PAGE) break;
       }
 
