@@ -883,41 +883,16 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       const { data: dataCfg, error: errorCfg } = await qCfg.limit(4000);
       let acc: CustomTag[] = errorCfg ? [] : (dataCfg ?? []);
 
-      // 2) Match por VALORES DAS TAGS (lógica AND global entre colunas)
-      // "Encontre registros onde PARA CADA TOKEN, ele exista em (ColA OR ColB OR ColC...)"
-      const cols = ['ds_tag_customizada', 'nm_tag_customizada', 'ds_tag_texto', 'ds_tag_calculada', 'nm_configuracao'];
-      
-      // Construção da cláusula AND(OR, OR, OR) manual para o PostgREST
-      const andClause = tokensIlike.map(t => {
-        const orGroup = cols.map(c => `${c}.ilike.${JSON.stringify(t)}`).join(',');
-        return `and(${orGroup})`;
-      }).join(',');
-
-      const { data: dataTags, error: errorTags } = await (supabase as any)
-        .from('auge_tag_custom')
-        .select(sel)
-        .or(andClause)
-        .limit(4000);
-      
-      if (!errorTags && dataTags) acc.push(...(dataTags as CustomTag[]));
-
-      // 3) Deduplicação rigorosa e Validação Final no Cliente (Double Check)
+      // 2) Deduplicação rigorosa e Validação Final no Cliente (Double Check)
+      // Para o bloco RESUMO, só aceitamos se bater no NOME DA CONFIGURAÇÃO.
       const seenTag = new Set<string>();
       const validRows = acc.filter((t) => {
         const k = `${t.cd_configuracao}|${t.ds_tag_customizada ?? t.nm_tag_customizada ?? ''}|${t.ds_tag_texto ?? ''}`;
         if (seenTag.has(k)) return false;
         seenTag.add(k);
 
-        // Validação AND rigorosa: todos os tokens devem estar em ALGUMA das colunas deste registro específico
-        const searchPool = [
-          t.nm_configuracao,
-          t.nm_tag_customizada,
-          t.ds_tag_customizada,
-          t.ds_tag_texto,
-          t.ds_tag_calculada
-        ].map(v => (v || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')).join(' ');
-
-        return tokensPuros.every(tk => searchPool.includes(tk));
+        const nm = (t.nm_configuracao || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        return tokensPuros.every(tk => nm.includes(tk));
       });
 
       // Deriva as configurações distintas
