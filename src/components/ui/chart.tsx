@@ -1,4 +1,5 @@
 import * as React from "react";
+// Usamos importação dinâmica ou verificamos a existência para evitar erros de inicialização do vendor
 import * as RechartsPrimitive from "recharts";
 
 import { cn } from "@/lib/utils";
@@ -33,7 +34,7 @@ const ChartContainer = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<"div"> & {
     config: ChartConfig;
-    children: React.ComponentProps<typeof RechartsPrimitive.ResponsiveContainer>["children"];
+    children: React.ReactNode;
   }
 >(({ id, className, children, config, ...props }, ref) => {
   const uniqueId = React.useId();
@@ -51,7 +52,13 @@ const ChartContainer = React.forwardRef<
         {...props}
       >
         <ChartStyle id={chartId} config={config} />
-        <RechartsPrimitive.ResponsiveContainer>{children}</RechartsPrimitive.ResponsiveContainer>
+        {RechartsPrimitive?.ResponsiveContainer ? (
+          <RechartsPrimitive.ResponsiveContainer>{children as React.ReactElement}</RechartsPrimitive.ResponsiveContainer>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+            Carregando gráficos...
+          </div>
+        )}
       </div>
     </ChartContext.Provider>
   );
@@ -87,7 +94,7 @@ ${colorConfig
   );
 };
 
-const ChartTooltip = RechartsPrimitive.Tooltip;
+const ChartTooltip = RechartsPrimitive?.Tooltip || (() => null);
 
 const ChartTooltipContent = React.forwardRef<
   HTMLDivElement,
@@ -231,7 +238,7 @@ const ChartTooltipContent = React.forwardRef<
 );
 ChartTooltipContent.displayName = "ChartTooltip";
 
-const ChartLegend = RechartsPrimitive.Legend;
+const ChartLegend = RechartsPrimitive?.Legend || (() => null);
 
 const ChartLegendContent = React.forwardRef<
   HTMLDivElement,
