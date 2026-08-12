@@ -870,61 +870,63 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     enabled: termoDeferido.trim().length >= 2,
     staleTime: 60 * 1000,
     queryFn: async () => {
-      const sel =
-        'cd_configuracao, nm_configuracao, nm_tag_customizada, ds_tag_customizada, ds_tag_calculada, ds_tag_texto';
+      const sel = 'cd_configuracao, nm_configuracao, nm_tag_customizada, ds_tag_customizada, ds_tag_calculada, ds_tag_texto';
       const termo = termoDeferido.trim();
-      const padrao = toIlikePattern(termo);
       const tokensIlike = toIlikeTokens(termo);
+      const tokensPuros = termo.split(/[\s*]+/).map(t => t.trim().toLowerCase()).filter(t => t.length >= 2);
 
-      const acc: CustomTag[] = [];
-      
+      if (tokensPuros.length === 0) return { configs: [], tags: [] };
+
       // 1) Match por NOME DA CONFIGURAÇÃO (nm_configuracao)
-      // Mesma lógica que o Auge usa para listar as configurações da família.
       // Aplicamos o filtro AND para garantir que todos os tokens estejam presentes no nome.
-      const qCfg = (supabase as any).from('auge_tag_custom').select(sel);
-      const { data: dataCfg, error: errorCfg } = await ilikeAnd(qCfg, 'nm_configuracao', padrao, tokensIlike).limit(4000);
-      if (!errorCfg) acc.push(...((dataCfg ?? []) as CustomTag[]));
-
-      // 2) Match por VALORES DAS TAGS (lógica AND entre colunas)
-      // Um item é retornado se para CADA token pesquisado, ele existir em pelo menos UMA das colunas.
-      const cols = ['ds_tag_customizada', 'nm_tag_customizada', 'ds_tag_texto', 'ds_tag_calculada'];
-      
-      if (tokensIlike.length > 0) {
-        // Constrói a cláusula AND para os tokens. O PostgREST interpreta a vírgula 
-        // no .or() como OR, mas se envolvermos em and() vira lógica de interseção.
-        const andClause = tokensIlike.map(t => {
-          const orGroup = cols.map(c => `${c}.ilike.${JSON.stringify(t)}`).join(',');
-          return `and(${orGroup})`;
-        }).join(',');
-
-        const { data: dataTags, error: errorTags } = await (supabase as any)
-          .from('auge_tag_custom')
-          .select(sel)
-          .or(andClause)
-          .limit(4000);
-        if (!errorTags) acc.push(...((dataTags ?? []) as CustomTag[]));
-      } else if (padrao) {
-        const orClause = cols.map(c => `${c}.ilike.${JSON.stringify(padrao)}`).join(',');
-        const { data: dataTags, error: errorTags } = await (supabase as any)
-          .from('auge_tag_custom')
-          .select(sel)
-          .or(orClause)
-          .limit(4000);
-        if (!errorTags) acc.push(...((dataTags ?? []) as CustomTag[]));
+      let qCfg = (supabase as any).from('auge_tag_custom').select(sel);
+      for (const t of tokensIlike) {
+        qCfg = qCfg.ilike('nm_configuracao', t);
       }
+      
+      const { data: dataCfg, error: errorCfg } = await qCfg.limit(4000);
+      let acc: CustomTag[] = errorCfg ? [] : (dataCfg ?? []);
 
-      // Deduplicação de TAGs Custom
+      // 2) Match por VALORES DAS TAGS (lógica AND global entre colunas)
+      // "Encontre registros onde PARA CADA TOKEN, ele exista em (ColA OR ColB OR ColC...)"
+      const cols = ['ds_tag_customizada', 'nm_tag_customizada', 'ds_tag_texto', 'ds_tag_calculada', 'nm_configuracao'];
+      
+      // Construção da cláusula AND(OR, OR, OR) manual para o PostgREST
+      const andClause = tokensIlike.map(t => {
+        const orGroup = cols.map(c => `${c}.ilike.${JSON.stringify(t)}`).join(',');
+        return `and(${orGroup})`;
+      }).join(',');
+
+      const { data: dataTags, error: errorTags } = await (supabase as any)
+        .from('auge_tag_custom')
+        .select(sel)
+        .or(andClause)
+        .limit(4000);
+      
+      if (!errorTags && dataTags) acc.push(...(dataTags as CustomTag[]));
+
+      // 3) Deduplicação rigorosa e Validação Final no Cliente (Double Check)
       const seenTag = new Set<string>();
-      const rows = acc.filter((t) => {
+      const validRows = acc.filter((t) => {
         const k = `${t.cd_configuracao}|${t.ds_tag_customizada ?? t.nm_tag_customizada ?? ''}|${t.ds_tag_texto ?? ''}`;
         if (seenTag.has(k)) return false;
         seenTag.add(k);
-        return true;
+
+        // Validação AND rigorosa: todos os tokens devem estar em ALGUMA das colunas deste registro específico
+        const searchPool = [
+          t.nm_configuracao,
+          t.nm_tag_customizada,
+          t.ds_tag_customizada,
+          t.ds_tag_texto,
+          t.ds_tag_calculada
+        ].map(v => (v || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')).join(' ');
+
+        return tokensPuros.every(tk => searchPool.includes(tk));
       });
 
-      // Deriva as configurações distintas a partir das TAGs encontradas.
+      // Deriva as configurações distintas
       const cfgMap = new Map<string, ConfiguracaoLite>();
-      for (const t of rows) {
+      for (const t of validRows) {
         const cd = String(t.cd_configuracao ?? '').trim();
         if (!cd) continue;
         const cur = cfgMap.get(cd) ?? {
@@ -936,24 +938,15 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         cfgMap.set(cd, cur);
       }
       
-      const uniqueConfigs = Array.from(cfgMap.values());
-      const configs = uniqueConfigs.filter(cfg => {
-        const nm = cfg.nm_configuracao ?? '';
-        const tokensParaValidar = tokensIlike.length > 0 ? tokensIlike : (padrao ? [padrao] : []);
-        return tokensParaValidar.every((t) => matchesIlike(nm, t));
-      }).sort((a, b) =>
-        (a.nm_configuracao ?? '').localeCompare(b.nm_configuracao ?? '', 'pt-BR'),
-      );
-
-      return { rows, configs, usados: tokensIlike };
+      return { 
+        configs: Array.from(cfgMap.values()).sort((a, b) => a.nm_configuracao.localeCompare(b.nm_configuracao)), 
+        tags: validRows 
+      };
     },
   });
-
-  const tagsPalavras = useMemo(() => buscaPalavras?.rows ?? [], [buscaPalavras]);
-  const configsPalavras = useMemo<ConfiguracaoLite[]>(
-    () => buscaPalavras?.configs ?? [],
-    [buscaPalavras],
-  );
+  const resumoConfigs = useMemo(() => buscaPalavras?.configs ?? [], [buscaPalavras]);
+  const tagsPalavras = useMemo(() => buscaPalavras?.tags ?? [], [buscaPalavras]);
+  const tagsReconhecidas = useMemo(() => buscaPalavras?.tags ?? [], [buscaPalavras]);
 
   // ---------- Configurações do bloco "Resumo" (alvo da alteração em massa) ----------
   // Busca DEDICADA e PAGINADA sobre `auge_tag_custom`, aplicando AND estrito de
