@@ -824,20 +824,20 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       // nome bate mas a config não. Agora usamos o mesmo predicado em
       // `nm_configuracao` e mantemos o OR nas outras colunas para o curinga.
       const qBase = (supabase as any).from('auge_tag_custom').select(sel);
-      const { data, error } = await ilikeAnd(qBase, 'nm_configuracao', padraoBusca, tokensBusca).limit(500);
+      const { data, error } = await ilikeAnd(qBase, 'nm_configuracao', padraoBusca, tokensBusca).limit(2000);
       if (!error) acc.push(...((data ?? []) as CustomTag[]));
 
       // Match amplo nas colunas de TAG (não de configuração) — mantém o
       // comportamento do curinga livre: digitar "preto" pode trazer TAGs
       // cujo valor é "preto" mesmo que a config não mencione isso.
-      if (padraoBusca) {
+      if (padraoBusca || tokensBusca.length > 0) {
         const cols = ['ds_tag_customizada', 'nm_tag_customizada', 'ds_tag_texto', 'ds_tag_calculada'];
-        const or = ilikeOr(cols, padraoBusca, []);
+        const or = ilikeOr(cols, padraoBusca, tokensBusca);
         const { data: alt, error: altErr } = await (supabase as any)
           .from('auge_tag_custom')
           .select(sel)
           .or(or)
-          .limit(300);
+          .limit(2000);
         if (!altErr) acc.push(...((alt ?? []) as CustomTag[]));
       }
 
