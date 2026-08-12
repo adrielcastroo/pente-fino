@@ -1,3 +1,32 @@
+/**
+ * ## Análise de Falha na Ação de Entrega
+ *
+ * **Objetivo:** Investigar e identificar a causa raiz pela qual a ação de entrega não está funcionando corretamente, em comparação com outras ações que operam normalmente.
+ *
+ * **Requisitos:**
+ * * Acesso aos logs do sistema relacionados às ações de entrega e outras ações funcionais.
+ * * Compreensão da arquitetura e fluxo de trabalho das ações no sistema.
+ * * Ferramentas de depuração e monitoramento.
+ *
+ * **Passos:**
+ * 1. **Coleta de Dados:**
+ *    * Reunir logs detalhados de execuções recentes da ação de entrega que falharam.
+ *    * Coletar logs de execuções bem-sucedidas de ações similares para comparação.
+ *    * Identificar quaisquer mensagens de erro, exceções ou avisos nos logs.
+ *
+ * 2. **Análise Comparativa:**
+ *    * Comparar os fluxos de execução e os parâmetros utilizados nas ações de entrega com os das ações funcionais.
+ *    * Verificar se há diferenças significativas em termos de dependências, chamadas de API, acesso a dados ou lógica de negócios.
+ *
+ * 3. **Identificação de Causa Raiz:**
+ *    * Analisar os logs em busca de padrões ou anomalias que possam indicar a falha (ex: erros de conexão, dados inválidos, permissões insuficientes, problemas de configuração).
+ *    * Se necessário, reproduzir o cenário de falha em um ambiente de teste.
+ *    * Utilizar ferramentas de depuração para inspecionar o estado do sistema durante a execução da ação de entrega.
+ *
+ * 4. **Documentação:**
+ *    * Documentar claramente a causa da falha identificada.
+ *    * Propor uma solução ou correção para o problema.
+ */
 import { useEffect, useMemo, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -47,7 +76,7 @@ function abbrevFromDate(data: string): string {
 }
 
 function previewDescricao(desc: string, acao: Acao, novaData: string | null): string {
-  let base = (desc || '').replace(ENT_AP_RE, ' ').replace(LARG_MAX_RE, ' ').replace(/\s+/g, ' ').trim() || 'A imagem mostra o resultado esperado';
+  let base = (desc || '').replace(ENT_AP_RE, ' ').replace(LARG_MAX_RE, ' ').replace(/\s+/g, ' ').trim();
   if (acao === 'remover' || !novaData) return base;
   if (acao === 'restringir_largura') {
     return `${base} - Largura Máxima ${novaData}`;
