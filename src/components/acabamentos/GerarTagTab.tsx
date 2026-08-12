@@ -986,13 +986,25 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       const MAX = 80000;
 
       for (let from = 0; from < MAX; from += PAGE) {
-        const q = (supabase as any)
-          .from('auge_tag_custom')
+        // Fonte 1: auge_tag_custom_configuracoes (Configurações com TAGs vinculadas)
+        const q1 = (supabase as any)
+          .from('auge_tag_custom_configuracoes')
           .select('cd_configuracao, nm_configuracao');
-        const { data, error } = await ilikeAnd(q, 'nm_configuracao', padrao, tokens)
+        const res1 = await ilikeAnd(q1, 'nm_configuracao', padrao, tokens)
           .order('cd_configuracao', { ascending: true })
           .range(from, from + PAGE - 1);
-        if (error) break;
+        
+        // Fonte 2: auge_tag_custom_scan (Configurações do catálogo geral)
+        const q2 = (supabase as any)
+          .from('auge_tag_custom_scan')
+          .select('cd_configuracao, nm_configuracao');
+        const res2 = await ilikeAnd(q2, 'nm_configuracao', padrao, tokens)
+          .order('cd_configuracao', { ascending: true })
+          .range(from, from + PAGE - 1);
+
+        const data = [...(res1.data || []), ...(res2.data || [])];
+        if (data.length === 0 && from > 0) break;
+
         const rows = (data ?? []) as Array<{ cd_configuracao: string; nm_configuracao: string | null }>;
         for (const r of rows) {
           const cd = String(r.cd_configuracao ?? '').trim();
@@ -1565,7 +1577,8 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           />
           <p className="text-[10px] text-muted-foreground">
             Digite aqui (ex.: <code className="font-mono">Rollo Pro</code>) — o sistema reconhecerá todas as configurações 
-            e TAGs correspondentes e as listará no bloco "Resumo" abaixo automaticamente.
+            e TAGs correspondentes e as listará no bloco "Resumo" abaixo automaticamente. O usuário terá capacidade de 
+            poder incluir, excluir, editar e alterar todas as configurações que estão exibidas no bloco "resumo" de uma vez só no Auge.
             <span className="font-semibold text-foreground"> Curinga:</span> <code className="font-mono">*</code> como no SAP B1.
           </p>
         </div>
@@ -1623,8 +1636,8 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                       <div className="space-y-2">
                         <div className="text-[10px] text-muted-foreground leading-relaxed flex items-center justify-between">
                           <span>
-                            Todas as configurações que contêm <strong>todas</strong> as palavras de "{termoBusca.trim()}" —
-                            estas são as configurações que serão alteradas em massa.
+                            Exibindo configurações que possuam <strong>TODOS</strong> os tokens/palavras inseridas na busca (Curinga SAP B1).
+                            As alterações realizadas na composição abaixo serão aplicadas a todas as configurações listadas aqui.
                           </span>
                           {obrigatorias.length > 0 && (
                             <Badge variant="outline" className="text-[9px] border-blue-500/30 text-blue-600 bg-blue-50/50">
