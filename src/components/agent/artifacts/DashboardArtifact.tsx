@@ -18,8 +18,6 @@ const ResponsiveContainer = lazy(() => import("recharts").then(m => ({ default: 
 const Tooltip = lazy(() => import("recharts").then(m => ({ default: m.Tooltip })));
 const XAxis = lazy(() => import("recharts").then(m => ({ default: m.XAxis })));
 const YAxis = lazy(() => import("recharts").then(m => ({ default: m.YAxis })));
-import { cn } from "@/lib/utils";
-import type { ArtifactSpec, DashboardKpi, DashboardChart } from "@/lib/agent-blocks";
 
 const DEFAULT_PALETTE = [
   "hsl(var(--primary))",
@@ -95,6 +93,7 @@ function ChartBlock({ chart }: { chart: DashboardChart }) {
         <div className="mb-2 text-xs font-semibold text-foreground">{chart.title}</div>
       )}
       <div style={{ width: "100%", height }}>
+        <Suspense fallback={<div className="w-full h-full animate-pulse bg-muted rounded" />}>
         <ResponsiveContainer>
           {chart.type === "bar" ? (
             <BarChart data={chart.data} margin={{ top: 4, right: 8, left: -8, bottom: 4 }}>
@@ -163,6 +162,7 @@ function ChartBlock({ chart }: { chart: DashboardChart }) {
             </PieChart>
           )}
         </ResponsiveContainer>
+        </Suspense>
       </div>
     </div>
   );
