@@ -805,7 +805,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   const tokensBusca = useMemo(() => toIlikeTokens(termoBusca), [termoBusca]);
 
   const { data: tagsBusca = [], isFetching: loadingBusca } = useQuery({
-    queryKey: ['auge-tag-custom-busca', ilikeCacheKey(padraoBusca, tokensBusca)],
+    queryKey: ['auge-tag-custom-busca', padraoBusca, tokensBusca],
     enabled: termoBusca.trim().length >= 2,
     staleTime: 60 * 1000,
     queryFn: async () => {
