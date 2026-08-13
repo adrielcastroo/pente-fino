@@ -1,4 +1,4 @@
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import { useDeferredValue, useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { useTagCustomConfigurationSearch } from '@/hooks/useTagCustomConfigurationSearch';
@@ -699,40 +699,34 @@ export interface GerarTagTabProps {
 }
 
 export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
+  // 1. Hooks de estado no topo, sempre na mesma ordem
   const [descricao, setDescricao] = useState(rascunho.descricao);
   const [linhas, setLinhas] = useState<LinhaTag[]>(rascunho.linhas);
   const [customAberta, setCustomAberta] = useState<{ cd: string; nm: string } | null>(rascunho.customAberta);
   const [enviando, setEnviando] = useState(false);
-  // O resultado é preservado no rascunho de módulo: alternar de aba, rota ou
-  // janela (alt+tab) não pode limpar o retorno do Auge.
   const [resultado, setResultado] = useState<ResultadoAuge | null>(rascunho.resultado);
   const [tentouEnviar, setTentouEnviar] = useState(false);
-
-  // Edição das TAGs calculadas já gravadas no Auge.
   const [editandoAuge, setEditandoAuge] = useState(false);
   const [edicoesAuge, setEdicoesAuge] = useState<Record<string, TagCalculadaSel>>({});
   const [regravando, setRegravando] = useState(false);
-
-  // Inclusão manual de TAG Configurada na composição.
   const [addManual, setAddManual] = useState(false);
-
-  // Histórico local dos últimos lançamentos desta aba.
-  const [historico, setHistorico] = useState<RegistroGerarTag[]>(() => lerHistorico());
-
-
-  useEffect(() => { rascunho.descricao = descricao; }, [descricao]);
-  useEffect(() => { rascunho.linhas = linhas; }, [linhas]);
-  useEffect(() => { rascunho.customAberta = customAberta; }, [customAberta]);
-  useEffect(() => { rascunho.resultado = resultado; }, [resultado]);
-
-
-  // Estado da busca no campo Configuração (para indicar "Nova TAG Custom").
+  const [historico, setHistorico] = useState<RegistroGerarTag[]>([]);
   const [cfgSearch, setCfgSearch] = useState<{ termo: string; hasResults: boolean; isSearching: boolean; pesquisou: boolean }>({
     termo: '',
     hasResults: false,
     isSearching: false,
     pesquisou: false,
   });
+
+  // 2. Efeitos e Memos subsequentes
+  useEffect(() => {
+    setHistorico(lerHistorico());
+  }, []);
+
+  useEffect(() => { rascunho.descricao = descricao; }, [descricao]);
+  useEffect(() => { rascunho.linhas = linhas; }, [linhas]);
+  useEffect(() => { rascunho.customAberta = customAberta; }, [customAberta]);
+  useEffect(() => { rascunho.resultado = resultado; }, [resultado]);
 
 
   // O texto da CONFIGURAÇÃO (não o nome da Tag) é o único driver das análises:
@@ -811,7 +805,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   const tokensBusca = useMemo(() => toIlikeTokens(termoBusca), [termoBusca]);
 
   const { data: tagsBusca = [], isFetching: loadingBusca } = useQuery({
-    queryKey: ['auge-tag-custom-busca', ilikeCacheKey(padraoBusca, tokensBusca)],
+    queryKey: ['auge-tag-custom-busca', padraoBusca, tokensBusca],
     enabled: termoBusca.trim().length >= 2,
     staleTime: 60 * 1000,
     queryFn: async () => {
@@ -861,8 +855,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
   const { data: buscaPalavras, isFetching: loadingPalavras } = useQuery({
     queryKey: [
-      'auge-tag-custom-palavras',
-      ilikeCacheKey(toIlikePattern(termoDeferido), toIlikeTokens(termoDeferido)),
+      'auge-tag-custom-palavras', termoDeferido,
     ],
     enabled: termoDeferido.trim().length >= 2,
     staleTime: 60 * 1000,
@@ -929,7 +922,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   const { data: configsMassa = [], isFetching: loadingMassa } = useQuery({
     queryKey: [
       'auge-tag-custom-configs-massa',
-      ilikeCacheKey(toIlikePattern(termoDeferido), toIlikeTokens(termoDeferido)),
+      termoDeferido,
     ],
     enabled: termoDeferido.trim().length >= 2,
     staleTime: 60 * 1000,
