@@ -922,7 +922,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   const { data: configsMassa = [], isFetching: loadingMassa } = useQuery({
     queryKey: [
       'auge-tag-custom-configs-massa',
-      ilikeCacheKey(toIlikePattern(termoDeferido), toIlikeTokens(termoDeferido)),
+      termoDeferido,
     ],
     enabled: termoDeferido.trim().length >= 2,
     staleTime: 60 * 1000,
