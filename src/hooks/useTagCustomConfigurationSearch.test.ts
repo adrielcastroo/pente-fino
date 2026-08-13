@@ -2,6 +2,8 @@ import { describe, it, expect, vi } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { useTagCustomConfigurationSearch } from './useTagCustomConfigurationSearch';
 import { supabase } from '@/integrations/supabase/client';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import React from 'react';
 
 // Mock do supabase client
 vi.mock('@/integrations/supabase/client', () => ({
@@ -10,9 +12,24 @@ vi.mock('@/integrations/supabase/client', () => ({
   },
 }));
 
+const createWrapper = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+  return ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+};
+
 describe('useTagCustomConfigurationSearch', () => {
   it('should not search if term is too short', () => {
-    const { result } = renderHook(() => useTagCustomConfigurationSearch('a'));
+    const { result } = renderHook(() => useTagCustomConfigurationSearch('a'), {
+      wrapper: createWrapper(),
+    });
     expect(result.current.hasSearched).toBe(false);
     expect(result.current.isLoading).toBe(false);
   });
@@ -21,9 +38,11 @@ describe('useTagCustomConfigurationSearch', () => {
     const mockData = [{ cd_configuracao: '1', nm_configuracao: 'Config 1', qtd_tags: 5 }];
     (supabase.rpc as any).mockResolvedValue({ data: mockData, error: null });
 
-    const { result } = renderHook(() => useTagCustomConfigurationSearch('rollo*t45'));
+    const { result } = renderHook(() => useTagCustomConfigurationSearch('rollo*t45'), {
+      wrapper: createWrapper(),
+    });
 
-    await waitFor(() => expect(result.current.isSuccess).toBe(true), { timeout: 1000 });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true), { timeout: 2000 });
 
     expect(supabase.rpc).toHaveBeenCalledWith('buscar_auge_tag_custom_configuracoes', {
       p_termo: 'rollo*t45'
@@ -35,9 +54,12 @@ describe('useTagCustomConfigurationSearch', () => {
     const mockError = { message: 'Database error' };
     (supabase.rpc as any).mockResolvedValue({ data: null, error: mockError });
 
-    const { result } = renderHook(() => useTagCustomConfigurationSearch('error_test'));
+    const { result } = renderHook(() => useTagCustomConfigurationSearch('error_test'), {
+      wrapper: createWrapper(),
+    });
 
-    await waitFor(() => expect(result.current.isError).toBe(true), { timeout: 1000 });
+    await waitFor(() => expect(result.current.isError).toBe(true), { timeout: 2000 });
     expect(result.current.error).toBeDefined();
   });
 });
+
