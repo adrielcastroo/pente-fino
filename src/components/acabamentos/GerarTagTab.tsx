@@ -1,6 +1,7 @@
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
+import { useTagCustomConfigurationSearch } from '@/hooks/useTagCustomConfigurationSearch';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -1599,8 +1600,9 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           // palavras digitadas (AND, curinga "*" como separador, sem acentos).
           // A lista é paginada no servidor, então representa exatamente o
           // universo de configurações que serão alteradas em massa.
-          const configsResumo = configsMassa;
-          const carregandoResumo = loadingMassa;
+          const configsResumo = useTagCustomConfigurationSearch(termoBusca).data || [];
+          const carregandoResumo = useTagCustomConfigurationSearch(termoBusca).isLoading;
+
           const totalTagsMassa = configsResumo.reduce((s, c) => s + (c.qtd_tags ?? 0), 0);
           return (
             <motion.div
