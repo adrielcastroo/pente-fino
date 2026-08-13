@@ -699,40 +699,34 @@ export interface GerarTagTabProps {
 }
 
 export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
+  // 1. Hooks de estado no topo, sempre na mesma ordem
   const [descricao, setDescricao] = useState(rascunho.descricao);
   const [linhas, setLinhas] = useState<LinhaTag[]>(rascunho.linhas);
   const [customAberta, setCustomAberta] = useState<{ cd: string; nm: string } | null>(rascunho.customAberta);
   const [enviando, setEnviando] = useState(false);
-  // O resultado é preservado no rascunho de módulo: alternar de aba, rota ou
-  // janela (alt+tab) não pode limpar o retorno do Auge.
   const [resultado, setResultado] = useState<ResultadoAuge | null>(rascunho.resultado);
   const [tentouEnviar, setTentouEnviar] = useState(false);
-
-  // Edição das TAGs calculadas já gravadas no Auge.
   const [editandoAuge, setEditandoAuge] = useState(false);
   const [edicoesAuge, setEdicoesAuge] = useState<Record<string, TagCalculadaSel>>({});
   const [regravando, setRegravando] = useState(false);
-
-  // Inclusão manual de TAG Configurada na composição.
   const [addManual, setAddManual] = useState(false);
-
-  // Histórico local dos últimos lançamentos desta aba.
-  const [historico, setHistorico] = useState<RegistroGerarTag[]>(() => lerHistorico());
-
-
-  useEffect(() => { rascunho.descricao = descricao; }, [descricao]);
-  useEffect(() => { rascunho.linhas = linhas; }, [linhas]);
-  useEffect(() => { rascunho.customAberta = customAberta; }, [customAberta]);
-  useEffect(() => { rascunho.resultado = resultado; }, [resultado]);
-
-
-  // Estado da busca no campo Configuração (para indicar "Nova TAG Custom").
+  const [historico, setHistorico] = useState<RegistroGerarTag[]>([]);
   const [cfgSearch, setCfgSearch] = useState<{ termo: string; hasResults: boolean; isSearching: boolean; pesquisou: boolean }>({
     termo: '',
     hasResults: false,
     isSearching: false,
     pesquisou: false,
   });
+
+  // 2. Efeitos e Memos subsequentes
+  useEffect(() => {
+    setHistorico(lerHistorico());
+  }, []);
+
+  useEffect(() => { rascunho.descricao = descricao; }, [descricao]);
+  useEffect(() => { rascunho.linhas = linhas; }, [linhas]);
+  useEffect(() => { rascunho.customAberta = customAberta; }, [customAberta]);
+  useEffect(() => { rascunho.resultado = resultado; }, [resultado]);
 
 
   // O texto da CONFIGURAÇÃO (não o nome da Tag) é o único driver das análises:
