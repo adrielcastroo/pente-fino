@@ -46,11 +46,23 @@ export default function AcabamentosPage() {
   const [showPanel, setShowPanel] = useState(false);
   const [sortBy, setSortBy] = useState<'nome' | 'codigo'>('nome');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
-  const [tab, setTab] = useState<string>(() => {
-    if (typeof window === 'undefined') return 'consulta';
-    return localStorage.getItem('acabamentos:tab') || 'consulta';
-  });
-  useEffect(() => { try { localStorage.setItem('acabamentos:tab', tab); } catch {} }, [tab]);
+  
+  // Mover o estado do localStorage para uma inicialização simples e usar useEffect para carregar/salvar
+  // Isso evita computação pesada no corpo do componente e garante ordem estável.
+  const [tab, setTab] = useState<string>('consulta');
+
+  useEffect(() => {
+    const saved = localStorage.getItem('acabamentos:tab');
+    if (saved) setTab(saved);
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('acabamentos:tab', tab);
+    } catch (e) {
+      console.warn('Erro ao salvar aba no localStorage', e);
+    }
+  }, [tab]);
   const channelRef = useRef<any>(null);
 
   // Recupera última execução de acabamentos ao montar
