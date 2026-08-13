@@ -855,8 +855,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
   const { data: buscaPalavras, isFetching: loadingPalavras } = useQuery({
     queryKey: [
-      'auge-tag-custom-palavras',
-      ilikeCacheKey(toIlikePattern(termoDeferido), toIlikeTokens(termoDeferido)),
+      'auge-tag-custom-palavras', termoDeferido,
     ],
     enabled: termoDeferido.trim().length >= 2,
     staleTime: 60 * 1000,
