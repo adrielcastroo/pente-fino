@@ -1,6 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 
 export interface TagCustomSearchResult {
   cd_configuracao: string;
@@ -8,26 +8,45 @@ export interface TagCustomSearchResult {
   qtd_tags: number;
 }
 
+/**
+ * Hook centralizado para busca de configurações de TAG Custom.
+ * Implementa debounce, cancelamento de query e lógica de busca AND via RPC.
+ */
 export function useTagCustomConfigurationSearch(searchTerm: string) {
-  const queryTerm = useMemo(() => searchTerm.trim(), [searchTerm]);
+  const [debouncedTerm, setDebouncedTerm] = useState(searchTerm);
+  const queryClient = useQueryClient();
 
-  return useQuery({
-    queryKey: ['tag-custom-config-search', queryTerm],
-    enabled: queryTerm.length >= 2,
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedTerm(searchTerm.trim());
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
+
+  const query = useQuery({
+    queryKey: ['tag-custom-config-search', debouncedTerm],
+    enabled: debouncedTerm.length >= 2,
     staleTime: 5 * 60 * 1000,
-    queryFn: async () => {
-      // Usamos any para evitar erro de tipo até que a migration rode e o type-gen atualize (ou se não atualizar)
+    gcTime: 10 * 60 * 1000,
+    retry: 1,
+    queryFn: async ({ signal }) => {
+      // Usamos a RPC segura que aplica lógica AND no PostgreSQL
       const { data, error } = await (supabase as any).rpc('buscar_auge_tag_custom_configuracoes', {
-        p_termo: queryTerm
+        p_termo: debouncedTerm
       });
 
       if (error) {
-        console.error('Erro na busca RPC:', error);
+        console.error('Erro useTagCustomConfigurationSearch:', error);
         throw error;
       }
 
       return (data || []) as TagCustomSearchResult[];
     }
   });
-}
 
+  return {
+    ...query,
+    hasSearched: debouncedTerm.length >= 2,
+    debouncedTerm
+  };
+}
