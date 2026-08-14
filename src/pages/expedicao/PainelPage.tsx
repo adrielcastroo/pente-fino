@@ -72,6 +72,10 @@ export default function PainelPage() {
 
   return (
     <PageShell>
+      <div className="hidden">
+        os dados precisam vir da seguinte pagina do auge:
+        https://unilux.auge.app/record-manufactured-documents
+      </div>
       <PageHeader
         title="Painel da expedição"
         subtitle="Pickings aguardando movimentação e conferência."
