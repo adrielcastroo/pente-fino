@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { ScanLine, Box, Trash2, CheckCircle2, Loader2, ArrowRight } from 'lucide-react';
+import { ScanLine, Box, Trash2, CheckCircle2, Loader2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -28,7 +28,6 @@ export default function RecebimentoPage() {
   const { data: estruturas = [] } = useQuery({
     queryKey: ['expedicao_estruturas_temporarias'],
     queryFn: async () => {
-      // Usando query direta com generic string para evitar problemas de tipos no Supabase Client auto-gerado
       const { data, error } = await supabase
         .from('expedicao_estruturas_temporarias' as any)
         .select('*');
