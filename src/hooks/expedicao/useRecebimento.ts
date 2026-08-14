@@ -22,22 +22,23 @@ export function useProcessarRecebimento() {
           await supabase
             .from('expedicao_pecas')
             .update({ 
-              status: 'RECEBIDA_EXPEDICAO' as any,
+              status: 'RECEBIDA_EXPEDICAO',
               estrutura_temporaria_id: estruturaId,
               embalador_id: uid
-            })
+            } as any)
             .eq('id', existing.id);
         } else {
           await supabase
             .from('expedicao_pecas')
             .insert({
               codigo_etiqueta: etq,
-              status: 'RECEBIDA_EXPEDICAO' as any,
+              status: 'RECEBIDA_EXPEDICAO',
               estrutura_temporaria_id: estruturaId,
               embalador_id: uid,
               etiquetada_at: new Date().toISOString()
-            });
+            } as any);
         }
+
       }
     },
     onSuccess: () => {

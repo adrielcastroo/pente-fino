@@ -25,17 +25,17 @@ export default function RecebimentoPage() {
   const { bipagemTemporaria, addBipagem, clearBipagem } = useExpedicaoStore();
   const processar = useProcessarRecebimento();
 
-  const { data: estruturas = [], isLoading: loadingEstruturas } = useQuery({
+  const { data: estruturas = [] } = useQuery({
     queryKey: ['expedicao_estruturas_temporarias'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('expedicao_estruturas_temporarias')
-        .select('*')
-        .order('codigo');
+        .select('*');
       if (error) throw error;
       return data;
     }
   });
+
 
   useEffect(() => { inputRef.current?.focus(); }, []);
 
@@ -53,9 +53,10 @@ export default function RecebimentoPage() {
 
   const handleFinalizar = async () => {
     if (!estruturaId) {
-      bipToast.error('Selecione uma estrutura de destino (pulmão)');
+      bipToast.erro('Selecione uma estrutura de destino (pulmão)');
       return;
     }
+
     await processar.mutateAsync({
       etiquetas: bipagemTemporaria,
       estruturaId
@@ -115,6 +116,7 @@ export default function RecebimentoPage() {
               {processar.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle2 className="w-5 h-5" />}
               Finalizar Recebimento ({bipagemTemporaria.length})
             </Button>
+
           </CardContent>
         </Card>
 
