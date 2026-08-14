@@ -6250,51 +6250,7 @@ Deno.serve(async (req) => {
         romaneio_id: romaneio.id
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
-            transportadora_id,
-            ciclo_id,
-            status: 'aberto',
-            operador_abertura_id: triggeredBy
-          })
-          .select()
-          .single();
-        if (errR) throw errR;
-        romaneio = novo;
-      }
 
-      // 3. Criar Alocação
-      const { data: alocacao, error: errA } = await admin
-        .from('expedicao_alocacoes')
-        .insert({
-          peca_id,
-          carrinho_id,
-          transportadora_id,
-          romaneio_id: romaneio.id,
-          operador_id: triggeredBy
-        })
-        .select()
-        .single();
-      if (errA) throw errA;
-
-      // 4. Inserir Item no Romaneio
-      await admin.from('expedicao_romaneio_itens').insert({
-        romaneio_id: romaneio.id,
-        peca_id,
-        alocacao_id: alocacao.id,
-        status: 'normal',
-        operador_inclusao_id: triggeredBy
-      });
-
-      // 5. Atualizar Status da Peça
-      await admin.from('expedicao_pecas')
-        .update({ status: 'alocada' })
-        .eq('id', peca_id);
-
-      return new Response(JSON.stringify({ 
-        ok: true, 
-        alocacao_id: alocacao.id,
-        romaneio_id: romaneio.id
-      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
 
     // ==============================================================
     // necessidade_cron_run
