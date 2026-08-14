@@ -12,14 +12,14 @@ export function useProcessarRecebimento() {
 
   return useMutation({
     mutationFn: async ({ etiquetas, estruturaId }: ProcessarRecebimentoParams) => {
-      // 1. Buscar UUIDs das peças no Supabase
+      // 1. Buscar UUIDs das peças na tabela de sincronização oficial (Auge Sync)
       const { data: pecas, error: fetchErr } = await supabase
-        .from('expedicao_pecas')
+        .from('expedicao_pecas_auge_sync')
         .select('id, codigo_etiqueta')
         .in('codigo_etiqueta', etiquetas);
 
       if (fetchErr) throw fetchErr;
-      if (!pecas?.length) throw new Error('Nenhuma peça encontrada para os códigos bipados.');
+      if (!pecas?.length) throw new Error('Nenhuma peça encontrada no banco de peças PRONTAS do Auge.');
 
       const pecaIds = pecas.map(p => p.id);
 

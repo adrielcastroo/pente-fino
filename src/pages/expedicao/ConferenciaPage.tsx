@@ -69,7 +69,7 @@ export default function ConferenciaPage() {
     if (step === 'peca') {
       const peca = await validar(value);
       if (peca) {
-        addBipagemHistorico({ codigo: value, tipo: 'peca', status: 'sucesso' });
+        // addBipagemHistorico já é chamado dentro do validar()
       }
     } else if (step === 'picking') {
       // Validação de picking via bipagem
@@ -122,6 +122,7 @@ export default function ConferenciaPage() {
         setTimeout(() => inputRef.current?.focus(), 0);
       }
     }
+  };
   };
 
   const cancelarFluxo = () => {

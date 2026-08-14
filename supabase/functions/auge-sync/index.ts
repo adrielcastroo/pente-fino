@@ -6185,6 +6185,43 @@ Deno.serve(async (req) => {
           .insert({
             numero: nrRomaneio,
             transportadora_id,
+            status: 'aberto'
+          })
+          .select('id')
+          .single();
+        if (errR) throw errR;
+        romaneio = novo;
+      }
+
+      // 3. Registrar Alocação Real e vincular na sincronização
+      const { data: aloc, error: errA } = await admin
+        .from('expedicao_alocacoes')
+        .insert({
+          peca_id,
+          carrinho_id,
+          romaneio_id: romaneio.id,
+          transportadora_id
+        })
+        .select('id')
+        .single();
+      if (errA) throw errA;
+
+      await admin.from('expedicao_pecas_auge_sync').update({
+        alocacao_id: aloc.id,
+        transportadora_id,
+        carrinho_id,
+        romaneio_id: romaneio.id,
+        status_local: 'alocada',
+        processado_em: new Date().toISOString()
+      }).eq('id', peca_id);
+
+      return new Response(JSON.stringify({ 
+        ok: true, 
+        alocacao_id: aloc.id,
+        romaneio_id: romaneio.id
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+            transportadora_id,
             ciclo_id,
             status: 'aberto',
             operador_abertura_id: triggeredBy
