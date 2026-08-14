@@ -9,8 +9,6 @@ export function useProcessarRecebimento() {
       const { data: userData } = await supabase.auth.getUser();
       const uid = userData.user?.id;
 
-      // 1. Atualiza ou cria as peças com status RECEBIDA_EXPEDICAO
-      // O trigger trg_registrar_evento_expedicao cuidará do histórico
       for (const etq of etiquetas) {
         const { data: existing } = await supabase
           .from('expedicao_pecas')
@@ -19,7 +17,7 @@ export function useProcessarRecebimento() {
           .maybeSingle();
 
         if (existing) {
-          await supabase
+          const { error } = await supabase
             .from('expedicao_pecas')
             .update({ 
               status: 'RECEBIDA_EXPEDICAO',
@@ -27,8 +25,9 @@ export function useProcessarRecebimento() {
               embalador_id: uid
             } as any)
             .eq('id', existing.id);
+          if (error) throw error;
         } else {
-          await supabase
+          const { error } = await supabase
             .from('expedicao_pecas')
             .insert({
               codigo_etiqueta: etq,
@@ -37,8 +36,8 @@ export function useProcessarRecebimento() {
               embalador_id: uid,
               etiquetada_at: new Date().toISOString()
             } as any);
+          if (error) throw error;
         }
-
       }
     },
     onSuccess: () => {
