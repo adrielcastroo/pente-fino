@@ -10,13 +10,32 @@ import { ExportRomaneioButton } from '@/components/expedicao/ExportRomaneioButto
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Card, CardTitle, CardHeader, CardContent } from '@/components/ui/card';
+import { NavLink } from 'react-router-dom';
 
 type RomaneioStatus = "aberto" | "cancelado" | "faturado";
+
+interface TransportadoraData {
+  nome: string;
+}
+
+interface ItemCount {
+  count: number;
+}
+
+interface RomaneioRow {
+  id: string;
+  numero: string;
+  status: RomaneioStatus;
+  transportadora_id: string | null;
+  created_at: string;
+  transportadora: TransportadoraData | null;
+  itens: ItemCount[];
+}
 
 export default function RomaneioPage() {
   const [filterStatus, setFilterStatus] = useState<string>('aberto');
 
-  const { data: romaneios = [], isLoading } = useQuery({
+  const { data: romaneios = [], isLoading } = useQuery<RomaneioRow[]>({
     queryKey: ['expedicao_romaneios_list', filterStatus],
     queryFn: async () => {
       let query = supabase
@@ -106,8 +125,8 @@ export default function RomaneioPage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {romaneios.map((rom) => {
-                  const transportadora = (rom as any).transportadora;
-                  const itensCount = (rom as any).itens?.[0]?.count || 0;
+                  const transportadora = rom.transportadora;
+                  const itensCount = rom.itens?.[0]?.count || 0;
                   
                   return (
                     <Card key={rom.id} className="overflow-hidden border-muted-foreground/10 hover:border-primary/50 transition-colors">
@@ -151,8 +170,10 @@ export default function RomaneioPage() {
                              romaneioId={rom.id} 
                              numero={rom.numero} 
                            />
-                           <Button variant="ghost" size="sm" className="text-primary text-xs h-8">
-                              Ver Detalhes
+                           <Button asChild variant="ghost" size="sm" className="text-primary text-xs h-8">
+                              <NavLink to={`/expedicao/romaneios/${rom.id}`}>
+                                Ver Detalhes
+                              </NavLink>
                            </Button>
                         </div>
                       </CardContent>

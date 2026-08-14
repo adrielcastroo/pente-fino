@@ -6135,7 +6135,7 @@ Deno.serve(async (req) => {
         .from('expedicao_romaneios')
         .select('id')
         .eq('transportadora_id', transportadora_id)
-        .eq('status', 'ABERTO')
+        .eq('status', 'aberto')
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -6148,7 +6148,7 @@ Deno.serve(async (req) => {
             numero: nrRomaneio,
             transportadora_id,
             ciclo_id,
-            status: 'ABERTO',
+            status: 'aberto',
             operador_abertura_id: triggeredBy
           })
           .select()
@@ -6182,7 +6182,7 @@ Deno.serve(async (req) => {
 
       // 5. Atualizar Status da Peça
       await admin.from('expedicao_pecas')
-        .update({ status: 'ALOCADA' })
+        .update({ status: 'alocada' })
         .eq('id', peca_id);
 
       return new Response(JSON.stringify({ 
