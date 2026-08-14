@@ -117,7 +117,7 @@ export default function RomaneioPage() {
                             {rom.numero}
                           </Badge>
                           <StatusBadge 
-                            tone={rom.status === 'aberto' ? 'info' : rom.status === 'faturado' ? 'success' : 'destructive'} 
+                            tone={rom.status === 'aberto' ? 'info' : rom.status === 'faturado' ? 'success' : 'warning'} 
                             label={rom.status} 
                           />
                         </div>
