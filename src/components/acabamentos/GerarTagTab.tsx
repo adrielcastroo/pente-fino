@@ -1596,7 +1596,6 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         />
       </Card>
 
-      </Card>
 
 
 
