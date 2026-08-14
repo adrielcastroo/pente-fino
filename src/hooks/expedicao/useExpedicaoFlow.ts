@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useExpedicaoStore } from '@/store/useExpedicaoStore';
 import { toast } from 'sonner';
@@ -11,8 +10,6 @@ export function useValidarPeca() {
   const validar = async (codigo: string) => {
     setLoading(true);
     try {
-      // 1. Tentar identificar a peça pela lógica de etiquetas existente
-      // (Aqui usamos uma consulta direta ao Supabase que espelha a lógica de etiquetas)
       const { data: peca, error } = await supabase
         .from('expedicao_pecas')
         .select(`
@@ -31,7 +28,6 @@ export function useValidarPeca() {
         return null;
       }
 
-      // Validações de negócio
       if (peca.status.toUpperCase() === 'CANCELADO' || peca.status === 'cancelada') {
         toast.error('Esta peça está CANCELADA e não pode ser processada.');
         return null;
@@ -50,3 +46,39 @@ export function useValidarPeca() {
 
   return { validar, loading };
 }
+
+export function useAlocarPeca() {
+  const { addBipagemHistorico, limparSessaoAlocacao } = useExpedicaoStore();
+  const [loading, setLoading] = useState(false);
+
+  const alocar = async (params: {
+    peca_id: string;
+    carrinho_id: string;
+    transportadora_id: string;
+    ciclo_id?: string;
+  }) => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('auge-sync', {
+        body: {
+          action: 'expedicao_alocar',
+          ...params
+        }
+      });
+
+      if (error) throw error;
+      if (!data.ok) throw new Error(data.error || 'Erro desconhecido na alocação');
+
+      toast.success('Peça alocada com sucesso!');
+      return data;
+    } catch (err: any) {
+      toast.error('Erro na alocação: ' + err.message);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { alocar, loading };
+}
+
