@@ -91,6 +91,16 @@ export default function ClientesPage() {
 
   return (
     <div className="flex flex-col h-full gap-4 overflow-hidden">
+      <div className="flex flex-col gap-1 p-4 border-b bg-amber-50/10 border-amber-500/20 dark:bg-amber-950/10">
+        <h2 className="text-sm font-bold flex items-center gap-2 text-amber-600 dark:text-amber-400">
+          <Info className="h-4 w-4" /> REGRA ABSOLUTA — ESPELHO DE CLIENTES SOMENTE LEITURA
+        </h2>
+        <p className="text-[11px] leading-relaxed text-muted-foreground">
+          Esta tabela é um espelho técnico e fiel do cadastro do Auge. Proibida qualquer edição, inserção ou exclusão manual. 
+          O sistema sincroniza unidirecionalmente (Auge → Pente Fino) para garantir integridade.
+        </p>
+      </div>
+
       <PageHeader 
         title="Clientes (Auge)" 
         actions={
@@ -100,7 +110,7 @@ export default function ClientesPage() {
             className="gap-2"
           >
             {syncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-            Sincronizar
+            Sincronizar Agora
           </Button>
         }
       />
