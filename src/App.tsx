@@ -260,6 +260,7 @@ const App = () => (
                   <Route path="logistica" element={<ExpedicaoDashboardLogisticoPage />} />
                   <Route path="carrinhos" element={<ExpedicaoCarrinhosPage />} />
                   <Route path="historico" element={<ExpedicaoHistoricoPage />} />
+                  <Route path="romaneios" element={<ExpedicaoRomaneioPage />} />
                   <Route path="relatorios" element={<ExpedicaoRelatoriosPage />} />
                   <Route path="equipes" element={<RequireRole role="supervisor" fallback={<Navigate to="/expedicao/operacao" replace />}><EquipesPage /></RequireRole>} />
                   <Route path="configuracoes" element={<SettingsPage />} />
