@@ -4312,7 +4312,7 @@ Deno.serve(async (req) => {
         ok: true, status: res.status, location: res.headers.get('location'),
         html_len: html.length,
         title: html.match(/<title>([\s\S]*?)<\/title>/i)?.[1]?.trim() ?? null,
-        urls, routes, columns, scripts,
+        urls, routes, columns, inputs, scripts,
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
