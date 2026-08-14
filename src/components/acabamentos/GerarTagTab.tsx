@@ -25,6 +25,7 @@ import {
 import { toast } from 'sonner';
 import { normalizeTagFormatC } from '@/lib/tag-utils';
 import { registrarEventoTag, type TagEventoTipo } from '@/lib/tag-historico';
+import { ResumoConfiguracoesMassa } from './ResumoConfiguracoesMassa';
 import {
   extrairPalavras,
   filtrarPorIlike,
@@ -1588,66 +1589,13 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         )}
 
         {/* BLOCO DE RESUMO (Colapsável) - Posicionado abaixo do bloco "Manter Tag Customizada" */}
-        {termoBusca.trim().length >= 2 && (() => {
-          // Fonte única e estrita: configurações cujo NOME contém TODAS as
-          // palavras digitadas (AND, curinga "*" como separador, sem acentos).
-          // A lista é paginada no servidor, então representa exatamente o
-          // universo de configurações que serão alteradas em massa.
-          const configsResumo = useTagCustomConfigurationSearch(termoBusca).data || [];
-          const carregandoResumo = useTagCustomConfigurationSearch(termoBusca).isLoading;
+        <ResumoConfiguracoesMassa 
+          termoBusca={termoBusca}
+          customAberta={customAberta}
+          setCustomAberta={setCustomAberta}
+          obrigatoriasCount={obrigatorias.length}
+        />
 
-          const totalTagsMassa = configsResumo.reduce((s, c) => s + (c.qtd_tags ?? 0), 0);
-          return (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="rounded-lg border bg-muted/30 overflow-hidden"
-            >
-              <details className="group">
-                <summary className="flex items-center justify-between p-3 cursor-pointer hover:bg-muted/50 transition-colors list-none">
-                  <div className="flex items-center gap-2">
-                    <Layers className="h-4 w-4 text-primary" />
-                    <span className="text-[11px] font-semibold uppercase tracking-wider">
-                      Resumo{' '}
-                      {configsResumo.length > 0
-                        ? `(${configsResumo.length} configurações · ${totalTagsMassa} TAGs)`
-                        : carregandoResumo
-                          ? '(buscando…)'
-                          : '(nenhuma configuração encontrada)'}
-                    </span>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-90" />
-                </summary>
-                <div className="px-3 pb-3 space-y-3 border-t pt-2">
-                  {configsResumo.length > 0 ? (
-                    <>
-                      <div className="space-y-2">
-                        <div className="text-[10px] text-muted-foreground leading-relaxed flex items-center justify-between">
-                          <span>
-                            Exibindo configurações que possuam <strong>TODOS</strong> os tokens/palavras inseridas na busca (Curinga SAP B1).
-                            As alterações realizadas na composição abaixo serão aplicadas a todas as configurações listadas aqui.
-                          </span>
-                          {obrigatorias.length > 0 && (
-                            <Badge variant="outline" className="text-[9px] border-blue-500/30 text-blue-600 bg-blue-50/50">
-                              {obrigatorias.length} TAGs Reconhecidas
-                            </Badge>
-                          )}
-                        </div>
-
-                        {/* Bloco de "Configurações Encontradas" interativas */}
-                        <div className="space-y-1">
-                          <div className="text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-1.5 px-1">
-                            <Sparkles className="h-2.5 w-2.5" /> Configurações que serão alteradas ({configsResumo.length})
-                          </div>
-                          <div className="flex flex-wrap gap-1.5 max-h-64 overflow-y-auto pr-1 p-1 bg-background/40 rounded-md border border-dashed">
-                            {configsResumo.map((cfg) => {
-
-                              const isSelected = customAberta?.cd === cfg.cd_configuracao;
-                              return (
-                                <button
-                                  key={cfg.cd_configuracao}
-                                  onClick={() => setCustomAberta({ cd: cfg.cd_configuracao, nm: cfg.nm_configuracao })}
-                                  className={cn(
                                     "text-[10px] font-mono py-0.5 px-2 rounded-md border transition-all flex items-center gap-1.5",
                                     isSelected 
                                       ? "bg-primary text-primary-foreground border-primary shadow-sm" 
