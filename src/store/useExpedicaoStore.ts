@@ -11,10 +11,13 @@ interface ExpedicaoSessionState {
   transportadoraSelecionada: any | null;
   carrinhoSelecionado: any | null;
   
+  // Controle de Fluxo (Estado Interno)
+  fluxoPasso: 'peca' | 'picking' | 'transportadora' | 'carrinho';
+  
   // Histórico de bipagem local (para feedback rápido)
   bipagemHistorico: Array<{
     codigo: string;
-    tipo: 'peca' | 'transportadora' | 'carrinho';
+    tipo: 'peca' | 'picking' | 'transportadora' | 'carrinho';
     status: 'sucesso' | 'erro';
     mensagem?: string;
     ts: number;
@@ -26,6 +29,7 @@ interface ExpedicaoSessionState {
   setPickingSelecionado: (picking: any | null) => void;
   setTransportadoraSelecionada: (transp: any | null) => void;
   setCarrinhoSelecionado: (carrinho: any | null) => void;
+  setFluxoPasso: (passo: ExpedicaoSessionState['fluxoPasso']) => void;
   addBipagemHistorico: (entry: Omit<ExpedicaoSessionState['bipagemHistorico'][0], 'ts'>) => void;
   limparSessaoAlocacao: () => void;
 }
@@ -38,13 +42,15 @@ export const useExpedicaoStore = create<ExpedicaoSessionState>()(
       pickingSelecionado: null,
       transportadoraSelecionada: null,
       carrinhoSelecionado: null,
+      fluxoPasso: 'peca',
       bipagemHistorico: [],
 
       setEstruturaTemporaria: (id) => set({ estruturaTemporariaId: id }),
-      setPecaAtual: (peca) => set({ pecaAtual: peca }),
-      setPickingSelecionado: (picking) => set({ pickingSelecionado: picking }),
-      setTransportadoraSelecionada: (transp) => set({ transportadoraSelecionada: transp }),
+      setPecaAtual: (peca) => set({ pecaAtual: peca, fluxoPasso: peca ? 'picking' : 'peca' }),
+      setPickingSelecionado: (picking) => set({ pickingSelecionado: picking, fluxoPasso: picking ? 'transportadora' : 'picking' }),
+      setTransportadoraSelecionada: (transp) => set({ transportadoraSelecionada: transp, fluxoPasso: transp ? 'carrinho' : 'transportadora' }),
       setCarrinhoSelecionado: (carrinho) => set({ carrinhoSelecionado: carrinho }),
+      setFluxoPasso: (passo) => set({ fluxoPasso: passo }),
       
       addBipagemHistorico: (entry) => set((state) => ({
         bipagemHistorico: [{ ...entry, ts: Date.now() }, ...state.bipagemHistorico].slice(0, 50)
@@ -55,6 +61,7 @@ export const useExpedicaoStore = create<ExpedicaoSessionState>()(
         pickingSelecionado: null,
         transportadoraSelecionada: null,
         carrinhoSelecionado: null,
+        fluxoPasso: 'peca',
       }),
     }),
     {

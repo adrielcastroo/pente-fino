@@ -11,12 +11,8 @@ export function useValidarPeca() {
     setLoading(true);
     try {
       const { data: peca, error } = await supabase
-        .from('expedicao_pecas')
-        .select(`
-          *,
-          cliente:auge_clientes(*),
-          picking:expedicao_pickings(*)
-        `)
+        .from('expedicao_pecas_auge_sync')
+        .select('*')
         .eq('codigo_etiqueta', codigo.toUpperCase())
         .maybeSingle();
 
