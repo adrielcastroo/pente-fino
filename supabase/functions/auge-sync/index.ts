@@ -4308,11 +4308,13 @@ Deno.serve(async (req) => {
       const columns = [...new Set([...html.matchAll(/(?:data|name)\s*:\s*['"]([a-zA-Z0-9_.]+)['"]/g)].map(m => m[1]))];
       const inputs = [...new Set([...html.matchAll(/<(?:input|select)[^>]+(?:id|name)="([^"]+)"/g)].map(m => m[1]))];
       const scripts = [...new Set([...html.matchAll(/<script[^>]+src="([^"]+)"/g)].map(m => m[1]))];
+      const snippets = [...html.matchAll(/[^\n]{0,120}(?:ajax|url\s*:|iframe|fetch\()[^\n]{0,160}/gi)]
+        .map(m => m[0].trim()).slice(0, 60);
       return new Response(JSON.stringify({
         ok: true, status: res.status, location: res.headers.get('location'),
         html_len: html.length,
         title: html.match(/<title>([\s\S]*?)<\/title>/i)?.[1]?.trim() ?? null,
-        urls, routes, columns, inputs, scripts,
+        urls, routes, columns, inputs, scripts, snippets,
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
