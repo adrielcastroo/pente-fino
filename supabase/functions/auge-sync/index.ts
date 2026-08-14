@@ -89,8 +89,8 @@ async function loadAugeCredentials(admin: ReturnType<typeof createClient>, userI
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
 const TRANSFERENCIA_BACKFILL_BATCH = 8;
 
-type Entity = 'saldo' | 'produtos' | 'depositos' | 'movimentacoes' | 'entradas' | 'lotes' | 'transferencias';
-const ALL_ENTITIES: Entity[] = ['produtos', 'saldo', 'movimentacoes', 'entradas', 'depositos', 'lotes', 'transferencias'];
+type Entity = 'saldo' | 'produtos' | 'depositos' | 'movimentacoes' | 'entradas' | 'lotes' | 'transferencias' | 'clientes';
+const ALL_ENTITIES: Entity[] = ['produtos', 'saldo', 'movimentacoes', 'entradas', 'depositos', 'lotes', 'transferencias', 'clientes'];
 const UNMAPPED: Entity[] = []; // todos tentam endpoints; erros são registrados no run
 
 // ---------- Cookie jar ----------
@@ -1606,6 +1606,30 @@ function mapSaldo(r: any) {
   };
 }
 
+function mapCliente(r: any) {
+  return {
+    codigo: String(r.cdParticipante ?? r.codigo ?? '').trim(),
+    nome: r.nmParticipante ?? r.nome ?? null,
+    nome_fantasia: r.nmFantasia ?? null,
+    razao_social: r.dsRazaoSocial ?? null,
+    cpf_cnpj: r.nrCpfCnpj ?? null,
+    email: r.dsEmail ?? null,
+    telefone: r.nrTelefone ?? null,
+    celular: r.nrCelular ?? null,
+    endereco: r.dsEndereco ?? null,
+    numero: r.nrEndereco ?? null,
+    complemento: r.dsComplemento ?? null,
+    bairro: r.nmBairro ?? null,
+    cidade: r.nmCidade ?? null,
+    uf: r.idUF ?? null,
+    cep: r.nrCEP ?? null,
+    situacao: r.dsSituacao ?? null,
+    raw: r,
+    synced_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+}
+
 function mapProduto(r: any) {
   // r vem do endpoint getItensEstoque.php:
   // { cdItem, nmItem, nmGrupoItem, idNCM, idItemEstoque(Y/N), idItemVenda, idItemCompra,
@@ -1630,6 +1654,31 @@ function mapProduto(r: any) {
     synced_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };
+}
+
+async function fetchClientesPHP(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+): Promise<any[]> {
+  const body = new URLSearchParams({
+    draw: '1',
+    start: '0',
+    length: '5000',
+    'search[value]': '',
+    'search[regex]': 'false',
+    idTipoParticipante: '1', // 1=Cliente no Auge
+    idAtivo: 'Y',
+  });
+  const candidates = [
+    { method: 'POST' as const, path: '/l.unilux/modComercial/ajax/getParticipantes.php', body, referer: '/l.unilux/modComercial/gerirParticipante.php' },
+    { method: 'POST' as const, path: '/l.unilux/modCadastro/ajax/getParticipantes.php', body, referer: '/l.unilux/modCadastro/gerirParticipante.php' },
+  ];
+  try {
+    const { data } = await tryPHP(auth, candidates);
+    return data;
+  } catch (e) {
+    console.error('fetchClientesPHP failed', e);
+    return [];
+  }
 }
 
 // Endpoint real de itens/cadastro (Auge legado / módulo PHP)
@@ -2797,6 +2846,14 @@ async function syncEntity(
       if (error) throw error;
       upserted = count ?? rows.length;
       await admin.from('auge_sync_runs').update({ detalhes: { path } }).eq('id', runId);
+    } else if (entity === 'clientes') {
+      const items = await fetchClientesPHP(auth);
+      processed = items.length;
+      const rows = items.map(mapCliente).filter(r => r.codigo);
+      const { error, count } = await admin.from('auge_clientes')
+        .upsert(rows, { onConflict: 'codigo', count: 'exact' });
+      if (error) throw error;
+      upserted = count ?? rows.length;
     } else if (entity === 'transferencias') {
       const days = daysSince(lastMax, 7, 120);
       const { data: items, path } = await fetchTransferenciasPHP(auth, days, options.dateFrom, options.dateTo);
@@ -4227,6 +4284,13 @@ Deno.serve(async (req) => {
         ok: true, connected: true, latency_ms: Date.now() - t0,
         has_api_token: !!apiToken, csrf_prefix: csrf.slice(0, 8),
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    if (action === 'sync_clientes') {
+      const result = await syncEntity(admin, auth, 'clientes', triggeredBy);
+      return new Response(JSON.stringify({ ok: true, ...result }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     if (

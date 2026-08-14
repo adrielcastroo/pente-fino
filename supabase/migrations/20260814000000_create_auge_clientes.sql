@@ -22,8 +22,8 @@ CREATE TABLE IF NOT EXISTS public.auge_clientes (
     updated_at timestamptz DEFAULT now()
 );
 
--- Grant privileges
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.auge_clientes TO authenticated;
+-- Grant privileges: Somente leitura para usuários autenticados, total para service_role
+GRANT SELECT ON public.auge_clientes TO authenticated;
 GRANT ALL ON public.auge_clientes TO service_role;
 
 -- Enable RLS
