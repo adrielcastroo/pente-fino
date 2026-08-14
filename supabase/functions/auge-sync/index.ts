@@ -6101,13 +6101,83 @@ Deno.serve(async (req) => {
     // ==============================================================
     // EXPEDICAO - ACOES ATOMICAS
     // ==============================================================
+    // Consulta uma peça diretamente no terminal de Checkout de Ordem do Auge
+    // (https://unilux.auge.app/record-manufactured-documents/{codigoBarras}).
+    // Este é o único endpoint que o Auge expõe para peças apontadas como PRONTO:
+    // não existe listagem em massa, a consulta é sempre por código de barras.
+    const consultarPecaNoAuge = async (codigoBarras: string): Promise<{ ok: boolean; status: number; data: any }> => {
+      const url = `${AUGE_BASE_URL}/record-manufactured-documents/${encodeURIComponent(codigoBarras)}`;
+      const r = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Cookie': jar.header(),
+          'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRF-TOKEN': csrf,
+          'Origin': AUGE_BASE_URL,
+          'Referer': `${AUGE_BASE_URL}/record-manufactured-documents`,
+          'User-Agent': UA,
+          'Accept': 'application/json, text/javascript, */*; q=0.01',
+        },
+        body: new URLSearchParams({ bar_code: codigoBarras }),
+      });
+      jar.ingest(r);
+      const texto = await r.text();
+      let data: any = null;
+      try { data = JSON.parse(texto); } catch { data = { raw: texto.slice(0, 4000) }; }
+      return { ok: r.ok, status: r.status, data };
+    };
+
+    // Normaliza a resposta do Auge para o formato da tabela expedicao_pecas_auge_sync.
+    const mapearPecaAuge = (codigo: string, data: any) => {
+      const doc = data?.document ?? data?.data ?? data ?? {};
+      const item = doc?.item ?? doc?.items?.[0]?.item ?? doc?.items?.[0] ?? {};
+      const cliente = doc?.customer ?? doc?.client ?? doc?.participant ?? {};
+      const pedido = doc?.order ?? doc?.sale_order ?? doc?.document ?? {};
+      const str = (v: unknown) => (v === null || v === undefined || v === '' ? null : String(v));
+      return {
+        auge_peca_id: str(doc?.id ?? doc?.uuid ?? codigo) ?? codigo,
+        auge_evento_id: str(doc?.event_id ?? doc?.checkout_id),
+        codigo_peca: str(doc?.code ?? doc?.bar_code ?? codigo),
+        codigo_etiqueta: codigo,
+        auge_pedido_id: str(pedido?.id),
+        auge_pedido_codigo: str(pedido?.code ?? pedido?.number ?? doc?.order_code ?? doc?.reference) ?? 'SEM_PEDIDO',
+        auge_cliente_id: str(cliente?.id),
+        auge_cliente_codigo: str(cliente?.code),
+        auge_cliente_nome: str(cliente?.name ?? cliente?.trade_name ?? doc?.customer_name),
+        auge_item_id: str(item?.id),
+        auge_item_codigo: str(item?.code),
+        descricao_item: str(item?.description ?? item?.name ?? doc?.description),
+        quantidade: Number(doc?.quantity ?? item?.quantity ?? 1) || 1,
+        status_auge: str(doc?.status?.name ?? doc?.status ?? 'pronto') ?? 'pronto',
+        operador_producao_id: str(doc?.user?.id ?? doc?.operator?.id),
+        operador_producao_nome: str(doc?.user?.name ?? doc?.operator?.name),
+        payload_original: data ?? {},
+      };
+    };
+
+    if (action === 'expedicao_consultar_auge') {
+      let payload: any = {};
+      try { payload = await req.json(); } catch { /* ignore */ }
+      const codigo = String(payload?.codigo ?? '').trim().toUpperCase();
+      if (!codigo) throw new Error('Código de barras é obrigatório.');
+      const resultado = await consultarPecaNoAuge(codigo);
+      return new Response(JSON.stringify({
+        ok: resultado.ok,
+        status: resultado.status,
+        auge: resultado.data,
+        mapeado: mapearPecaAuge(codigo, resultado.data),
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     if (action === 'expedicao_sync_prontos') {
-      // Sincroniza peças PRONTAS do Auge: https://unilux.auge.app/record-manufactured-documents
-      // Implementação da busca de peças PRONTAS no Auge
-      // Por enquanto, retorna OK para permitir o fluxo no front
-      return new Response(JSON.stringify({ 
-        ok: true, 
-        message: 'Sincronização iniciada (Auge: /record-manufactured-documents)' 
+      // O Auge NÃO expõe listagem em massa de peças prontas: o terminal
+      // /record-manufactured-documents opera por bipagem individual.
+      // A sincronização acontece sob demanda (expedicao_validar_peca / expedicao_consultar_auge).
+      return new Response(JSON.stringify({
+        ok: true,
+        modo: 'sob_demanda',
+        message: 'O Auge não expõe listagem de peças prontas. A consulta ocorre ao bipar a etiqueta.',
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -6118,17 +6188,35 @@ Deno.serve(async (req) => {
       if (!codigo) throw new Error('Código da etiqueta é obrigatório.');
 
       // 1. Buscar peça na tabela de sincronização oficial (Auge Sync)
-      const { data: peca, error: pecaErr } = await admin
+      let { data: peca, error: pecaErr } = await admin
         .from('expedicao_pecas_auge_sync')
         .select('*')
         .eq('codigo_etiqueta', codigo)
         .maybeSingle();
 
       if (pecaErr) throw pecaErr;
-      if (!peca) throw new Error(`Etiqueta ${codigo} não encontrada no banco de peças PRONTAS do Auge.`);
 
-      // 2. Validações básicas
-      if (peca.status_auge.toLowerCase() === 'cancelado' || peca.status_auge.toLowerCase() === 'cancelada') {
+      // 2. Fallback: consultar o Auge em tempo real e materializar a peça localmente
+      if (!peca) {
+        const consulta = await consultarPecaNoAuge(codigo);
+        if (!consulta.ok || consulta.data?.error || consulta.data?.message) {
+          throw new Error(
+            `Etiqueta ${codigo} não encontrada no Auge: ${consulta.data?.message ?? consulta.data?.error ?? `HTTP ${consulta.status}`}`,
+          );
+        }
+        const registro = { ...mapearPecaAuge(codigo, consulta.data), status_local: 'pendente' };
+        const { data: inserida, error: insErr } = await admin
+          .from('expedicao_pecas_auge_sync')
+          .upsert(registro, { onConflict: 'codigo_etiqueta' })
+          .select('*')
+          .single();
+        if (insErr) throw insErr;
+        peca = inserida;
+      }
+
+      // 3. Validações básicas
+      const statusAuge = String(peca.status_auge ?? '').toLowerCase();
+      if (statusAuge.startsWith('cancel')) {
         throw new Error(`A etiqueta ${codigo} está CANCELADA no Auge.`);
       }
 
