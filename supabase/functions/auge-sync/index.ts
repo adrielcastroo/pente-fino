@@ -6111,6 +6111,36 @@ Deno.serve(async (req) => {
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
+    if (action === 'expedicao_receber') {
+      let payload: any = {};
+      try { payload = await req.json(); } catch { /* ignore */ }
+      const { pecas, estrutura_id } = payload;
+      
+      if (!pecas || !Array.isArray(pecas) || !estrutura_id) {
+        throw new Error('pecas (array) e estrutura_id são obrigatórios.');
+      }
+
+      // 1. Atualizar peças no Supabase
+      const { error: updErr } = await admin
+        .from('expedicao_pecas')
+        .update({ 
+          status: 'no_pulmao',
+          estrutura_temporaria_id: estrutura_id,
+          conferido_at: new Date().toISOString()
+        })
+        .in('id', pecas);
+
+      if (updErr) throw updErr;
+
+      // 2. Registrar eventos de auditoria (opcional)
+      // TODO: Implementar registro em expedicao_eventos se necessário
+
+      return new Response(JSON.stringify({ 
+        ok: true, 
+        count: pecas.length
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     if (action === 'expedicao_alocar') {
       let payload: any = {};
       try { payload = await req.json(); } catch { /* ignore */ }
