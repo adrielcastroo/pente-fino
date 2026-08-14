@@ -4340,6 +4340,7 @@ Deno.serve(async (req) => {
         html_len: html.length,
         title: html.match(/<title>([\s\S]*?)<\/title>/i)?.[1]?.trim() ?? null,
         urls, routes, columns, inputs, scripts, snippets,
+        raw: requestPayload.raw === true ? html.slice(0, 12000) : undefined,
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
