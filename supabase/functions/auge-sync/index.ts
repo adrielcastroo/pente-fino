@@ -6108,18 +6108,15 @@ Deno.serve(async (req) => {
     const consultarPecaNoAuge = async (codigoBarras: string): Promise<{ ok: boolean; status: number; data: any }> => {
       const url = `${AUGE_BASE_URL}/record-manufactured-documents/${encodeURIComponent(codigoBarras)}`;
       const r = await fetch(url, {
-        method: 'POST',
+        method: 'GET',
         headers: {
           'Cookie': jar.header(),
-          'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
           'X-Requested-With': 'XMLHttpRequest',
           'X-CSRF-TOKEN': csrf,
-          'Origin': AUGE_BASE_URL,
           'Referer': `${AUGE_BASE_URL}/record-manufactured-documents`,
           'User-Agent': UA,
           'Accept': 'application/json, text/javascript, */*; q=0.01',
         },
-        body: new URLSearchParams({ bar_code: codigoBarras }),
       });
       jar.ingest(r);
       const texto = await r.text();
