@@ -4286,6 +4286,13 @@ Deno.serve(async (req) => {
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
+    if (action === 'sync_clientes') {
+      const result = await syncEntity(admin, auth, 'clientes', triggeredBy);
+      return new Response(JSON.stringify({ ok: true, ...result }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     if (
       action === 'transferencia_criar' ||
       action === 'transferencia_efetivar' ||
