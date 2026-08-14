@@ -38,7 +38,6 @@ export function useProcessarRecebimento() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['expedicao_pecas_pulmao'] });
-      bipToast.sucesso('Recebimento confirmado no Auge e Pente Fino.');
     },
     onError: (err: any) => {
       bipToast.erro(err.message || 'Erro ao processar recebimento');
