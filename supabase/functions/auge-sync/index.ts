@@ -4286,6 +4286,68 @@ Deno.serve(async (req) => {
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
+    // Sonda de descoberta: inspeciona a página de peças prontas do Auge
+    // (https://unilux.auge.app/record-manufactured-documents) para mapear o
+    // endpoint AJAX/DataTables que alimenta a fila de expedição.
+    if (action === 'expedicao_probe_prontos') {
+      const probePath = cleanText(requestPayload.path) ?? '/record-manufactured-documents';
+      // Modo POST: testa endpoints ajax legados (DataTables) do Auge.
+      if (requestPayload.post === true) {
+        const params = new URLSearchParams();
+        const fields = (requestPayload.fields ?? {}) as Record<string, string>;
+        for (const [k, v] of Object.entries(fields)) params.set(k, String(v));
+        const r = await fetch(`${AUGE_BASE_URL}${probePath}`, {
+          method: 'POST',
+          headers: {
+            'Cookie': jar.header(),
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': csrf,
+            'Origin': AUGE_BASE_URL,
+            'Referer': `${AUGE_BASE_URL}/l.unilux/modProducao/logPronto.php`,
+            'User-Agent': UA,
+            'Accept': 'application/json, text/javascript, */*; q=0.01',
+          },
+          body: params,
+        });
+        jar.ingest(r);
+        const t = await r.text();
+        const tabela = t.match(/<table[^>]*id="tabelaResultado"[\s\S]*?<\/table>/i)?.[0] ?? '';
+        return new Response(JSON.stringify({
+          ok: r.ok, status: r.status, len: t.length,
+          tabela_len: tabela.length,
+          tabela: tabela.slice(0, 6000),
+          sample: tabela ? undefined : t.slice(0, 4000),
+        }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      const pageUrl = `${AUGE_BASE_URL}${probePath}`;
+      const res = await fetch(pageUrl, {
+        redirect: 'manual',
+        headers: {
+          'Cookie': jar.header(),
+          'User-Agent': UA,
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Referer': `${AUGE_BASE_URL}/home`,
+        },
+      });
+      jar.ingest(res);
+      const html = await res.text();
+      const urls = [...new Set([...html.matchAll(/["'`]((?:\.\.\/)*(?:\/)?(?:ajax|api|l\.unilux)[^"'`\s]{3,160}\.php[^"'`\s]{0,60})["'`]/g)].map(m => m[1]))];
+      const routes = [...new Set([...html.matchAll(/["'`](https?:\/\/[^"'`\s]*auge\.app[^"'`\s]{0,160})["'`]/g)].map(m => m[1]))];
+      const columns = [...new Set([...html.matchAll(/(?:data|name)\s*:\s*['"]([a-zA-Z0-9_.]+)['"]/g)].map(m => m[1]))];
+      const inputs = [...new Set([...html.matchAll(/<(?:input|select)[^>]+(?:id|name)="([^"]+)"/g)].map(m => m[1]))];
+      const scripts = [...new Set([...html.matchAll(/<script[^>]+src="([^"]+)"/g)].map(m => m[1]))];
+      const snippets = [...html.matchAll(/[^\n]{0,120}(?:ajax|url\s*:|iframe|fetch\()[^\n]{0,160}/gi)]
+        .map(m => m[0].trim()).slice(0, 60);
+      return new Response(JSON.stringify({
+        ok: true, status: res.status, location: res.headers.get('location'),
+        html_len: html.length,
+        title: html.match(/<title>([\s\S]*?)<\/title>/i)?.[1]?.trim() ?? null,
+        urls, routes, columns, inputs, scripts, snippets,
+        raw: requestPayload.raw === true ? html.slice(0, 12000) : undefined,
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     if (action === 'sync_clientes') {
       const result = await syncEntity(admin, auth, 'clientes', triggeredBy);
       return new Response(JSON.stringify({ ok: true, ...result }), {
@@ -5005,48 +5067,7 @@ Deno.serve(async (req) => {
       });
     }
 
-      // A listagem do Auge devolve apenas o CÓDIGO da TAG calculada. Resolvemos
-      // o nome/fórmula pelo espelho local para a tabela "Como ficou no Auge"
-      // não exibir a coluna vazia.
-      try {
-        const codigos = Array.from(new Set(
-          augeRows
-            .map((r: any) => String(r?.cdTagCalculada ?? r?.cdTag ?? '').trim())
-            .filter((v: string) => v.length > 0),
-        ));
-        if (codigos.length) {
-          const { data: espelho } = await admin
-            .from('auge_tags_calculadas')
-            .select('cd_tag, nm_tag, nome, descricao, formula')
-            .in('cd_tag', codigos);
-          const porCd = new Map<string, any>();
-          for (const t of (espelho ?? []) as any[]) porCd.set(String(t.cd_tag), t);
-          augeRows = augeRows.map((r: any) => {
-            const cd = String(r?.cdTagCalculada ?? r?.cdTag ?? '').trim();
-            const hit = cd ? porCd.get(cd) : null;
-            if (!hit) return r;
-            return {
-              ...r,
-              dsTagCalculada: r?.dsTagCalculada || hit.nome || hit.nm_tag || hit.descricao || '',
-              dsFormula: r?.dsFormula || hit.formula || '',
-            };
-          });
-        }
-      } catch { /* enriquecimento é best-effort */ }
 
-
-      const okCount = results.filter((r) => r.ok).length;
-      return new Response(JSON.stringify({
-        ok: okCount > 0,
-        descricao,
-        cdConfiguracao,
-        total: results.length,
-        gravadas: okCount,
-        falhas: results.length - okCount,
-        results,
-        augeRows,
-      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
 
     if (action === 'tag_config_select') {
       let payload: any = {};
@@ -6080,13 +6101,81 @@ Deno.serve(async (req) => {
     // ==============================================================
     // EXPEDICAO - ACOES ATOMICAS
     // ==============================================================
+    // Consulta uma peça diretamente no terminal de Checkout de Ordem do Auge
+    // (https://unilux.auge.app/record-manufactured-documents/{codigoBarras}).
+    // Este é o único endpoint que o Auge expõe para peças apontadas como PRONTO:
+    // não existe listagem em massa, a consulta é sempre por código de barras.
+    const consultarPecaNoAuge = async (codigoBarras: string): Promise<{ ok: boolean; status: number; data: any }> => {
+      const url = `${AUGE_BASE_URL}/record-manufactured-documents/${encodeURIComponent(codigoBarras)}`;
+      const r = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Cookie': jar.header(),
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRF-TOKEN': csrf,
+          'Referer': `${AUGE_BASE_URL}/record-manufactured-documents`,
+          'User-Agent': UA,
+          'Accept': 'application/json, text/javascript, */*; q=0.01',
+        },
+      });
+      jar.ingest(r);
+      const texto = await r.text();
+      let data: any = null;
+      try { data = JSON.parse(texto); } catch { data = { raw: texto.slice(0, 4000) }; }
+      return { ok: r.ok, status: r.status, data };
+    };
+
+    // Normaliza a resposta do Auge para o formato da tabela expedicao_pecas_auge_sync.
+    const mapearPecaAuge = (codigo: string, data: any) => {
+      const rawDoc = data?.document ?? data?.data ?? data ?? {};
+      const doc = Array.isArray(rawDoc) ? (rawDoc[0] ?? {}) : rawDoc;
+      const item = doc?.item ?? doc?.items?.[0]?.item ?? doc?.items?.[0] ?? {};
+      const cliente = doc?.customer ?? doc?.client ?? doc?.participant ?? {};
+      const pedido = doc?.order ?? doc?.sale_order ?? doc?.document ?? {};
+      const str = (v: unknown) => (v === null || v === undefined || v === '' ? null : String(v));
+      return {
+        auge_peca_id: str(doc?.id ?? doc?.uuid ?? codigo) ?? codigo,
+        auge_evento_id: str(doc?.event_id ?? doc?.checkout_id),
+        codigo_peca: str(doc?.code ?? doc?.bar_code ?? codigo),
+        codigo_etiqueta: codigo,
+        auge_pedido_id: str(pedido?.id),
+        auge_pedido_codigo: str(pedido?.code ?? pedido?.number ?? doc?.order_code ?? doc?.reference) ?? 'SEM_PEDIDO',
+        auge_cliente_id: str(cliente?.id),
+        auge_cliente_codigo: str(cliente?.code),
+        auge_cliente_nome: str(cliente?.name ?? cliente?.trade_name ?? doc?.customer_name),
+        auge_item_id: str(item?.id),
+        auge_item_codigo: str(item?.code),
+        descricao_item: str(item?.description ?? item?.name ?? doc?.description),
+        quantidade: Number(doc?.quantity ?? item?.quantity ?? 1) || 1,
+        status_auge: str(doc?.status?.name ?? doc?.status ?? 'pronto') ?? 'pronto',
+        operador_producao_id: str(doc?.user?.id ?? doc?.operator?.id),
+        operador_producao_nome: str(doc?.user?.name ?? doc?.operator?.name),
+        payload_original: data ?? {},
+      };
+    };
+
+    if (action === 'expedicao_consultar_auge') {
+      let payload: any = {};
+      try { payload = await req.json(); } catch { /* ignore */ }
+      const codigo = String(payload?.codigo ?? '').trim().toUpperCase();
+      if (!codigo) throw new Error('Código de barras é obrigatório.');
+      const resultado = await consultarPecaNoAuge(codigo);
+      return new Response(JSON.stringify({
+        ok: resultado.ok,
+        status: resultado.status,
+        auge: resultado.data,
+        mapeado: mapearPecaAuge(codigo, resultado.data),
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     if (action === 'expedicao_sync_prontos') {
-      // Sincroniza peças PRONTAS do Auge: https://unilux.auge.app/record-manufactured-documents
-      // Implementação da busca de peças PRONTAS no Auge
-      // Por enquanto, retorna OK para permitir o fluxo no front
-      return new Response(JSON.stringify({ 
-        ok: true, 
-        message: 'Sincronização iniciada (Auge: /record-manufactured-documents)' 
+      // O Auge NÃO expõe listagem em massa de peças prontas: o terminal
+      // /record-manufactured-documents opera por bipagem individual.
+      // A sincronização acontece sob demanda (expedicao_validar_peca / expedicao_consultar_auge).
+      return new Response(JSON.stringify({
+        ok: true,
+        modo: 'sob_demanda',
+        message: 'O Auge não expõe listagem de peças prontas. A consulta ocorre ao bipar a etiqueta.',
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -6097,17 +6186,38 @@ Deno.serve(async (req) => {
       if (!codigo) throw new Error('Código da etiqueta é obrigatório.');
 
       // 1. Buscar peça na tabela de sincronização oficial (Auge Sync)
-      const { data: peca, error: pecaErr } = await admin
+      let { data: peca, error: pecaErr } = await admin
         .from('expedicao_pecas_auge_sync')
         .select('*')
         .eq('codigo_etiqueta', codigo)
         .maybeSingle();
 
       if (pecaErr) throw pecaErr;
-      if (!peca) throw new Error(`Etiqueta ${codigo} não encontrada no banco de peças PRONTAS do Auge.`);
 
-      // 2. Validações básicas
-      if (peca.status_auge.toLowerCase() === 'cancelado' || peca.status_auge.toLowerCase() === 'cancelada') {
+      // 2. Fallback: consultar o Auge em tempo real e materializar a peça localmente
+      if (!peca) {
+        const consulta = await consultarPecaNoAuge(codigo);
+        const info = consulta.data?.information;
+        const docBruto = consulta.data?.document;
+        const semDocumento = !docBruto || (Array.isArray(docBruto) && docBruto.length === 0);
+        if (!consulta.ok || (info && info.type && info.type !== 'success') || semDocumento) {
+          throw new Error(
+            `Etiqueta ${codigo} não reconhecida no Auge: ${info?.message ?? consulta.data?.message ?? consulta.data?.error ?? `HTTP ${consulta.status}`}`,
+          );
+        }
+        const registro = { ...mapearPecaAuge(codigo, consulta.data), status_local: 'pendente' };
+        const { data: inserida, error: insErr } = await admin
+          .from('expedicao_pecas_auge_sync')
+          .upsert(registro, { onConflict: 'codigo_etiqueta' })
+          .select('*')
+          .single();
+        if (insErr) throw insErr;
+        peca = inserida;
+      }
+
+      // 3. Validações básicas
+      const statusAuge = String(peca.status_auge ?? '').toLowerCase();
+      if (statusAuge.startsWith('cancel')) {
         throw new Error(`A etiqueta ${codigo} está CANCELADA no Auge.`);
       }
 
@@ -6222,51 +6332,7 @@ Deno.serve(async (req) => {
         romaneio_id: romaneio.id
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
-            transportadora_id,
-            ciclo_id,
-            status: 'aberto',
-            operador_abertura_id: triggeredBy
-          })
-          .select()
-          .single();
-        if (errR) throw errR;
-        romaneio = novo;
-      }
 
-      // 3. Criar Alocação
-      const { data: alocacao, error: errA } = await admin
-        .from('expedicao_alocacoes')
-        .insert({
-          peca_id,
-          carrinho_id,
-          transportadora_id,
-          romaneio_id: romaneio.id,
-          operador_id: triggeredBy
-        })
-        .select()
-        .single();
-      if (errA) throw errA;
-
-      // 4. Inserir Item no Romaneio
-      await admin.from('expedicao_romaneio_itens').insert({
-        romaneio_id: romaneio.id,
-        peca_id,
-        alocacao_id: alocacao.id,
-        status: 'normal',
-        operador_inclusao_id: triggeredBy
-      });
-
-      // 5. Atualizar Status da Peça
-      await admin.from('expedicao_pecas')
-        .update({ status: 'alocada' })
-        .eq('id', peca_id);
-
-      return new Response(JSON.stringify({ 
-        ok: true, 
-        alocacao_id: alocacao.id,
-        romaneio_id: romaneio.id
-      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
 
     // ==============================================================
     // necessidade_cron_run
