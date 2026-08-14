@@ -2846,6 +2846,14 @@ async function syncEntity(
       if (error) throw error;
       upserted = count ?? rows.length;
       await admin.from('auge_sync_runs').update({ detalhes: { path } }).eq('id', runId);
+    } else if (entity === 'clientes') {
+      const items = await fetchClientesPHP(auth);
+      processed = items.length;
+      const rows = items.map(mapCliente).filter(r => r.codigo);
+      const { error, count } = await admin.from('auge_clientes')
+        .upsert(rows, { onConflict: 'codigo', count: 'exact' });
+      if (error) throw error;
+      upserted = count ?? rows.length;
     } else if (entity === 'transferencias') {
       const days = daysSince(lastMax, 7, 120);
       const { data: items, path } = await fetchTransferenciasPHP(auth, days, options.dateFrom, options.dateTo);
