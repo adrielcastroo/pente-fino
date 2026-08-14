@@ -4681,21 +4681,21 @@ Deno.serve(async (req) => {
     if (action === 'criar_tag_custom') {
       let payload: any = {};
       try { payload = await req.json(); } catch { /* ignore */ }
-      const cdConfiguracao = String(payload?.cdConfiguracao ?? '').trim();
+      const cdConfiguracoes = Array.isArray(payload?.cdConfiguracoes) ? payload.cdConfiguracoes : [];
+      const cdConfiguracaoPrincipal = String(payload?.cdConfiguracao ?? '').trim();
       const descricao = String(payload?.descricao ?? '').trim();
       const itens: any[] = Array.isArray(payload?.itens) ? payload.itens : [];
+      
       if (!descricao) throw new Error('Descrição da TAG Custom é obrigatória.');
       if (!itens.length) throw new Error('Inclua ao menos 1 TAG customizada.');
 
+      // O conjunto de configurações alvo deve ser as enviadas ou a principal
+      const alvos = cdConfiguracoes.length > 0 ? cdConfiguracoes : [cdConfiguracaoPrincipal];
+      const alvosValidos = alvos.map(c => String(c).trim()).filter(Boolean);
+      
+      if (alvosValidos.length === 0) throw new Error('Nenhuma configuração alvo informada.');
+
       // Resolve o CÓDIGO da TAG Calculada a partir do nome/descrição informado.
-      // O Auge grava por `cdTagCalculada` (id numérico), não pelo texto.
-      //
-      // ATENÇÃO: o espelho local guarda MAIS DE UM `cd_tag` para o mesmo nome
-      // (varreduras antigas gravaram códigos que não existem mais em
-      // PC_TAG_CALCULADA e ficaram sem fórmula). Enviar um desses códigos faz o
-      // Auge devolver "SQLSTATE[23000] ... FOREIGN KEY PC_TAG_CUSTOMIZADA_PC_TAG_CALCULADA_FK".
-      // Por isso guardamos TODOS os candidatos por nome, priorizando os que têm
-      // fórmula (registros confirmados), e tentamos um a um na gravação.
       const nomesCalculadas = Array.from(
         new Set(
           itens
@@ -4764,125 +4764,159 @@ Deno.serve(async (req) => {
 
 
 
-      const results: Array<{
-        tag: string;
-        calculada: string;
-        formula?: string;
-        cdTagCustomizada?: string;
+      const globalResults: Array<{
+        configuracao: string;
         ok: boolean;
-        erro?: string;
-        auge?: any;
+        total: number;
+        gravadas: number;
+        detalhes: any[];
       }> = [];
-      for (const it of itens) {
-        // Mapa de campos: Configuração -> cdConfiguracao | TAG -> dsTagCustomizada | TAG Calculada -> cdTagCalculada
-        const dsTagCustomizada = String(it?.dsTagCustomizada ?? '').trim();
-        const dsTagCalculada = String(it?.dsTagCalculada ?? '').trim();
-        const dsFormula = String(it?.dsFormula ?? '').trim();
-        if (!dsTagCustomizada) {
-          // Nunca descarta a linha em silêncio: sem isso a tabela "Gravada no
-          // Auge" ficava vazia e o usuário não sabia o que aconteceu.
-          results.push({
-            tag: String(it?.dsTagTexto ?? '').trim() || '(sem nome)',
-            calculada: dsTagCalculada,
-            formula: dsFormula,
-            ok: false,
-            erro: 'Linha sem nome da TAG configurada — nada foi enviado ao Auge.',
-          });
-          continue;
+
+      for (const cdConfiguracao of alvosValidos) {
+        const results: Array<{
+          tag: string;
+          calculada: string;
+          formula?: string;
+          cdTagCustomizada?: string;
+          ok: boolean;
+          erro?: string;
+          auge?: any;
+        }> = [];
+
+        // Para cada configuração, precisamos saber quais TAGs ela JÁ possui
+        // para aplicar a lógica de UPSERT (atualizar se existir, criar se não).
+        let tagsExistentes: any[] = [];
+        try {
+          tagsExistentes = await fetchListaTagsCustomizadas(auth, cdConfiguracao);
+        } catch (e) {
+          console.warn(`[cdConfiguracao ${cdConfiguracao}] erro ao listar existentes:`, getErrorMessage(e));
         }
 
-        // Candidatos de código: o enviado pelo cliente + os do espelho para o
-        // mesmo nome. Códigos sem fórmula (registros fantasmas) vão para o fim.
-        const doEspelho = dsTagCalculada
-          ? (mapaCalculadas.get(dsTagCalculada.toLowerCase()) ?? [])
-          : [];
-        const informado = String(it?.cdTagCalculada ?? '').trim();
-        const candidatos: string[] = [];
-        for (const cd of [informado, ...doEspelho]) {
-          if (cd && !candidatos.includes(cd)) candidatos.push(cd);
-        }
-        candidatos.sort((a, b) => {
-          const fa = codigoTemFormula.get(a) === false ? 1 : 0;
-          const fb = codigoTemFormula.get(b) === false ? 1 : 0;
-          return fa - fb;
-        });
-
-        if (dsTagCalculada && !candidatos.length) {
-          results.push({
-            tag: dsTagCustomizada,
-            calculada: dsTagCalculada,
-            formula: dsFormula,
-            ok: false,
-            erro: `TAG Calculada "${dsTagCalculada}" não encontrada no espelho local. Rode "Sincronizar TAGs calculadas" e tente novamente.`,
-          });
-          continue;
+        const mapaExistentes = new Map<string, string>(); // normalizeTagCode -> cdTagCustomizada
+        for (const ext of tagsExistentes) {
+          const valor = String(ext.dsTagCustomizada ?? ext.nmTagCustomizada ?? '').trim().toUpperCase().replace(/&/g, '').replace(/\s+/g, '');
+          if (valor) mapaExistentes.set(valor, String(ext.cdTagCustomizada));
         }
 
-        // Quando o cliente manda o código da linha existente, o Auge sobrescreve
-        // (idAcao=2) em vez de criar uma nova — é o caminho da edição.
-        const cdTagCustomizadaExistente = String(it?.cdTagCustomizada ?? '').trim();
-
-        // Sem TAG calculada => grava como texto livre (mutuamente exclusivos).
-        const tentativas = candidatos.length ? candidatos : [''];
-        let gravou = false;
-        let ultimoErro = '';
-        let ultimoCd = '';
-
-        for (const cdTagCalculada of tentativas) {
-          const dsTextoLivre = cdTagCalculada ? '' : String(it?.dsTagTexto ?? dsTagCustomizada).trim();
-          ultimoCd = cdTagCalculada;
-          try {
-            const auge = await saveTagCustomizada(auth, {
-              cdConfiguracao,
-              cdTagCustomizada: cdTagCustomizadaExistente,
-              dsTagCustomizada,
-              cdTagCalculada,
-              dsTextoLivre,
+        for (const it of itens) {
+          const dsTagCustomizada = String(it?.dsTagCustomizada ?? '').trim();
+          const dsTagCalculada = String(it?.dsTagCalculada ?? '').trim();
+          const dsFormula = String(it?.dsFormula ?? '').trim();
+          
+          if (!dsTagCustomizada) {
+            results.push({
+              tag: String(it?.dsTagTexto ?? '').trim() || '(sem nome)',
+              calculada: dsTagCalculada,
+              formula: dsFormula,
+              ok: false,
+              erro: 'Linha sem nome da TAG configurada — nada foi enviado ao Auge.',
             });
+            continue;
+          }
+
+          const normCode = dsTagCustomizada.toUpperCase().replace(/&/g, '').replace(/\s+/g, '');
+          const cdTagCustomizadaExistente = mapaExistentes.get(normCode) || String(it?.cdTagCustomizada ?? '').trim();
+
+          const doEspelho = dsTagCalculada ? (mapaCalculadas.get(dsTagCalculada.toLowerCase()) ?? []) : [];
+          const informado = String(it?.cdTagCalculada ?? '').trim();
+          const candidatos: string[] = [];
+          for (const cd of [informado, ...doEspelho]) {
+            if (cd && !candidatos.includes(cd)) candidatos.push(cd);
+          }
+          candidatos.sort((a, b) => {
+            const fa = codigoTemFormula.get(a) === false ? 1 : 0;
+            const fb = codigoTemFormula.get(b) === false ? 1 : 0;
+            return fa - fb;
+          });
+
+          if (dsTagCalculada && !candidatos.length) {
             results.push({
               tag: dsTagCustomizada,
               calculada: dsTagCalculada,
               formula: dsFormula,
-              cdTagCustomizada: String(auge?.cdTagCustomizada ?? cdTagCustomizadaExistente ?? ''),
-              ok: true,
-              auge,
+              ok: false,
+              erro: `TAG Calculada "${dsTagCalculada}" não encontrada no espelho local.`,
             });
-            gravou = true;
-            break;
-          } catch (e) {
-            ultimoErro = getErrorMessage(e);
-            // Só faz sentido tentar o próximo código quando o erro é a violação
-            // de chave estrangeira da TAG calculada. Qualquer outro erro é real.
-            const fkTagCalculada = /PC_TAG_CALCULADA|cdSeqTagCalculada|23000/i.test(ultimoErro);
-            if (!fkTagCalculada) break;
-            // Marca o código como inválido para não reutilizá-lo nas próximas linhas.
-            if (cdTagCalculada) codigoTemFormula.set(cdTagCalculada, false);
+            continue;
+          }
+
+          const tentativas = candidatos.length ? candidatos : [''];
+          let gravou = false;
+          let ultimoErro = '';
+          let ultimoCd = '';
+
+          for (const cdTagCalculada of tentativas) {
+            const dsTextoLivre = cdTagCalculada ? '' : String(it?.dsTagTexto ?? dsTagCustomizada).trim();
+            ultimoCd = cdTagCalculada;
+            try {
+              const auge = await saveTagCustomizada(auth, {
+                cdConfiguracao,
+                cdTagCustomizada: cdTagCustomizadaExistente,
+                dsTagCustomizada,
+                cdTagCalculada,
+                dsTextoLivre,
+              });
+              results.push({
+                tag: dsTagCustomizada,
+                calculada: dsTagCalculada,
+                formula: dsFormula,
+                cdTagCustomizada: String(auge?.cdTagCustomizada ?? cdTagCustomizadaExistente ?? ''),
+                ok: true,
+                auge,
+              });
+              gravou = true;
+              break;
+            } catch (e) {
+              ultimoErro = getErrorMessage(e);
+              if (!/PC_TAG_CALCULADA|cdSeqTagCalculada|23000/i.test(ultimoErro)) break;
+              if (cdTagCalculada) codigoTemFormula.set(cdTagCalculada, false);
+            }
+          }
+
+          if (!gravou) {
+            results.push({
+              tag: dsTagCustomizada,
+              calculada: dsTagCalculada,
+              formula: dsFormula,
+              cdTagCustomizada: cdTagCustomizadaExistente,
+              ok: false,
+              erro: ultimoErro,
+            });
           }
         }
-
-        if (!gravou) {
-          const fkTagCalculada = /PC_TAG_CALCULADA|cdSeqTagCalculada|23000/i.test(ultimoErro);
-          results.push({
-            tag: dsTagCustomizada,
-            calculada: dsTagCalculada,
-            formula: dsFormula,
-            cdTagCustomizada: cdTagCustomizadaExistente,
-            ok: false,
-            erro: fkTagCalculada
-              ? `A TAG Calculada "${dsTagCalculada}" não existe mais no Auge (código ${ultimoCd || '—'} inválido). Rode "Sincronizar TAGs calculadas" e selecione a fórmula novamente.`
-              : ultimoErro,
-          });
-        }
+        
+        const gravadas = results.filter(r => r.ok).length;
+        globalResults.push({
+          configuracao: cdConfiguracao,
+          ok: gravadas > 0,
+          total: itens.length,
+          gravadas,
+          detalhes: results
+        });
       }
 
+      const totalGravadas = globalResults.reduce((s, r) => s + r.gravadas, 0);
+      const totalEsperadas = globalResults.reduce((s, r) => s + r.total, 0);
 
-
-
-      // Estado final no Auge (o que o usuário vê na tela manterTagCustomizada).
+      // Tenta retornar o estado da primeira configuração do lote para manter compatibilidade com o preview
       let augeRows: any[] = [];
       try {
-        augeRows = await fetchListaTagsCustomizadas(auth, cdConfiguracao, cdConfiguracao ? '' : descricao);
-      } catch { /* consulta de conferência é best-effort */ }
+        augeRows = await fetchListaTagsCustomizadas(auth, alvosValidos[0]);
+      } catch { /* ignore */ }
+
+      return new Response(JSON.stringify({
+        ok: totalGravadas > 0,
+        total: totalEsperadas,
+        gravadas: totalGravadas,
+        results: globalResults[0]?.detalhes ?? [],
+        augeRows,
+        cdConfiguracao: alvosValidos[0],
+        descricao,
+        lote: globalResults
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
       // A listagem do Auge devolve apenas o CÓDIGO da TAG calculada. Resolvemos
       // o nome/fórmula pelo espelho local para a tabela "Como ficou no Auge"

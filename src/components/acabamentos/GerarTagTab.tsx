@@ -712,6 +712,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   const [regravando, setRegravando] = useState(false);
   const [addManual, setAddManual] = useState(false);
   const [historico, setHistorico] = useState<RegistroGerarTag[]>([]);
+  const [removidasManualmente, setRemovidasManualmente] = useState<Set<string>>(new Set());
   const [cfgSearch, setCfgSearch] = useState<{ termo: string; hasResults: boolean; isSearching: boolean; pesquisou: boolean }>({
     termo: '',
     hasResults: false,
@@ -737,6 +738,15 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     [customAberta, cfgSearch.termo],
   );
   const termoDeferido = useDeferredValue(termoBusca);
+
+  // Limpa remoções manuais ao mudar drasticamente o termo de busca (novo escopo)
+  const termoAnteriorRef = useRef(termoBusca);
+  useEffect(() => {
+    if (termoAnteriorRef.current !== termoBusca) {
+      setRemovidasManualmente(new Set());
+      termoAnteriorRef.current = termoBusca;
+    }
+  }, [termoBusca]);
 
   // ---------- Configurações (catálogo leve) ----------
   const { data: configuracoes = [], isLoading: loadingCfgs } = useQuery({
@@ -1100,42 +1110,98 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     return arr;
   }, [tagsUnificadas, configsRanqueadas]);
 
-  /** TAGs necessárias: melhor item de cada categoria. */
+  /** TAGs necessárias: agrupadas globalmente e recomendando a mais frequente. */
   const recomendadas = useMemo(() => {
-    const out: Array<{ id: string; code: string; valor: string; cfgNome: string; calculada: string }> = [];
+    const out: Array<{ id: string; code: string; valor: string; cfgNome: string; calculada: string; formula: string }> = [];
+    
+    // Usamos categorias que já consolidam TAGs de todas as configurações ranqueadas e encontradas.
     for (const cat of categorias) {
-      const best = cat.items[0];
-      if (!best) continue;
-      const valorBruto = best.tag.ds_tag_customizada ?? best.tag.nm_tag_customizada ?? best.tag.ds_tag_texto ?? '';
-      const valor = normalizeTagFormatC(valorBruto);
-      if (!valor || valor === '—') continue;
+      if (removidasManualmente.has(cat.code)) continue;
+
+      // Para cada categoria (ex: &COR), identificamos a TAG calculada mais frequente
+      const contagemCalculadas = new Map<string, { n: number; valor: string; cfgNome: string }>();
+      
+      for (const item of cat.items) {
+        const calc = normalizeTagFormatC(item.tag.ds_tag_calculada ?? '');
+        if (!calc) continue;
+        const cur = contagemCalculadas.get(calc) ?? { n: 0, valor: normalizeTagFormatC(item.tag.ds_tag_customizada ?? item.tag.nm_tag_customizada ?? ''), cfgNome: item.cfgNome };
+        cur.n += 1;
+        contagemCalculadas.set(calc, cur);
+      }
+
+      // Se não houver TAGs calculadas para essa TAG configurada, pegamos o melhor item
+      if (contagemCalculadas.size === 0) {
+        const best = cat.items[0];
+        if (!best) continue;
+        const valorBruto = best.tag.ds_tag_customizada ?? best.tag.nm_tag_customizada ?? best.tag.ds_tag_texto ?? '';
+        const valor = normalizeTagFormatC(valorBruto);
+        if (!valor || valor === '—') continue;
+        out.push({
+          id: `${cat.code}|${valor}`,
+          code: cat.code,
+          valor,
+          cfgNome: best.cfgNome,
+          calculada: '',
+          formula: '',
+        });
+        continue;
+      }
+
+      // Recomenda a TAG calculada que aparece com maior frequência
+      const [calculadaMaisFrequente, info] = Array.from(contagemCalculadas.entries()).sort((a, b) => b[1].n - a[1].n)[0];
+
       out.push({
-        id: `${cat.code}|${valor}`,
+        id: `${cat.code}|${info.valor}`,
         code: cat.code,
-        valor,
-        cfgNome: best.cfgNome,
-        calculada: normalizeTagFormatC(best.tag.ds_tag_calculada ?? ''),
+        valor: info.valor,
+        cfgNome: info.cfgNome,
+        calculada: calculadaMaisFrequente,
+        formula: '',
       });
     }
     return out;
-  }, [categorias]);
+  }, [categorias, removidasManualmente]);
 
   // Sincroniza automaticamente a tabela com as recomendações do sistema
   useEffect(() => {
     if (recomendadas.length > 0) {
-      setLinhas(recomendadas.map(r => ({
-        id: r.id,
-        code: r.code,
-        valor: r.valor,
-        cfgNome: r.cfgNome,
-        calculada: r.calculada,
-        formula: '',
-      })));
+      setLinhas((prev) => {
+        const next = [...prev];
+        
+        // 1. Adiciona recomendações que ainda não estão na tabela e não foram removidas
+        for (const rec of recomendadas) {
+          const jaExiste = next.some(l => l.code === rec.code);
+          if (!jaExiste) {
+            next.push({
+              id: rec.id,
+              code: rec.code,
+              valor: rec.valor,
+              cfgNome: rec.cfgNome,
+              calculada: rec.calculada,
+              formula: '',
+            });
+          }
+        }
+
+        // 2. Remove linhas que foram removidas manualmente ou não fazem mais parte do escopo
+        return next.filter(l => {
+          // Se foi removida manualmente, deve sumir
+          if (removidasManualmente.has(l.code)) return false;
+          
+          // Se a TAG não está nas recomendações atuais...
+          const estaNasRecs = recomendadas.some(r => r.code === l.code);
+          if (!estaNasRecs) {
+            // ...só mantemos se foi adicionada manualmente pelo usuário
+            return l.id.startsWith('manual|');
+          }
+          
+          return true;
+        });
+      });
     } else if (termoBusca.trim().length < 2) {
-      // Limpa se o termo for removido
       setLinhas([]);
     }
-  }, [recomendadas, termoBusca]);
+  }, [recomendadas, termoBusca, removidasManualmente]);
 
   // ---------- Padrão obrigatório de TAGs ----------
   /**
@@ -1237,8 +1303,8 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
   const codigosNaTabela = useMemo(() => new Set(linhas.map((l) => l.code)), [linhas]);
   const obrigatoriasFaltando = useMemo(
-    () => obrigatorias.filter((o) => !codigosNaTabela.has(o.code)),
-    [obrigatorias, codigosNaTabela],
+    () => obrigatorias.filter((o) => !codigosNaTabela.has(o.code) && !removidasManualmente.has(o.code)),
+    [obrigatorias, codigosNaTabela, removidasManualmente],
   );
 
   /**
@@ -1301,6 +1367,11 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       calculada: normalizeTagFormatC(opt.calculada ?? ''),
       formula: '',
     }]);
+    setRemovidasManualmente((prev) => {
+      const next = new Set(prev);
+      next.delete(code);
+      return next;
+    });
     toast.success(`TAG ${code} adicionada à composição.`);
   };
 
@@ -1411,7 +1482,16 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
   const adicionarTagCustom = async () => {
     setTentouEnviar(true);
-    if (!descricaoFinal) {
+    
+    const configuracoesAlvo = Array.from(
+      new Set(
+        [...resumoConfigs, ...configsMassa]
+          .map((cfg) => String(cfg.cd_configuracao ?? '').trim())
+          .filter(Boolean)
+      )
+    );
+
+    if (configuracoesAlvo.length === 0 && !descricaoFinal) {
       toast.error('Selecione ou pesquise a Configuração antes de gravar.');
       return;
     }
@@ -1431,8 +1511,8 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       const { data, error } = await supabase.functions.invoke('auge-sync?action=criar_tag_custom', {
         body: {
           // Lista de configurações detectadas no Resumo
-          cdConfiguracoes: configsRanqueadas.map(r => r.cfg.cd_configuracao),
-          cdConfiguracao: customAberta?.cd ?? '',
+          cdConfiguracoes: configuracoesAlvo,
+          cdConfiguracao: customAberta?.cd ?? configuracoesAlvo[0] ?? '',
           descricao: descricaoFinal,
           itens: linhas.map((l) => {
             const calculada = (l.calculada ?? '').trim();
@@ -1659,7 +1739,10 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                           size="icon"
                           variant="ghost"
                           className="h-7 w-7"
-                          onClick={() => setLinhas((prev) => prev.filter((x) => x.id !== l.id))}
+                          onClick={() => {
+                            setLinhas((prev) => prev.filter((x) => x.id !== l.id));
+                            setRemovidasManualmente((prev) => new Set(prev).add(l.code));
+                          }}
                           aria-label="Remover TAG"
                         >
                           <X className="h-3.5 w-3.5" />
