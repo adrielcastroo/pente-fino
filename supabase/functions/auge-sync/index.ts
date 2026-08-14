@@ -89,8 +89,8 @@ async function loadAugeCredentials(admin: ReturnType<typeof createClient>, userI
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
 const TRANSFERENCIA_BACKFILL_BATCH = 8;
 
-type Entity = 'saldo' | 'produtos' | 'depositos' | 'movimentacoes' | 'entradas' | 'lotes' | 'transferencias' | 'clientes' | 'expedicao_validar_peca' | 'expedicao_alocar';
-const ALL_ENTITIES: Entity[] = ['produtos', 'saldo', 'movimentacoes', 'entradas', 'depositos', 'lotes', 'transferencias', 'clientes'];
+type Entity = 'saldo' | 'produtos' | 'depositos' | 'movimentacoes' | 'entradas' | 'lotes' | 'transferencias' | 'clientes' | 'expedicao_sync_prontos' | 'expedicao_validar_peca' | 'expedicao_alocar';
+const ALL_ENTITIES: Entity[] = ['produtos', 'saldo', 'movimentacoes', 'entradas', 'depositos', 'lotes', 'transferencias', 'clientes', 'expedicao_sync_prontos'];
 const UNMAPPED: Entity[] = []; // todos tentam endpoints; erros são registrados no run
 
 // ---------- Cookie jar ----------
