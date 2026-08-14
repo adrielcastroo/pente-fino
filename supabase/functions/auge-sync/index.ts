@@ -1656,6 +1656,31 @@ function mapProduto(r: any) {
   };
 }
 
+async function fetchClientesPHP(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+): Promise<any[]> {
+  const body = new URLSearchParams({
+    draw: '1',
+    start: '0',
+    length: '5000',
+    'search[value]': '',
+    'search[regex]': 'false',
+    idTipoParticipante: '1', // 1=Cliente no Auge
+    idAtivo: 'Y',
+  });
+  const candidates = [
+    { method: 'POST' as const, path: '/l.unilux/modComercial/ajax/getParticipantes.php', body, referer: '/l.unilux/modComercial/gerirParticipante.php' },
+    { method: 'POST' as const, path: '/l.unilux/modCadastro/ajax/getParticipantes.php', body, referer: '/l.unilux/modCadastro/gerirParticipante.php' },
+  ];
+  try {
+    const { data } = await tryPHP(auth, candidates);
+    return data;
+  } catch (e) {
+    console.error('fetchClientesPHP failed', e);
+    return [];
+  }
+}
+
 // Endpoint real de itens/cadastro (Auge legado / módulo PHP)
 // GET /l.unilux/modInventario/Ajax/getItensEstoque.php
 // Query: idEstoca, idVende, idCompra, idLiquidavel, idEmEstoque, idAtivo,
