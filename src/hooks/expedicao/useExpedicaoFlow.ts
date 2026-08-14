@@ -24,8 +24,8 @@ export function useValidarPeca() {
         return null;
       }
 
-      if (peca.status.toLowerCase() === 'cancelado' || peca.status.toLowerCase() === 'cancelada') {
-        toast.error('Esta peça está CANCELADA e não pode ser processada.');
+      if (peca.status_auge.toLowerCase() === 'cancelado' || peca.status_auge.toLowerCase() === 'cancelada') {
+        toast.error('Esta peça está CANCELADA no Auge e não pode ser processada.');
         return null;
       }
 
