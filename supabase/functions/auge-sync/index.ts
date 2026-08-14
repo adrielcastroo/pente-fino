@@ -4293,6 +4293,29 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (action === 'validar_peca_pedido') {
+      let payload: any = {};
+      try { payload = await req.json(); } catch { /* ignore */ }
+      const etq = String(payload?.etiqueta ?? '').trim();
+      if (!etq) throw new Error('Etiqueta é obrigatória.');
+
+      // 1. Busca detalhes da peça no Auge (Lote/Série)
+      // Simulado: No projeto real, integraríamos com a busca de item/lote do Auge
+      // para garantir que o que foi bipado corresponde a um pedido aberto.
+      
+      // 2. Retorna metadados para o frontend
+      return new Response(JSON.stringify({
+        ok: true,
+        valido: true,
+        detalhes: {
+          codigo_etiqueta: etq,
+          pedido_id: "PENDENTE_LOGICA_AUGE",
+          cliente: "CLIENTE_AUGE"
+        }
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+
     if (
       action === 'transferencia_criar' ||
       action === 'transferencia_efetivar' ||

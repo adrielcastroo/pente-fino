@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { CheckCircle2, Loader2, ScanLine, ShoppingCart, Trash2, X } from 'lucide-react';
+import { CheckCircle2, Loader2, ScanLine, ShoppingCart, Trash2, X, Search, Truck } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,9 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
-import { useAlocarPecaNoCarrinho } from '@/hooks/expedicao/useExpedicaoData';
+import { useAlocarPecaNoCarrinho, type Picking } from '@/hooks/expedicao/useExpedicaoData';
 import { toast } from 'sonner';
 import { bipToast } from '@/lib/toast-flows';
+import PickingSelectorDialog from '@/components/expedicao/PickingSelectorDialog';
+
 
 type CarrinhoOpt = { id: string; codigo: string; status: string };
 type Alocacao = { etiqueta: string; carrinho: string; ts: number };
@@ -22,6 +24,9 @@ export default function ConferenciaPage() {
   const [step, setStep] = useState<'bipar' | 'carrinho'>('bipar');
   const [alocando, setAlocando] = useState(false);
   const [recentes, setRecentes] = useState<Alocacao[]>([]);
+  const [selectedPicking, setSelectedPicking] = useState<Picking | null>(null);
+  const [pickingSelectorOpen, setPickingSelectorOpen] = useState(false);
+
 
   const pecaRef = useRef<HTMLInputElement>(null);
   const carrinhoRef = useRef<HTMLInputElement>(null);
@@ -71,8 +76,10 @@ export default function ConferenciaPage() {
     setPendingList([]);
     setStep('bipar');
     setCarrinhoCodigo('');
+    setSelectedPicking(null);
     setTimeout(() => pecaRef.current?.focus(), 0);
   };
+
 
   // 2. Alocar todas as peças pendentes em um carrinho
   const alocarLote = async (codCar: string) => {
@@ -123,11 +130,35 @@ export default function ConferenciaPage() {
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <ScanLine className="size-4" />
-            {step === 'bipar' ? `Passo 1 — Bipar peças (${pendingList.length})` : 'Passo 2 — Escolher carrinho'}
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <ScanLine className="size-4" />
+              {step === 'bipar' ? `Passo 1 — Bipar peças (${pendingList.length})` : 'Passo 2 — Escolher carrinho'}
+            </CardTitle>
+            
+            {step === 'bipar' && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="gap-2"
+                onClick={() => setPickingSelectorOpen(true)}
+              >
+                {selectedPicking ? (
+                  <>
+                    <Truck className="size-4 text-primary" />
+                    {selectedPicking.numero}
+                  </>
+                ) : (
+                  <>
+                    <Search className="size-4" />
+                    Vincular Picking
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
         </CardHeader>
+
         <CardContent className="space-y-3">
           {step === 'bipar' ? (
             <>
@@ -266,6 +297,13 @@ export default function ConferenciaPage() {
           )}
         </CardContent>
       </Card>
+
+      <PickingSelectorDialog 
+        open={pickingSelectorOpen}
+        onOpenChange={setPickingSelectorOpen}
+        onSelect={setSelectedPicking}
+      />
     </div>
   );
 }
+
