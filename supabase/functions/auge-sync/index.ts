@@ -6127,7 +6127,8 @@ Deno.serve(async (req) => {
 
     // Normaliza a resposta do Auge para o formato da tabela expedicao_pecas_auge_sync.
     const mapearPecaAuge = (codigo: string, data: any) => {
-      const doc = data?.document ?? data?.data ?? data ?? {};
+      const rawDoc = data?.document ?? data?.data ?? data ?? {};
+      const doc = Array.isArray(rawDoc) ? (rawDoc[0] ?? {}) : rawDoc;
       const item = doc?.item ?? doc?.items?.[0]?.item ?? doc?.items?.[0] ?? {};
       const cliente = doc?.customer ?? doc?.client ?? doc?.participant ?? {};
       const pedido = doc?.order ?? doc?.sale_order ?? doc?.document ?? {};
@@ -6196,9 +6197,12 @@ Deno.serve(async (req) => {
       // 2. Fallback: consultar o Auge em tempo real e materializar a peça localmente
       if (!peca) {
         const consulta = await consultarPecaNoAuge(codigo);
-        if (!consulta.ok || consulta.data?.error || consulta.data?.message) {
+        const info = consulta.data?.information;
+        const docBruto = consulta.data?.document;
+        const semDocumento = !docBruto || (Array.isArray(docBruto) && docBruto.length === 0);
+        if (!consulta.ok || (info && info.type && info.type !== 'success') || semDocumento) {
           throw new Error(
-            `Etiqueta ${codigo} não encontrada no Auge: ${consulta.data?.message ?? consulta.data?.error ?? `HTTP ${consulta.status}`}`,
+            `Etiqueta ${codigo} não reconhecida no Auge: ${info?.message ?? consulta.data?.message ?? consulta.data?.error ?? `HTTP ${consulta.status}`}`,
           );
         }
         const registro = { ...mapearPecaAuge(codigo, consulta.data), status_local: 'pendente' };
