@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   Dialog, 
   DialogContent, 
@@ -10,7 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Truck, Search, Loader2, CheckCircle2 } from 'lucide-react';
+import { Truck, Search, Loader2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
@@ -36,7 +36,7 @@ export default function CarrierSelectorDialog({
       let query = supabase
         .from('expedicao_transportadoras')
         .select('*')
-        .eq('status', 'ativo')
+        .eq('ativo', true)
         .order('nome', { ascending: true });
       
       if (search) {
@@ -100,7 +100,7 @@ export default function CarrierSelectorDialog({
                   >
                     <div className="flex-1">
                       <div className="font-semibold">{c.nome}</div>
-                      <div className="text-xs text-muted-foreground font-mono">{c.codigo}</div>
+                      <div className="text-xs text-muted-foreground font-mono">ID: {c.id.split('-')[0]}</div>
                     </div>
                     {defaultTransportadora?.id === c.id && (
                       <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
