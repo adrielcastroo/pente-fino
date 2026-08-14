@@ -87,7 +87,8 @@ export default function ConferenciaPage() {
 
       // Comparação rigorosa conforme requisitos (Cliente, Item, etc)
       // Nota: pecaAtual vem da expedicao_pecas_auge_sync com dados do Auge
-      if (pecaAtual.auge_cliente_codigo && picking.cliente_codigo && pecaAtual.auge_cliente_codigo !== picking.cliente_codigo) {
+      // Nota: Picking usa 'cliente' (nome) no schema atual, comparando se auge_cliente_nome contém o nome do picking
+      if (pecaAtual.auge_cliente_nome && picking.cliente && !pecaAtual.auge_cliente_nome.includes(picking.cliente)) {
          bipToast.erro('Picking incompatível: Cliente divergente');
          addBipagemHistorico({ codigo: value, tipo: 'picking', status: 'erro', mensagem: 'Cliente divergente' });
          return;
