@@ -1606,6 +1606,30 @@ function mapSaldo(r: any) {
   };
 }
 
+function mapCliente(r: any) {
+  return {
+    codigo: String(r.cdParticipante ?? r.codigo ?? '').trim(),
+    nome: r.nmParticipante ?? r.nome ?? null,
+    nome_fantasia: r.nmFantasia ?? null,
+    razao_social: r.dsRazaoSocial ?? null,
+    cpf_cnpj: r.nrCpfCnpj ?? null,
+    email: r.dsEmail ?? null,
+    telefone: r.nrTelefone ?? null,
+    celular: r.nrCelular ?? null,
+    endereco: r.dsEndereco ?? null,
+    numero: r.nrEndereco ?? null,
+    complemento: r.dsComplemento ?? null,
+    bairro: r.nmBairro ?? null,
+    cidade: r.nmCidade ?? null,
+    uf: r.idUF ?? null,
+    cep: r.nrCEP ?? null,
+    situacao: r.dsSituacao ?? null,
+    raw: r,
+    synced_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+}
+
 function mapProduto(r: any) {
   // r vem do endpoint getItensEstoque.php:
   // { cdItem, nmItem, nmGrupoItem, idNCM, idItemEstoque(Y/N), idItemVenda, idItemCompra,
