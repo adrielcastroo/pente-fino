@@ -1142,6 +1142,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           valor,
           cfgNome: best.cfgNome,
           calculada: '',
+          formula: '',
         });
         continue;
       }
@@ -1155,6 +1156,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         valor: info.valor,
         cfgNome: info.cfgNome,
         calculada: calculadaMaisFrequente,
+        formula: '',
       });
     }
     return out;
