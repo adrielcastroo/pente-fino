@@ -4286,6 +4286,34 @@ Deno.serve(async (req) => {
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
+    // Sonda de descoberta: inspeciona a página de peças prontas do Auge
+    // (https://unilux.auge.app/record-manufactured-documents) para mapear o
+    // endpoint AJAX/DataTables que alimenta a fila de expedição.
+    if (action === 'expedicao_probe_prontos') {
+      const pageUrl = `${AUGE_BASE_URL}/record-manufactured-documents`;
+      const res = await fetch(pageUrl, {
+        redirect: 'manual',
+        headers: {
+          'Cookie': jar.header(),
+          'User-Agent': UA,
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Referer': `${AUGE_BASE_URL}/home`,
+        },
+      });
+      jar.ingest(res);
+      const html = await res.text();
+      const urls = [...new Set([...html.matchAll(/["'`](\/(?:api|l\.unilux)[^"'`\s]{3,160})["'`]/g)].map(m => m[1]))];
+      const routes = [...new Set([...html.matchAll(/["'`](https?:\/\/[^"'`\s]*auge\.app[^"'`\s]{0,160})["'`]/g)].map(m => m[1]))];
+      const columns = [...new Set([...html.matchAll(/data\s*:\s*['"]([a-zA-Z0-9_.]+)['"]/g)].map(m => m[1]))];
+      const scripts = [...new Set([...html.matchAll(/<script[^>]+src="([^"]+)"/g)].map(m => m[1]))];
+      return new Response(JSON.stringify({
+        ok: true, status: res.status, location: res.headers.get('location'),
+        html_len: html.length,
+        title: html.match(/<title>([\s\S]*?)<\/title>/i)?.[1]?.trim() ?? null,
+        urls, routes, columns, scripts,
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     if (action === 'sync_clientes') {
       const result = await syncEntity(admin, auth, 'clientes', triggeredBy);
       return new Response(JSON.stringify({ ok: true, ...result }), {
