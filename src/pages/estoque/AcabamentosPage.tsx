@@ -46,16 +46,16 @@ export default function AcabamentosPage() {
   const [showPanel, setShowPanel] = useState(false);
   const [sortBy, setSortBy] = useState<'nome' | 'codigo'>('nome');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
-  
-  // Mover o estado do localStorage para uma inicialização simples e usar useEffect para carregar/salvar
-  // Isso evita computação pesada no corpo do componente e garante ordem estável.
   const [tab, setTab] = useState<string>('consulta');
+  const channelRef = useRef<any>(null);
 
+  // 1. Carregamento de aba inicial (uma única vez)
   useEffect(() => {
     const saved = localStorage.getItem('acabamentos:tab');
     if (saved) setTab(saved);
   }, []);
 
+  // 2. Persistência de aba
   useEffect(() => {
     try {
       localStorage.setItem('acabamentos:tab', tab);
@@ -63,9 +63,8 @@ export default function AcabamentosPage() {
       console.warn('Erro ao salvar aba no localStorage', e);
     }
   }, [tab]);
-  const channelRef = useRef<any>(null);
 
-  // Recupera última execução de acabamentos ao montar
+  // 3. Recupera última execução de acabamentos ao montar
   useEffect(() => {
     (async () => {
       const { data } = await (supabase as any)
