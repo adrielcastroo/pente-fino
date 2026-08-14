@@ -70,15 +70,14 @@ export default function RecebimentoPage() {
           addBipagemHistorico({
             codigo,
             tipo: 'peca',
-            status: 'sucesso',
-            ts: new Date().toISOString()
+            status: 'sucesso'
           });
         } catch (err) {
           addBipagemHistorico({
             codigo,
             tipo: 'peca',
             status: 'erro',
-            ts: new Date().toISOString()
+            mensagem: 'Erro no processamento'
           });
         }
       } else {
@@ -86,7 +85,7 @@ export default function RecebimentoPage() {
           codigo,
           tipo: 'peca',
           status: 'erro',
-          ts: new Date().toISOString()
+          mensagem: 'Peça inválida'
         });
       }
       setPeca('');
@@ -164,7 +163,7 @@ export default function RecebimentoPage() {
               </div>
             ) : (
               <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
-                {[...bipagemHistorico].reverse().map((b, idx) => (
+                {[...bipagemHistorico].map((b, idx) => (
                   <div key={`${b.ts}-${idx}`} className="flex items-center justify-between p-3 bg-muted/50 rounded-md border">
                     <span className="font-mono text-sm">{b.codigo}</span>
                     <Badge variant={b.status === 'sucesso' ? 'outline' : 'destructive'} className="gap-1">
