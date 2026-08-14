@@ -4290,7 +4290,8 @@ Deno.serve(async (req) => {
     // (https://unilux.auge.app/record-manufactured-documents) para mapear o
     // endpoint AJAX/DataTables que alimenta a fila de expedição.
     if (action === 'expedicao_probe_prontos') {
-      const pageUrl = `${AUGE_BASE_URL}/record-manufactured-documents`;
+      const probePath = cleanText(requestPayload.path) ?? '/record-manufactured-documents';
+      const pageUrl = `${AUGE_BASE_URL}${probePath}`;
       const res = await fetch(pageUrl, {
         redirect: 'manual',
         headers: {
