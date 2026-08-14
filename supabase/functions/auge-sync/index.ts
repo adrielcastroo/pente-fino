@@ -4291,6 +4291,31 @@ Deno.serve(async (req) => {
     // endpoint AJAX/DataTables que alimenta a fila de expedição.
     if (action === 'expedicao_probe_prontos') {
       const probePath = cleanText(requestPayload.path) ?? '/record-manufactured-documents';
+      // Modo POST: testa endpoints ajax legados (DataTables) do Auge.
+      if (requestPayload.post === true) {
+        const params = new URLSearchParams();
+        const fields = (requestPayload.fields ?? {}) as Record<string, string>;
+        for (const [k, v] of Object.entries(fields)) params.set(k, String(v));
+        const r = await fetch(`${AUGE_BASE_URL}${probePath}`, {
+          method: 'POST',
+          headers: {
+            'Cookie': jar.header(),
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': csrf,
+            'Origin': AUGE_BASE_URL,
+            'Referer': `${AUGE_BASE_URL}/l.unilux/modProducao/logPronto.php`,
+            'User-Agent': UA,
+            'Accept': 'application/json, text/javascript, */*; q=0.01',
+          },
+          body: params,
+        });
+        jar.ingest(r);
+        const t = await r.text();
+        return new Response(JSON.stringify({
+          ok: r.ok, status: r.status, len: t.length, sample: t.slice(0, 3000),
+        }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
       const pageUrl = `${AUGE_BASE_URL}${probePath}`;
       const res = await fetch(pageUrl, {
         redirect: 'manual',
