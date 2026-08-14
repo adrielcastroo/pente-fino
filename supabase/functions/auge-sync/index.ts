@@ -4312,8 +4312,11 @@ Deno.serve(async (req) => {
         });
         jar.ingest(r);
         const t = await r.text();
+        const tabela = t.match(/<table[^>]*id="tabelaResultado"[\s\S]*?<\/table>/i)?.[0] ?? '';
         return new Response(JSON.stringify({
-          ok: r.ok, status: r.status, len: t.length, sample: t.slice(0, 3000),
+          ok: r.ok, status: r.status, len: t.length,
+          tabela_len: tabela.length,
+          tabela: tabela.slice(0, 6000),
         }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
       const pageUrl = `${AUGE_BASE_URL}${probePath}`;
