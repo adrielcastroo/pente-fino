@@ -13,6 +13,7 @@ const TecidoPage = lazy(() => import("@/pages/TecidoPage"));
 const MadeiraPage = lazy(() => import("@/pages/MadeiraPage"));
 const MotorControlePage = lazy(() => import("@/pages/MotorControlePage"));
 const ComponentesPage = lazy(() => import("@/pages/ComponentesPage"));
+const ClientesPage = lazy(() => import("@/pages/estoque/ClientesPage"));
 const EstoquePage = lazy(() => import("@/pages/EstoquePage"));
 const SaidaPage = lazy(() => import("@/pages/SaidaPage"));
 const ReservasPage = lazy(() => import("@/pages/ReservasPage"));
@@ -176,6 +177,7 @@ const App = () => (
                   <Route path="/estoque/historico" element={<HistoricoPage />} />
                   <Route path="/estoque/configuracoes" element={<SettingsPage />} />
                   <Route path="/estoque/cadastros" element={<CadastrosPage />} />
+                  <Route path="/estoque/clientes" element={<ClientesPage />} />
                   <Route path="/estoque/auditoria" element={<Navigate to="/admin?tab=audit-auge" replace />} />
                   <Route
                     path="/estoque/auditoria-legado"
