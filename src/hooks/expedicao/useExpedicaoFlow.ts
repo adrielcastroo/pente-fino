@@ -28,7 +28,7 @@ export function useValidarPeca() {
         return null;
       }
 
-      if (peca.status.toUpperCase() === 'CANCELADO' || peca.status === 'cancelada') {
+      if (peca.status.toLowerCase() === 'cancelado' || peca.status.toLowerCase() === 'cancelada') {
         toast.error('Esta peça está CANCELADA e não pode ser processada.');
         return null;
       }
