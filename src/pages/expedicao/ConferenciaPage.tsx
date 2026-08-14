@@ -1,309 +1,292 @@
 import { useEffect, useRef, useState } from 'react';
-import { CheckCircle2, Loader2, ScanLine, ShoppingCart, Trash2, X, Search, Truck } from 'lucide-react';
+import { 
+  CheckCircle2, 
+  Loader2, 
+  ScanLine, 
+  ShoppingCart, 
+  Trash2, 
+  X, 
+  Truck,
+  ArrowRight,
+  PackageCheck,
+  UserCheck,
+  Search
+} from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
-import { useAlocarPecaNoCarrinho, type Picking } from '@/hooks/expedicao/useExpedicaoData';
-import { toast } from 'sonner';
+import { useExpedicaoStore } from '@/store/useExpedicaoStore';
+import { useValidarPeca, useAlocarPeca } from '@/hooks/expedicao/useExpedicaoFlow';
+import CarrierSelectorDialog from '@/components/expedicao/CarrierSelectorDialog';
 import { bipToast } from '@/lib/toast-flows';
-import PickingSelectorDialog from '@/components/expedicao/PickingSelectorDialog';
-
-
-type CarrinhoOpt = { id: string; codigo: string; status: string };
-type Alocacao = { etiqueta: string; carrinho: string; ts: number };
 
 export default function ConferenciaPage() {
   const qc = useQueryClient();
-  const [peca, setPeca] = useState('');
-  const [carrinhoCodigo, setCarrinhoCodigo] = useState('');
-  const [pendingList, setPendingList] = useState<string[]>([]);
-  const [step, setStep] = useState<'bipar' | 'carrinho'>('bipar');
-  const [alocando, setAlocando] = useState(false);
-  const [recentes, setRecentes] = useState<Alocacao[]>([]);
-  const [selectedPicking, setSelectedPicking] = useState<Picking | null>(null);
-  const [pickingSelectorOpen, setPickingSelectorOpen] = useState(false);
+  const { 
+    pecaAtual, 
+    setPecaAtual,
+    transportadoraSelecionada,
+    setTransportadoraSelecionada,
+    carrinhoSelecionado,
+    setCarrinhoSelecionado,
+    bipagemHistorico,
+    addBipagemHistorico,
+    limparSessaoAlocacao
+  } = useExpedicaoStore();
 
+  const [inputVal, setInputVal] = useState('');
+  const [carrierModalOpen, setCarrierModalOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const pecaRef = useRef<HTMLInputElement>(null);
-  const carrinhoRef = useRef<HTMLInputElement>(null);
+  const { validar, loading: validando } = useValidarPeca();
+  const { alocar, loading: alocando } = useAlocarPeca();
 
-  const alocar = useAlocarPecaNoCarrinho();
+  useEffect(() => { inputRef.current?.focus(); }, []);
 
-  const { data: carrinhos = [] } = useQuery({
-    queryKey: ['expedicao_carrinhos_disponiveis'],
-    staleTime: 30_000,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('expedicao_carrinhos')
-        .select('id, codigo, status')
-        .in('status', ['livre', 'em_uso'])
-        .order('codigo', { ascending: true });
-      if (error) throw error;
-      return (data ?? []) as CarrinhoOpt[];
-    },
-  });
+  // Determinar o passo atual baseado no estado do store
+  const step = !pecaAtual ? 'peca' : !transportadoraSelecionada ? 'transportadora' : 'carrinho';
 
-  useEffect(() => { pecaRef.current?.focus(); }, []);
-  useEffect(() => {
-    if (step === 'carrinho') carrinhoRef.current?.focus();
-    else pecaRef.current?.focus();
-  }, [step]);
-
-  // 1. Bipar peça — acumula na lista pendente
-  const handlePecaEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleEnter = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key !== 'Enter') return;
-    const codigo = peca.trim().toUpperCase();
-    if (!codigo) return;
+    const value = inputVal.trim().toUpperCase();
+    if (!value) return;
     e.preventDefault();
-    if (pendingList.includes(codigo)) {
-      bipToast.duplicado(codigo);
-      setPeca('');
-      return;
-    }
-    setPendingList((prev) => [codigo, ...prev]);
-    setPeca('');
-  };
+    setInputVal('');
 
-  const removerPendente = (codigo: string) => {
-    setPendingList((prev) => prev.filter((c) => c !== codigo));
-  };
-
-  const limparTudo = () => {
-    setPendingList([]);
-    setStep('bipar');
-    setCarrinhoCodigo('');
-    setSelectedPicking(null);
-    setTimeout(() => pecaRef.current?.focus(), 0);
-  };
-
-
-  // 2. Alocar todas as peças pendentes em um carrinho
-  const alocarLote = async (codCar: string) => {
-    const carrinho = codCar.trim().toUpperCase();
-    if (!carrinho || pendingList.length === 0) return;
-    setAlocando(true);
-    let sucesso = 0;
-    const alocadas: Alocacao[] = [];
-    try {
-      for (const etiqueta of pendingList) {
-        try {
-          await alocar.mutateAsync({ codigoEtiqueta: etiqueta, codigoCarrinho: carrinho });
-          alocadas.push({ etiqueta, carrinho, ts: Date.now() });
-          sucesso++;
-        } catch {
-          // toast já emitido pelo hook
+    if (step === 'peca') {
+      const peca = await validar(value);
+      if (peca) {
+        // Acesso seguro via cast para evitar erro de relação não detectada pelo TS
+        const pecaTyped = peca as any;
+        if (pecaTyped.picking?.transportadora_id) {
+          // Lógica futura: buscar transportadora se houver no picking
         }
       }
-      if (sucesso > 0) {
-        bipToast.lote(sucesso, pendingList.length, carrinho);
-        setRecentes((prev) => [...alocadas, ...prev].slice(0, 30));
-        setPendingList([]);
-        setStep('bipar');
-        setCarrinhoCodigo('');
-        qc.invalidateQueries({ queryKey: ['expedicao_carrinhos_disponiveis'] });
-        setTimeout(() => pecaRef.current?.focus(), 0);
+    } else if (step === 'carrinho') {
+      // Bipar carrinho
+      const { data: carrinho, error } = await supabase
+        .from('expedicao_carrinhos')
+        .select('*')
+        .eq('codigo', value)
+        .maybeSingle();
+
+      if (error || !carrinho) {
+        bipToast.erro('Carrinho não encontrado');
+        return;
       }
-    } finally {
-      setAlocando(false);
+
+      setCarrinhoSelecionado(carrinho);
+      
+      // Executar alocação atômica
+      const res = await alocar({
+        peca_id: pecaAtual.id,
+        carrinho_id: carrinho.id,
+        transportadora_id: transportadoraSelecionada.id
+      });
+
+      if (res?.ok) {
+        addBipagemHistorico({
+          codigo: pecaAtual.codigo_etiqueta,
+          tipo: 'peca',
+          status: 'sucesso'
+        });
+        limparSessaoAlocacao();
+        setTimeout(() => inputRef.current?.focus(), 0);
+      }
     }
   };
 
-  const handleCarrinhoEnter = async (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && carrinhoCodigo.trim()) {
-      e.preventDefault();
-      await alocarLote(carrinhoCodigo);
-    }
+  const cancelarFluxo = () => {
+    limparSessaoAlocacao();
+    setTimeout(() => inputRef.current?.focus(), 0);
   };
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Conferência</h1>
-        <p className="text-sm text-muted-foreground">
-          Bipe todas as peças e, ao final, escolha o carrinho onde elas serão alocadas.
-        </p>
+      <header className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Fluxo de Conferência</h1>
+          <p className="text-sm text-muted-foreground">
+            Validação atômica e alocação direcionada por transportadora.
+          </p>
+        </div>
+        {(pecaAtual || transportadoraSelecionada) && (
+          <Button variant="ghost" size="sm" onClick={cancelarFluxo} className="text-destructive gap-2">
+            <X className="size-4" /> Cancelar Fluxo
+          </Button>
+        )}
       </header>
 
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <ScanLine className="size-4" />
-              {step === 'bipar' ? `Passo 1 — Bipar peças (${pendingList.length})` : 'Passo 2 — Escolher carrinho'}
-            </CardTitle>
-            
-            {step === 'bipar' && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="gap-2"
-                onClick={() => setPickingSelectorOpen(true)}
-              >
-                {selectedPicking ? (
-                  <>
-                    <Truck className="size-4 text-primary" />
-                    {selectedPicking.numero}
-                  </>
-                ) : (
-                  <>
-                    <Search className="size-4" />
-                    Vincular Picking
-                  </>
-                )}
-              </Button>
-            )}
-          </div>
-        </CardHeader>
-
-        <CardContent className="space-y-3">
-          {step === 'bipar' ? (
-            <>
-              <Input
-                ref={pecaRef}
-                value={peca}
-                onChange={(e) => setPeca(e.target.value)}
-                onKeyDown={handlePecaEnter}
-                placeholder="Bipe o QR / código da peça e pressione Enter"
-                autoComplete="off"
-                className="h-12 font-mono uppercase text-base"
-              />
-
-              {pendingList.length > 0 && (
-                <>
-                  <div className="rounded-md border bg-muted/30 max-h-60 overflow-y-auto divide-y">
-                    {pendingList.map((codigo) => (
-                      <div key={codigo} className="flex items-center justify-between px-3 py-1.5 text-sm">
-                        <span className="font-mono">{codigo}</span>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-6 w-6 p-0"
-                          onClick={() => removerPendente(codigo)}
-                        >
-                          <Trash2 className="size-3" />
-                        </Button>
-                      </div>
-                    ))}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <Card className={cn(
+            "border-2 transition-all duration-200",
+            step === 'peca' ? "border-primary shadow-lg" : "border-muted opacity-80"
+          )}>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <ScanLine className="size-5" />
+                Passo 1: Identificar Peça
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {pecaAtual ? (
+                <div className="flex items-center justify-between bg-primary/5 p-4 rounded-lg border border-primary/20">
+                  <div className="flex items-center gap-4">
+                    <div className="bg-primary/20 p-2 rounded-full text-primary">
+                      <PackageCheck className="size-6" />
+                    </div>
+                    <div>
+                      <div className="font-mono text-lg font-bold">{pecaAtual.codigo_etiqueta}</div>
+                      <div className="text-xs text-muted-foreground">{pecaAtual.cliente?.nome_razao || 'Cliente não identificado'}</div>
+                    </div>
                   </div>
-
-                  <div className="flex gap-2">
-                    <Button
-                      className="flex-1 gap-2"
-                      onClick={() => setStep('carrinho')}
-                    >
-                      <ShoppingCart className="size-4" />
-                      Escolher carrinho ({pendingList.length})
-                    </Button>
-                    <Button variant="outline" onClick={limparTudo}>
-                      Limpar
-                    </Button>
-                  </div>
-                </>
-              )}
-            </>
-          ) : (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-xs">
-                <span className="text-muted-foreground">
-                  <span className="font-semibold text-foreground">{pendingList.length}</span> peça(s) para alocar
-                </span>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-6"
-                  onClick={() => setStep('bipar')}
-                  disabled={alocando}
-                >
-                  <X className="size-3" /> Voltar
-                </Button>
-              </div>
-
-              <div className="relative">
-                <ShoppingCart className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  ref={carrinhoRef}
-                  value={carrinhoCodigo}
-                  onChange={(e) => setCarrinhoCodigo(e.target.value)}
-                  onKeyDown={handleCarrinhoEnter}
-                  placeholder="Bipe o código do carrinho"
-                  autoComplete="off"
-                  className="h-12 pl-9 font-mono uppercase text-base"
-                  disabled={alocando}
-                />
-              </div>
-
-              {carrinhos.length > 0 && (
-                <div className="space-y-1.5">
-                  <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                    Ou selecione um carrinho
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {carrinhos.map((c) => (
-                      <Button
-                        key={c.id}
-                        type="button"
-                        size="sm"
-                        variant={c.status === 'livre' ? 'outline' : 'secondary'}
-                        disabled={alocando}
-                        onClick={() => alocarLote(c.codigo)}
-                        className={cn(
-                          'h-9 gap-1.5 font-mono text-xs',
-                          c.status === 'em_uso' && 'border-primary/40',
-                        )}
-                        title={`Status: ${c.status}`}
-                      >
-                        <ShoppingCart className="size-3" />
-                        {c.codigo}
-                      </Button>
-                    ))}
-                  </div>
+                  <Badge variant="outline" className="bg-background">VALIDADA</Badge>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <Input
+                    ref={step === 'peca' ? inputRef : null}
+                    value={step === 'peca' ? inputVal : ''}
+                    onChange={(e) => setInputVal(e.target.value)}
+                    onKeyDown={handleEnter}
+                    placeholder="Bipe a etiqueta da peça..."
+                    className="h-14 text-xl font-mono uppercase"
+                    disabled={validando}
+                  />
+                  {validando && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="size-4 animate-spin" /> Validando peça...
+                    </div>
+                  )}
                 </div>
               )}
+            </CardContent>
+          </Card>
 
-              {alocando && (
-                <p className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Loader2 className="size-3 animate-spin" /> Alocando {pendingList.length} peça(s)…
-                </p>
+          <Card className={cn(
+            "border-2 transition-all duration-200",
+            step === 'transportadora' ? "border-primary shadow-lg" : "border-muted",
+            step === 'peca' && "opacity-40"
+          )}>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Truck className="size-5" />
+                Passo 2: Direcionar Transportadora
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {transportadoraSelecionada ? (
+                <div className="flex items-center justify-between bg-primary/5 p-4 rounded-lg border border-primary/20">
+                  <div className="flex items-center gap-4">
+                    <div className="bg-primary/20 p-2 rounded-full text-primary">
+                      <Truck className="size-6" />
+                    </div>
+                    <div>
+                      <div className="font-bold">{transportadoraSelecionada.nome}</div>
+                      <div className="text-xs text-muted-foreground font-mono">{transportadoraSelecionada.codigo}</div>
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={() => setTransportadoraSelecionada(null)}>Trocar</Button>
+                </div>
+              ) : (
+                <div className="flex gap-4">
+                  <Button 
+                    className="h-14 flex-1 text-lg gap-3" 
+                    variant="outline"
+                    disabled={step === 'peca'}
+                    onClick={() => setCarrierModalOpen(true)}
+                  >
+                    <Search className="size-5" />
+                    Selecionar Transportadora
+                  </Button>
+                </div>
               )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
 
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <CheckCircle2 className="size-4" /> Últimas alocações ({recentes.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {recentes.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhuma peça alocada nesta sessão.</p>
-          ) : (
-            <ul className="divide-y">
-              {recentes.map((r, idx) => (
-                <li key={`${r.ts}-${idx}`} className="flex items-center justify-between py-2 text-sm">
-                  <span className="font-mono">{r.etiqueta}</span>
-                  <Badge variant="outline" className="gap-1 font-mono">
-                    <ShoppingCart className="size-3" /> {r.carrinho}
-                  </Badge>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
+          <Card className={cn(
+            "border-2 transition-all duration-200",
+            step === 'carrinho' ? "border-primary shadow-lg" : "border-muted",
+            (step === 'peca' || step === 'transportadora') && "opacity-40"
+          )}>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <ShoppingCart className="size-5" />
+                Passo 3: Alocar no Carrinho
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {carrinhoSelecionado ? (
+                <div className="flex items-center gap-4 bg-primary/5 p-4 rounded-lg border border-primary/20">
+                   <div className="bg-primary/20 p-2 rounded-full text-primary">
+                      <ShoppingCart className="size-6" />
+                    </div>
+                    <div className="font-mono text-xl font-bold">{carrinhoSelecionado.codigo}</div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                   <Input
+                    ref={step === 'carrinho' ? inputRef : null}
+                    value={step === 'carrinho' ? inputVal : ''}
+                    onChange={(e) => setInputVal(e.target.value)}
+                    onKeyDown={handleEnter}
+                    placeholder="Bipe o código do carrinho..."
+                    className="h-14 text-xl font-mono uppercase"
+                    disabled={step !== 'carrinho' || alocando}
+                  />
+                  {alocando && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="size-4 animate-spin" /> Efetuando alocação...
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
-      <PickingSelectorDialog 
-        open={pickingSelectorOpen}
-        onOpenChange={setPickingSelectorOpen}
-        onSelect={setSelectedPicking}
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <CheckCircle2 className="size-4" /> 
+                Histórico da Sessão
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {bipagemHistorico.length === 0 ? (
+                <div className="py-10 text-center text-sm text-muted-foreground border-2 border-dashed rounded-lg">
+                  Nenhuma peça alocada
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {bipagemHistorico.filter(b => b.tipo === 'peca').slice(0, 5).map((b, idx) => (
+                    <div key={`${b.ts}-${idx}`} className="flex items-center justify-between p-2 rounded border bg-muted/20">
+                      <span className="font-mono text-sm">{b.codigo}</span>
+                      <Badge variant="outline" className="text-[10px] text-green-600 border-green-200">ALOCADA</Badge>
+                    </div>
+                  ))}
+                  {bipagemHistorico.length > 5 && (
+                    <Button variant="link" className="w-full text-xs" onClick={() => {}}>Ver histórico completo</Button>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      <CarrierSelectorDialog 
+        open={carrierModalOpen}
+        onOpenChange={setCarrierModalOpen}
+        onSelect={setTransportadoraSelecionada}
       />
     </div>
   );
 }
-

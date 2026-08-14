@@ -427,6 +427,30 @@ export type Database = {
         }
         Relationships: []
       }
+      auge_clientes: {
+        Row: {
+          codigo_auge: string
+          cpf_cnpj: string | null
+          created_at: string | null
+          id: string
+          nome_razao: string
+        }
+        Insert: {
+          codigo_auge: string
+          cpf_cnpj?: string | null
+          created_at?: string | null
+          id?: string
+          nome_razao: string
+        }
+        Update: {
+          codigo_auge?: string
+          cpf_cnpj?: string | null
+          created_at?: string | null
+          id?: string
+          nome_razao?: string
+        }
+        Relationships: []
+      }
       auge_credentials: {
         Row: {
           base_url: string | null
@@ -1871,6 +1895,65 @@ export type Database = {
         }
         Relationships: []
       }
+      expedicao_alocacoes: {
+        Row: {
+          carrinho_id: string
+          created_at: string | null
+          id: string
+          operador_id: string | null
+          peca_id: string
+          romaneio_id: string | null
+          transportadora_id: string
+        }
+        Insert: {
+          carrinho_id: string
+          created_at?: string | null
+          id?: string
+          operador_id?: string | null
+          peca_id: string
+          romaneio_id?: string | null
+          transportadora_id: string
+        }
+        Update: {
+          carrinho_id?: string
+          created_at?: string | null
+          id?: string
+          operador_id?: string | null
+          peca_id?: string
+          romaneio_id?: string | null
+          transportadora_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expedicao_alocacoes_carrinho_id_fkey"
+            columns: ["carrinho_id"]
+            isOneToOne: false
+            referencedRelation: "expedicao_carrinhos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expedicao_alocacoes_peca_id_fkey"
+            columns: ["peca_id"]
+            isOneToOne: true
+            referencedRelation: "expedicao_pecas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expedicao_alocacoes_romaneio_id_fkey"
+            columns: ["romaneio_id"]
+            isOneToOne: false
+            referencedRelation: "expedicao_romaneios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expedicao_alocacoes_transportadora_id_fkey"
+            columns: ["transportadora_id"]
+            isOneToOne: false
+            referencedRelation: "expedicao_transportadoras"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       expedicao_carga_romaneios: {
         Row: {
           carga_id: string
@@ -1966,6 +2049,7 @@ export type Database = {
       expedicao_carrinhos: {
         Row: {
           aguardando_desde: string | null
+          ciclo_id: string | null
           codigo: string
           conferente_id: string | null
           conferido_at: string | null
@@ -1977,6 +2061,7 @@ export type Database = {
         }
         Insert: {
           aguardando_desde?: string | null
+          ciclo_id?: string | null
           codigo: string
           conferente_id?: string | null
           conferido_at?: string | null
@@ -1988,6 +2073,7 @@ export type Database = {
         }
         Update: {
           aguardando_desde?: string | null
+          ciclo_id?: string | null
           codigo?: string
           conferente_id?: string | null
           conferido_at?: string | null
@@ -2355,6 +2441,68 @@ export type Database = {
           },
         ]
       }
+      expedicao_romaneio_itens: {
+        Row: {
+          alocacao_id: string
+          cliente_id: string | null
+          created_at: string | null
+          id: string
+          operador_inclusao_id: string | null
+          peca_id: string
+          romaneio_id: string
+          status: string | null
+        }
+        Insert: {
+          alocacao_id: string
+          cliente_id?: string | null
+          created_at?: string | null
+          id?: string
+          operador_inclusao_id?: string | null
+          peca_id: string
+          romaneio_id: string
+          status?: string | null
+        }
+        Update: {
+          alocacao_id?: string
+          cliente_id?: string | null
+          created_at?: string | null
+          id?: string
+          operador_inclusao_id?: string | null
+          peca_id?: string
+          romaneio_id?: string
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expedicao_romaneio_itens_alocacao_id_fkey"
+            columns: ["alocacao_id"]
+            isOneToOne: false
+            referencedRelation: "expedicao_alocacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expedicao_romaneio_itens_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "auge_clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expedicao_romaneio_itens_peca_id_fkey"
+            columns: ["peca_id"]
+            isOneToOne: false
+            referencedRelation: "expedicao_pecas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expedicao_romaneio_itens_romaneio_id_fkey"
+            columns: ["romaneio_id"]
+            isOneToOne: false
+            referencedRelation: "expedicao_romaneios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       expedicao_romaneio_nfe: {
         Row: {
           nfe_id: string
@@ -2395,6 +2543,7 @@ export type Database = {
         Row: {
           cancelado_at: string | null
           cancelado_por: string | null
+          ciclo_id: string | null
           created_at: string
           created_by: string | null
           faturado_at: string | null
@@ -2402,6 +2551,8 @@ export type Database = {
           motivo_cancelamento: string | null
           numero: string
           observacao: string | null
+          operador_abertura_id: string | null
+          operador_fechamento_id: string | null
           status: Database["public"]["Enums"]["expedicao_romaneio_status"]
           transportadora_id: string | null
           updated_at: string
@@ -2409,6 +2560,7 @@ export type Database = {
         Insert: {
           cancelado_at?: string | null
           cancelado_por?: string | null
+          ciclo_id?: string | null
           created_at?: string
           created_by?: string | null
           faturado_at?: string | null
@@ -2416,6 +2568,8 @@ export type Database = {
           motivo_cancelamento?: string | null
           numero: string
           observacao?: string | null
+          operador_abertura_id?: string | null
+          operador_fechamento_id?: string | null
           status?: Database["public"]["Enums"]["expedicao_romaneio_status"]
           transportadora_id?: string | null
           updated_at?: string
@@ -2423,6 +2577,7 @@ export type Database = {
         Update: {
           cancelado_at?: string | null
           cancelado_por?: string | null
+          ciclo_id?: string | null
           created_at?: string
           created_by?: string | null
           faturado_at?: string | null
@@ -2430,6 +2585,8 @@ export type Database = {
           motivo_cancelamento?: string | null
           numero?: string
           observacao?: string | null
+          operador_abertura_id?: string | null
+          operador_fechamento_id?: string | null
           status?: Database["public"]["Enums"]["expedicao_romaneio_status"]
           transportadora_id?: string | null
           updated_at?: string
