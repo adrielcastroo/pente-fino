@@ -29,6 +29,9 @@ const ExpedicaoLayout = lazy(() => import("@/components/expedicao/ExpedicaoLayou
 const ExpedicaoPlaceholder = lazy(() => import("@/pages/expedicao/ExpedicaoPlaceholder"));
 const ExpedicaoPainelPage = lazy(() => import("@/pages/expedicao/PainelPage"));
 const ExpedicaoCarrinhosPage = lazy(() => import("@/pages/expedicao/CarrinhosPage"));
+const ExpedicaoRecebimentoPage = lazy(() => import("@/pages/expedicao/RecebimentoPage"));
+
+
 
 
 const ExpedicaoConferenciaPage = lazy(() => import("@/pages/expedicao/ConferenciaPage"));
@@ -245,6 +248,9 @@ const App = () => (
                   <Route index element={<Navigate to="/expedicao/operacao" replace />} />
 
                   <Route path="operacao" element={<ExpedicaoOperacaoHomePage />} />
+                  <Route path="recebimento" element={<ExpedicaoRecebimentoPage />} />
+
+
                   <Route path="painel" element={<ExpedicaoPainelPage />} />
                   
                   <Route path="conferencia" element={<ExpedicaoConferenciaPage />} />

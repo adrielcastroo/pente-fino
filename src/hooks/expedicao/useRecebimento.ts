@@ -1,0 +1,51 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+
+export function useProcessarRecebimento() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ etiquetas, estruturaId }: { etiquetas: string[], estruturaId: string }) => {
+      const { data: userData } = await supabase.auth.getUser();
+      const uid = userData.user?.id;
+
+      for (const etq of etiquetas) {
+        const { data: existing } = await supabase
+          .from('expedicao_pecas')
+          .select('id')
+          .eq('codigo_etiqueta', etq)
+          .maybeSingle();
+
+        if (existing) {
+          const { error } = await supabase
+            .from('expedicao_pecas')
+            .update({ 
+              status: 'RECEBIDA_EXPEDICAO',
+              estrutura_temporaria_id: estruturaId,
+              embalador_id: uid
+            } as any)
+            .eq('id', existing.id);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from('expedicao_pecas')
+            .insert({
+              codigo_etiqueta: etq,
+              status: 'RECEBIDA_EXPEDICAO',
+              estrutura_temporaria_id: estruturaId,
+              embalador_id: uid,
+              etiquetada_at: new Date().toISOString()
+            } as any);
+          if (error) throw error;
+        }
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['expedicao', 'alert-counts'] });
+      toast.success('Recebimento processado com sucesso');
+    },
+    onError: (err: any) => {
+      toast.error('Erro ao processar recebimento: ' + err.message);
+    }
+  });
+}
