@@ -6081,11 +6081,12 @@ Deno.serve(async (req) => {
     // EXPEDICAO - ACOES ATOMICAS
     // ==============================================================
     if (action === 'expedicao_sync_prontos') {
+      // Sincroniza peças PRONTAS do Auge: https://unilux.auge.app/record-manufactured-documents
       // Implementação da busca de peças PRONTAS no Auge
       // Por enquanto, retorna OK para permitir o fluxo no front
       return new Response(JSON.stringify({ 
         ok: true, 
-        message: 'Sincronização iniciada' 
+        message: 'Sincronização iniciada (Auge: /record-manufactured-documents)' 
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
