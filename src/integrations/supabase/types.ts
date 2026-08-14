@@ -2257,6 +2257,138 @@ export type Database = {
           },
         ]
       }
+      expedicao_pecas_auge_sync: {
+        Row: {
+          alocacao_id: string | null
+          auge_cliente_codigo: string | null
+          auge_cliente_id: string | null
+          auge_cliente_nome: string | null
+          auge_evento_id: string | null
+          auge_item_codigo: string | null
+          auge_item_id: string | null
+          auge_peca_id: string
+          auge_pedido_codigo: string
+          auge_pedido_id: string | null
+          carrinho_id: string | null
+          codigo_etiqueta: string
+          codigo_peca: string | null
+          codigo_picking: string | null
+          conferido_em: string | null
+          conferido_por: string | null
+          created_at: string
+          data_pronto_auge: string | null
+          descricao_item: string | null
+          erro_operacional: string | null
+          erro_sincronizacao: string | null
+          id: string
+          operador_producao_id: string | null
+          operador_producao_nome: string | null
+          payload_original: Json
+          picking_id: string | null
+          processado_em: string | null
+          quantidade: number | null
+          quantidade_tentativas: number
+          recebido_em: string
+          romaneio_id: string | null
+          status_auge: string
+          status_local: string
+          transportadora_id: string | null
+          ultima_tentativa_em: string | null
+          updated_at: string
+        }
+        Insert: {
+          alocacao_id?: string | null
+          auge_cliente_codigo?: string | null
+          auge_cliente_id?: string | null
+          auge_cliente_nome?: string | null
+          auge_evento_id?: string | null
+          auge_item_codigo?: string | null
+          auge_item_id?: string | null
+          auge_peca_id: string
+          auge_pedido_codigo: string
+          auge_pedido_id?: string | null
+          carrinho_id?: string | null
+          codigo_etiqueta: string
+          codigo_peca?: string | null
+          codigo_picking?: string | null
+          conferido_em?: string | null
+          conferido_por?: string | null
+          created_at?: string
+          data_pronto_auge?: string | null
+          descricao_item?: string | null
+          erro_operacional?: string | null
+          erro_sincronizacao?: string | null
+          id?: string
+          operador_producao_id?: string | null
+          operador_producao_nome?: string | null
+          payload_original?: Json
+          picking_id?: string | null
+          processado_em?: string | null
+          quantidade?: number | null
+          quantidade_tentativas?: number
+          recebido_em?: string
+          romaneio_id?: string | null
+          status_auge: string
+          status_local?: string
+          transportadora_id?: string | null
+          ultima_tentativa_em?: string | null
+          updated_at?: string
+        }
+        Update: {
+          alocacao_id?: string | null
+          auge_cliente_codigo?: string | null
+          auge_cliente_id?: string | null
+          auge_cliente_nome?: string | null
+          auge_evento_id?: string | null
+          auge_item_codigo?: string | null
+          auge_item_id?: string | null
+          auge_peca_id?: string
+          auge_pedido_codigo?: string
+          auge_pedido_id?: string | null
+          carrinho_id?: string | null
+          codigo_etiqueta?: string
+          codigo_peca?: string | null
+          codigo_picking?: string | null
+          conferido_em?: string | null
+          conferido_por?: string | null
+          created_at?: string
+          data_pronto_auge?: string | null
+          descricao_item?: string | null
+          erro_operacional?: string | null
+          erro_sincronizacao?: string | null
+          id?: string
+          operador_producao_id?: string | null
+          operador_producao_nome?: string | null
+          payload_original?: Json
+          picking_id?: string | null
+          processado_em?: string | null
+          quantidade?: number | null
+          quantidade_tentativas?: number
+          recebido_em?: string
+          romaneio_id?: string | null
+          status_auge?: string
+          status_local?: string
+          transportadora_id?: string | null
+          ultima_tentativa_em?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expedicao_pecas_auge_sync_carrinho_id_fkey"
+            columns: ["carrinho_id"]
+            isOneToOne: false
+            referencedRelation: "expedicao_carrinhos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expedicao_pecas_auge_sync_picking_id_fkey"
+            columns: ["picking_id"]
+            isOneToOne: false
+            referencedRelation: "expedicao_pickings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       expedicao_pecas_historico: {
         Row: {
           acao: string

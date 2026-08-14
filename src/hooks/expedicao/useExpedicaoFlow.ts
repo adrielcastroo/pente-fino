@@ -10,34 +10,24 @@ export function useValidarPeca() {
   const validar = async (codigo: string) => {
     setLoading(true);
     try {
-      const { data: peca, error } = await supabase
-        .from('expedicao_pecas')
-        .select(`
-          *,
-          cliente:auge_clientes(*),
-          picking:expedicao_pickings(*)
-        `)
-        .eq('codigo_etiqueta', codigo.toUpperCase())
-        .maybeSingle();
+      const { data, error } = await supabase.functions.invoke('auge-sync', {
+        body: {
+          action: 'expedicao_validar_peca',
+          codigo: codigo.toUpperCase()
+        }
+      });
 
       if (error) throw error;
+      if (!data.ok) throw new Error(data.error || 'Peça inválida');
       
-      if (!peca) {
-        addBipagemHistorico({ codigo, tipo: 'peca', status: 'erro', mensagem: 'Peça não encontrada no sistema' });
-        toast.error('Peça não encontrada. Verifique se a etiqueta foi gerada corretamente.');
-        return null;
-      }
-
-      if (peca.status.toLowerCase() === 'cancelado' || peca.status.toLowerCase() === 'cancelada') {
-        toast.error('Esta peça está CANCELADA e não pode ser processada.');
-        return null;
-      }
+      const peca = data.peca;
 
       setPecaAtual(peca);
       addBipagemHistorico({ codigo, tipo: 'peca', status: 'sucesso' });
       return peca;
     } catch (err: any) {
       toast.error('Erro ao validar peça: ' + err.message);
+      addBipagemHistorico({ codigo, tipo: 'peca', status: 'erro', mensagem: err.message });
       return null;
     } finally {
       setLoading(false);
