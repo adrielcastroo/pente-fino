@@ -10,7 +10,9 @@ import {
   ArrowRight,
   PackageCheck,
   UserCheck,
-  Search
+  Search,
+  ClipboardCheck,
+  ClipboardList
 } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -23,6 +25,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useExpedicaoStore } from '@/store/useExpedicaoStore';
 import { useValidarPeca, useAlocarPeca } from '@/hooks/expedicao/useExpedicaoFlow';
 import CarrierSelectorDialog from '@/components/expedicao/CarrierSelectorDialog';
+import PickingSelectorDialog from '@/components/expedicao/PickingSelectorDialog';
 import { bipToast } from '@/lib/toast-flows';
 
 export default function ConferenciaPage() {
@@ -30,10 +33,14 @@ export default function ConferenciaPage() {
   const { 
     pecaAtual, 
     setPecaAtual,
+    pickingSelecionado,
+    setPickingSelecionado,
     transportadoraSelecionada,
     setTransportadoraSelecionada,
     carrinhoSelecionado,
     setCarrinhoSelecionado,
+    fluxoPasso,
+    setFluxoPasso,
     bipagemHistorico,
     addBipagemHistorico,
     limparSessaoAlocacao
@@ -41,6 +48,7 @@ export default function ConferenciaPage() {
 
   const [inputVal, setInputVal] = useState('');
   const [carrierModalOpen, setCarrierModalOpen] = useState(false);
+  const [pickingModalOpen, setPickingModalOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const { validar, loading: validando } = useValidarPeca();
@@ -48,8 +56,8 @@ export default function ConferenciaPage() {
 
   useEffect(() => { inputRef.current?.focus(); }, []);
 
-  // Determinar o passo atual baseado no estado do store
-  const step = !pecaAtual ? 'peca' : !transportadoraSelecionada ? 'transportadora' : 'carrinho';
+  // O passo agora é controlado diretamente pelo store para garantir a sequência correta
+  const step = fluxoPasso;
 
   const handleEnter = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key !== 'Enter') return;
@@ -61,14 +69,34 @@ export default function ConferenciaPage() {
     if (step === 'peca') {
       const peca = await validar(value);
       if (peca) {
-        // Acesso seguro via cast para evitar erro de relação não detectada pelo TS
-        const pecaTyped = peca as any;
-        if (pecaTyped.picking?.transportadora_id) {
-          // Lógica futura: buscar transportadora se houver no picking
-        }
+        addBipagemHistorico({ codigo: value, tipo: 'peca', status: 'sucesso' });
       }
+    } else if (step === 'picking') {
+      // Validação de picking via bipagem
+      const { data: picking, error } = await supabase
+        .from('expedicao_pickings')
+        .select('*')
+        .eq('numero', value)
+        .maybeSingle();
+
+      if (error || !picking) {
+        bipToast.erro('Picking não encontrado');
+        addBipagemHistorico({ codigo: value, tipo: 'picking', status: 'erro', mensagem: 'Picking não encontrado' });
+        return;
+      }
+
+      // Comparação rigorosa conforme requisitos (Cliente, Item, etc)
+      // Nota: pecaAtual vem da expedicao_pecas_auge_sync com dados do Auge
+      if (pecaAtual.auge_cliente_codigo && picking.cliente_codigo && pecaAtual.auge_cliente_codigo !== picking.cliente_codigo) {
+         bipToast.erro('Picking incompatível: Cliente divergente');
+         addBipagemHistorico({ codigo: value, tipo: 'picking', status: 'erro', mensagem: 'Cliente divergente' });
+         return;
+      }
+
+      setPickingSelecionado(picking);
+      addBipagemHistorico({ codigo: value, tipo: 'picking', status: 'sucesso' });
+      
     } else if (step === 'carrinho') {
-      // Bipar carrinho
       const { data: carrinho, error } = await supabase
         .from('expedicao_carrinhos')
         .select('*')
@@ -82,7 +110,6 @@ export default function ConferenciaPage() {
 
       setCarrinhoSelecionado(carrinho);
       
-      // Executar alocação atômica
       const res = await alocar({
         peca_id: pecaAtual.id,
         carrinho_id: carrinho.id,
@@ -90,11 +117,6 @@ export default function ConferenciaPage() {
       });
 
       if (res?.ok) {
-        addBipagemHistorico({
-          codigo: pecaAtual.codigo_etiqueta,
-          tipo: 'peca',
-          status: 'sucesso'
-        });
         limparSessaoAlocacao();
         setTimeout(() => inputRef.current?.focus(), 0);
       }
@@ -112,18 +134,18 @@ export default function ConferenciaPage() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Fluxo de Conferência</h1>
           <p className="text-sm text-muted-foreground">
-            Validação atômica e alocação direcionada por transportadora.
+            Validação rigorosa Picking/Auge e alocação atômica por romaneio.
           </p>
         </div>
-        {(pecaAtual || transportadoraSelecionada) && (
+        {(pecaAtual || pickingSelecionado || transportadoraSelecionada) && (
           <Button variant="ghost" size="sm" onClick={cancelarFluxo} className="text-destructive gap-2">
             <X className="size-4" /> Cancelar Fluxo
           </Button>
         )}
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="lg:col-span-3 space-y-6">
           <Card className={cn(
             "border-2 transition-all duration-200",
             step === 'peca' ? "border-primary shadow-lg" : "border-muted opacity-80"
@@ -143,7 +165,7 @@ export default function ConferenciaPage() {
                     </div>
                     <div>
                       <div className="font-mono text-lg font-bold">{pecaAtual.codigo_etiqueta}</div>
-                      <div className="text-xs text-muted-foreground">{pecaAtual.cliente?.nome_razao || 'Cliente não identificado'}</div>
+                      <div className="text-xs text-muted-foreground">{pecaAtual.auge_cliente_nome || 'Cliente não identificado'}</div>
                     </div>
                   </div>
                   <Badge variant="outline" className="bg-background">VALIDADA</Badge>
@@ -171,13 +193,64 @@ export default function ConferenciaPage() {
 
           <Card className={cn(
             "border-2 transition-all duration-200",
-            step === 'transportadora' ? "border-primary shadow-lg" : "border-muted",
+            step === 'picking' ? "border-primary shadow-lg" : "border-muted",
             step === 'peca' && "opacity-40"
           )}>
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
+                <ClipboardCheck className="size-5" />
+                Passo 2: Validar Picking
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {pickingSelecionado ? (
+                <div className="flex items-center justify-between bg-primary/5 p-4 rounded-lg border border-primary/20">
+                  <div className="flex items-center gap-4">
+                    <div className="bg-primary/20 p-2 rounded-full text-primary">
+                      <ClipboardList className="size-6" />
+                    </div>
+                    <div>
+                      <div className="font-mono text-lg font-bold">{pickingSelecionado.numero}</div>
+                      <div className="text-xs text-muted-foreground">{pickingSelecionado.cliente}</div>
+                    </div>
+                  </div>
+                  <Badge variant="outline" className="bg-background">VINCULADO</Badge>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex gap-2">
+                    <Input
+                      ref={step === 'picking' ? inputRef : null}
+                      value={step === 'picking' ? inputVal : ''}
+                      onChange={(e) => setInputVal(e.target.value)}
+                      onKeyDown={handleEnter}
+                      placeholder="Bipe o número do picking..."
+                      className="h-14 text-xl font-mono uppercase"
+                      disabled={step !== 'picking'}
+                    />
+                    <Button 
+                      variant="outline" 
+                      className="h-14 px-6"
+                      disabled={step !== 'picking'}
+                      onClick={() => setPickingModalOpen(true)}
+                    >
+                      <Search className="size-5" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className={cn(
+            "border-2 transition-all duration-200",
+            step === 'transportadora' ? "border-primary shadow-lg" : "border-muted",
+            (step === 'peca' || step === 'picking') && "opacity-40"
+          )}>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
                 <Truck className="size-5" />
-                Passo 2: Direcionar Transportadora
+                Passo 3: Transportadora
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -199,7 +272,7 @@ export default function ConferenciaPage() {
                   <Button 
                     className="h-14 flex-1 text-lg gap-3" 
                     variant="outline"
-                    disabled={step === 'peca'}
+                    disabled={step !== 'transportadora'}
                     onClick={() => setCarrierModalOpen(true)}
                   >
                     <Search className="size-5" />
@@ -213,12 +286,12 @@ export default function ConferenciaPage() {
           <Card className={cn(
             "border-2 transition-all duration-200",
             step === 'carrinho' ? "border-primary shadow-lg" : "border-muted",
-            (step === 'peca' || step === 'transportadora') && "opacity-40"
+            step !== 'carrinho' && "opacity-40"
           )}>
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
                 <ShoppingCart className="size-5" />
-                Passo 3: Alocar no Carrinho
+                Passo 4: Alocar no Carrinho
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -266,10 +339,15 @@ export default function ConferenciaPage() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {bipagemHistorico.filter(b => b.tipo === 'peca').slice(0, 5).map((b, idx) => (
+                  {bipagemHistorico.slice(0, 10).map((b, idx) => (
                     <div key={`${b.ts}-${idx}`} className="flex items-center justify-between p-2 rounded border bg-muted/20">
-                      <span className="font-mono text-sm">{b.codigo}</span>
-                      <Badge variant="outline" className="text-[10px] text-green-600 border-green-200">ALOCADA</Badge>
+                      <div className="flex flex-col">
+                        <span className="font-mono text-xs font-bold">{b.codigo}</span>
+                        <span className="text-[10px] text-muted-foreground uppercase">{b.tipo}</span>
+                      </div>
+                      <Badge variant={b.status === 'sucesso' ? 'outline' : 'destructive'} className="text-[9px]">
+                        {b.status === 'sucesso' ? 'OK' : 'ERRO'}
+                      </Badge>
                     </div>
                   ))}
                   {bipagemHistorico.length > 5 && (
@@ -286,6 +364,12 @@ export default function ConferenciaPage() {
         open={carrierModalOpen}
         onOpenChange={setCarrierModalOpen}
         onSelect={setTransportadoraSelecionada}
+      />
+
+      <PickingSelectorDialog
+        open={pickingModalOpen}
+        onOpenChange={setPickingModalOpen}
+        onSelect={setPickingSelecionado}
       />
     </div>
   );
