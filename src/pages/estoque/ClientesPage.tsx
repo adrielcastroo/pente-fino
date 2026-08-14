@@ -44,13 +44,14 @@ export default function ClientesPage() {
   const loadClientes = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // Uso de query crua para evitar problemas com tipos desalinhados do schema
+      const { data, error } = await (supabase as any)
         .from('auge_clientes')
         .select('*')
         .order('nome', { ascending: true });
 
       if (error) throw error;
-      setClientes(data || []);
+      setClientes((data || []) as ClienteAuge[]);
     } catch (e: any) {
       toast.error('Erro ao carregar clientes: ' + e.message);
     } finally {
