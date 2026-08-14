@@ -4303,9 +4303,10 @@ Deno.serve(async (req) => {
       });
       jar.ingest(res);
       const html = await res.text();
-      const urls = [...new Set([...html.matchAll(/["'`](\/(?:api|l\.unilux)[^"'`\s]{3,160})["'`]/g)].map(m => m[1]))];
+      const urls = [...new Set([...html.matchAll(/["'`]((?:\.\.\/)*(?:\/)?(?:ajax|api|l\.unilux)[^"'`\s]{3,160}\.php[^"'`\s]{0,60})["'`]/g)].map(m => m[1]))];
       const routes = [...new Set([...html.matchAll(/["'`](https?:\/\/[^"'`\s]*auge\.app[^"'`\s]{0,160})["'`]/g)].map(m => m[1]))];
-      const columns = [...new Set([...html.matchAll(/data\s*:\s*['"]([a-zA-Z0-9_.]+)['"]/g)].map(m => m[1]))];
+      const columns = [...new Set([...html.matchAll(/(?:data|name)\s*:\s*['"]([a-zA-Z0-9_.]+)['"]/g)].map(m => m[1]))];
+      const inputs = [...new Set([...html.matchAll(/<(?:input|select)[^>]+(?:id|name)="([^"]+)"/g)].map(m => m[1]))];
       const scripts = [...new Set([...html.matchAll(/<script[^>]+src="([^"]+)"/g)].map(m => m[1]))];
       return new Response(JSON.stringify({
         ok: true, status: res.status, location: res.headers.get('location'),
