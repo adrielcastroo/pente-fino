@@ -5,41 +5,39 @@ Este plano visa transformar o módulo de Expedição em um sistema auxiliar simb
 ## 1. Infraestrutura e Banco de Dados (Supabase)
 
 - **expedicao_pecas**: Evoluir a tabela para suportar o fluxo completo.
-  - Adicionar , ,  (vinculado à ).
-  - Adicionar  (FK para ).
-  - Adicionar .
-  - Estados: `AGUARDANDO_RECEBIMENTO`, `RECEBIDA_EXPEDICAO`, `ARMAZENADA_EXPEDICAO`, `EM_CONFERENCIA`, `CONFERIDA`, `VINCULADA_PICKING`, `AGUARDANDO_TRANSPORTADORA`, `ALOCADA_CARRINHO_TRANSPORTADORA`, `INCLUIDA_ROMANEIO`, `LIBERADA`, `DIVERGENTE`, `BLOQUEADA`, `CANCELADA`.
-- **expedicao_estruturas_temporarias**: Nova tabela para gerir o pulmão da expedição.
-- **expedicao_eventos**: Tabela de auditoria para registrar cada mudança de estado e operador.
-- **RLS**: Garantir que  permaneça estritamente read-only para usuários, com permissões de escrita apenas via .
+  - Adicionar colunas: `pedido_id`, `item_pedido_id`, `cliente_id` (vinculado à `auge_clientes`), `picking_id` (FK para `expedicao_pickings`), `estrutura_temporaria_id`.
+  - Novos estados: `AGUARDANDO_RECEBIMENTO`, `RECEBIDA_EXPEDICAO`, `ARMAZENADA_EXPEDICAO`, `EM_CONFERENCIA`, `CONFERIDA`, `VINCULADA_PICKING`, `AGUARDANDO_TRANSPORTADORA`, `ALOCADA_CARRINHO_TRANSPORTADORA`, `INCLUIDA_ROMANEIO`, `LIBERADA`, `DIVERGENTE`, `BLOQUEADA`, `CANCELADA`.
+- **expedicao_estruturas_temporarias**: Nova tabela para gerir o pulmão da expedição (prateleiras/boxes).
+- **expedicao_eventos**: Tabela de auditoria para registrar cada mudança de estado e o operador responsável.
+- **RLS**: Reforçar que `auge_clientes` é estritamente read-only para usuários.
 
 ## 2. Backend e Integração Auge (Edge Functions)
 
 - **auge-sync**:
   - Implementar consulta de pedidos e itens do pedido em tempo real.
-  - Implementar lógica de "Liberar para Faturamento" enviando o status de volta ao Auge (via adaptador seguro).
-  - Adaptador de etiquetas: Criar camada de serviço que interpreta os QRs atuais e extrai o vínculo com o Auge.
+  - Implementar ação "Liberar para Faturamento" enviando o status de volta ao Auge.
+  - Adaptador de etiquetas: Camada de serviço que interpreta os QRs gerados pelo `etiquetaService.ts` e extrai os metadados do Auge (vínculo simbólico).
 
 ## 3. Fluxo de Conferência e Alocação (Frontend)
 
 - **Nova Página de Recebimento**: Bipagem inicial para entrada no "Pulmão" (Estrutura Temporária).
-- **Página de Conferência (Redesign)**:
-  - Fluxo: Bipar Peça -> Validar com Auge (Pedido/Cliente) -> Mostrar Pickings compatíveis -> Vincular.
+- **Redesign da Página de Conferência**:
+  - Fluxo: Bipar Peça -> Validar Pedido/Cliente no Auge -> Listar Pickings compatíveis -> Vincular.
 - **Modal de Transportadora**:
-  - Busca inteligente na .
-  - Bipagem de código da transportadora.
+  - Busca inteligente na `expedicao_transportadoras`.
+  - Suporte a bipagem de transportadora.
 - **Alocação em Carrinho**:
-  - Validação de compatibilidade (mesma transportadora no carrinho).
-  - Criação automática de romaneio se não houver um aberto para o ciclo/transportadora.
+  - Validação de compatibilidade.
+  - Criação automática de romaneio se não houver um aberto para o par ciclo/transportadora.
 
 ## 4. Fila de Faturamento
 
-- **Painel de Liberação**: Lista de pedidos onde todas as peças atingiram o estado `LIBERADA`.
-- Interface simplificada para o faturista visualizar o que o sistema "Pente Fino" já validou 100%.
+- **Painel de Liberação**: Lista consolidada de pedidos onde todas as peças atingiram o estado `LIBERADA`.
+- Interface dedicada para o faturista validar o progresso antes de processar no ERP.
 
 ## Detalhes Técnicos
 
-- **Preservação**: O serviço  e o hook  não serão alterados, apenas consumidos.
-- **Performance**: Uso intensivo de  para cache de clientes e pedidos do Auge.
-- **Segurança**: Credenciais do Auge residem apenas no cofre do Supabase, nunca expostas ao browser.
+- **Preservação**: O serviço `etiquetaService.ts` e o hook `useEtiquetas.ts` não sofrerão alterações estruturais, apenas novos adaptadores de leitura.
+- **Performance**: Uso de `TanStack Query` para sincronização eficiente e cache de dados do Auge.
+- **Segurança**: Integrações sensíveis via backend seguro, sem exposição de tokens no frontend.
 
