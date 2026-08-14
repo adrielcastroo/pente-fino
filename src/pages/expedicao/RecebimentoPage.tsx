@@ -28,14 +28,14 @@ export default function RecebimentoPage() {
   const { data: estruturas = [] } = useQuery({
     queryKey: ['expedicao_estruturas_temporarias'],
     queryFn: async () => {
+      // Usando query direta com generic string para evitar problemas de tipos no Supabase Client auto-gerado
       const { data, error } = await supabase
-        .from('expedicao_estruturas_temporarias')
+        .from('expedicao_estruturas_temporarias' as any)
         .select('*');
       if (error) throw error;
-      return data;
+      return (data || []) as any[];
     }
   });
-
 
   useEffect(() => { inputRef.current?.focus(); }, []);
 
@@ -56,7 +56,6 @@ export default function RecebimentoPage() {
       bipToast.erro('Selecione uma estrutura de destino (pulmão)');
       return;
     }
-
     await processar.mutateAsync({
       etiquetas: bipagemTemporaria,
       estruturaId
@@ -99,7 +98,7 @@ export default function RecebimentoPage() {
                   <SelectValue placeholder="Selecione onde as peças serão colocadas" />
                 </SelectTrigger>
                 <SelectContent>
-                  {estruturas.map(e => (
+                  {estruturas.map((e: any) => (
                     <SelectItem key={e.id} value={e.id}>
                       {e.codigo} - {e.descricao}
                     </SelectItem>
@@ -116,7 +115,6 @@ export default function RecebimentoPage() {
               {processar.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle2 className="w-5 h-5" />}
               Finalizar Recebimento ({bipagemTemporaria.length})
             </Button>
-
           </CardContent>
         </Card>
 
