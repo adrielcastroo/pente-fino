@@ -1166,15 +1166,10 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       setLinhas((prev) => {
         const next = [...prev];
         
+        // 1. Adiciona recomendações que ainda não estão na tabela e não foram removidas
         for (const rec of recomendadas) {
-          const idx = next.findIndex(l => l.code === rec.code);
-          if (idx >= 0) {
-            // Se já existe, atualizamos se não houver edição manual pendente
-            // (Neste estágio, assumimos que 'linhas' reflete o estado da composição)
-            // Para simplicidade, apenas atualizamos a recomendação se ela mudou de valor e for uma linha 'automática'
-            // Mas o requisito pede para permitir alteração global, então a sincronização
-            // deve apenas adicionar novas ou manter o que o usuário já mexeu.
-          } else {
+          const jaExiste = next.some(l => l.code === rec.code);
+          if (!jaExiste) {
             next.push({
               id: rec.id,
               code: rec.code,
@@ -1186,13 +1181,19 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           }
         }
 
-        // Remove linhas que não estão mais nas recomendações e não foram adicionadas manualmente
+        // 2. Remove linhas que foram removidas manualmente ou não fazem mais parte do escopo
         return next.filter(l => {
+          // Se foi removida manualmente, deve sumir
           if (removidasManualmente.has(l.code)) return false;
-          // Se a TAG sumiu das recomendações e não foi manual, removemos
+          
+          // Se a TAG não está nas recomendações atuais...
           const estaNasRecs = recomendadas.some(r => r.code === l.code);
-          const ehManual = l.id.startsWith('manual|');
-          return estaNasRecs || ehManual;
+          if (!estaNasRecs) {
+            // ...só mantemos se foi adicionada manualmente pelo usuário
+            return l.id.startsWith('manual|');
+          }
+          
+          return true;
         });
       });
     } else if (termoBusca.trim().length < 2) {
