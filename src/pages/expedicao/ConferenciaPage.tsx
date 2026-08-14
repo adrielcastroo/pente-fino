@@ -123,7 +123,6 @@ export default function ConferenciaPage() {
       }
     }
   };
-  };
 
   const cancelarFluxo = () => {
     limparSessaoAlocacao();
