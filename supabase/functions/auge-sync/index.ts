@@ -6078,7 +6078,123 @@ Deno.serve(async (req) => {
     }
 
     // ==============================================================
+    // EXPEDICAO - ACOES ATOMICAS
+    // ==============================================================
+    if (action === 'expedicao_validar_peca') {
+      let payload: any = {};
+      try { payload = await req.json(); } catch { /* ignore */ }
+      const codigo = String(payload?.codigo ?? '').trim().toUpperCase();
+      if (!codigo) throw new Error('Código da etiqueta é obrigatório.');
+
+      // 1. Buscar peça no Supabase
+      const { data: peca, error: pecaErr } = await admin
+        .from('expedicao_pecas')
+        .select('*')
+        .eq('codigo', codigo)
+        .maybeSingle();
+
+      if (pecaErr) throw pecaErr;
+      if (!peca) throw new Error(`Etiqueta ${codigo} não encontrada no Pente Fino.`);
+
+      // 2. Validações básicas de negócio
+      if (peca.status.toLowerCase() === 'cancelado' || peca.status.toLowerCase() === 'cancelada') {
+        throw new Error(`A etiqueta ${codigo} está CANCELADA.`);
+      }
+
+      // 3. Consultar Auge para ver se há restrição ou pedido vinculado
+      // Aqui poderíamos chamar endpoints de consulta de item ou romaneio do Auge
+      // Por enquanto, devolvemos a peça validada com metadados básicos.
+      return new Response(JSON.stringify({ 
+        ok: true, 
+        peca,
+        contexto: 'validado'
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    if (action === 'expedicao_alocar') {
+      let payload: any = {};
+      try { payload = await req.json(); } catch { /* ignore */ }
+      const { peca_id, carrinho_id, transportadora_id, ciclo_id } = payload;
+      
+      if (!peca_id || !carrinho_id || !transportadora_id) {
+        throw new Error('peca_id, carrinho_id e transportadora_id são obrigatórios.');
+      }
+
+      // Transação atômica (simulada via RPC ou múltiplos inserts)
+      // 1. Verificar se já existe alocação
+      const { data: existente } = await admin
+        .from('expedicao_alocacoes')
+        .select('id')
+        .eq('peca_id', peca_id)
+        .maybeSingle();
+
+      if (existente) throw new Error('Esta peça já está alocada em um carrinho.');
+
+      // 2. Buscar ou Criar Romaneio Aberto para Transp/Ciclo
+      let { data: romaneio } = await admin
+        .from('expedicao_romaneios')
+        .select('id')
+        .eq('transportadora_id', transportadora_id)
+        .eq('status', 'ABERTO')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!romaneio) {
+        const nrRomaneio = `ROM-${Date.now().toString().slice(-6)}`;
+        const { data: novo, error: errR } = await admin
+          .from('expedicao_romaneios')
+          .insert({
+            numero: nrRomaneio,
+            transportadora_id,
+            ciclo_id,
+            status: 'ABERTO',
+            operador_abertura_id: triggeredBy
+          })
+          .select()
+          .single();
+        if (errR) throw errR;
+        romaneio = novo;
+      }
+
+      // 3. Criar Alocação
+      const { data: alocacao, error: errA } = await admin
+        .from('expedicao_alocacoes')
+        .insert({
+          peca_id,
+          carrinho_id,
+          transportadora_id,
+          romaneio_id: romaneio.id,
+          operador_id: triggeredBy
+        })
+        .select()
+        .single();
+      if (errA) throw errA;
+
+      // 4. Inserir Item no Romaneio
+      await admin.from('expedicao_romaneio_itens').insert({
+        romaneio_id: romaneio.id,
+        peca_id,
+        alocacao_id: alocacao.id,
+        status: 'normal',
+        operador_inclusao_id: triggeredBy
+      });
+
+      // 5. Atualizar Status da Peça
+      await admin.from('expedicao_pecas')
+        .update({ status: 'ALOCADA' })
+        .eq('id', peca_id);
+
+      return new Response(JSON.stringify({ 
+        ok: true, 
+        alocacao_id: alocacao.id,
+        romaneio_id: romaneio.id
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    // ==============================================================
     // necessidade_cron_run
+
     //   Executa o fluxo Necessidade automaticamente para uma lista
     //   de depósitos destino (origem sempre "01" — Central).
     //   Para "PVT", divide em 2 rascunhos: tecidos (TC.*) e demais.
