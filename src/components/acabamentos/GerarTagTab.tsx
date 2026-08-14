@@ -1303,8 +1303,8 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
   const codigosNaTabela = useMemo(() => new Set(linhas.map((l) => l.code)), [linhas]);
   const obrigatoriasFaltando = useMemo(
-    () => obrigatorias.filter((o) => !codigosNaTabela.has(o.code)),
-    [obrigatorias, codigosNaTabela],
+    () => obrigatorias.filter((o) => !codigosNaTabela.has(o.code) && !removidasManualmente.has(o.code)),
+    [obrigatorias, codigosNaTabela, removidasManualmente],
   );
 
   /**
