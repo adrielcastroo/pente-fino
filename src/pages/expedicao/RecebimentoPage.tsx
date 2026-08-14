@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { ScanLine, Box, Trash2, CheckCircle2, Loader2 } from 'lucide-react';
+import { ScanLine, Box, CheckCircle2, Loader2, Ban } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -16,13 +16,20 @@ import {
 import { PageShell, PageHeader } from '@/components/expedicao/ui';
 import { useExpedicaoStore } from '@/store/useExpedicaoStore';
 import { useProcessarRecebimento } from '@/hooks/expedicao/useRecebimento';
+import { useValidarPeca } from '@/hooks/expedicao/useExpedicaoFlow';
 import { bipToast } from '@/lib/toast-flows';
 
 export default function RecebimentoPage() {
-  const [etiqueta, setEtiqueta] = useState('');
-  const [estruturaId, setEstruturaId] = useState<string>('');
+  const [peca, setPeca] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
-  const { bipagemTemporaria, addBipagem, clearBipagem } = useExpedicaoStore();
+  const { 
+    estruturaTemporariaId, 
+    setEstruturaTemporaria, 
+    bipagemHistorico, 
+    addBipagemHistorico 
+  } = useExpedicaoStore();
+  
+  const { validar, loading: validando } = useValidarPeca();
   const processar = useProcessarRecebimento();
 
   const { data: estruturas = [] } = useQuery({
@@ -38,35 +45,59 @@ export default function RecebimentoPage() {
 
   useEffect(() => { inputRef.current?.focus(); }, []);
 
-  const handleBip = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && etiqueta.trim()) {
-      const code = etiqueta.trim().toUpperCase();
-      if (bipagemTemporaria.includes(code)) {
-        bipToast.duplicado(code);
-      } else {
-        addBipagem(code);
+  const handleBip = async (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && peca.trim()) {
+      const codigo = peca.trim().toUpperCase();
+      
+      if (!estruturaTemporariaId) {
+        bipToast.erro('Selecione uma estrutura de destino primeiro');
+        return;
       }
-      setEtiqueta('');
-    }
-  };
 
-  const handleFinalizar = async () => {
-    if (!estruturaId) {
-      bipToast.erro('Selecione uma estrutura de destino (pulmão)');
-      return;
+      if (bipagemHistorico.some(b => b.codigo === codigo && b.tipo === 'peca' && b.status === 'sucesso')) {
+        bipToast.duplicado(codigo);
+        setPeca('');
+        return;
+      }
+
+      const pecaValidada = await validar(codigo);
+      if (pecaValidada) {
+        try {
+          await processar.mutateAsync({ 
+            etiquetas: [codigo], 
+            estruturaId: estruturaTemporariaId 
+          });
+          addBipagemHistorico({
+            codigo,
+            tipo: 'peca',
+            status: 'sucesso',
+            ts: new Date().toISOString()
+          });
+        } catch (err) {
+          addBipagemHistorico({
+            codigo,
+            tipo: 'peca',
+            status: 'erro',
+            ts: new Date().toISOString()
+          });
+        }
+      } else {
+        addBipagemHistorico({
+          codigo,
+          tipo: 'peca',
+          status: 'erro',
+          ts: new Date().toISOString()
+        });
+      }
+      setPeca('');
     }
-    await processar.mutateAsync({
-      etiquetas: bipagemTemporaria,
-      estruturaId
-    });
-    clearBipagem();
   };
 
   return (
     <PageShell>
       <PageHeader 
         title="Recebimento de Peças" 
-        subtitle="Entrada de peças no pulmão da expedição para conferência futura."
+        subtitle="Entrada atômica de peças no pulmão da expedição."
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -79,22 +110,13 @@ export default function RecebimentoPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">QR Code da Etiqueta</label>
-              <Input
-                ref={inputRef}
-                value={etiqueta}
-                onChange={e => setEtiqueta(e.target.value)}
-                onKeyDown={handleBip}
-                placeholder="Bipe a etiqueta aqui..."
-                className="h-12 text-lg font-mono uppercase"
-              />
-            </div>
-
-            <div className="space-y-2">
               <label className="text-sm font-medium">Destino (Estrutura Temporária)</label>
-              <Select value={estruturaId} onValueChange={setEstruturaId}>
+              <Select 
+                value={estruturaTemporariaId || ''} 
+                onValueChange={setEstruturaTemporaria}
+              >
                 <SelectTrigger className="h-12">
-                  <SelectValue placeholder="Selecione onde as peças serão colocadas" />
+                  <SelectValue placeholder="Selecione o Pulmão" />
                 </SelectTrigger>
                 <SelectContent>
                   {estruturas.map((e: any) => (
@@ -106,14 +128,25 @@ export default function RecebimentoPage() {
               </Select>
             </div>
 
-            <Button 
-              className="w-full h-12 gap-2 text-base" 
-              disabled={bipagemTemporaria.length === 0 || !estruturaId || processar.isPending}
-              onClick={handleFinalizar}
-            >
-              {processar.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle2 className="w-5 h-5" />}
-              Finalizar Recebimento ({bipagemTemporaria.length})
-            </Button>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">QR Code da Etiqueta</label>
+              <div className="relative">
+                <Input
+                  ref={inputRef}
+                  value={peca}
+                  onChange={e => setPeca(e.target.value)}
+                  onKeyDown={handleBip}
+                  disabled={validando || processar.isPending}
+                  placeholder="Bipe a etiqueta aqui..."
+                  className="h-12 text-lg font-mono uppercase pr-10"
+                />
+                {(validando || processar.isPending) && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                  </div>
+                )}
+              </div>
+            </div>
           </CardContent>
         </Card>
 
@@ -121,23 +154,23 @@ export default function RecebimentoPage() {
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="flex items-center gap-2">
               <Box className="w-5 h-5" />
-              Peças na Fila
+              Histórico da Sessão
             </CardTitle>
-            <Button variant="ghost" size="sm" onClick={clearBipagem} className="text-muted-foreground">
-              Limpar Lista
-            </Button>
           </CardHeader>
           <CardContent>
-            {bipagemTemporaria.length === 0 ? (
+            {bipagemHistorico.length === 0 ? (
               <div className="h-40 flex items-center justify-center text-muted-foreground border-2 border-dashed rounded-lg">
-                Nenhuma peça bipada
+                Nenhuma peça processada
               </div>
             ) : (
               <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
-                {bipagemTemporaria.map(code => (
-                  <div key={code} className="flex items-center justify-between p-3 bg-muted/50 rounded-md border">
-                    <span className="font-mono text-sm">{code}</span>
-                    <Badge variant="secondary">RECEBENDO</Badge>
+                {[...bipagemHistorico].reverse().map((b, idx) => (
+                  <div key={`${b.ts}-${idx}`} className="flex items-center justify-between p-3 bg-muted/50 rounded-md border">
+                    <span className="font-mono text-sm">{b.codigo}</span>
+                    <Badge variant={b.status === 'sucesso' ? 'outline' : 'destructive'} className="gap-1">
+                      {b.status === 'sucesso' ? <CheckCircle2 className="size-3" /> : <Ban className="size-3" />}
+                      {b.status === 'sucesso' ? 'Recebida' : 'Erro'}
+                    </Badge>
                   </div>
                 ))}
               </div>
