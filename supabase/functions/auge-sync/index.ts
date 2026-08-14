@@ -4317,6 +4317,7 @@ Deno.serve(async (req) => {
           ok: r.ok, status: r.status, len: t.length,
           tabela_len: tabela.length,
           tabela: tabela.slice(0, 6000),
+          sample: tabela ? undefined : t.slice(0, 4000),
         }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
       const pageUrl = `${AUGE_BASE_URL}${probePath}`;
