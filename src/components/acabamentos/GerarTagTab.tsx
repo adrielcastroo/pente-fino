@@ -1588,107 +1588,14 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           </div>
         )}
 
-        {/* BLOCO DE RESUMO (Colapsável) - Posicionado abaixo do bloco "Manter Tag Customizada" */}
         <ResumoConfiguracoesMassa 
           termoBusca={termoBusca}
           customAberta={customAberta}
           setCustomAberta={setCustomAberta}
           obrigatoriasCount={obrigatorias.length}
         />
+      </Card>
 
-                                    "text-[10px] font-mono py-0.5 px-2 rounded-md border transition-all flex items-center gap-1.5",
-                                    isSelected 
-                                      ? "bg-primary text-primary-foreground border-primary shadow-sm" 
-                                      : "bg-background/80 border-primary/20 hover:bg-muted text-foreground"
-                                  )}
-                                  title={`${cfg.qtd_tags} TAG(s) casaram`}
-                                >
-                                  {isSelected && <CheckCircle2 className="h-2.5 w-2.5" />}
-                                  {cfg.nm_configuracao}
-                                  {cfg.qtd_tags > 1 && (
-                                    <span className={cn("text-[9px]", isSelected ? "text-primary-foreground/70" : "text-primary/70")}>
-                                      ×{cfg.qtd_tags}
-                                    </span>
-                                  )}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-1">
-                        <div className="text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-1.5 px-1">
-                          <CheckCircle2 className="h-2.5 w-2.5 text-emerald-500" /> TAGs Recomendadas pela Família
-                        </div>
-                        {/* Exibição das TAGs Reconhecidas/Padrão */}
-                        {obrigatorias.length > 0 && (
-                          <div className="flex flex-wrap gap-1 p-2 bg-blue-500/5 rounded border border-blue-500/10">
-                            {obrigatorias.map((o) => (
-                              <div key={o.code} className="flex items-center gap-1.5 px-2 py-0.5 rounded-md border bg-background/80 text-[10px] font-mono shadow-sm">
-                                <span className="text-blue-600 font-bold">{o.code}</span>
-                                <span className="text-muted-foreground">→</span>
-                                <span className="truncate max-w-[100px]">{o.valor}</span>
-                                {o.calculada && (
-                                  <span className="text-[9px] text-emerald-600 font-bold ml-1 bg-emerald-500/10 px-1 rounded">
-                                    {o.calculada}
-                                  </span>
-                                )}
-                                <Badge variant="secondary" className="text-[8px] h-3.5 px-1 bg-blue-100 text-blue-700 hover:bg-blue-100">
-                                  {Math.round((o.freq / o.total) * 100)}%
-                                </Badge>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </>
-                  ) : (
-                    <div className="p-8 text-center bg-muted/20 rounded-lg border border-dashed border-muted-foreground/20">
-                      <p className="text-sm text-muted-foreground mb-4 font-sora">
-                        me explique a lógica que é usada para o pente fino, recomendar as Tags configuradas no bloco "composição da TAG Custom"
-                      </p>
-                      <div className="text-left space-y-4 max-w-2xl mx-auto text-xs text-muted-foreground/80 leading-relaxed">
-                        <div className="bg-background/50 p-4 rounded-md border border-muted-foreground/10 space-y-3">
-                          <p>
-                            A recomendação do Pente Fino baseia-se em <strong>Análise Estatística de Padrão</strong> e <strong>Extração de Pesos Estruturais</strong>:
-                          </p>
-                          
-                          <div className="space-y-2">
-                            <span className="font-semibold text-foreground flex items-center gap-1.5">
-                              <Wand2 className="h-3 w-3 text-primary" /> 1. Escopo por Palavras-Chave (Relevância)
-                            </span>
-                            <p>
-                              O sistema tokeniza sua pesquisa e atribui pesos (ex: <em>rollo</em> = 8, <em>t45</em> = 6). Ele identifica o grupo de configurações existentes que possui a <strong>maior cobertura</strong> desses termos. Se você pesquisar "Rollo Pro T45", ele prioriza modelos que tenham as três palavras antes de cair para modelos com apenas duas.
-                            </p>
-                          </div>
-
-                          <div className="space-y-2">
-                            <span className="font-semibold text-foreground flex items-center gap-1.5">
-                              <Layers className="h-3 w-3 text-primary" /> 2. Frequência de Ocorrência (Consenso)
-                            </span>
-                            <p>
-                              Dentro desse grupo mais específico, o app calcula a frequência de cada TAG Configurada. Uma TAG é considerada <strong>Obrigatória</strong> se estiver presente em pelo menos <strong>70%</strong> dos modelos encontrados (ou 100% se houver apenas um modelo de referência).
-                            </p>
-                          </div>
-
-                          <div className="space-y-2">
-                            <span className="font-semibold text-foreground flex items-center gap-1.5">
-                              <CheckCircle2 className="h-3 w-3 text-primary" /> 3. Resultado Final
-                            </span>
-                            <p>
-                              O "Consenso" de valor e TAG Calculada é automaticamente injetado na sua composição, garantindo que novas criações sigam o padrão histórico da Unilux, eliminando variações indesejadas.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </details>
-            </motion.div>
-          );
-        })()}
       </Card>
 
 
