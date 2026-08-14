@@ -60,9 +60,10 @@ export default function ConferenciaPage() {
     if (step === 'peca') {
       const peca = await validar(value);
       if (peca) {
-        // Se a peça já tem transportadora no picking do Auge, poderíamos pré-selecionar
-        if (peca.picking?.transportadora_id) {
-          // Lógica para carregar transportadora do Auge se necessário
+        // Acesso seguro via cast para evitar erro de relação não detectada pelo TS
+        const pecaTyped = peca as any;
+        if (pecaTyped.picking?.transportadora_id) {
+          // Lógica futura: buscar transportadora se houver no picking
         }
       }
     } else if (step === 'carrinho') {
