@@ -33,6 +33,7 @@ const ExpedicaoRecebimentoPage = lazy(() => import("@/pages/expedicao/Recebiment
 
 
 
+
 const ExpedicaoConferenciaPage = lazy(() => import("@/pages/expedicao/ConferenciaPage"));
 const ExpedicaoRomaneioPage = lazy(() => import("@/pages/expedicao/RomaneioPage"));
 
@@ -248,6 +249,7 @@ const App = () => (
 
                   <Route path="operacao" element={<ExpedicaoOperacaoHomePage />} />
                   <Route path="recebimento" element={<ExpedicaoRecebimentoPage />} />
+
 
                   <Route path="painel" element={<ExpedicaoPainelPage />} />
                   
