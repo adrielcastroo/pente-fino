@@ -150,7 +150,4 @@ export default function AugeSyncStatusPage() {
   );
 }
 
-function cn(...inputs: any[]) {
-  return inputs.filter(Boolean).join(' ');
-}
 
