@@ -638,59 +638,67 @@ function normalizeTagGridObject(obj: Record<string, unknown>): TagCalculadaRow |
 }
 
 // Extrai linhas tanto de resposta JSON quanto de HTML (<tr> com JSON no último <td>).
-function parseTagGridResponse(text: string): TagCalculadaRow[] {
-  const trimmed = (text ?? '').trim();
-  if (!trimmed) return [];
-  const out: TagCalculadaRow[] = [];
-
-  if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
-    try {
-      const j = JSON.parse(trimmed);
-      const arr = Array.isArray(j)
-        ? j
-        : (Array.isArray((j as any)?.data) ? (j as any).data
-          : (Array.isArray((j as any)?.rows) ? (j as any).rows
-            : (Array.isArray((j as any)?.results) ? (j as any).results : [])));
-      for (const r of arr) {
-        const row = normalizeTagGridObject(r ?? {});
-        if (row) out.push(row);
-      }
-      if (out.length) return out;
-    } catch { /* cai para HTML */ }
-  }
-
-  const trRe = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
-  let m: RegExpExecArray | null;
-  while ((m = trRe.exec(trimmed)) !== null) {
-    const tds = [...m[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)]
-      .map((t) => t[1]
-        .replace(/&quot;/g, '"').replace(/&amp;/g, '&')
-        .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
-        .replace(/<[^>]+>/g, '').trim());
-    if (!tds.length) continue;
-
-    // 1) JSON escondido no último <td>
-    const last = tds[tds.length - 1];
-    if (last.startsWith('{')) {
-      try {
-        const row = normalizeTagGridObject(JSON.parse(last));
-        if (row) { out.push(row); continue; }
-      } catch { /* segue para leitura por colunas */ }
-    }
-
-    // 2) Colunas visíveis: Nome | Descrição | (Fórmula)
-    const cols = tds.filter((c) => c.length > 0 && !c.startsWith('{'));
-    if (cols.length >= 2) {
-      const [nome, descricao, formula] = cols;
-      // Ignora rótulos de formulário ("Nome:", "Tag:", "Operador:") e cabeçalhos.
-      const isLabel = (v: string) => /:$/.test(v.trim());
-      if (nome && !/^nome$/i.test(nome) && !isLabel(nome) && !isLabel(descricao ?? '')) {
-        out.push({ cd_tag: nome, nome, descricao: descricao || null, formula: formula || null });
-      }
-    }
-  }
-  return out;
-}
+ function parseTagGridResponse(text: string): TagCalculadaRow[] {
+   const trimmed = (text ?? '').trim();
+   if (!trimmed) return [];
+   // Limite de segurança: não processar HTMLs gigantes que podem causar timeout na regex
+   if (trimmed.length > 2 * 1024 * 1024) {
+     console.warn(`[auge-sync] HTML muito grande (${trimmed.length} bytes), truncando para evitar timeout.`);
+   }
+   
+   const out: TagCalculadaRow[] = [];
+ 
+   if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+     try {
+       const j = JSON.parse(trimmed);
+       const arr = Array.isArray(j)
+         ? j
+         : (Array.isArray((j as any)?.data) ? (j as any).data
+           : (Array.isArray((j as any)?.rows) ? (j as any).rows
+             : (Array.isArray((j as any)?.results) ? (j as any).results : [])));
+       for (const r of arr) {
+         const row = normalizeTagGridObject(r ?? {});
+         if (row) out.push(row);
+       }
+       if (out.length) return out;
+     } catch { /* cai para HTML */ }
+   }
+ 
+   const trRe = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+   let m: RegExpExecArray | null;
+   let count = 0;
+   // Máximo de 2000 linhas para evitar loop infinito ou CPU spike
+   while ((m = trRe.exec(trimmed)) !== null && count < 2000) {
+     count++;
+     const inner = m[1];
+     const tds = [...inner.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)]
+       .map((t) => t[1]
+         .replace(/&quot;/g, '"').replace(/&amp;/g, '&')
+         .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+         .replace(/<[^>]+>/g, '').trim());
+     if (!tds.length) continue;
+ 
+     // 1) JSON escondido no último <td>
+     const last = tds[tds.length - 1];
+     if (last.startsWith('{')) {
+       try {
+         const row = normalizeTagGridObject(JSON.parse(last));
+         if (row) { out.push(row); continue; }
+       } catch { /* segue para leitura por colunas */ }
+     }
+ 
+     // 2) Colunas visíveis: Nome | Descrição | (Fórmula)
+     const cols = tds.filter((c) => c.length > 0 && !c.startsWith('{'));
+     if (cols.length >= 2) {
+       const [nome, descricao, formula] = cols;
+       const isLabel = (v: string) => /:$/.test(v.trim());
+       if (nome && !/^nome$/i.test(nome) && !isLabel(nome) && !isLabel(descricao ?? '')) {
+         out.push({ cd_tag: nome, nome, descricao: descricao || null, formula: formula || null });
+       }
+     }
+   }
+   return out;
+ }
 
 // Descobre os endpoints ajax realmente usados pela página tag.php, lendo o HTML
 // da própria página (mais confiável do que adivinhar nomes de arquivo).
@@ -2761,34 +2769,35 @@ function maxDateISO(rows: any[], field = 'data_movimento'): string | null {
   return m ? new Date(m).toISOString() : null;
 }
 
-async function syncEntity(
-  admin: any,
-  auth: { jar: Jar; csrf: string; apiToken: string | null },
-  entity: Entity,
-  triggeredBy: string | null,
-  options: { dateFrom?: string | null; dateTo?: string | null } = {},
-) {
-  if (UNMAPPED.includes(entity)) {
-    return { entity, skipped: true, reason: 'Endpoint ainda não mapeado (aguardando HAR).' };
-  }
-
-  // Estado anterior (para sync incremental)
-  const { data: prevState } = await admin
-    .from('auge_sync_state')
-    .select('last_max_dt')
-    .eq('entidade', entity)
-    .maybeSingle();
-  const lastMax: string | null = prevState?.last_max_dt ?? null;
-
-  const { data: run } = await admin.from('auge_sync_runs')
-    .insert({ status: 'running', triggered_by: triggeredBy, entidade: entity })
-    .select('id').single();
-  const runId = run?.id;
-
-  try {
-    let processed = 0;
-    let upserted = 0;
-    let newMaxDt: string | null = null;
+ async function syncEntity(
+   admin: any,
+   auth: { jar: Jar; csrf: string; apiToken: string | null },
+   entity: Entity,
+   triggeredBy: string | null,
+   options: { dateFrom?: string | null; dateTo?: string | null } = {},
+ ) {
+   const t0 = Date.now();
+   if (UNMAPPED.includes(entity)) {
+     return { entity, skipped: true, reason: 'Endpoint ainda não mapeado (aguardando HAR).' };
+   }
+ 
+   // Estado anterior (para sync incremental)
+   const { data: prevState } = await admin
+     .from('auge_sync_state')
+     .select('last_max_dt')
+     .eq('entidade', entity)
+     .maybeSingle();
+   const lastMax: string | null = prevState?.last_max_dt ?? null;
+ 
+   const { data: run } = await admin.from('auge_sync_runs')
+     .insert({ status: 'running', triggered_by: triggeredBy, entidade: entity })
+     .select('id').single();
+   const runId = run?.id;
+ 
+   try {
+     let processed = 0;
+     let upserted = 0;
+     let newMaxDt: string | null = null;
 
     if (entity === 'saldo') {
       const items = await fetchSaldo(auth);
@@ -2887,29 +2896,33 @@ async function syncEntity(
       }).eq('id', runId);
     }
 
-    const nowIso = new Date().toISOString();
-    await admin.from('auge_sync_runs').update({
-      status: 'success',
-      finished_at: nowIso,
-      rows_processed: processed,
-      rows_upserted: upserted,
-    }).eq('id', runId);
-
-    // Persiste estado de sync incremental
-    await admin.from('auge_sync_state').upsert({
-      entidade: entity,
-      last_synced_at: nowIso,
-      last_max_dt: newMaxDt ?? lastMax,
-      last_status: 'success',
-      last_error: null,
-    }, { onConflict: 'entidade' });
-
-    return { entity, processed, upserted, incremental: !!lastMax };
-  } catch (e) {
-    const info = serializeError(e);
-    const nowIso = new Date().toISOString();
-    await admin.from('auge_sync_runs').update({
-      status: 'error',
+     const nowIso = new Date().toISOString();
+     const durationMs = Date.now() - t0;
+     await admin.from('auge_sync_runs').update({
+       status: 'success',
+       finished_at: nowIso,
+       rows_processed: processed,
+       rows_upserted: upserted,
+       detalhes: { ...((await admin.from('auge_sync_runs').select('detalhes').eq('id', runId).single()).data?.detalhes || {}), duration_ms: durationMs }
+     }).eq('id', runId);
+ 
+     // Persiste estado de sync incremental
+     await admin.from('auge_sync_state').upsert({
+       entidade: entity,
+       last_synced_at: nowIso,
+       last_max_dt: newMaxDt ?? lastMax,
+       last_status: 'success',
+       last_error: null,
+     }, { onConflict: 'entidade' });
+ 
+     return { entity, processed, upserted, incremental: !!lastMax, duration_ms: durationMs };
+   } catch (e) {
+     const info = serializeError(e);
+     const nowIso = new Date().toISOString();
+     const durationMs = Date.now() - t0;
+     console.error(`[auge-sync] Erro ao sincronizar entidade ${entity} após ${durationMs}ms:`, e);
+     await admin.from('auge_sync_runs').update({
+       status: 'error',
       finished_at: nowIso,
       error_message: info.message,
       detalhes: { entity, stack: info.stack ?? null, details: info.details ?? null },
@@ -4239,10 +4252,10 @@ Deno.serve(async (req) => {
     } catch (_) { /* cron/anon */ }
   }
 
-  try {
     try {
       await loadAugeCredentials(admin, triggeredBy);
     } catch (err: any) {
+      console.error(`[auge-sync] Erro ao carregar credenciais (triggeredBy: ${triggeredBy}):`, err);
       if (err?.code === 'AUGE_CREDENTIALS_MISSING') {
         return new Response(JSON.stringify({
           ok: false,
@@ -6521,7 +6534,27 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     const msg = getErrorMessage(e);
-    return new Response(JSON.stringify({ ok: false, error: msg, fallback: true }), {
+    console.error(`[auge-sync] Fatal error: ${msg}`, e);
+    
+    // Tenta registrar a falha no banco para auditoria antes de responder
+    try {
+      const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+      await admin.from('auge_sync_runs').insert({
+        status: 'error',
+        entidade: 'fatal_error',
+        error_message: msg,
+        finished_at: new Date().toISOString()
+      });
+    } catch (dbErr) {
+      console.error(`[auge-sync] Falha ao registrar log de erro no banco:`, dbErr);
+    }
+
+    return new Response(JSON.stringify({ 
+      ok: false, 
+      error: msg, 
+      error_stack: (e as Error)?.stack || 'not_available',
+      fallback: true 
+    }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
