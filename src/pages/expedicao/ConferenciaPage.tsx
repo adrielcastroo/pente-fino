@@ -133,7 +133,7 @@ export default function ConferenciaPage() {
     <div className="space-y-6">
       <header className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Fluxo de Conferência</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">como está o fluxo detalhado que implementamos no módulo expedição?</h1>
           <p className="text-sm text-muted-foreground">
             Validação rigorosa Picking/Auge e alocação atômica por romaneio.
           </p>
