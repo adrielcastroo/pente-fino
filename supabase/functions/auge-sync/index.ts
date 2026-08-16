@@ -2769,34 +2769,35 @@ function maxDateISO(rows: any[], field = 'data_movimento'): string | null {
   return m ? new Date(m).toISOString() : null;
 }
 
-async function syncEntity(
-  admin: any,
-  auth: { jar: Jar; csrf: string; apiToken: string | null },
-  entity: Entity,
-  triggeredBy: string | null,
-  options: { dateFrom?: string | null; dateTo?: string | null } = {},
-) {
-  if (UNMAPPED.includes(entity)) {
-    return { entity, skipped: true, reason: 'Endpoint ainda não mapeado (aguardando HAR).' };
-  }
-
-  // Estado anterior (para sync incremental)
-  const { data: prevState } = await admin
-    .from('auge_sync_state')
-    .select('last_max_dt')
-    .eq('entidade', entity)
-    .maybeSingle();
-  const lastMax: string | null = prevState?.last_max_dt ?? null;
-
-  const { data: run } = await admin.from('auge_sync_runs')
-    .insert({ status: 'running', triggered_by: triggeredBy, entidade: entity })
-    .select('id').single();
-  const runId = run?.id;
-
-  try {
-    let processed = 0;
-    let upserted = 0;
-    let newMaxDt: string | null = null;
+ async function syncEntity(
+   admin: any,
+   auth: { jar: Jar; csrf: string; apiToken: string | null },
+   entity: Entity,
+   triggeredBy: string | null,
+   options: { dateFrom?: string | null; dateTo?: string | null } = {},
+ ) {
+   const t0 = Date.now();
+   if (UNMAPPED.includes(entity)) {
+     return { entity, skipped: true, reason: 'Endpoint ainda não mapeado (aguardando HAR).' };
+   }
+ 
+   // Estado anterior (para sync incremental)
+   const { data: prevState } = await admin
+     .from('auge_sync_state')
+     .select('last_max_dt')
+     .eq('entidade', entity)
+     .maybeSingle();
+   const lastMax: string | null = prevState?.last_max_dt ?? null;
+ 
+   const { data: run } = await admin.from('auge_sync_runs')
+     .insert({ status: 'running', triggered_by: triggeredBy, entidade: entity })
+     .select('id').single();
+   const runId = run?.id;
+ 
+   try {
+     let processed = 0;
+     let upserted = 0;
+     let newMaxDt: string | null = null;
 
     if (entity === 'saldo') {
       const items = await fetchSaldo(auth);
@@ -2895,29 +2896,33 @@ async function syncEntity(
       }).eq('id', runId);
     }
 
-    const nowIso = new Date().toISOString();
-    await admin.from('auge_sync_runs').update({
-      status: 'success',
-      finished_at: nowIso,
-      rows_processed: processed,
-      rows_upserted: upserted,
-    }).eq('id', runId);
-
-    // Persiste estado de sync incremental
-    await admin.from('auge_sync_state').upsert({
-      entidade: entity,
-      last_synced_at: nowIso,
-      last_max_dt: newMaxDt ?? lastMax,
-      last_status: 'success',
-      last_error: null,
-    }, { onConflict: 'entidade' });
-
-    return { entity, processed, upserted, incremental: !!lastMax };
-  } catch (e) {
-    const info = serializeError(e);
-    const nowIso = new Date().toISOString();
-    await admin.from('auge_sync_runs').update({
-      status: 'error',
+     const nowIso = new Date().toISOString();
+     const durationMs = Date.now() - t0;
+     await admin.from('auge_sync_runs').update({
+       status: 'success',
+       finished_at: nowIso,
+       rows_processed: processed,
+       rows_upserted: upserted,
+       detalhes: { ...((await admin.from('auge_sync_runs').select('detalhes').eq('id', runId).single()).data?.detalhes || {}), duration_ms: durationMs }
+     }).eq('id', runId);
+ 
+     // Persiste estado de sync incremental
+     await admin.from('auge_sync_state').upsert({
+       entidade: entity,
+       last_synced_at: nowIso,
+       last_max_dt: newMaxDt ?? lastMax,
+       last_status: 'success',
+       last_error: null,
+     }, { onConflict: 'entidade' });
+ 
+     return { entity, processed, upserted, incremental: !!lastMax, duration_ms: durationMs };
+   } catch (e) {
+     const info = serializeError(e);
+     const nowIso = new Date().toISOString();
+     const durationMs = Date.now() - t0;
+     console.error(`[auge-sync] Erro ao sincronizar entidade ${entity} após ${durationMs}ms:`, e);
+     await admin.from('auge_sync_runs').update({
+       status: 'error',
       finished_at: nowIso,
       error_message: info.message,
       detalhes: { entity, stack: info.stack ?? null, details: info.details ?? null },
