@@ -88,6 +88,7 @@ async function loadAugeCredentials(admin: ReturnType<typeof createClient>, userI
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
 const TRANSFERENCIA_BACKFILL_BATCH = 8;
+const TRANSFERENCIAS_CHUNK_DAYS = 30; // Blocos de 30 dias para evitar timeouts no sync completo
 
 type Entity = 'saldo' | 'produtos' | 'depositos' | 'movimentacoes' | 'entradas' | 'lotes' | 'transferencias' | 'clientes' | 'expedicao_sync_prontos' | 'expedicao_validar_peca' | 'expedicao_alocar';
 const ALL_ENTITIES: Entity[] = ['produtos', 'saldo', 'movimentacoes', 'entradas', 'depositos', 'lotes', 'transferencias', 'clientes', 'expedicao_sync_prontos'];
@@ -487,7 +488,7 @@ async function fetchSelectTagsCalculadas(
         TAG_CALCULADA_PATH_OK = path;
         return rows;
       }
-    } catch { /* tenta o próximo candidato */ }
+    } catch (err) { /* tenta o próximo candidato */ }
   }
   return [];
 }
@@ -507,7 +508,7 @@ function decodeBase64Utf8(b64: string): string {
     const bin = atob(b64);
     const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
     return new TextDecoder('utf-8').decode(bytes);
-  } catch {
+  } catch (err) {
     return '';
   }
 }
@@ -2864,36 +2865,30 @@ function maxDateISO(rows: any[], field = 'data_movimento'): string | null {
       if (error) throw error;
       upserted = count ?? rows.length;
     } else if (entity === 'transferencias') {
-      const days = daysSince(lastMax, 7, 120);
-      const { data: items, path } = await fetchTransferenciasPHP(auth, days, options.dateFrom, options.dateTo);
-      processed = items.length;
-      const mapped = items.map(mapTransferencia).filter(r => r.id_externo);
-      // Enriquece com endpoint de detalhe (origem/destino/item)
-      const enrichStats = await enrichTransferencias(auth, mapped, 4, 800);
-      // Remove campo interno antes do upsert
-      const rows = mapped
-        .flatMap((row: any) => expandTransferenciaItens(row))
-        .map(({ _cd, _cd_mov, _cd_transf, _detail_ids, ...rest }: any) => rest);
-      const existing = await fetchExistingTransferencias(admin, rows);
-      const rowsToUpsert = await fillTransferenciaProductDescriptions(
-        admin,
-        rows.map((row: any) => preserveTransferenciaDetalhes(row, existing.get(row.id_externo)))
-      );
-      newMaxDt = maxDateISO(rowsToUpsert);
-      const { error, count } = await admin.from('auge_transferencias')
-        .upsert(rowsToUpsert, { onConflict: 'id_externo', count: 'exact' });
-      if (error) throw error;
-      const aggregateIdsToRemove = mapped
-        .filter((row: any) => Array.isArray(row.raw?._itens) && row.raw._itens.length > 0)
-        .map((row: any) => row.id_externo)
-        .filter(Boolean);
-      if (aggregateIdsToRemove.length > 0) {
-        await admin.from('auge_transferencias').delete().in('id_externo', aggregateIdsToRemove);
-      }
-      upserted = count ?? rowsToUpsert.length;
-      await admin.from('auge_sync_runs').update({
-        detalhes: { path, days_back: days, date_from: options.dateFrom, date_to: options.dateTo, last_max_dt: lastMax, enrich: enrichStats },
-      }).eq('id', runId);
+      const nowIso = new Date().toISOString();
+      // Inicia a tarefa em background para processamento assíncrono e chunked
+      const task = (async () => {
+        try {
+          await transferenciasSyncInit(admin, runId, options.dateFrom, options.dateTo, lastMax);
+        } catch (e) {
+          console.error(`[auge-sync] Erro ao iniciar sync de transferências:`, e);
+          await admin.from('auge_sync_runs').update({
+            status: 'error',
+            finished_at: new Date().toISOString(),
+            error_message: getErrorMessage(e),
+          }).eq('id', runId);
+        }
+      })();
+
+      // @ts-ignore
+      if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime?.waitUntil) EdgeRuntime.waitUntil(task);
+
+      return { 
+        entity, 
+        background: true, 
+        run_id: runId, 
+        message: 'Sync de transferências iniciado em chunks assíncronos. Verifique o progresso no painel administrativo.' 
+      };
     }
 
      const nowIso = new Date().toISOString();
@@ -3507,6 +3502,161 @@ async function tecidosDispatch(admin: any, auth: any, runId: string) {
       status: 'error',
       finished_at: new Date().toISOString(),
       error_message: (getErrorMessage(e)) + ` (phase=${phase})`,
+    }).eq('id', runId);
+  }
+}
+
+// ============================================================
+// Sync de Transferências em Chunks (Estratégia Assíncrona)
+// ============================================================
+
+async function transferenciasSyncInit(admin: any, runId: string, dateFrom?: string | null, dateTo?: string | null, lastMax?: string | null) {
+  const totalDays = daysSince(lastMax, 7, 120);
+  const now = Date.now();
+  
+  // Define os chunks de data
+  const chunks: Array<{ from: string; to: string }> = [];
+  
+  if (dateFrom && dateTo) {
+    // Se o usuário passou um range específico, processamos ele todo de uma vez (ou em chunks se for longo)
+    const de = new Date(dateFrom);
+    const ate = new Date(dateTo);
+    const diffDays = Math.ceil((ate.getTime() - de.getTime()) / 86400000);
+    
+    if (diffDays > TRANSFERENCIAS_CHUNK_DAYS) {
+      for (let d = 0; d < diffDays; d += TRANSFERENCIAS_CHUNK_DAYS) {
+        const chunkDe = new Date(de.getTime() + d * 86400000);
+        const chunkAte = new Date(Math.min(ate.getTime(), chunkDe.getTime() + (TRANSFERENCIAS_CHUNK_DAYS - 1) * 86400000));
+        chunks.push({ 
+          from: chunkDe.toISOString().split('T')[0], 
+          to: chunkAte.toISOString().split('T')[0] 
+        });
+      }
+    } else {
+      chunks.push({ from: dateFrom, to: dateTo });
+    }
+  } else {
+    // Sync incremental ou histórico padrão
+    for (let offset = 0; offset < totalDays; offset += TRANSFERENCIAS_CHUNK_DAYS) {
+      const ate = new Date(now - offset * 86400000);
+      const de = new Date(now - Math.min(offset + TRANSFERENCIAS_CHUNK_DAYS, totalDays) * 86400000);
+      chunks.push({ 
+        from: de.toISOString().split('T')[0], 
+        to: ate.toISOString().split('T')[0] 
+      });
+    }
+  }
+
+  const state = {
+    phase: 'sync_chunk',
+    chunks,
+    current_chunk_idx: 0,
+    processed: 0,
+    upserted: 0,
+    enriched: 0,
+    started_at: new Date().toISOString(),
+    last_max_dt: lastMax,
+    new_max_dt: lastMax,
+  };
+
+  await saveTecidosState(admin, runId, state);
+  selfInvoke('sync_transferencias_chunk', runId);
+}
+
+async function transferenciasSyncChunk(admin: any, auth: any, runId: string) {
+  const state = await loadTecidosState(admin, runId);
+  const idx = state.current_chunk_idx ?? 0;
+  const chunks = state.chunks ?? [];
+
+  if (idx >= chunks.length) {
+    // Finalizado
+    const nowIso = new Date().toISOString();
+    await admin.from('auge_sync_runs').update({
+      status: 'success',
+      finished_at: nowIso,
+      rows_processed: state.processed,
+      rows_upserted: state.upserted,
+      detalhes: { ...state, phase: 'done', finished_at: nowIso },
+    }).eq('id', runId);
+
+    // Persiste estado de sync incremental
+    await admin.from('auge_sync_state').upsert({
+      entidade: 'transferencias',
+      last_synced_at: nowIso,
+      last_max_dt: state.new_max_dt,
+      last_status: 'success',
+      last_error: null,
+    }, { onConflict: 'entidade' });
+    
+    return;
+  }
+
+  const chunk = chunks[idx];
+  console.log(`[auge-sync] Sincronizando chunk de transferências ${idx + 1}/${chunks.length}: ${chunk.from} ate ${chunk.to}`);
+
+  try {
+    const { data: items } = await fetchTransferenciasPHP(auth, 0, chunk.from, chunk.to);
+    const mapped = items.map(mapTransferencia).filter((r: any) => r.id_externo);
+    
+    // Enriquece
+    const enrichStats = await enrichTransferencias(auth, mapped, 4, 800);
+    
+    const rows = mapped
+      .flatMap((row: any) => expandTransferenciaItens(row))
+      .map(({ _cd, _cd_mov, _cd_transf, _detail_ids, ...rest }: any) => rest);
+      
+    const existing = await fetchExistingTransferencias(admin, rows);
+    const rowsToUpsert = await fillTransferenciaProductDescriptions(
+      admin,
+      rows.map((row: any) => preserveTransferenciaDetalhes(row, existing.get(row.id_externo)))
+    );
+    
+    const currentMaxDt = maxDateISO(rowsToUpsert);
+    let newMax = state.new_max_dt;
+    if (currentMaxDt && (!newMax || newMax < currentMaxDt)) newMax = currentMaxDt;
+
+    const { error, count } = await admin.from('auge_transferencias')
+      .upsert(rowsToUpsert, { onConflict: 'id_externo', count: 'exact' });
+    if (error) throw error;
+
+    // Remove agregados (se houver linhas explodidas)
+    const aggregateIdsToRemove = mapped
+      .filter((row: any) => Array.isArray(row.raw?._itens) && row.raw._itens.length > 0)
+      .map((row: any) => row.id_externo)
+      .filter(Boolean);
+    if (aggregateIdsToRemove.length > 0) {
+      await admin.from('auge_transferencias').delete().in('id_externo', aggregateIdsToRemove);
+    }
+
+    const newState = {
+      ...state,
+      current_chunk_idx: idx + 1,
+      processed: (state.processed ?? 0) + items.length,
+      upserted: (state.upserted ?? 0) + (count ?? rowsToUpsert.length),
+      enriched: (state.enriched ?? 0) + enrichStats.enriched,
+      new_max_dt: newMax,
+      last_chunk_stats: { chunk, items: items.length, upserted: count ?? rowsToUpsert.length, enrich: enrichStats },
+    };
+
+    await saveTecidosState(admin, runId, newState);
+    selfInvoke('sync_transferencias_chunk', runId);
+    
+  } catch (e) {
+    console.error(`[auge-sync] Erro no chunk ${idx} de transferências:`, e);
+    throw e; // O capturador de erro do dispatch registrará no log
+  }
+}
+
+async function transferenciasDispatch(admin: any, auth: any, runId: string) {
+  const state = await loadTecidosState(admin, runId);
+  const phase = state.phase ?? 'sync_chunk';
+  try {
+    if (phase === 'sync_chunk') await transferenciasSyncChunk(admin, auth, runId);
+  } catch (e) {
+    await admin.from('auge_sync_runs').update({
+      status: 'error',
+      finished_at: new Date().toISOString(),
+      error_message: (getErrorMessage(e)) + ` (phase=${phase}, chunk=${state.current_chunk_idx})`,
     }).eq('id', runId);
   }
 }
@@ -4678,6 +4828,17 @@ Deno.serve(async (req) => {
       const runId = url.searchParams.get('run_id') ?? '';
       if (!runId) throw new Error('run_id é obrigatório.');
       const task = tecidosDispatch(admin, auth, runId);
+      // @ts-ignore
+      if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime?.waitUntil) EdgeRuntime.waitUntil(task);
+      return new Response(JSON.stringify({ ok: true, chunk: true, run_id: runId }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (action === 'sync_transferencias_chunk') {
+      const runId = url.searchParams.get('run_id') ?? '';
+      if (!runId) throw new Error('run_id é obrigatório.');
+      const task = transferenciasDispatch(admin, auth, runId);
       // @ts-ignore
       if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime?.waitUntil) EdgeRuntime.waitUntil(task);
       return new Response(JSON.stringify({ ok: true, chunk: true, run_id: runId }), {
@@ -6357,7 +6518,7 @@ Deno.serve(async (req) => {
     // ==============================================================
     if (action === 'necessidade_cron_run') {
       let payload: any = {};
-      try { payload = await req.json(); } catch { /* ignore */ }
+      try { payload = await req.json(); } catch (err) { /* ignore */ }
       const destinosDefault = ['18', '20', 'EMBALAGE', 'ESPE.1', 'ESPE.2', 'PH', 'PVT'];
       const destinos: string[] = Array.isArray(payload?.destinos) && payload.destinos.length
         ? payload.destinos.map((s: any) => String(s).trim()).filter(Boolean)
@@ -6488,7 +6649,7 @@ Deno.serve(async (req) => {
 
     if (action === 'necessidade_cron_log') {
       let payload: any = {};
-      try { payload = await req.json(); } catch { /* ignore */ }
+      try { payload = await req.json(); } catch (err) { /* ignore */ }
       const resultados = Array.isArray(payload?.resultados) ? payload.resultados : [];
       const destinos = Array.isArray(payload?.destinos) ? payload.destinos : [];
       await admin.from('auge_sync_runs').insert({
@@ -6504,7 +6665,7 @@ Deno.serve(async (req) => {
 
     if (action === 'lotes_live' || action === 'series_live') {
       let payload: any = {};
-      try { payload = await req.json(); } catch { /* ignore */ }
+      try { payload = await req.json(); } catch (err) { /* ignore */ }
       const cdItem = String(payload?.cdItem ?? '').trim();
       const cdDeposito = String(payload?.cdDeposito ?? '').trim();
       if (!cdItem || !cdDeposito) throw new Error('cdItem e cdDeposito são obrigatórios.');
@@ -6517,7 +6678,7 @@ Deno.serve(async (req) => {
     }
 
     let syncPayload: any = {};
-    try { syncPayload = await req.clone().json(); } catch { /* GET ou body ausente */ }
+    try { syncPayload = await req.clone().json(); } catch (err) { /* GET ou body ausente */ }
     const syncOptions = {
       dateFrom: cleanText(url.searchParams.get('dateFrom')) ?? cleanText(syncPayload?.dateFrom) ?? cleanText(syncPayload?.dataDe),
       dateTo: cleanText(url.searchParams.get('dateTo')) ?? cleanText(syncPayload?.dateTo) ?? cleanText(syncPayload?.dataAte),
