@@ -638,59 +638,67 @@ function normalizeTagGridObject(obj: Record<string, unknown>): TagCalculadaRow |
 }
 
 // Extrai linhas tanto de resposta JSON quanto de HTML (<tr> com JSON no último <td>).
-function parseTagGridResponse(text: string): TagCalculadaRow[] {
-  const trimmed = (text ?? '').trim();
-  if (!trimmed) return [];
-  const out: TagCalculadaRow[] = [];
-
-  if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
-    try {
-      const j = JSON.parse(trimmed);
-      const arr = Array.isArray(j)
-        ? j
-        : (Array.isArray((j as any)?.data) ? (j as any).data
-          : (Array.isArray((j as any)?.rows) ? (j as any).rows
-            : (Array.isArray((j as any)?.results) ? (j as any).results : [])));
-      for (const r of arr) {
-        const row = normalizeTagGridObject(r ?? {});
-        if (row) out.push(row);
-      }
-      if (out.length) return out;
-    } catch { /* cai para HTML */ }
-  }
-
-  const trRe = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
-  let m: RegExpExecArray | null;
-  while ((m = trRe.exec(trimmed)) !== null) {
-    const tds = [...m[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)]
-      .map((t) => t[1]
-        .replace(/&quot;/g, '"').replace(/&amp;/g, '&')
-        .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
-        .replace(/<[^>]+>/g, '').trim());
-    if (!tds.length) continue;
-
-    // 1) JSON escondido no último <td>
-    const last = tds[tds.length - 1];
-    if (last.startsWith('{')) {
-      try {
-        const row = normalizeTagGridObject(JSON.parse(last));
-        if (row) { out.push(row); continue; }
-      } catch { /* segue para leitura por colunas */ }
-    }
-
-    // 2) Colunas visíveis: Nome | Descrição | (Fórmula)
-    const cols = tds.filter((c) => c.length > 0 && !c.startsWith('{'));
-    if (cols.length >= 2) {
-      const [nome, descricao, formula] = cols;
-      // Ignora rótulos de formulário ("Nome:", "Tag:", "Operador:") e cabeçalhos.
-      const isLabel = (v: string) => /:$/.test(v.trim());
-      if (nome && !/^nome$/i.test(nome) && !isLabel(nome) && !isLabel(descricao ?? '')) {
-        out.push({ cd_tag: nome, nome, descricao: descricao || null, formula: formula || null });
-      }
-    }
-  }
-  return out;
-}
+ function parseTagGridResponse(text: string): TagCalculadaRow[] {
+   const trimmed = (text ?? '').trim();
+   if (!trimmed) return [];
+   // Limite de segurança: não processar HTMLs gigantes que podem causar timeout na regex
+   if (trimmed.length > 2 * 1024 * 1024) {
+     console.warn(`[auge-sync] HTML muito grande (${trimmed.length} bytes), truncando para evitar timeout.`);
+   }
+   
+   const out: TagCalculadaRow[] = [];
+ 
+   if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+     try {
+       const j = JSON.parse(trimmed);
+       const arr = Array.isArray(j)
+         ? j
+         : (Array.isArray((j as any)?.data) ? (j as any).data
+           : (Array.isArray((j as any)?.rows) ? (j as any).rows
+             : (Array.isArray((j as any)?.results) ? (j as any).results : [])));
+       for (const r of arr) {
+         const row = normalizeTagGridObject(r ?? {});
+         if (row) out.push(row);
+       }
+       if (out.length) return out;
+     } catch { /* cai para HTML */ }
+   }
+ 
+   const trRe = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+   let m: RegExpExecArray | null;
+   let count = 0;
+   // Máximo de 2000 linhas para evitar loop infinito ou CPU spike
+   while ((m = trRe.exec(trimmed)) !== null && count < 2000) {
+     count++;
+     const inner = m[1];
+     const tds = [...inner.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)]
+       .map((t) => t[1]
+         .replace(/&quot;/g, '"').replace(/&amp;/g, '&')
+         .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+         .replace(/<[^>]+>/g, '').trim());
+     if (!tds.length) continue;
+ 
+     // 1) JSON escondido no último <td>
+     const last = tds[tds.length - 1];
+     if (last.startsWith('{')) {
+       try {
+         const row = normalizeTagGridObject(JSON.parse(last));
+         if (row) { out.push(row); continue; }
+       } catch { /* segue para leitura por colunas */ }
+     }
+ 
+     // 2) Colunas visíveis: Nome | Descrição | (Fórmula)
+     const cols = tds.filter((c) => c.length > 0 && !c.startsWith('{'));
+     if (cols.length >= 2) {
+       const [nome, descricao, formula] = cols;
+       const isLabel = (v: string) => /:$/.test(v.trim());
+       if (nome && !/^nome$/i.test(nome) && !isLabel(nome) && !isLabel(descricao ?? '')) {
+         out.push({ cd_tag: nome, nome, descricao: descricao || null, formula: formula || null });
+       }
+     }
+   }
+   return out;
+ }
 
 // Descobre os endpoints ajax realmente usados pela página tag.php, lendo o HTML
 // da própria página (mais confiável do que adivinhar nomes de arquivo).
