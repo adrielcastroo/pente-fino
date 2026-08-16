@@ -4239,10 +4239,10 @@ Deno.serve(async (req) => {
     } catch (_) { /* cron/anon */ }
   }
 
-  try {
     try {
       await loadAugeCredentials(admin, triggeredBy);
     } catch (err: any) {
+      console.error(`[auge-sync] Erro ao carregar credenciais (triggeredBy: ${triggeredBy}):`, err);
       if (err?.code === 'AUGE_CREDENTIALS_MISSING') {
         return new Response(JSON.stringify({
           ok: false,
@@ -6521,7 +6521,27 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     const msg = getErrorMessage(e);
-    return new Response(JSON.stringify({ ok: false, error: msg, fallback: true }), {
+    console.error(`[auge-sync] Fatal error: ${msg}`, e);
+    
+    // Tenta registrar a falha no banco para auditoria antes de responder
+    try {
+      const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+      await admin.from('auge_sync_runs').insert({
+        status: 'error',
+        entidade: 'fatal_error',
+        error_message: msg,
+        finished_at: new Date().toISOString()
+      });
+    } catch (dbErr) {
+      console.error(`[auge-sync] Falha ao registrar log de erro no banco:`, dbErr);
+    }
+
+    return new Response(JSON.stringify({ 
+      ok: false, 
+      error: msg, 
+      error_stack: (e as Error)?.stack || 'not_available',
+      fallback: true 
+    }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
