@@ -277,7 +277,12 @@ export default function AugeAdminPanel() {
       </Card>
 
       {/* Status da conexão */}
-      <Card className="p-5 rounded-md border-border/40">
+      <Card className="p-5 rounded-md border-border/40 relative overflow-hidden">
+        <div className="absolute top-2 right-2">
+          <Button variant="ghost" size="sm" className="text-[10px] h-7 gap-1" asChild>
+            <a href="/admin/auge-sync-status"><Activity className="w-3 h-3" /> Monitorar Status</a>
+          </Button>
+        </div>
 
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">

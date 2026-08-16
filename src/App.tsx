@@ -71,6 +71,7 @@ const N8nMonitorPage = lazy(() => import("@/pages/N8nMonitorPage"));
 const HarTransferenciasPage = lazy(() => import("@/pages/admin/HarTransferenciasPage"));
 const DepositosAdminPage = lazy(() => import("@/pages/admin/DepositosAdminPage"));
 const AutomacoesPage = lazy(() => import("@/pages/admin/AutomacoesPage"));
+const AugeSyncStatusPage = lazy(() => import("@/pages/admin/AugeSyncStatusPage"));
 
 import RequireModule from "@/components/auth/RequireModule";
 import PageAccessOutlet from "@/components/auth/PageAccessOutlet";
@@ -311,6 +312,7 @@ const App = () => (
                   <Route path="/admin/depositos" element={<RequireRole role="admin" fallback={<Navigate to="/admin" replace />}><DepositosAdminPage /></RequireRole>} />
                   <Route path="/automacoes" element={<RequireRole role="admin" fallback={<Navigate to="/admin" replace />}><AutomacoesPage /></RequireRole>} />
                   <Route path="/admin/automacoes" element={<Navigate to="/automacoes" replace />} />
+                  <Route path="/admin/auge-sync-status" element={<RequireRole role="admin" fallback={<Navigate to="/admin" replace />}><AugeSyncStatusPage /></RequireRole>} />
                 </Route>
 
                 <Route path="/admin/flags" element={<Navigate to="/admin?tab=flags" replace />} />

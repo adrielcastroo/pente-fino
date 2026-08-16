@@ -72,8 +72,15 @@ export default function IntegrationsTab() {
       <Card className="p-4 border-primary/30 bg-primary/5">
         <div className="flex items-start gap-3 text-xs">
           <ShieldAlert className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-          <div className="space-y-1">
-            <p className="font-semibold text-foreground">Kill switch global de integrações</p>
+          <div className="flex-1 space-y-1">
+            <div className="flex items-center justify-between">
+              <p className="font-semibold text-foreground">Kill switch global de integrações</p>
+              <Button variant="link" size="sm" className="h-auto p-0 text-primary text-[10px]" asChild>
+                <a href="/admin/auge-sync-status" className="flex items-center gap-1">
+                  Ver status de sincronização <ChevronRight className="h-3 w-3" />
+                </a>
+              </Button>
+            </div>
             <p className="text-muted-foreground">
               Ao desativar uma integração aqui, ela para de responder em todo o app imediatamente.
               Use nossos <code className="text-[10px]">useFeatureFlag()</code> ou consulte
