@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Sparkles, FileText, Truck, Webhook, Mail, Database, Building2,
-  ShieldAlert, LineChart, Zap, Clock, CheckCircle2, XCircle, AlertCircle,
+  ShieldAlert, LineChart, Zap, Clock, CheckCircle2, XCircle, AlertCircle, ChevronRight,
 } from 'lucide-react';
 import { toast } from 'sonner';
 

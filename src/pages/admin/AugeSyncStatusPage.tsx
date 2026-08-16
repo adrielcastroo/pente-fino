@@ -7,13 +7,14 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
-  RefreshCw, PlayCircle, Zap, Activity, 
-  ArrowLeft, LayoutDashboard, History,
-  Wifi, WifiOff, Loader2
+  RefreshCw, Zap, Activity, 
+  History, Wifi, WifiOff, Loader2,
+  LayoutDashboard
 } from 'lucide-react';
 import { syncToast } from '@/lib/toast-flows';
 import { formatDateBR } from '@/lib/app-utils';
 import AugeSyncHistory from '@/components/auge/AugeSyncHistory';
+import { cn } from '@/lib/utils';
 
 export default function AugeSyncStatusPage() {
   const { isAdmin, loading } = useAuth();
@@ -62,7 +63,6 @@ export default function AugeSyncStatusPage() {
     <PageShell>
       <PageHeader
         title="Status da Sincronização"
-        description="Monitoramento em tempo real do fluxo de dados Auge ERP"
         actions={
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" asChild className="h-9">
@@ -86,12 +86,12 @@ export default function AugeSyncStatusPage() {
             <div className="flex items-center gap-4">
               <div className={cn(
                 "w-12 h-12 rounded-full flex items-center justify-center",
-                pinging ? "bg-muted animate-pulse" : ping?.ok ? "bg-success/10" : "bg-destructive/10"
+                pinging ? "bg-muted animate-pulse" : ping?.ok ? "bg-emerald-500/10" : "bg-destructive/10"
               )}>
                 {pinging ? (
                   <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
                 ) : ping?.ok ? (
-                  <Wifi className="h-6 w-6 text-success" />
+                  <Wifi className="h-6 w-6 text-emerald-500" />
                 ) : (
                   <WifiOff className="h-6 w-6 text-destructive" />
                 )}
@@ -99,7 +99,7 @@ export default function AugeSyncStatusPage() {
               <div>
                 <h3 className="text-lg font-bold">Conexão Auge ERP</h3>
                 <div className="flex items-center gap-2 mt-0.5">
-                  <Badge variant={ping?.ok ? "success" : "destructive"} className="text-[10px] uppercase">
+                  <Badge variant={ping?.ok ? "secondary" : "destructive"} className={cn("text-[10px] uppercase", ping?.ok && "bg-emerald-500/10 text-emerald-500 border-emerald-500/20")}>
                     {pinging ? "Verificando..." : ping?.ok ? "Online" : "Offline"}
                   </Badge>
                   {ping?.latency && (
@@ -153,3 +153,4 @@ export default function AugeSyncStatusPage() {
 function cn(...inputs: any[]) {
   return inputs.filter(Boolean).join(' ');
 }
+
