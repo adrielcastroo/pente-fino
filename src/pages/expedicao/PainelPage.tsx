@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Loader2, PackageSearch, Ban, AlertTriangle, AlertOctagon, CheckCircle2, ChevronRight } from 'lucide-react';
+import { Loader2, PackageSearch, Ban, AlertTriangle, AlertOctagon, CheckCircle2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,12 +9,14 @@ import {
 } from '@/components/ui/table';
 import { usePickings, type Picking } from '@/hooks/expedicao/useExpedicaoData';
 import { EmptyState } from '@/components/ui/empty-state';
+import { supabase } from '@/integrations/supabase/client';
 
 import CancelPickingDialog from '@/components/expedicao/CancelPickingDialog';
 import { PageShell, PageHeader, StatCard, StatusBadge } from '@/components/expedicao/ui';
 import AlertsPanel from '@/components/expedicao/AlertsPanel';
 import { useAuth } from '@/hooks/use-auth';
 import { computeSla } from '@/lib/expedicao/sla';
+import { syncToast } from '@/lib/toast-flows';
 
 export default function PainelPage() {
   const { data, isLoading } = usePickings();
