@@ -1095,7 +1095,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
   /** TAGs necessárias: agrupadas globalmente e recomendando a mais frequente. */
   const recomendadas = useMemo(() => {
-    const out: Array<{ id: string; code: string; valor: string; cfgNome: string; calculada: string; formula: string }> = [];
+    const out: Array<{ id: string; code: string; valor: string; cfgNome: string; calculada: string; formula: string; cdTagCustomizada?: string; cdTagCalculada?: string; dsTagTexto?: string }> = [];
     
     // Usamos categorias que já consolidam TAGs de todas as configurações ranqueadas e encontradas.
     for (const cat of categorias) {
@@ -1314,7 +1314,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   const jaNaTabela = (id: string) => linhas.some((l) => l.id === id);
 
 
-  const adicionarLinha = (r: { id: string; code: string; valor: string; cfgNome: string; calculada: string }) => {
+  const adicionarLinha = (r: { id: string; code: string; valor: string; cfgNome: string; calculada: string; formula?: string; cdTagCustomizada?: string; cdTagCalculada?: string; dsTagTexto?: string }) => {
     setLinhas((prev) => {
       if (prev.some((l) => l.id === r.id)) {
         toast.info(`TAG ${r.code} removida da tabela.`);
@@ -1427,6 +1427,9 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         valor: l.valor,
         calculada: l.calculada ?? null,
         formula: l.formula ?? null,
+        cdTagCustomizada: l.cdTagCustomizada ?? null,
+        cdTagCalculada: l.cdTagCalculada ?? null,
+        dsTagTexto: l.dsTagTexto ?? null,
       })),
       gravadas: res?.gravadas ?? null,
       total: res?.total ?? null,
