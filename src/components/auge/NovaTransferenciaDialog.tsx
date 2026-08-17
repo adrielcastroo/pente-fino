@@ -195,7 +195,7 @@ export default function NovaTransferenciaDialog({
     <>
     <Dialog open={open} onOpenChange={(o) => { if (!loading) onOpenChange(o); }}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
-        <DialogHeader>
+        <DialogHeader className="p-5 sm:p-6 pb-4 sm:pb-4 mb-0">
           <DialogTitle className="flex items-center gap-2">
             <ArrowRightLeft className="w-4 h-4 text-primary" />
             {isEdit
