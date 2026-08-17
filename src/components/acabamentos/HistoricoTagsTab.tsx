@@ -36,6 +36,8 @@ export default function HistoricoTagsTab() {
   const [removendo, setRemovendo] = useState(false);
   const [revertendo, setRevertendo] = useState<string | null>(null);
   const [filtroAlteradas, setFiltroAlteradas] = useState<string | null>(null);
+  const [eventoParaAuditoria, setEventoParaAuditoria] = useState<any | null>(null);
+
 
 
   const { data: eventos = [], isLoading, isFetching, refetch } = useQuery({
@@ -291,25 +293,11 @@ export default function HistoricoTagsTab() {
                         <Button
                           variant="outline"
                           size="sm"
-                          className={`h-7 px-2 text-[10px] gap-1 transition-all ${
-                            filtroAlteradas === ev.id
-                              ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                              : 'hover:bg-primary/10 border-primary/20 text-primary'
-                          }`}
-                          onClick={() => {
-                            if (filtroAlteradas === ev.id) {
-                              setFiltroAlteradas(null);
-                            } else {
-                              const alteradas = ev.linhas.filter(l => l.valor !== l.valor_antigo);
-                              setFiltroAlteradas(ev.id);
-                              toast.info(`Mostrando apenas as ${alteradas.length} tags que tiveram alteração real de valor.`, {
-                                duration: 3000
-                              });
-                            }
-                          }}
+                          className="h-7 px-2 text-[10px] gap-1 hover:bg-primary/10 border-primary/20 text-primary"
+                          onClick={() => setEventoParaAuditoria(ev)}
                         >
                           <CheckCircle2 className="h-3 w-3" />
-                          {filtroAlteradas === ev.id ? 'Mostrar Todas' : 'Ver Apenas Alteradas'}
+                          Ver Apenas Alteradas
                         </Button>
                       </div>
                     )}
@@ -389,6 +377,75 @@ export default function HistoricoTagsTab() {
               </Button>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+      <Dialog open={!!eventoParaAuditoria} onOpenChange={(v) => !v && setEventoParaAuditoria(null)}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col p-0 gap-0 border-primary/20 shadow-2xl">
+          <DialogHeader className="p-5 sm:p-6 pb-4 border-b bg-muted/30">
+            <DialogTitle className="flex items-center gap-2 flex-wrap text-primary">
+              <CheckCircle2 className="h-5 w-5" />
+              Auditoria de Impacto
+              <Badge variant="outline" className="ml-2 text-[10px] uppercase border-primary/30">
+                Apenas Alteradas
+              </Badge>
+            </DialogTitle>
+            <p className="text-xs text-muted-foreground mt-1">
+              Exibindo as tags que sofreram alteração real de valor na operação de {formatarDataTag(eventoParaAuditoria?.em)}.
+            </p>
+          </DialogHeader>
+
+          <ScrollArea className="flex-1 p-5">
+            {eventoParaAuditoria && (
+              <div className="rounded border bg-card">
+                <table className="w-full text-[11px]">
+                  <thead className="bg-muted text-muted-foreground">
+                    <tr className="text-left border-b">
+                      <th className="p-3 font-medium uppercase tracking-wider">TAG</th>
+                      <th className="p-3 font-medium uppercase tracking-wider">Anterior (Auge)</th>
+                      <th className="p-3 font-medium uppercase tracking-wider text-emerald-600">Implementado</th>
+                      <th className="p-3 font-medium uppercase tracking-wider">Fórmula</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {eventoParaAuditoria.linhas
+                      .filter((l: any) => l.valor !== l.valor_antigo)
+                      .map((l: any, i: number) => (
+                        <tr key={i} className="hover:bg-muted/30 transition-colors">
+                          <td className="p-3 font-mono font-bold text-primary">
+                            {l.code || '—'}
+                          </td>
+                          <td className="p-3 font-mono text-muted-foreground line-through decoration-destructive/30">
+                            {l.valor_antigo || '—'}
+                          </td>
+                          <td className="p-3 font-mono font-semibold text-emerald-600 bg-emerald-500/5">
+                            {l.valor || '—'}
+                          </td>
+                          <td className="p-3 font-mono text-muted-foreground italic text-[10px]">
+                            {l.formula || '—'}
+                          </td>
+                        </tr>
+                      ))}
+                    {eventoParaAuditoria.linhas.filter((l: any) => l.valor !== l.valor_antigo).length === 0 && (
+                      <tr>
+                        <td colSpan={4} className="p-8 text-center text-muted-foreground italic">
+                          Nenhuma alteração real de valor detectada neste registro.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </ScrollArea>
+          
+          <div className="p-4 border-t bg-muted/30 flex justify-between items-center px-6">
+            <div className="text-[11px] text-muted-foreground font-medium">
+              Total de Impacto: <span className="text-primary">{eventoParaAuditoria?.linhas?.filter((l: any) => l.valor !== l.valor_antigo).length || 0}</span> tags alteradas
+            </div>
+            <Button size="sm" onClick={() => setEventoParaAuditoria(null)} className="h-8 px-4 text-xs">
+              Fechar Auditoria
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
