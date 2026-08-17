@@ -9,7 +9,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
-export type TagEventoTipo = 'criacao' | 'edicao' | 'relancamento';
+export type TagEventoTipo = 'criacao' | 'edicao' | 'relancamento' | 'reversao';
 
 export interface TagHistoricoLinha {
   /** Rótulo curto exibido na composição (ex.: "C1"). */
@@ -63,6 +63,7 @@ export const TAG_EVENTO_LABEL: Record<TagEventoTipo, string> = {
   criacao: 'Gravação',
   edicao: 'Edição das TAGs calculadas',
   relancamento: 'Relançamento',
+  reversao: 'Reversão para estado anterior',
 };
 
 /** Chave estável de agrupamento por TAG Custom (nome + configuração). */

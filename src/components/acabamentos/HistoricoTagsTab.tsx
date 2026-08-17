@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import {
   History, Search, CheckCircle2, AlertTriangle, Trash2, Tag as TagIcon,
-  ChevronRight, Loader2, RefreshCw, User,
+  ChevronRight, Loader2, RefreshCw, User, ArrowLeftCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -21,6 +21,7 @@ import {
   formatarDataTag,
   lerEventosTag,
   removerGrupoTag,
+  registrarEventoTag,
 } from '@/lib/tag-historico';
 
 /**
@@ -33,6 +34,7 @@ export default function HistoricoTagsTab() {
   const [busca, setBusca] = useState('');
   const [chaveAberta, setChaveAberta] = useState<string | null>(null);
   const [removendo, setRemovendo] = useState(false);
+  const [revertendo, setRevertendo] = useState<string | null>(null);
 
   const { data: eventos = [], isLoading, isFetching, refetch } = useQuery({
     queryKey: ['tag-custom-historico'],
@@ -83,6 +85,50 @@ export default function HistoricoTagsTab() {
       toast.error(e?.message ?? 'Falha ao remover o histórico desta TAG.');
     } finally {
       setRemovendo(false);
+    }
+  };
+
+  const reverterPara = async (ev: any) => {
+    if (!ev.linhas || ev.linhas.length === 0) {
+      toast.error('Este registro não possui dados de composição para reverter.');
+      return;
+    }
+    setRevertendo(ev.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('auge-sync?action=criar_tag_custom', {
+        body: {
+          cdConfiguracao: ev.cdConfiguracao,
+          descricao: ev.descricao,
+          itens: ev.linhas.map((l: any) => ({
+            dsTagCustomizada: l.valor,
+            dsTagCalculada: l.calculada || '',
+            dsFormula: l.formula || '',
+            dsTagTexto: l.calculada ? '' : l.valor,
+          })),
+        },
+      });
+      if (error) throw error;
+      const res = data as any;
+      if (res?.ok) {
+        toast.success(`Configuração revertida com sucesso no Auge (${res.gravadas}/${res.total}).`);
+        await registrarEventoTag({
+          ok: true,
+          tipo: 'reversao',
+          descricao: ev.descricao,
+          cdConfiguracao: ev.cdConfiguracao,
+          nmConfiguracao: ev.nmConfiguracao,
+          linhas: ev.linhas,
+          gravadas: res.gravadas,
+          total: res.total,
+        });
+        qc.invalidateQueries({ queryKey: ['tag-custom-historico'] });
+      } else {
+        throw new Error(res?.error || 'O Auge não confirmou a reversão.');
+      }
+    } catch (e: any) {
+      toast.error(e?.message || 'Falha ao reverter no Auge.');
+    } finally {
+      setRevertendo(null);
     }
   };
 
@@ -211,6 +257,28 @@ export default function HistoricoTagsTab() {
                       <Badge variant="outline" className="text-[9px]">
                         {ev.gravadas ?? 0}/{ev.total} gravada(s)
                       </Badge>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between gap-2 mt-1">
+                    <div className="text-[10px] text-muted-foreground">
+                      {ev.total != null && `${ev.gravadas ?? 0} de ${ev.total} configs. alteradas`}
+                    </div>
+                    {ev.ok && ev.tipo !== 'reversao' && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 px-2 text-[10px] gap-1 hover:bg-amber-500/10 hover:text-amber-600 hover:border-amber-500/50"
+                        onClick={() => reverterPara(ev)}
+                        disabled={!!revertendo}
+                      >
+                        {revertendo === ev.id ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <ArrowLeftCircle className="h-3 w-3" />
+                        )}
+                        Reverter para este estado
+                      </Button>
                     )}
                   </div>
 

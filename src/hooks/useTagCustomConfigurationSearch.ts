@@ -1,7 +1,7 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useMemo, useEffect, useState } from 'react';
-import { toIlikePattern, toIlikeTokens, ilikeAnd } from '@/lib/tag-search';
+import { useState, useEffect } from 'react';
+import { toIlikeTokens, matchesIlike } from '@/lib/tag-search';
 
 export interface TagCustomSearchResult {
   cd_configuracao: string;
@@ -9,14 +9,6 @@ export interface TagCustomSearchResult {
   qtd_tags: number;
 }
 
-/**
- * Hook centralizado para busca de configurações de TAG Custom.
- * Implementa debounce e lógica de busca AND.
- * 
- * FALLBACK: Se a RPC 'buscar_auge_tag_custom_configuracoes' não estiver 
- * disponível (PGRST202), o hook cai para uma busca via PostgREST 
- * aplicando ilike sequencial (AND) no cliente/servidor.
- */
 export function useTagCustomConfigurationSearch(searchTerm: string) {
   const [debouncedTerm, setDebouncedTerm] = useState(searchTerm);
 
@@ -28,33 +20,58 @@ export function useTagCustomConfigurationSearch(searchTerm: string) {
   }, [searchTerm]);
 
   const query = useQuery({
-    queryKey: ['tag-custom-config-search-v2', debouncedTerm],
+    queryKey: ['tag-custom-config-search-v3', debouncedTerm],
     enabled: debouncedTerm.length >= 2,
     staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-    retry: 1,
     queryFn: async () => {
+      // 1. Tenta RPC
       try {
-        // 1. Tenta usar a RPC (Lógica AND nativa e performática)
         const { data, error } = await (supabase as any).rpc('buscar_auge_tag_custom_configuracoes', {
           p_termo: debouncedTerm
         });
 
-        if (error) {
-          // PGRST202 = Função não encontrada no schema cache
-          if (error.code === 'PGRST202') {
-            console.warn('RPC buscar_auge_tag_custom_configuracoes não encontrada. Usando fallback PostgREST.');
-            return await runFallbackSearch(debouncedTerm);
-          }
-          throw error;
+        if (!error && data) {
+          // A RPC já deve aplicar o AND, mas garantimos no cliente para evitar discrepâncias visuais
+          const tokens = toIlikeTokens(debouncedTerm);
+          return (data as any[]).filter(cfg => {
+            const nm = cfg.nm_configuracao || '';
+            return tokens.every(tk => matchesIlike(nm, tk));
+          }) as TagCustomSearchResult[];
+        }
+      } catch (err) {
+        console.warn('RPC failed, falling back to PostgREST', err);
+      }
+
+      // 2. Fallback PostgREST com filtro AND estrito
+      const tokens = toIlikeTokens(debouncedTerm);
+      const tabelas = ['auge_tag_custom_configuracoes', 'auge_tag_custom_scan'];
+      const map = new Map<string, TagCustomSearchResult>();
+
+      for (const tabela of tabelas) {
+        let q = supabase.from(tabela as any).select('cd_configuracao, nm_configuracao, qtd_tags');
+        
+        // Aplicamos o primeiro token no banco para reduzir o dataset
+        if (tokens.length > 0) {
+          q = q.ilike('nm_configuracao', tokens[0]);
         }
 
-        return (data || []) as TagCustomSearchResult[];
-      } catch (err) {
-        console.error('Erro useTagCustomConfigurationSearch:', err);
-        // Se falhou por qualquer motivo, tenta o fallback antes de desistir
-        return await runFallbackSearch(debouncedTerm);
+        const { data } = await q.limit(1000);
+        if (data) {
+          for (const r of data as any[]) {
+            const nm = r.nm_configuracao || '';
+            // Validamos TODOS os tokens no cliente para garantir lógica AND perfeita
+            if (tokens.every(tk => matchesIlike(nm, tk))) {
+              map.set(r.cd_configuracao, {
+                cd_configuracao: String(r.cd_configuracao),
+                nm_configuracao: nm,
+                qtd_tags: Number(r.qtd_tags || 0)
+              });
+            }
+          }
+        }
       }
+
+      return Array.from(map.values()).sort((a, b) => a.nm_configuracao.localeCompare(b.nm_configuracao, 'pt-BR'));
     }
   });
 
@@ -64,45 +81,3 @@ export function useTagCustomConfigurationSearch(searchTerm: string) {
     debouncedTerm
   };
 }
-
-/**
- * Busca de fallback usando PostgREST padrão quando a RPC não está disponível.
- * Aplica lógica AND filtrando nm_configuracao por múltiplos tokens ilike.
- */
-async function runFallbackSearch(term: string): Promise<TagCustomSearchResult[]> {
-  const padrao = toIlikePattern(term);
-  const tokens = toIlikeTokens(term);
-
-  // Consultamos as duas tabelas que compõem o catálogo de configurações
-  const tabelas = ['auge_tag_custom_configuracoes', 'auge_tag_custom_scan'];
-  const acumulado: TagCustomSearchResult[] = [];
-
-  for (const tabela of tabelas) {
-    let q = supabase
-      .from(tabela as any)
-      .select('cd_configuracao, nm_configuracao, qtd_tags');
-    
-    // Aplica lógica AND (cada token deve estar no nome)
-    q = ilikeAnd(q as any, 'nm_configuracao', padrao, tokens);
-
-    const { data, error } = await q.limit(500);
-    if (!error && data) {
-      acumulado.push(...(data as any[]).map(r => ({
-        cd_configuracao: String(r.cd_configuracao),
-        nm_configuracao: String(r.nm_configuracao),
-        qtd_tags: Number(r.qtd_tags || 0)
-      })));
-    }
-  }
-
-  // Deduplica e ordena
-  const seen = new Set<string>();
-  return acumulado
-    .filter(cfg => {
-      if (seen.has(cfg.cd_configuracao)) return false;
-      seen.add(cfg.cd_configuracao);
-      return true;
-    })
-    .sort((a, b) => a.nm_configuracao.localeCompare(b.nm_configuracao, 'pt-BR'));
-}
-
