@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2, AlertTriangle, ArrowRight, X, Info } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, ArrowRight, X, Info, Search } from 'lucide-react';
 
 interface ResumoConfiguracoesMassaProps {
   termoBusca: string;
