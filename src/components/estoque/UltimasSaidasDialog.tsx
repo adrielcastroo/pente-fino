@@ -49,7 +49,7 @@ export function UltimasSaidasDialog({ open, onOpenChange, describeItem }: Ultima
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] sm:max-w-3xl p-0 gap-0 border border-border bg-card overflow-hidden rounded-lg shadow-xl max-h-[90vh] flex flex-col">
+      <DialogContent className="max-w-[95vw] sm:max-w-3xl p-0 gap-0 overflow-hidden max-h-[90vh] flex flex-col">
         <div className="px-5 sm:px-6 py-4 border-b border-border bg-card">
           <div className="flex items-center gap-3 pr-10">
             <div className="p-2 rounded-md border border-violet-500/20 bg-violet-500/10 text-violet-400">
