@@ -810,8 +810,7 @@ export default function IncluirItemMassaTab() {
                     Nenhum acabamento encontrado com este item.
                   </div>
                 )}
-                {vinculosGrouped.map(({ cd, list, acab }) => {
-                  // exibe uma linha por vínculo (cd_acabamento_item)
+                {vinculosGroupedPaginados.map(({ cd, list, acab }) => {
                   return list.map((v) => {
                     const sel = selecionadosExcluir.has(v.cd_acabamento_item);
                     return (
@@ -840,6 +839,14 @@ export default function IncluirItemMassaTab() {
                   });
                 })}
               </div>
+              <Pagination
+                totalItems={vinculos.length}
+                pageSize={pageSizeExcluir}
+                currentPage={currentExcluir}
+                onPageChange={setCurrentExcluir}
+                onPageSizeChange={setPageSizeExcluir}
+                className="border-t pt-2"
+              />
             </Card>
           )}
         </div>
