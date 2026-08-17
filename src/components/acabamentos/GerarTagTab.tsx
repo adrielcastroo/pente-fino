@@ -1721,10 +1721,16 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         )}
 
         <ResumoConfiguracoesMassa 
-          termoBusca={termoBusca}
-          customAberta={customAberta}
-          setCustomAberta={setCustomAberta}
-          obrigatoriasCount={obrigatorias.length}
+          configs={resumoConfigs
+            .filter(c => !removidasResumo.has(c.cd_configuracao))
+            .map(c => ({
+              cd_configuracao: c.cd_configuracao,
+              nm_configuracao: c.nm_configuracao,
+              count: c.qtd_tags
+            }))
+          }
+          onRemove={(cd) => setRemovidasResumo(prev => new Set(prev).add(cd))}
+          onClear={() => setRemovidasResumo(new Set(resumoConfigs.map(c => c.cd_configuracao)))}
         />
       </Card>
 
