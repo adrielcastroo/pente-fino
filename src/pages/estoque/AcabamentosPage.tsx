@@ -227,7 +227,7 @@ export default function AcabamentosPage() {
   return (
     <div className="p-4 md:p-6 space-y-4">
       <PageHeader
-        title="Acabamentos"
+        title="Gestão de Acabamentos"
         actions={
           <div className="flex items-center gap-2">
             {run && !showPanel && (
