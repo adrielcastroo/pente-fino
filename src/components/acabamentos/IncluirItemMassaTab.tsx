@@ -865,7 +865,7 @@ function ImportPlanilhaDialog({
             <FileUp className="h-10 w-10 text-muted-foreground" />
             <div className="text-center space-y-1">
               <div className="text-sm font-medium">Nenhum arquivo selecionado</div>
-              <div className="text-xs text-muted-foreground">Escolha uma planilha ou baixe o modelo para começar.</div>
+              <div className="text-xs text-muted-foreground">Importe arquivos (.xlsx, .csv) para vincular múltiplos itens com precisão estratégica.</div>
             </div>
             <div className="flex items-center gap-2">
               <Button onClick={onPickFile} className="gap-2">

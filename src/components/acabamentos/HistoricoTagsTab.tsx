@@ -192,7 +192,7 @@ export default function HistoricoTagsTab() {
           <div className="p-8 text-center text-[11px] text-muted-foreground">
             <History className="h-5 w-5 mx-auto mb-2 opacity-50" />
             {eventos.length === 0
-              ? 'Nenhuma ação registrada ainda. Ao gravar ou editar uma TAG Custom na aba "Gerar TAG", ela aparece aqui para toda a equipe.'
+              ? 'Nenhum registro encontrado. Suas ações de configuração e edição de TAGs Custom serão listadas aqui em tempo real para auditoria da equipe.'
               : 'Nenhuma TAG Custom encontrada para esta busca.'}
           </div>
         ) : (
