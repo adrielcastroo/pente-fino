@@ -1019,27 +1019,10 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
 
 
-  // TAGs Custom existentes que casam com o termo pesquisado.
+  // TAGs Custom existentes que casam com o termo pesquisado (removido lógica duplicada)
   const customsEncontradas = useMemo(() => {
-    const byCfg = new Map<string, { cd: string; nm: string; qtd: number }>();
-    const tokens = toIlikeTokens(termoDeferido);
-    
-    // Filtramos tagsBusca para garantir que só apareçam se o nome da CONFIGURAÇÃO casar.
-    // Isso corrige a discrepância visual onde o usuário busca por uma configuração
-    // mas os resultados mostram itens cujos nomes de TAG batem mas a config não.
-    const filteredTags = tagsBusca.filter(t => {
-      const nm = t.nm_configuracao || '';
-      return tokens.every(tk => matchesIlike(nm, tk));
-    });
-
-    for (const t of filteredTags) {
-      const cd = t.cd_configuracao;
-      const cur = byCfg.get(cd) ?? { cd, nm: t.nm_configuracao ?? cd, qtd: 0 };
-      cur.qtd += 1;
-      byCfg.set(cd, cur);
-    }
-    return Array.from(byCfg.values()).sort((a, b) => a.nm.localeCompare(b.nm)).slice(0, 30);
-  }, [tagsBusca, termoDeferido]);
+    return configsResumo.map(c => ({ cd: c.cd_configuracao, nm: c.nm_configuracao, qtd: c.qtd_tags }));
+  }, [configsResumo]);
 
   const { data: tagsDaCustom = [], isFetching: loadingCustom } = useQuery({
     queryKey: ['auge-tag-custom-detalhe', customAberta?.cd ?? ''],
@@ -1512,7 +1495,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         body: {
           // Lista de configurações detectadas no Resumo
           cdConfiguracoes: configuracoesAlvo,
-          cdConfiguracao: customAberta?.cd ?? configuracoesAlvo[0] ?? '',
+          cdConfiguracao: customAberta?.cd || configuracoesAlvo[0] || '',
           descricao: descricaoFinal,
           itens: linhas.map((l) => {
             const calculada = (l.calculada ?? '').trim();
@@ -1537,9 +1520,16 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       setResultado(res);
       setEditandoAuge(false);
       setEdicoesAuge({});
+      
+      // O histórico registra o número REAL de configurações afetadas devolvido pelo Auge.
+      // Se configsAlvo tinha 102 mas o Auge alterou 90, o total será 90.
       registrarHistorico(res?.ok === true, res, 'criacao');
-      if (res?.ok) toast.success(`TAG Custom gravada no Auge (${res.gravadas}/${res.total}).`);
-      else toast.error(res?.error ?? 'O Auge não confirmou a gravação da TAG Custom.');
+      
+      if (res?.ok) {
+        toast.success(`TAG Custom gravada no Auge (${res.gravadas}/${res.total}).`);
+      } else {
+        toast.error(res?.error ?? 'O Auge não confirmou a gravação da TAG Custom.');
+      }
 
     } catch (e: any) {
       const msg = e?.message ?? 'Falha ao criar a TAG Custom no Auge.';
