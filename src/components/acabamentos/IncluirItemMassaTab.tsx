@@ -400,10 +400,11 @@ export default function IncluirItemMassaTab() {
     });
   };
 
-  const buscarVinculos = () => {
+   const buscarVinculos = () => {
     if (!codigoExcluir.trim()) return toast.error('Informe o código do item.');
     setSelecionadosExcluir(new Set());
     setCodigoBuscado(codigoExcluir.trim());
+    setCurrentExcluir(1);
   };
 
   const handleImportFile = async (file: File) => {
