@@ -1097,7 +1097,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
   /** TAGs necessárias: agrupadas globalmente e recomendando a mais frequente. */
   const recomendadas = useMemo(() => {
-    const out: Array<{ id: string; code: string; valor: string; cfgNome: string; calculada: string; formula: string; cdTagCustomizada?: string; cdTagCalculada?: string; dsTagTexto?: string }> = [];
+    const out: Array<{ id: string; code: string; valor: string; cfgNome: string; calculada: string; formula: string; cdTagCustomizada?: string; valorAntigo?: string; cdTagCalculada?: string; dsTagTexto?: string }> = [];
     
     // Usamos categorias que já consolidam TAGs de todas as configurações ranqueadas e encontradas.
     for (const cat of categorias) {
