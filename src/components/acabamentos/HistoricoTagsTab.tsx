@@ -227,7 +227,7 @@ export default function HistoricoTagsTab() {
       </Card>
 
       <Dialog open={!!grupoAberto} onOpenChange={(v) => !v && setChaveAberta(null)}>
-        <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col p-0 gap-0">
+        <DialogContent className="max-w-5xl max-h-[85vh] overflow-hidden flex flex-col p-0 gap-0">
           <DialogHeader className="p-5 sm:p-6 pb-4 sm:pb-4 mb-0">
             <DialogTitle className="flex items-center gap-2 flex-wrap">
               <TagIcon className="h-4 w-4 text-primary" />
