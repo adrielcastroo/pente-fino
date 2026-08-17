@@ -147,7 +147,6 @@ export default function CadastroDetailDialog({ item, open, onOpenChange, onEdit 
               </Button>
             </div>
           )}
-        </div>
       </DialogContent>
     </Dialog>
   );
