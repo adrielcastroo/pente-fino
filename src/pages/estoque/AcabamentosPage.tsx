@@ -362,7 +362,7 @@ export default function AcabamentosPage() {
               <button
                 key={a.cd_acabamento}
                 onClick={() => setAcabSel(a.cd_acabamento)}
-                className={`w-full text-left rounded border p-2 text-xs transition ${acabSel === a.cd_acabamento ? 'bg-primary/10 border-primary' : 'hover:bg-muted'}`}
+                className={`w-full text-left rounded-lg border p-3 text-xs transition-all duration-200 group active:scale-[0.98] ${acabSel === a.cd_acabamento ? 'bg-primary/10 border-primary shadow-sm ring-1 ring-primary/20' : 'hover:bg-muted hover:border-muted-foreground/30'}`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">

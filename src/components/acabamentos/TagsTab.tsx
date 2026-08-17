@@ -393,7 +393,7 @@ export default function TagsTab() {
               {lista.map((r) => {
                 const tags = tagsByCfg[r.cd_configuracao] ?? [];
                 return (
-                  <tr key={r.cd_configuracao} className="border-t align-top hover:bg-muted/50">
+                  <tr key={r.cd_configuracao} className="border-t align-top hover:bg-muted/30 transition-colors duration-150 group">
                     <td className="p-2">
                       <div className="font-medium">{r.nm_configuracao ?? '—'}</div>
                       {r.erro && <div className="text-[10px] text-amber-500 mt-0.5">⚠ {r.erro}</div>}
