@@ -714,6 +714,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   const [addManual, setAddManual] = useState(false);
   const [historico, setHistorico] = useState<RegistroGerarTag[]>([]);
   const [removidasManualmente, setRemovidasManualmente] = useState<Set<string>>(new Set());
+  const [configuracoesAtivas, setConfiguracoesAtivas] = useState<ConfiguracaoLite[]>([]);
   const [cfgSearch, setCfgSearch] = useState<{ termo: string; hasResults: boolean; isSearching: boolean; pesquisou: boolean }>({
     termo: '',
     hasResults: false,
@@ -1019,11 +1020,16 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
 
 
+  // Sincroniza as configurações ativas baseadas na busca e nas remoções manuais
+  useEffect(() => {
+    const ativas = configsMassa.filter(c => !removidasManualmente.has(c.cd_configuracao));
+    setConfiguracoesAtivas(ativas);
+  }, [configsMassa, removidasManualmente]);
 
-  // TAGs Custom existentes que casam com o termo pesquisado (removido lógica duplicada)
+  // TAGs Custom existentes que casam com o termo pesquisado
   const customsEncontradas = useMemo(() => {
-    return configsMassa.map(c => ({ cd: c.cd_configuracao, nm: c.nm_configuracao, qtd: c.qtd_tags }));
-  }, [configsMassa]);
+    return configuracoesAtivas.map(c => ({ cd: c.cd_configuracao, nm: c.nm_configuracao, qtd: c.qtd_tags }));
+  }, [configuracoesAtivas]);
 
   const { data: tagsDaCustom = [], isFetching: loadingCustom } = useQuery({
     queryKey: ['auge-tag-custom-detalhe', customAberta?.cd ?? ''],
@@ -1525,7 +1531,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     
     const configuracoesAlvo = Array.from(
       new Set(
-        [...resumoConfigs, ...configsMassa]
+        configuracoesAtivas
           .map((cfg) => String(cfg.cd_configuracao ?? '').trim())
           .filter(Boolean)
       )
@@ -1725,6 +1731,16 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           customAberta={customAberta}
           setCustomAberta={setCustomAberta}
           obrigatoriasCount={obrigatorias.length}
+          configuracoesAtivas={configuracoesAtivas}
+          onRemove={(cd) => setRemovidasManualmente(prev => new Set(prev).add(cd))}
+          onClear={() => {
+            const allCodes = configuracoesAtivas.map(c => c.cd_configuracao);
+            setRemovidasManualmente(prev => {
+              const next = new Set(prev);
+              allCodes.forEach(cd => next.add(cd));
+              return next;
+            });
+          }}
         />
       </Card>
 
