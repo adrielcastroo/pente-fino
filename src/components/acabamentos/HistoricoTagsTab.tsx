@@ -332,7 +332,7 @@ export default function HistoricoTagsTab() {
                                 .map((l, i) => (
                                   <tr key={i} className={`border-t align-top ${l.valor !== l.valor_antigo ? 'bg-emerald-500/5' : 'bg-background/50'}`}>
                                     <td className="p-1.5 font-mono break-all font-bold text-blue-600">
-                                      {ev.nmConfiguracao || grupoAberto?.nmConfiguracao || ev.cdConfiguracao || grupoAberto?.cdConfiguracao || '—'}
+                                      {l.nmConfiguracao || ev.nmConfiguracao || grupoAberto?.nmConfiguracao || l.cdConfiguracao || ev.cdConfiguracao || grupoAberto?.cdConfiguracao || '—'}
                                     </td>
                                     <td className="p-1.5 font-mono break-all text-muted-foreground">
                                       {l.valor_antigo || '—'}
