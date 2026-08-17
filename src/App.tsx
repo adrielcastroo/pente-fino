@@ -324,7 +324,7 @@ const App = () => (
               </Routes>
               <UpdateAvailableBanner />
               <ReleaseRegistrar />
-              {/* <AgentChatWidget /> */}
+              {/* {/* <AgentChatWidget /> */} */}
             </Suspense>
             </PageAccessProvider>
           </AuthProvider>
