@@ -1344,9 +1344,9 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         cfgNome: r.cfgNome,
         calculada: r.calculada,
         formula: r.formula || '',
-        cdTagCustomizada: (r as any).cdTagCustomizada,
-        cdTagCalculada: (r as any).cdTagCalculada,
-        dsTagTexto: (r as any).dsTagTexto,
+        cdTagCustomizada: r.cdTagCustomizada,
+        cdTagCalculada: r.cdTagCalculada,
+        dsTagTexto: r.dsTagTexto,
       }];
     });
   };
