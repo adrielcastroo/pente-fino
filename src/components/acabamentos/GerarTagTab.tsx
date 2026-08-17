@@ -1698,9 +1698,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
             onSearchStateChange={setCfgSearch}
           />
           <p className="text-[10px] text-muted-foreground leading-relaxed whitespace-pre-line">
-            vc lembra que antes eu conseguia pesquisar ex: cortina*cm*35*liso.
-            {"\n\n"}
-            e o bloco resumo mostrava somente as configurações que continham essas palavras? dia 16/08 estava funcionando perfeitamente, me diga pq isso foi alterado e qual horario isso foi alterado
+            o bloco resumo teve alguma alteração neste mesmo periodo?
           </p>
         </div>
 
