@@ -694,7 +694,7 @@ export default function IncluirItemMassaTab() {
               <div className="text-[10px] text-muted-foreground">{filtrados.length} de {acabamentos.length} · {selecionados.size} selecionados</div>
               <div className="max-h-[60vh] overflow-auto space-y-1">
                 {isLoading && <div className="p-6 text-center"><Loader2 className="h-4 w-4 animate-spin inline" /></div>}
-                {filtrados.map((a) => {
+                {filtradosPaginados.map((a) => {
                   const sel = selecionados.has(a.cd_acabamento);
                   return (
                     <button
@@ -715,6 +715,15 @@ export default function IncluirItemMassaTab() {
                   );
                 })}
               </div>
+              <Pagination
+                totalItems={filtrados.length}
+                pageSize={pageSize}
+                currentPage={currentPage}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+                pageSizeOptions={[25, 50, 100]}
+                className="border-t pt-2"
+              />
             </Card>
           </div>
         </div>
