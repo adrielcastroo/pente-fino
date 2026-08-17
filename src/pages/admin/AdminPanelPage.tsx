@@ -76,7 +76,7 @@ const TAB_GROUPS: TabGroup[] = [
       { key: 'n8n', label: 'n8n', icon: Workflow },
       { key: 'auge', label: 'Auge ERP', icon: Warehouse },
       { key: 'backfill-transf', label: 'Backfill Transf.', icon: ListChecks },
-      { key: 'llm-tokens', label: 'Tokens LLM', icon: KeyRound },
+      // { key: 'llm-tokens', label: 'Tokens LLM', icon: KeyRound },
     ],
   },
 
@@ -199,9 +199,9 @@ export default function AdminPanelPage() {
           <TabsContent value="auge" className="mt-0">
             <Suspense fallback={tabFallback}><AugeAdminPanel /></Suspense>
           </TabsContent>
-          <TabsContent value="llm-tokens" className="mt-0">
+          {/* <TabsContent value="llm-tokens" className="mt-0">
             <Suspense fallback={tabFallback}><LlmTokensTab /></Suspense>
-          </TabsContent>
+          </TabsContent> */}
           <TabsContent value="backfill-transf" className="mt-0">
             <Suspense fallback={tabFallback}><BackfillTransferenciasTab /></Suspense>
           </TabsContent>

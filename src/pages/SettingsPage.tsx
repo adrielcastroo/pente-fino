@@ -96,7 +96,7 @@ const CATEGORY_GROUPS: { id: 'account' | 'system'; label: string; minRole?: Role
       { id: 'auge-account', name: 'Minha conta Auge', icon: KeyRound, description: 'Configure suas credenciais do Auge para ações no ERP.' },
       { id: 'appearance', name: 'Aparência', icon: Palette, description: 'Personalize o visual e as cores.' },
       { id: 'preferences', name: 'Preferências', icon: Settings, description: 'Ajuste o comportamento do sistema.' },
-      { id: 'fio-memory', name: 'Memória do Fio', icon: Brain, description: 'Revise, edite e apague o que o assistente lembra sobre você.' },
+      // { id: 'fio-memory', name: 'Memória do Fio', icon: Brain, description: 'Revise, edite e apague o que o assistente lembra sobre você.' },
     ],
   },
   {

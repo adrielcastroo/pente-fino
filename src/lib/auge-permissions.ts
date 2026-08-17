@@ -44,8 +44,8 @@ export const AUGE_ACTIONS: { key: AugeAction; label: string; hint?: string }[] =
   { key: 'delete', label: 'Excluir' },
   { key: 'sync', label: 'Sincronizar com Auge' },
   { key: 'export', label: 'Exportar' },
-  { key: 'ai_ask', label: 'Consultar via Fio (IA)' },
-  { key: 'ai_write', label: 'Executar ações via Fio (IA)' },
+  // { key: 'ai_ask', label: 'Consultar via Fio (IA)' },
+  // { key: 'ai_write', label: 'Executar ações via Fio (IA)' },
 ];
 
 export function labelForArea(k: string): string {

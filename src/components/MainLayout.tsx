@@ -115,7 +115,7 @@ export default function MainLayout({
       {showUndo && <UndoBanner />}
       <CommandPalette />
       <ShortcutsModal open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
-      <AugeCredentialsGate />
+      {/* <AugeCredentialsGate /> */}
     </SidebarProvider>
   );
 }
