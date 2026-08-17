@@ -415,8 +415,8 @@ export default function HistoricoTagsTab() {
                       {eventoParaAuditoria.linhas
                         .filter((l: any) => l.valor !== l.valor_antigo)
                         .map((l: any, i: number) => {
-                          const configNome = eventoParaAuditoria?.nmConfiguracao || grupoAberto?.nmConfiguracao;
-                          const configCodigo = eventoParaAuditoria?.cdConfiguracao || grupoAberto?.cdConfiguracao;
+                          const configNome = l.nmConfiguracao || eventoParaAuditoria?.nmConfiguracao || grupoAberto?.nmConfiguracao;
+                          const configCodigo = l.cdConfiguracao || eventoParaAuditoria?.cdConfiguracao || grupoAberto?.cdConfiguracao;
                           
                           return (
                             <tr key={i} className="hover:bg-muted/30 transition-colors">
