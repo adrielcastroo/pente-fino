@@ -941,73 +941,54 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     staleTime: 60 * 1000,
     queryFn: async () => {
       const termo = termoDeferido.trim();
-      const padrao = toIlikePattern(termo);
       const tokens = toIlikeTokens(termo);
 
       const map = new Map<string, ConfiguracaoLite>();
       const PAGE = 1000;
-      const MAX = 80000;
+      const MAX_PAGES = 5; // Limita a 5000 registros para evitar travamento de UI
 
-      for (let from = 0; from < MAX; from += PAGE) {
-        // Fonte 1: auge_tag_custom_configuracoes (Configurações com TAGs vinculadas)
-        // CRITICAL: We MUST search only in nm_configuracao to respect the "Configuration" input filter
-        // CORREÇÃO: Aplicar ilikeAnd garante que todos os tokens sejam filtrados no SELECT
-        // Garantimos que o filtro seja aplicado APENAS em nm_configuracao para o bloco Resumo
-        let query1 = (supabase as any)
-          .from('auge_tag_custom_configuracoes')
-          .select('cd_configuracao, nm_configuracao');
-        
-        for (const t of tokens) {
-          query1 = query1.ilike('nm_configuracao', t);
-        }
-        if (tokens.length === 0 && padrao) {
-          query1 = query1.ilike('nm_configuracao', padrao);
-        }
+      for (let page = 0; page < MAX_PAGES; page++) {
+        const from = page * PAGE;
+        const to = from + PAGE - 1;
 
-        const res1 = await query1
-          .order('cd_configuracao', { ascending: true })
-          .range(from, from + PAGE - 1);
-        
-        let query2 = (supabase as any)
-          .from('auge_tag_custom_scan')
-          .select('cd_configuracao, nm_configuracao');
-          
-        for (const t of tokens) {
-          query2 = query2.ilike('nm_configuracao', t);
-        }
-        if (tokens.length === 0 && padrao) {
-          query2 = query2.ilike('nm_configuracao', padrao);
-        }
-
-        const res2 = await query2
-          .order('cd_configuracao', { ascending: true })
-          .range(from, from + PAGE - 1);
+        // Buscamos em ambas as tabelas
+        const [res1, res2] = await Promise.all([
+          (async () => {
+            let q = (supabase as any).from('auge_tag_custom_configuracoes').select('cd_configuracao, nm_configuracao, qtd_tags');
+            for (const t of tokens) q = q.ilike('nm_configuracao', t);
+            return q.order('cd_configuracao', { ascending: true }).range(from, to);
+          })(),
+          (async () => {
+            let q = (supabase as any).from('auge_tag_custom_scan').select('cd_configuracao, nm_configuracao, qtd_tags');
+            for (const t of tokens) q = q.ilike('nm_configuracao', t);
+            return q.order('cd_configuracao', { ascending: true }).range(from, to);
+          })()
+        ]);
 
         const data1 = res1.data || [];
         const data2 = res2.data || [];
         const data = [...data1, ...data2];
         
-        if (data.length === 0 && from > 0) break;
+        if (data.length === 0) break;
 
         for (const r of data) {
           const cd = String(r.cd_configuracao ?? '').trim();
           if (!cd) continue;
           const nm = r.nm_configuracao ?? cd;
           
-          // Validação extra no cliente para garantir 100% de precisão (lógica AND estrita)
-          // Normalizamos ambos para garantir que espaços e acentos não quebrem a busca
-          const nmNorm = nm.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-          const tokensNorm = tokens.map(t => t.replace(/%/g, '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
-          
-          const passaNoFiltro = tokensNorm.every(tk => nmNorm.includes(tk));
-          
-          if (!passaNoFiltro) continue;
-
-          if (!map.has(cd)) {
-            map.set(cd, { cd_configuracao: cd, nm_configuracao: nm, qtd_tags: 0 });
+          // Double-check no cliente (acentos/case)
+          if (tokens.every(tk => matchesIlike(nm, tk))) {
+            if (!map.has(cd)) {
+              map.set(cd, { 
+                cd_configuracao: cd, 
+                nm_configuracao: nm, 
+                qtd_tags: Number(r.qtd_tags || 0) 
+              });
+            }
           }
         }
         
+        // Se ambos vieram com menos que a página, acabou
         if (data1.length < PAGE && data2.length < PAGE) break;
       }
 
