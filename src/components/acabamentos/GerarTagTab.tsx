@@ -1699,9 +1699,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
             onSearchStateChange={setCfgSearch}
           />
           <p className="text-[10px] text-muted-foreground leading-relaxed whitespace-pre-line">
-            Como ele funcionava na versão do dia 16/08 as 22:40?
-
-            bloco resumo e campo de busca/pesquisa
+            Como ele funcionava na versão do dia 16/08 as 22:40?\n\nbloco resumo e campo de busca/pesquisa
           </p>
         </div>
 
