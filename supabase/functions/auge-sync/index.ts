@@ -6351,7 +6351,7 @@ Deno.serve(async (req) => {
       ];
       const body = dtBody(columns, 200); // Buscar as últimas 200 peças
       
-      const res = await postApi(auth, '/api/v1/record-manufactured-documents/list', body);
+      const res = await postApi(auth, '/record-manufactured-documents/list', body);
       const rows = Array.isArray(res) ? res : [];
       
       if (rows.length === 0) {
