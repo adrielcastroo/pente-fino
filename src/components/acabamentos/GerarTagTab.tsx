@@ -705,6 +705,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   const [descricao, setDescricao] = useState(rascunho.descricao);
   const [linhas, setLinhas] = useState<LinhaTag[]>(rascunho.linhas);
   const [customAberta, setCustomAberta] = useState<{ cd: string; nm: string } | null>(rascunho.customAberta);
+  const [removidasResumo, setRemovidasResumo] = useState<Set<string>>(new Set());
   const [enviando, setEnviando] = useState(false);
   const [resultado, setResultado] = useState<ResultadoAuge | null>(rascunho.resultado);
   const [tentouEnviar, setTentouEnviar] = useState(false);
