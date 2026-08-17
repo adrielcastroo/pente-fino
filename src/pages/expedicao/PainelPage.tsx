@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Loader2, PackageSearch, Ban, AlertTriangle, AlertOctagon, CheckCircle2, ChevronRight } from 'lucide-react';
+import { Loader2, PackageSearch, Ban, AlertTriangle, AlertOctagon, CheckCircle2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,17 +9,41 @@ import {
 } from '@/components/ui/table';
 import { usePickings, type Picking } from '@/hooks/expedicao/useExpedicaoData';
 import { EmptyState } from '@/components/ui/empty-state';
+import { supabase } from '@/integrations/supabase/client';
 
 import CancelPickingDialog from '@/components/expedicao/CancelPickingDialog';
 import { PageShell, PageHeader, StatCard, StatusBadge } from '@/components/expedicao/ui';
 import AlertsPanel from '@/components/expedicao/AlertsPanel';
 import { useAuth } from '@/hooks/use-auth';
 import { computeSla } from '@/lib/expedicao/sla';
+import { syncToast } from '@/lib/toast-flows';
 
 export default function PainelPage() {
-  const { data, isLoading } = usePickings();
+  const { data, isLoading, refetch } = usePickings();
   const { can } = useAuth();
   const allowCancel = can('expedicao:cancel-picking');
+  const [isSyncing, setIsSyncing] = useState(false);
+  
+  const handleSyncProduction = async () => {
+    if (isSyncing) return;
+    setIsSyncing(true);
+    const tid = syncToast.iniciado('Produção do Auge');
+    
+    try {
+      const { data: res, error } = await supabase.functions.invoke('auge-sync', {
+        body: { action: 'expedicao_sync_prontos' }
+      });
+      
+      if (error) throw error;
+      
+      syncToast.ok('Produção', res.count || 0, res.message, { id: tid });
+      refetch();
+    } catch (err) {
+      syncToast.erro('Produção', err, { id: tid });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
   
   const [cancelTarget, setCancelTarget] = useState<Picking | null>(null);
   const [filter, setFilter] = useState('');
@@ -79,6 +103,18 @@ export default function PainelPage() {
       <PageHeader
         title="Painel da expedição"
         subtitle="Pickings aguardando movimentação e conferência."
+        actions={
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSyncProduction}
+            disabled={isSyncing}
+            className="h-9 gap-2"
+          >
+            <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+            Sincronizar Produção
+          </Button>
+        }
       />
 
       <AlertsPanel />

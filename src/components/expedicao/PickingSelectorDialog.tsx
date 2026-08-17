@@ -22,11 +22,19 @@ export default function PickingSelectorDialog({ open, onOpenChange, onSelect, cl
   const [q, setQ] = useState('');
   const { data = [], isLoading } = usePickings();
 
-  const filtered = data.filter(p => 
-    ['aguardando', 'em_separacao'].includes(p.status) &&
-    (p.numero.toLowerCase().includes(q.toLowerCase()) || 
-     p.cliente.toLowerCase().includes(q.toLowerCase()))
-  );
+  const filtered = data.filter(p => {
+    const matchesSearch = p.numero.toLowerCase().includes(q.toLowerCase()) || 
+                         p.cliente.toLowerCase().includes(q.toLowerCase());
+    
+    const matchesStatus = ['aguardando', 'em_separacao'].includes(p.status);
+    
+    // Se tivermos o nome do cliente da peça, priorizamos ou filtramos por ele
+    const matchesClient = !clienteNome || 
+                         p.cliente.toLowerCase().includes(clienteNome.toLowerCase()) ||
+                         clienteNome.toLowerCase().includes(p.cliente.toLowerCase());
+
+    return matchesSearch && matchesStatus && matchesClient;
+  });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
