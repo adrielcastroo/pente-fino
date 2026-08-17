@@ -1780,7 +1780,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                 {linhas.length === 0 && !addManual && (
                   <tr>
                     <td colSpan={4} className="p-6 text-center text-muted-foreground text-[11px]">
-                      Nenhuma TAG adicionada à composição.
+                      Aguardando composição. Utilize o buscador acima para definir o padrão técnico.
                     </td>
                   </tr>
                 )}
@@ -1820,7 +1820,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
               className="w-full h-10 gap-2 text-xs"
             >
               {enviando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-              {enviando ? 'Gravando no Auge…' : `Adicionar TAG Custom (${linhas.length})`}
+              {enviando ? 'Sincronizando com o Auge…' : `Consolidar Configuração Global (${linhas.length})`}
             </Button>
             {obrigatoriasFaltando.length > 0 && (
               <p className="text-[10px] text-destructive flex items-start gap-1">
