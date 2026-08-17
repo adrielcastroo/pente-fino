@@ -1697,10 +1697,10 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
             onChange={(v) => setCustomAberta(v)}
             onSearchStateChange={setCfgSearch}
           />
-          <p className="text-[10px] text-muted-foreground leading-relaxed">
-            o campo de busca precisa voltar com o comportamento que tinha até o dia 16/08 as 22:40, assim como o bloco resumo que esta interligado ao campo de busca.
+          <p className="text-[10px] text-muted-foreground leading-relaxed whitespace-pre-line">
+            vc lembra que antes eu conseguia pesquisar ex: cortina*cm*35*liso.
             {"\n\n"}
-            Verifique a possibilidade e veja se algo neste periodo realmente foi alterado neste campo e me diga o que foi alterado e se é possível retomar o funcionamento anterior.
+            e o bloco resumo mostrava somente as configurações que continham essas palavras? dia 16/08 estava funcionando perfeitamente, me diga pq isso foi alterado e qual horario isso foi alterado
           </p>
         </div>
 
