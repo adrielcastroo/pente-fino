@@ -262,41 +262,40 @@ export default function HistoricoTagsTab() {
                     )}
                   </div>
 
-                  <div className="flex items-center justify-between gap-2 mt-1">
-                    <div className="text-[10px] text-muted-foreground">
-                      {ev.total != null && `${ev.gravadas ?? 0} de ${ev.total} configs. alteradas`}
+                  <div className="flex flex-col gap-2 mt-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="text-[10px] text-muted-foreground">
+                        {ev.total != null && `${ev.gravadas ?? 0} de ${ev.total} configs. alteradas`}
+                      </div>
+                      {ev.ok && ev.tipo !== 'reversao' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 px-2 text-[10px] gap-1 hover:bg-amber-500/10 hover:text-amber-600 hover:border-amber-500/50"
+                          onClick={() => reverterPara(ev)}
+                          disabled={!!revertendo}
+                        >
+                          {revertendo === ev.id ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <ArrowLeftCircle className="h-3 w-3" />
+                          )
+                          }
+                          Reverter para este estado
+                        </Button>
+                      )}
                     </div>
-                    {ev.ok && ev.tipo !== 'reversao' && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 px-2 text-[10px] gap-1 hover:bg-amber-500/10 hover:text-amber-600 hover:border-amber-500/50"
-                        onClick={() => reverterPara(ev)}
-                        disabled={!!revertendo}
-                      >
-                        {revertendo === ev.id ? (
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                        ) : (
-                          <ArrowLeftCircle className="h-3 w-3" />
-                        )
-                        }
-                        Reverter para este estado
-                      </Button>
-                    )}
-                  </div>
 
-                  {ev.erro && (
-                    <div className="text-[10px] text-destructive break-all">{ev.erro}</div>
-                  )}
-
-                  {ev.ok && ev.tipo === 'edicao' && ev.linhas.length > 0 && (
-                    <div className="mt-2 p-2 bg-primary/5 rounded border border-primary/20">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="text-[10px] font-semibold text-primary">Auditoria de Impacto</div>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className={`h-6 px-2 text-[9px] gap-1 ${filtroAlteradas === ev.id ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'hover:bg-primary/10'}`}
+                    {ev.ok && ev.tipo === 'edicao' && ev.linhas.length > 0 && (
+                      <div className="flex justify-end">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className={`h-7 px-2 text-[10px] gap-1 transition-all ${
+                            filtroAlteradas === ev.id
+                              ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                              : 'hover:bg-primary/10 border-primary/20 text-primary'
+                          }`}
                           onClick={() => {
                             if (filtroAlteradas === ev.id) {
                               setFiltroAlteradas(null);
@@ -313,8 +312,13 @@ export default function HistoricoTagsTab() {
                           {filtroAlteradas === ev.id ? 'Mostrar Todas' : 'Ver Apenas Alteradas'}
                         </Button>
                       </div>
-                    </div>
+                    )}
+                  </div>
+
+                  {ev.erro && (
+                    <div className="text-[10px] text-destructive break-all">{ev.erro}</div>
                   )}
+
 
 
                   {ev.linhas.length > 0 && (
