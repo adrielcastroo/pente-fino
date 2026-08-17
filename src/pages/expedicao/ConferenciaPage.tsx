@@ -86,11 +86,13 @@ export default function ConferenciaPage() {
       }
 
       // Comparação rigorosa conforme requisitos (Cliente, Item, etc)
-      // Nota: pecaAtual vem da expedicao_pecas_auge_sync com dados do Auge
-      // Nota: Picking usa 'cliente' (nome) no schema atual, comparando se auge_cliente_nome contém o nome do picking
-      if (pecaAtual.auge_cliente_nome && picking.cliente && !pecaAtual.auge_cliente_nome.includes(picking.cliente)) {
+      const clientName = (pecaAtual.auge_cliente_nome || '').toLowerCase();
+      const pickingClient = (picking.cliente || '').toLowerCase();
+
+      // Permitimos se um contiver o outro para lidar com variações de razão social vs nome fantasia
+      if (clientName && pickingClient && !clientName.includes(pickingClient) && !pickingClient.includes(clientName)) {
          bipToast.erro('Picking incompatível: Cliente divergente');
-         addBipagemHistorico({ codigo: value, tipo: 'picking', status: 'erro', mensagem: 'Cliente divergente' });
+         addBipagemHistorico({ codigo: value, tipo: 'picking', status: 'erro', mensagem: `Cliente divergente: ${pecaAtual.auge_cliente_nome} vs ${picking.cliente}` });
          return;
       }
 
@@ -371,6 +373,7 @@ export default function ConferenciaPage() {
         open={pickingModalOpen}
         onOpenChange={setPickingModalOpen}
         onSelect={setPickingSelecionado}
+        clienteNome={pecaAtual?.auge_cliente_nome}
       />
     </div>
   );
