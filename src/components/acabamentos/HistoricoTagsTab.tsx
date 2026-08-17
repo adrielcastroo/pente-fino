@@ -287,6 +287,30 @@ export default function HistoricoTagsTab() {
                     <div className="text-[10px] text-destructive break-all">{ev.erro}</div>
                   )}
 
+                  {ev.ok && ev.tipo === 'edicao' && ev.linhas.length > 0 && (
+                    <div className="mt-2 p-2 bg-primary/5 rounded border border-primary/20">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="text-[10px] font-semibold text-primary">Alteração em Massa</div>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-6 px-2 text-[9px] gap-1 hover:bg-primary/10"
+                          onClick={() => {
+                            // Abrir um resumo detalhado apenas das tags que mudaram de fato
+                            const alteradas = ev.linhas.filter(l => l.valor !== l.valor_antigo);
+                            toast.info(`Nesta operação, ${alteradas.length} das ${ev.linhas.length} tags enviadas foram efetivamente alteradas no Auge.`, {
+                              duration: 5000,
+                              description: "Verifique o resumo abaixo para o detalhamento completo."
+                            });
+                          }}
+                        >
+                          <History className="h-3 w-3" />
+                          Ver Auditoria de Impacto
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
                   {ev.linhas.length > 0 && (
                     <div className="space-y-2">
                       <details className="group">
