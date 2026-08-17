@@ -206,7 +206,7 @@ export default function NovaTransferenciaDialog({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 py-2 overflow-auto pr-1">
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-5 sm:p-6 space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label className="text-xs">Origem padrão</Label>
