@@ -286,7 +286,7 @@ export default function HistoricoTagsTab() {
                       )}
                     </div>
 
-                    {ev.ok && ev.tipo === 'edicao' && ev.linhas.length > 0 && (
+                    {ev.ok && ev.linhas.length > 0 && (
                       <div className="flex justify-end">
                         <Button
                           variant="outline"
