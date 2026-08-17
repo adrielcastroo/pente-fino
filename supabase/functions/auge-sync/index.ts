@@ -6343,13 +6343,68 @@ Deno.serve(async (req) => {
     }
 
     if (action === 'expedicao_sync_prontos') {
-      // O Auge NÃO expõe listagem em massa de peças prontas: o terminal
-      // /record-manufactured-documents opera por bipagem individual.
-      // A sincronização acontece sob demanda (expedicao_validar_peca / expedicao_consultar_auge).
+      // O endpoint /record-manufactured-documents no Auge (DataTables) permite listar
+      // peças produzidas. Simulamos a requisição para obter os últimos registros e
+      // popular o Painel de Expedição no Pente Fino.
+      const columns = [
+        'id', 'document', 'customer', 'status', 'user', 'quantity', 'created_at', 'updated_at'
+      ];
+      const body = dtBody(columns, 200); // Buscar as últimas 200 peças
+      
+      const res = await postApi(auth, '/api/v1/record-manufactured-documents/list', body);
+      const rows = Array.isArray(res) ? res : [];
+      
+      if (rows.length === 0) {
+        return new Response(JSON.stringify({
+          ok: true, count: 0, message: 'Nenhuma peça produzida encontrada no Auge recentemente.'
+        }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      const registros = rows.map(r => mapearPecaAuge(r.code || r.bar_code || r.id, r));
+      
+      // 1. UPSERT na tabela atômica de peças
+      const { error: errP } = await admin
+        .from('expedicao_pecas_auge_sync')
+        .upsert(registros.map(r => ({ ...r, status_local: 'pendente' })), { onConflict: 'codigo_etiqueta' });
+      
+      if (errP) throw errP;
+
+      // 2. Extrair Pedidos Únicos para popular expedicao_pickings
+      // O Painel depende de pickings para mostrar os cards de pedidos/clientes.
+      const pedidosMap = new Map();
+      registros.forEach(r => {
+        if (!r.auge_pedido_codigo || r.auge_pedido_codigo === 'SEM_PEDIDO') return;
+        if (!pedidosMap.has(r.auge_pedido_codigo)) {
+          pedidosMap.set(r.auge_pedido_codigo, {
+            numero: r.auge_pedido_codigo,
+            cliente: r.auge_cliente_nome || 'Cliente não identificado',
+            cidade: null, // Auge API costuma não devolver cidade no list
+            status: 'aguardando',
+            total_pecas: 0
+          });
+        }
+        pedidosMap.get(r.auge_pedido_codigo).total_pecas += (r.quantidade || 1);
+      });
+
+      const pickings = Array.from(pedidosMap.values());
+      if (pickings.length > 0) {
+        const { error: errPick } = await admin
+          .from('expedicao_pickings')
+          .upsert(pickings, { onConflict: 'numero' });
+        if (errPick) console.error('Erro ao sincronizar pickings:', errPick);
+      }
+
+      await admin.from('auge_sync_runs').insert({
+        status: 'success', triggered_by: triggeredBy, entidade: 'expedicao_sync_prontos',
+        finished_at: new Date().toISOString(),
+        detalhes: { count: registros.length, pickings: pickings.length },
+      });
+
       return new Response(JSON.stringify({
         ok: true,
-        modo: 'sob_demanda',
-        message: 'O Auge não expõe listagem de peças prontas. A consulta ocorre ao bipar a etiqueta.',
+        count: registros.length,
+        pickings: pickings.length,
+        message: `${registros.length} peças sincronizadas do Auge.`
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
