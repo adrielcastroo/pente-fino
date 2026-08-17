@@ -281,15 +281,15 @@ export default function TagsTab() {
       <Card className="p-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div>
-            <div className="text-[10px] uppercase text-muted-foreground">Escaneadas</div>
+            <div className="text-[10px] uppercase text-muted-foreground">Monitoradas</div>
             <div className="text-lg font-semibold font-mono">{totais.totalScan}</div>
           </div>
           <div>
-            <div className="text-[10px] uppercase text-muted-foreground">Sem TAG</div>
+            <div className="text-[10px] uppercase text-muted-foreground">Lacunas Críticas</div>
             <div className="text-lg font-semibold font-mono text-destructive">{totais.semTag}</div>
           </div>
           <div>
-            <div className="text-[10px] uppercase text-muted-foreground">Com TAG</div>
+            <div className="text-[10px] uppercase text-muted-foreground">Otimizadas</div>
             <div className="text-lg font-semibold font-mono text-emerald-500">{totais.comTag}</div>
           </div>
           <div>
@@ -306,8 +306,8 @@ export default function TagsTab() {
               run.status === 'error' ? <AlertTriangle className="h-4 w-4 text-destructive" /> :
               <CheckCircle2 className="h-4 w-4 text-emerald-500" />}
             <div className="text-xs font-semibold">
-              {isActive ? `Varrendo Auge… ${run.detalhes?.phase ?? ''}` :
-                run.status === 'error' ? 'Falhou' : 'Concluído'}
+              {isActive ? `Sincronizando com o Auge… ${run.detalhes?.phase ?? ''}` :
+                run.status === 'error' ? 'Atenção Necessária' : 'Integridade Validada'}
             </div>
             <div className="ml-auto text-[11px] font-mono text-muted-foreground">
               {current}/{total} · {totais.totalScan} config. · {totais.comTag} c/tag · {totais.semTag} s/tag · restam {totais.pendentes}
