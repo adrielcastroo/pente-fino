@@ -1378,7 +1378,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   const setCalculada = (id: string, sel: TagCalculadaSel) => {
     setLinhas((prev) => prev.map((l) => (
       l.id === id
-        ? { ...l, calculada: sel.valor, formula: sel.formula, cdTagCalculada: sel.cdTag ?? '' }
+        ? { ...l, calculada: sel.valor, formula: sel.formula, cdTagCalculada: sel.cdTag ?? '', dsTagTexto: '' }
         : l
     )));
   };
@@ -1397,6 +1397,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           cfgNome: customAberta?.nm ?? '',
           calculada: o.calculada,
           formula: '',
+          cdTagCalculada: (o as any).cdTagCalculada,
         }));
       return [...prev, ...novas];
     });
