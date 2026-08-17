@@ -322,7 +322,7 @@ export default function HistoricoTagsTab() {
                               <tr className="text-left">
                                 <th className="p-1.5">TAG Custom</th>
                                 <th className="p-1.5">Anterior (Auge)</th>
-                                <th className="p-1.5">Implementado</th>
+                                <th className="p-1.5">TAG Calculada</th>
                                 <th className="p-1.5">Fórmula</th>
                               </tr>
                             </thead>
@@ -402,7 +402,7 @@ export default function HistoricoTagsTab() {
                     <tr className="text-left border-b">
                       <th className="p-3 font-medium uppercase tracking-wider">TAG Custom</th>
                       <th className="p-3 font-medium uppercase tracking-wider">Anterior (Auge)</th>
-                      <th className="p-3 font-medium uppercase tracking-wider text-emerald-600">Implementado</th>
+                      <th className="p-3 font-medium uppercase tracking-wider text-emerald-600">TAG Calculada</th>
                       <th className="p-3 font-medium uppercase tracking-wider">Fórmula</th>
                     </tr>
                   </thead>
