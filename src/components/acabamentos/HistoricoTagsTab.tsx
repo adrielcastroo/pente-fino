@@ -283,7 +283,7 @@ export default function HistoricoTagsTab() {
                             <ArrowLeftCircle className="h-3 w-3" />
                           )
                           }
-                          Reverter para este estado
+                          O botão reverter para este estado, faz o que exatamente?
                         </Button>
                       )}
                     </div>
