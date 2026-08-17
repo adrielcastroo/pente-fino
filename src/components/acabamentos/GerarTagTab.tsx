@@ -79,6 +79,8 @@ interface LinhaTag {
   formula: string;
   /** Código da linha no Auge — quando presente, a gravação sobrescreve. */
   cdTagCustomizada?: string;
+  /** Valor que estava no Auge antes do usuário mexer (para o histórico). */
+  valorAntigo?: string;
   /** Código da TAG calculada no Auge (`cd_tag`). */
   cdTagCalculada?: string;
   /** Valor original da TAG calculada (se era texto livre). */
@@ -1095,7 +1097,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
   /** TAGs necessárias: agrupadas globalmente e recomendando a mais frequente. */
   const recomendadas = useMemo(() => {
-    const out: Array<{ id: string; code: string; valor: string; cfgNome: string; calculada: string; formula: string; cdTagCustomizada?: string; cdTagCalculada?: string; dsTagTexto?: string }> = [];
+    const out: Array<{ id: string; code: string; valor: string; cfgNome: string; calculada: string; formula: string; cdTagCustomizada?: string; valorAntigo?: string; cdTagCalculada?: string; dsTagTexto?: string }> = [];
     
     // Usamos categorias que já consolidam TAGs de todas as configurações ranqueadas e encontradas.
     for (const cat of categorias) {
@@ -1151,6 +1153,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         calculada: calculadaMaisFrequente,
         formula: '',
         cdTagCustomizada: (info as any).cdTagCustomizada,
+        valorAntigo: info.valor, // Armazenamos o valor original para o histórico
         cdTagCalculada: (info as any).cdTagCalculada,
         dsTagTexto: (info as any).dsTagTexto,
       });
@@ -1176,6 +1179,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
               calculada: rec.calculada,
               formula: '',
               cdTagCustomizada: rec.cdTagCustomizada,
+              valorAntigo: rec.valorAntigo,
               cdTagCalculada: rec.cdTagCalculada,
               dsTagTexto: rec.dsTagTexto,
             });
@@ -1614,11 +1618,17 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         descricao: (resultado?.descricao ?? descricao).trim() || descricaoFinal || '—',
         cdConfiguracao: customAberta?.cd ?? resultado?.cdConfiguracao ?? null,
         nmConfiguracao: customAberta?.nm ?? null,
-        linhas: (itens as any[]).map((it) => ({
-          valor: it.dsTagCustomizada,
-          calculada: it.dsTagCalculada || null,
-          formula: it.dsFormula || null,
-        })),
+        linhas: (itens as any[]).map((it, idx) => {
+          // Buscamos o valor antigo na linha correspondente da UI
+          const uiLine = linhas.find(l => l.valor === it.dsTagCustomizada);
+          return {
+            code: uiLine?.code || null,
+            valor: it.dsTagCustomizada,
+            valor_antigo: uiLine?.valorAntigo || null,
+            calculada: it.dsTagCalculada || null,
+            formula: it.dsFormula || null,
+          };
+        }),
         gravadas: res?.gravadas ?? null,
         total: res?.total ?? null,
         erro: res?.ok === false ? (res?.error ?? null) : null,

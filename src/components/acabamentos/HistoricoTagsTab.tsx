@@ -276,7 +276,8 @@ export default function HistoricoTagsTab() {
                           <Loader2 className="h-3 w-3 animate-spin" />
                         ) : (
                           <ArrowLeftCircle className="h-3 w-3" />
-                        )}
+                        )
+                        }
                         Reverter para este estado
                       </Button>
                     )}
@@ -287,27 +288,43 @@ export default function HistoricoTagsTab() {
                   )}
 
                   {ev.linhas.length > 0 && (
-                    <div className="overflow-x-auto rounded border">
-                      <table className="w-full text-[10px]">
-                        <thead className="bg-muted">
-                          <tr className="text-left">
-                            <th className="p-1.5">TAG Configurada</th>
-                            <th className="p-1.5">TAG Calculada</th>
-                            <th className="p-1.5">Fórmula</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {ev.linhas.map((l, i) => (
-                            <tr key={i} className="border-t align-top">
-                              <td className="p-1.5 font-mono break-all">{l.valor || '—'}</td>
-                              <td className="p-1.5 font-mono break-all">{l.calculada || '—'}</td>
-                              <td className="p-1.5 font-mono break-all text-muted-foreground">
-                                {l.formula || '—'}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                    <div className="space-y-2">
+                      <details className="group">
+                        <summary className="text-[10px] font-medium text-primary cursor-pointer hover:underline list-none flex items-center gap-1">
+                          <ChevronRight className="h-3 w-3 transition-transform group-open:rotate-90" />
+                          Ver resumo das alterações ({ev.linhas.length} itens)
+                        </summary>
+                        <div className="mt-2 overflow-x-auto rounded border bg-muted/30">
+                          <table className="w-full text-[10px]">
+                            <thead className="bg-muted">
+                              <tr className="text-left">
+                                <th className="p-1.5">TAG</th>
+                                <th className="p-1.5">Anterior (Auge)</th>
+                                <th className="p-1.5">Implementado</th>
+                                <th className="p-1.5">Fórmula</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {ev.linhas.map((l, i) => (
+                                <tr key={i} className="border-t align-top bg-background/50">
+                                  <td className="p-1.5 font-mono break-all font-semibold">
+                                    {l.code || '—'}
+                                  </td>
+                                  <td className="p-1.5 font-mono break-all text-muted-foreground">
+                                    {l.valor_antigo || '—'}
+                                  </td>
+                                  <td className="p-1.5 font-mono break-all text-emerald-600 font-medium">
+                                    {l.valor || '—'}
+                                  </td>
+                                  <td className="p-1.5 font-mono break-all text-muted-foreground italic">
+                                    {l.formula || '—'}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </details>
                     </div>
                   )}
                 </div>

@@ -14,8 +14,10 @@ export type TagEventoTipo = 'criacao' | 'edicao' | 'relancamento' | 'reversao';
 export interface TagHistoricoLinha {
   /** Rótulo curto exibido na composição (ex.: "C1"). */
   code?: string | null;
-  /** Valor da TAG Configurada. */
+  /** Valor da TAG Configurada (o que foi gravado agora). */
   valor: string;
+  /** Valor que estava no Auge antes desta alteração. */
+  valor_antigo?: string | null;
   /** TAG Calculada vinculada, quando houver. */
   calculada?: string | null;
   /** Fórmula da TAG Calculada, quando conhecida. */
