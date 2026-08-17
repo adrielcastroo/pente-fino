@@ -79,6 +79,8 @@ interface LinhaTag {
   formula: string;
   /** Código da linha no Auge — quando presente, a gravação sobrescreve. */
   cdTagCustomizada?: string;
+  /** Valor que estava no Auge antes do usuário mexer (para o histórico). */
+  valorAntigo?: string;
   /** Código da TAG calculada no Auge (`cd_tag`). */
   cdTagCalculada?: string;
   /** Valor original da TAG calculada (se era texto livre). */
