@@ -321,16 +321,16 @@ export default function HistoricoTagsTab() {
                                     const cd = l.cdConfiguracao || ev.cdConfiguracao || grupoAberto?.cdConfiguracao;
                                     return (
                                       <tr key={i} className={`border-t align-top ${l.valor !== l.valor_antigo ? 'bg-emerald-500/5' : 'bg-background/50'}`}>
-                                        <td className="p-1.5 font-mono font-bold text-blue-600 whitespace-nowrap">
+                                        <td className="p-2 font-mono font-bold text-blue-600 whitespace-nowrap">
                                           {nm || '—'} {cd ? `[${cd}]` : ''}
                                         </td>
-                                        <td className="p-1.5 font-mono text-muted-foreground whitespace-nowrap">
+                                        <td className="p-2 font-mono text-muted-foreground whitespace-nowrap">
                                           {l.valor_antigo || '—'}
                                         </td>
-                                        <td className={`p-1.5 font-mono font-medium whitespace-nowrap ${l.valor !== l.valor_antigo ? 'text-emerald-600 bg-emerald-500/5' : 'text-foreground'}`}>
+                                        <td className={`p-2 font-mono font-medium whitespace-nowrap ${l.valor !== l.valor_antigo ? 'text-emerald-600 bg-emerald-500/5' : 'text-foreground'}`}>
                                           {l.valor || '—'}
                                         </td>
-                                        <td className={`p-1.5 font-mono font-bold whitespace-nowrap ${l.valor !== l.valor_antigo ? 'text-emerald-600' : 'text-muted-foreground'}`}>
+                                        <td className={`p-2 font-mono font-bold whitespace-nowrap ${l.valor !== l.valor_antigo ? 'text-emerald-600' : 'text-muted-foreground'}`}>
                                           {l.calculada || '—'}
                                         </td>
                                       </tr>
