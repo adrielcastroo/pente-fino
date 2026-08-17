@@ -1654,7 +1654,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     <div className="space-y-4">
       {/* Espelha o diálogo "Manter Tag Customizada" do Auge */}
       <Card className="p-4 space-y-4">
-        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+        <div className="text-xs font-semibold uppercase tracking-wider text-primary flex items-center gap-2">
           <Wand2 className="h-3.5 w-3.5" /> Motor de Configuração de TAGs Custom
         </div>
 
