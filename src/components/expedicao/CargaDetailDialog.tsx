@@ -58,8 +58,8 @@ export function CargaDetailDialog({ cargaId, open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-3xl max-h-[92vh] overflow-hidden flex flex-col p-0 gap-0">
+        <DialogHeader className="p-5 sm:p-6 pb-4 sm:pb-4 mb-0">
           <DialogTitle className="flex items-center gap-3">
             <span className="font-mono">{carga?.numero ?? '…'}</span>
             {carga && <StatusBadge label={carga.status} tone={
@@ -70,7 +70,8 @@ export function CargaDetailDialog({ cargaId, open, onOpenChange }: Props) {
           </DialogTitle>
         </DialogHeader>
 
-        {carga && (
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-5 sm:p-6 space-y-4 pt-2">
+          {carga && (
           <>
             <div className="grid grid-cols-2 gap-3 text-xs">
               <Info label="Veículo" value={carga.expedicao_veiculos ? `${carga.expedicao_veiculos.placa} ${carga.expedicao_veiculos.modelo ?? ''}` : '—'} />
@@ -117,7 +118,8 @@ export function CargaDetailDialog({ cargaId, open, onOpenChange }: Props) {
               )}
             </Section>
           </>
-        )}
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );
