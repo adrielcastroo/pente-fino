@@ -307,10 +307,10 @@ export default function HistoricoTagsTab() {
                           <table className="w-full text-[10px]">
                             <thead className="bg-muted">
                               <tr className="text-left">
-                                <th className="p-1.5 text-blue-600 font-bold">Configuração (TAG Custom)</th>
-                                <th className="p-1.5">Anterior (Auge)</th>
-                                <th className="p-1.5">Tag Configurada</th>
-                                <th className="p-1.5 text-emerald-600 font-bold text-[11px]">TAG Calculada (Implementada)</th>
+                                <th className="p-1.5 text-blue-600 font-bold whitespace-nowrap">Configuração (TAG Custom)</th>
+                                <th className="p-1.5 whitespace-nowrap">Anterior (Auge)</th>
+                                <th className="p-1.5 whitespace-nowrap">Tag Configurada</th>
+                                <th className="p-1.5 text-emerald-600 font-bold text-[11px] whitespace-nowrap">TAG Calculada (Implementada)</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -321,16 +321,16 @@ export default function HistoricoTagsTab() {
                                     const cd = l.cdConfiguracao || ev.cdConfiguracao || grupoAberto?.cdConfiguracao;
                                     return (
                                       <tr key={i} className={`border-t align-top ${l.valor !== l.valor_antigo ? 'bg-emerald-500/5' : 'bg-background/50'}`}>
-                                        <td className="p-1.5 font-mono break-all font-bold text-blue-600">
+                                        <td className="p-1.5 font-mono font-bold text-blue-600 whitespace-nowrap">
                                           {nm || '—'} {cd ? `[${cd}]` : ''}
                                         </td>
-                                        <td className="p-1.5 font-mono break-all text-muted-foreground">
+                                        <td className="p-1.5 font-mono text-muted-foreground whitespace-nowrap">
                                           {l.valor_antigo || '—'}
                                         </td>
-                                        <td className={`p-1.5 font-mono break-all font-medium ${l.valor !== l.valor_antigo ? 'text-emerald-600 bg-emerald-500/5' : 'text-foreground'}`}>
+                                        <td className={`p-1.5 font-mono font-medium whitespace-nowrap ${l.valor !== l.valor_antigo ? 'text-emerald-600 bg-emerald-500/5' : 'text-foreground'}`}>
                                           {l.valor || '—'}
                                         </td>
-                                        <td className={`p-1.5 font-mono break-all font-bold ${l.valor !== l.valor_antigo ? 'text-emerald-600' : 'text-muted-foreground'}`}>
+                                        <td className={`p-1.5 font-mono font-bold whitespace-nowrap ${l.valor !== l.valor_antigo ? 'text-emerald-600' : 'text-muted-foreground'}`}>
                                           {l.calculada || '—'}
                                         </td>
                                       </tr>
