@@ -389,10 +389,12 @@ export default function HistoricoTagsTab() {
                 TAGs Custom Alteradas
               </Badge>
             </DialogTitle>
-            <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed max-w-2xl whitespace-pre-line">
-              Preciso que as informações que aparecem, sejam mais certeiras e concisas, sem gerar erro ou informações pela metade.{"\n\n"}
+            <div className="text-[11px] text-muted-foreground mt-1 leading-relaxed max-w-2xl whitespace-pre-line">
+              <p className="font-semibold text-foreground/80 mb-2">
+                Preciso que as informações que aparecem, sejam mais certeiras e concisas, sem gerar erro ou informações pela metade.
+              </p>
               Exibindo as TAGs Custom que sofreram alteração real de valor na operação de {formatarDataTag(eventoParaAuditoria?.em)}.
-            </p>
+            </div>
           </DialogHeader>
 
           <ScrollArea className="flex-1">
