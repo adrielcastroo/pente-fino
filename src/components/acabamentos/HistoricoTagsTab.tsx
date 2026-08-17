@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import {
   History, Search, CheckCircle2, AlertTriangle, Trash2, Tag as TagIcon,
-  ChevronRight, Loader2, RefreshCw, User, ArrowLeftCircle,
+  ChevronRight, Loader2, RefreshCw, User,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -23,6 +23,7 @@ import {
   removerGrupoTag,
   registrarEventoTag,
 } from '@/lib/tag-historico';
+import { Pagination, usePagination } from '@/components/ui/pagination-simple';
 
 /**
  * Aba "Histórico": consolida todas as ações e edições feitas nas TAGs Custom
@@ -71,6 +72,14 @@ export default function HistoricoTagsTab() {
       g.autores.some((a) => a.toLowerCase().includes(t)),
     );
   }, [grupos, busca]);
+
+  const {
+    currentPage,
+    setCurrentPage,
+    pageSize,
+    setPageSize,
+    paginatedItems: listaPaginada,
+  } = usePagination(lista, 25);
 
   const grupoAberto: TagHistoricoGrupo | null = useMemo(
     () => (chaveAberta ? grupos.find((g) => g.chave === chaveAberta) ?? null : null),
@@ -205,8 +214,8 @@ export default function HistoricoTagsTab() {
               : 'Nenhuma TAG Custom encontrada para esta busca.'}
           </div>
         ) : (
-          <div className="divide-y">
-            {lista.map((g) => (
+            <div className="divide-y max-h-[60vh] overflow-auto">
+            {listaPaginada.map((g) => (
               <button
                 key={g.chave}
                 type="button"
@@ -232,6 +241,14 @@ export default function HistoricoTagsTab() {
               </button>
             ))}
           </div>
+          <Pagination
+            totalItems={lista.length}
+            pageSize={pageSize}
+            currentPage={currentPage}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setPageSize}
+            className="p-3 border-t"
+          />
         )}
       </Card>
 
