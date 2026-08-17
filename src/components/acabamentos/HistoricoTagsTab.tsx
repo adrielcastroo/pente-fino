@@ -320,7 +320,7 @@ export default function HistoricoTagsTab() {
                           <table className="w-full text-[10px]">
                             <thead className="bg-muted">
                               <tr className="text-left">
-                                <th className="p-1.5">TAG</th>
+                                <th className="p-1.5">TAG Custom</th>
                                 <th className="p-1.5">Anterior (Auge)</th>
                                 <th className="p-1.5">Implementado</th>
                                 <th className="p-1.5">Fórmula</th>
@@ -332,13 +332,13 @@ export default function HistoricoTagsTab() {
                                 .map((l, i) => (
                                   <tr key={i} className={`border-t align-top ${l.valor !== l.valor_antigo ? 'bg-emerald-500/5' : 'bg-background/50'}`}>
                                     <td className="p-1.5 font-mono break-all font-semibold">
-                                      {l.code || '—'}
+                                      {l.valor || '—'}
                                     </td>
                                     <td className="p-1.5 font-mono break-all text-muted-foreground">
                                       {l.valor_antigo || '—'}
                                     </td>
                                     <td className={`p-1.5 font-mono break-all font-medium ${l.valor !== l.valor_antigo ? 'text-emerald-600' : 'text-foreground'}`}>
-                                      {l.valor || '—'}
+                                      {l.calculada || '—'}
                                     </td>
                                     <td className="p-1.5 font-mono break-all text-muted-foreground italic">
                                       {l.formula || '—'}
@@ -412,13 +412,13 @@ export default function HistoricoTagsTab() {
                       .map((l: any, i: number) => (
                         <tr key={i} className="hover:bg-muted/30 transition-colors">
                           <td className="p-3 font-mono font-bold text-primary">
-                            {l.code || '—'}
+                            {l.valor || '—'}
                           </td>
                           <td className="p-3 font-mono text-muted-foreground line-through decoration-destructive/30">
                             {l.valor_antigo || '—'}
                           </td>
                           <td className="p-3 font-mono font-semibold text-emerald-600 bg-emerald-500/5">
-                            {l.valor || '—'}
+                            {l.calculada || '—'}
                           </td>
                           <td className="p-3 font-mono text-muted-foreground italic text-[10px]">
                             {l.formula || '—'}
