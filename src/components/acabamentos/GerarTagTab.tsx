@@ -1021,8 +1021,8 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
   // TAGs Custom existentes que casam com o termo pesquisado (removido lógica duplicada)
   const customsEncontradas = useMemo(() => {
-    return configsResumo.map(c => ({ cd: c.cd_configuracao, nm: c.nm_configuracao, qtd: c.qtd_tags }));
-  }, [configsResumo]);
+    return configsMassa.map(c => ({ cd: c.cd_configuracao, nm: c.nm_configuracao, qtd: c.qtd_tags }));
+  }, [configsMassa]);
 
   const { data: tagsDaCustom = [], isFetching: loadingCustom } = useQuery({
     queryKey: ['auge-tag-custom-detalhe', customAberta?.cd ?? ''],

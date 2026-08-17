@@ -30,6 +30,8 @@ import {
  */
 export default function HistoricoTagsTab() {
   const qc = useQueryClient();
+  const registrarHistoricoLocal = registrarEventoTag; // alias to keep the code compatible if needed or just use registrarEventoTag directly
+  const qc = useQueryClient();
   const [busca, setBusca] = useState('');
   const [chaveAberta, setChaveAberta] = useState<string | null>(null);
   const [removendo, setRemovendo] = useState(false);
