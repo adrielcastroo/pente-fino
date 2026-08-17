@@ -92,11 +92,18 @@ export default function HistoricoTagsTab() {
     }
   };
 
-  const reverterPara = async (ev: any) => {
+  const restaurarOriginalAuge = async (ev: any) => {
     if (!ev.linhas || ev.linhas.length === 0) {
-      toast.error('Este registro não possui dados de composição para reverter.');
+      toast.error('Este registro não possui dados de composição para restaurar.');
       return;
     }
+
+    const temOriginal = ev.linhas.some((l: any) => l.valor_antigo !== undefined && l.valor_antigo !== null);
+    if (!temOriginal) {
+      toast.error('Não há registros do valor original do Auge para este histórico.');
+      return;
+    }
+
     setRevertendo(ev.id);
     try {
       const { data, error } = await supabase.functions.invoke('auge-sync?action=criar_tag_custom', {
@@ -104,33 +111,35 @@ export default function HistoricoTagsTab() {
           cdConfiguracao: ev.cdConfiguracao,
           descricao: ev.descricao,
           itens: ev.linhas.map((l: any) => ({
-            dsTagCustomizada: l.valor,
-            dsTagCalculada: l.calculada || '',
-            dsFormula: l.formula || '',
-            dsTagTexto: l.calculada ? '' : l.valor,
+            dsTagCustomizada: l.valor_antigo || '',
+            dsTagCalculada: '', // Remove a calculada para voltar ao padrão Auge
+            dsFormula: '',      // Remove a fórmula
+            dsTagTexto: l.valor_antigo || '',
           })),
         },
       });
+
       if (error) throw error;
       const res = data as any;
+
       if (res?.ok) {
-        toast.success(`Configuração revertida com sucesso no Auge (${res.gravadas}/${res.total}).`);
+        toast.success(`Valores originais do Auge restaurados com sucesso (${res.gravadas}/${res.total}).`);
         await registrarEventoTag({
           ok: true,
           tipo: 'reversao',
-          descricao: ev.descricao,
+          descricao: `[RESTAURO AUGE] ${ev.descricao}`,
           cdConfiguracao: ev.cdConfiguracao,
           nmConfiguracao: ev.nmConfiguracao,
-          linhas: ev.linhas,
+          linhas: ev.linhas.map((l: any) => ({ ...l, valor: l.valor_antigo || '' })),
           gravadas: res.gravadas,
           total: res.total,
         });
         qc.invalidateQueries({ queryKey: ['tag-custom-historico'] });
       } else {
-        throw new Error(res?.error || 'O Auge não confirmou a reversão.');
+        throw new Error(res?.error || 'O Auge não confirmou o restauro.');
       }
     } catch (e: any) {
-      toast.error(e?.message || 'Falha ao reverter no Auge.');
+      toast.error(e?.message || 'Falha ao restaurar valores no Auge.');
     } finally {
       setRevertendo(null);
     }
