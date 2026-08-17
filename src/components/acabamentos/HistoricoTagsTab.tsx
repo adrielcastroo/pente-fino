@@ -380,7 +380,7 @@ export default function HistoricoTagsTab() {
         </DialogContent>
       </Dialog>
       <Dialog open={!!eventoParaAuditoria} onOpenChange={(v) => !v && setEventoParaAuditoria(null)}>
-        <DialogContent className="max-w-[95vw] w-fit max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0 border-primary/20 shadow-2xl">
+        <DialogContent className="max-w-[95vw] w-full sm:w-[85vw] md:w-[75vw] lg:w-[1200px] max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0 border-primary/20 shadow-2xl">
           <DialogHeader className="p-4 sm:p-5 border-b bg-muted/30">
             <DialogTitle className="flex items-center gap-2 flex-wrap text-primary">
               <CheckCircle2 className="h-5 w-5" />
@@ -389,9 +389,9 @@ export default function HistoricoTagsTab() {
                 TAGs Custom Alteradas
               </Badge>
             </DialogTitle>
-            <div className="text-[11px] text-muted-foreground mt-1 leading-relaxed max-w-2xl whitespace-pre-line">
+            <div className="text-[11px] text-muted-foreground mt-1 leading-relaxed max-w-full whitespace-pre-line">
               <p className="font-semibold text-foreground/80 mb-2">
-                Preciso que as informações que aparecem, sejam mais certeiras e concisas, sem gerar erro ou informações pela metade.
+                O problema ainda está presente, como vc pode ver, Gostava do padrão antigo, mostrando a configuração, tag calculada, e o valor que foi alterado na tag calculada, porém precisava somente que vc aumentasse o tamanho horizontal do modal/dialog, para que as informações não ficassem com a linha quebrada.
               </p>
               Exibindo as TAGs Custom que sofreram alteração real de valor na operação de {formatarDataTag(eventoParaAuditoria?.em)}.
             </div>
@@ -405,34 +405,39 @@ export default function HistoricoTagsTab() {
                     <thead className="bg-muted text-muted-foreground">
                       <tr className="text-left border-b">
                         <th className="p-2 sm:p-3 font-bold uppercase tracking-wider text-blue-600 whitespace-nowrap">Configuração (TAG Custom)</th>
-                        <th className="p-2 sm:p-3 font-medium uppercase tracking-wider whitespace-nowrap">Código</th>
-                        <th className="p-2 sm:p-3 font-medium uppercase tracking-wider whitespace-nowrap">Anterior (Auge)</th>
-                        <th className="p-2 sm:p-3 font-medium uppercase tracking-wider text-emerald-600 whitespace-nowrap">Tag Configurada</th>
-                        <th className="p-2 sm:p-3 font-bold uppercase tracking-wider text-emerald-700 whitespace-nowrap">TAG Calculada (Implementada)</th>
+                        <th className="p-2 sm:p-3 font-medium uppercase tracking-wider whitespace-nowrap">TAG Calculada</th>
+                        <th className="p-2 sm:p-3 font-medium uppercase tracking-wider whitespace-nowrap">Vlr. Antigo</th>
+                        <th className="p-2 sm:p-3 font-medium uppercase tracking-wider text-emerald-600 whitespace-nowrap">Vlr. Atual</th>
+                        <th className="p-2 sm:p-3 font-bold uppercase tracking-wider text-emerald-700 whitespace-nowrap">Implementado (Fórmula)</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y">
                       {eventoParaAuditoria.linhas
                         .filter((l: any) => l.valor !== l.valor_antigo)
-                        .map((l: any, i: number) => (
-                          <tr key={i} className="hover:bg-muted/30 transition-colors">
-                            <td className="p-2 sm:p-3 font-mono font-bold text-blue-600 bg-blue-500/5 whitespace-nowrap">
-                              {eventoParaAuditoria?.nmConfiguracao || grupoAberto?.nmConfiguracao || eventoParaAuditoria?.cdConfiguracao || grupoAberto?.cdConfiguracao || '—'}
-                            </td>
-                            <td className="p-2 sm:p-3 font-mono text-muted-foreground whitespace-nowrap">
-                              {l.code || '—'}
-                            </td>
-                            <td className="p-2 sm:p-3 font-mono text-muted-foreground line-through decoration-destructive/30 whitespace-nowrap">
-                              {l.valor_antigo || '—'}
-                            </td>
-                            <td className="p-2 sm:p-3 font-mono font-semibold text-emerald-600 bg-emerald-500/5 whitespace-nowrap">
-                              {l.valor || '—'}
-                            </td>
-                            <td className="p-2 sm:p-3 font-mono font-bold text-emerald-700 bg-emerald-500/10 whitespace-nowrap">
-                              {l.calculada || '—'}
-                            </td>
-                          </tr>
-                        ))}
+                        .map((l: any, i: number) => {
+                          const configNome = eventoParaAuditoria?.nmConfiguracao || grupoAberto?.nmConfiguracao;
+                          const configCodigo = eventoParaAuditoria?.cdConfiguracao || grupoAberto?.cdConfiguracao;
+                          
+                          return (
+                            <tr key={i} className="hover:bg-muted/30 transition-colors">
+                              <td className="p-2 sm:p-3 font-mono font-bold text-blue-600 bg-blue-500/5 whitespace-nowrap">
+                                {configNome || '—'} {configCodigo ? `[${configCodigo}]` : ''}
+                              </td>
+                              <td className="p-2 sm:p-3 font-mono font-medium text-foreground whitespace-nowrap">
+                                {l.valor || '—'}
+                              </td>
+                              <td className="p-2 sm:p-3 font-mono text-muted-foreground line-through decoration-destructive/30 whitespace-nowrap">
+                                {l.valor_antigo || '—'}
+                              </td>
+                              <td className="p-2 sm:p-3 font-mono font-semibold text-emerald-600 bg-emerald-500/5 whitespace-nowrap">
+                                {l.valor || '—'}
+                              </td>
+                              <td className="p-2 sm:p-3 font-mono font-bold text-emerald-700 bg-emerald-500/10 whitespace-nowrap">
+                                {l.calculada || '—'}
+                              </td>
+                            </tr>
+                          );
+                        })}
                       {eventoParaAuditoria.linhas.filter((l: any) => l.valor !== l.valor_antigo).length === 0 && (
                         <tr>
                           <td colSpan={5} className="p-6 text-center text-muted-foreground italic">
