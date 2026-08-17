@@ -307,10 +307,10 @@ export default function HistoricoTagsTab() {
                           <table className="w-full text-[10px]">
                             <thead className="bg-muted">
                               <tr className="text-left">
-                                <th className="p-1.5 text-blue-600 font-bold whitespace-nowrap">Configuração (TAG Custom)</th>
-                                <th className="p-1.5 whitespace-nowrap">Anterior (Auge)</th>
-                                <th className="p-1.5 whitespace-nowrap">Tag Configurada</th>
-                                <th className="p-1.5 text-emerald-600 font-bold text-[11px] whitespace-nowrap">TAG Calculada (Implementada)</th>
+                                <th className="p-2 text-blue-600 font-bold whitespace-nowrap min-w-[200px]">Configuração (TAG Custom)</th>
+                                <th className="p-2 whitespace-nowrap min-w-[120px]">Anterior (Auge)</th>
+                                <th className="p-2 whitespace-nowrap min-w-[120px]">Tag Configurada</th>
+                                <th className="p-2 text-emerald-600 font-bold text-[11px] whitespace-nowrap min-w-[200px]">TAG Calculada (Implementada)</th>
                               </tr>
                             </thead>
                             <tbody>
