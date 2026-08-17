@@ -79,12 +79,10 @@ interface LinhaTag {
   formula: string;
   /** Código da linha no Auge — quando presente, a gravação sobrescreve. */
   cdTagCustomizada?: string;
-  /**
-   * Código da TAG calculada no Auge (`cd_tag`). Quando o usuário escolhe a
-   * opção na lista já temos o código: enviá-lo evita que o backend precise
-   * reencontrar a TAG pelo nome (fórmulas com vírgula quebravam essa busca).
-   */
+  /** Código da TAG calculada no Auge (`cd_tag`). */
   cdTagCalculada?: string;
+  /** Valor original da TAG calculada (se era texto livre). */
+  dsTagTexto?: string;
 }
 
 interface ResultadoAuge {
@@ -1052,6 +1050,8 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           ds_tag_customizada: r.dsTagCustomizada ?? null,
           ds_tag_calculada: r.dsTagCalculada ?? null,
           ds_tag_texto: r.dsTagTexto ?? null,
+          cd_tag_customizada: r.cdTagCustomizada ?? null,
+          cd_tag_calculada: r.cdTagCalculada ?? null,
         })) as CustomTag[];
       } catch {
         return locais;
@@ -1065,7 +1065,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     const seen = new Set<string>();
     const out: CustomTag[] = [];
     for (const t of [...tagsDaCustom, ...tagsTop, ...tagsBusca, ...tagsPalavras]) {
-      const k = `${t.cd_configuracao}|${t.ds_tag_customizada ?? t.nm_tag_customizada ?? ''}|${t.ds_tag_texto ?? ''}`;
+      const k = `${t.cd_configuracao}|${t.ds_tag_customizada ?? t.nm_tag_customizada ?? ''}|${t.ds_tag_texto ?? ''}|${(t as any).cd_tag_customizada ?? ''}`;
       if (seen.has(k)) continue;
       seen.add(k);
       out.push(t);
@@ -1095,7 +1095,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
   /** TAGs necessárias: agrupadas globalmente e recomendando a mais frequente. */
   const recomendadas = useMemo(() => {
-    const out: Array<{ id: string; code: string; valor: string; cfgNome: string; calculada: string; formula: string }> = [];
+    const out: Array<{ id: string; code: string; valor: string; cfgNome: string; calculada: string; formula: string; cdTagCustomizada?: string; cdTagCalculada?: string; dsTagTexto?: string }> = [];
     
     // Usamos categorias que já consolidam TAGs de todas as configurações ranqueadas e encontradas.
     for (const cat of categorias) {
@@ -1107,7 +1107,14 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       for (const item of cat.items) {
         const calc = normalizeTagFormatC(item.tag.ds_tag_calculada ?? '');
         if (!calc) continue;
-        const cur = contagemCalculadas.get(calc) ?? { n: 0, valor: normalizeTagFormatC(item.tag.ds_tag_customizada ?? item.tag.nm_tag_customizada ?? ''), cfgNome: item.cfgNome };
+        const cur = contagemCalculadas.get(calc) ?? { 
+          n: 0, 
+          valor: normalizeTagFormatC(item.tag.ds_tag_customizada ?? item.tag.nm_tag_customizada ?? ''), 
+          cfgNome: item.cfgNome,
+          cdTagCustomizada: (item.tag as any).cd_tag_customizada,
+          cdTagCalculada: (item.tag as any).cd_tag_calculada,
+          dsTagTexto: item.tag.ds_tag_texto ?? undefined
+        };
         cur.n += 1;
         contagemCalculadas.set(calc, cur);
       }
@@ -1126,6 +1133,9 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           cfgNome: best.cfgNome,
           calculada: '',
           formula: '',
+          cdTagCustomizada: (best.tag as any).cd_tag_customizada,
+          cdTagCalculada: (best.tag as any).cd_tag_calculada,
+          dsTagTexto: best.tag.ds_tag_texto ?? undefined,
         });
         continue;
       }
@@ -1140,6 +1150,9 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         cfgNome: info.cfgNome,
         calculada: calculadaMaisFrequente,
         formula: '',
+        cdTagCustomizada: (info as any).cdTagCustomizada,
+        cdTagCalculada: (info as any).cdTagCalculada,
+        dsTagTexto: (info as any).dsTagTexto,
       });
     }
     return out;
@@ -1314,7 +1327,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   const jaNaTabela = (id: string) => linhas.some((l) => l.id === id);
 
 
-  const adicionarLinha = (r: { id: string; code: string; valor: string; cfgNome: string; calculada: string }) => {
+  const adicionarLinha = (r: { id: string; code: string; valor: string; cfgNome: string; calculada: string; formula?: string; cdTagCustomizada?: string; cdTagCalculada?: string; dsTagTexto?: string }) => {
     setLinhas((prev) => {
       if (prev.some((l) => l.id === r.id)) {
         toast.info(`TAG ${r.code} removida da tabela.`);
@@ -1327,7 +1340,10 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         valor: r.valor,
         cfgNome: r.cfgNome,
         calculada: r.calculada,
-        formula: '',
+        formula: r.formula || '',
+        cdTagCustomizada: (r as any).cdTagCustomizada,
+        cdTagCalculada: (r as any).cdTagCalculada,
+        dsTagTexto: (r as any).dsTagTexto,
       }];
     });
   };
@@ -1362,7 +1378,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   const setCalculada = (id: string, sel: TagCalculadaSel) => {
     setLinhas((prev) => prev.map((l) => (
       l.id === id
-        ? { ...l, calculada: sel.valor, formula: sel.formula, cdTagCalculada: sel.cdTag ?? '' }
+        ? { ...l, calculada: sel.valor, formula: sel.formula, cdTagCalculada: sel.cdTag ?? '', dsTagTexto: '' }
         : l
     )));
   };
@@ -1381,6 +1397,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           cfgNome: customAberta?.nm ?? '',
           calculada: o.calculada,
           formula: '',
+          cdTagCalculada: (o as any).cdTagCalculada,
         }));
       return [...prev, ...novas];
     });
@@ -1424,6 +1441,9 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         valor: l.valor,
         calculada: l.calculada ?? null,
         formula: l.formula ?? null,
+        cdTagCustomizada: l.cdTagCustomizada ?? null,
+        cdTagCalculada: l.cdTagCalculada ?? null,
+        dsTagTexto: l.dsTagTexto ?? null,
       })),
       gravadas: res?.gravadas ?? null,
       total: res?.total ?? null,
