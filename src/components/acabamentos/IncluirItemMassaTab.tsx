@@ -12,6 +12,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Search, Loader2, Send, CheckCircle2, AlertTriangle, X, Trash2, Plus, FileSpreadsheet, Upload, Download, FileUp } from 'lucide-react';
 import { toast } from 'sonner';
+import { Pagination, usePagination } from '@/components/ui/pagination-simple';
 
 interface Acabamento {
   cd_acabamento: string;
