@@ -19,9 +19,31 @@ import { computeSla } from '@/lib/expedicao/sla';
 import { syncToast } from '@/lib/toast-flows';
 
 export default function PainelPage() {
-  const { data, isLoading } = usePickings();
+  const { data, isLoading, refetch } = usePickings();
   const { can } = useAuth();
   const allowCancel = can('expedicao:cancel-picking');
+  const [isSyncing, setIsSyncing] = useState(false);
+  
+  const handleSyncProduction = async () => {
+    if (isSyncing) return;
+    setIsSyncing(true);
+    const tid = syncToast.iniciado('Produção do Auge');
+    
+    try {
+      const { data: res, error } = await supabase.functions.invoke('auge-sync', {
+        body: { action: 'expedicao_sync_prontos' }
+      });
+      
+      if (error) throw error;
+      
+      syncToast.ok('Produção', res.count || 0, res.message, { id: tid });
+      refetch();
+    } catch (err) {
+      syncToast.erro('Produção', err, { id: tid });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
   
   const [cancelTarget, setCancelTarget] = useState<Picking | null>(null);
   const [filter, setFilter] = useState('');
