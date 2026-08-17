@@ -214,41 +214,43 @@ export default function HistoricoTagsTab() {
               : 'Nenhuma TAG Custom encontrada para esta busca.'}
           </div>
         ) : (
+          <>
             <div className="divide-y max-h-[60vh] overflow-auto">
-            {listaPaginada.map((g) => (
-              <button
-                key={g.chave}
-                type="button"
-                onClick={() => setChaveAberta(g.chave)}
-                className="w-full text-left p-3 flex items-center justify-between gap-3 hover:bg-muted/50 transition-colors"
-              >
-                <div className="min-w-0 space-y-1">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <TagIcon className="h-3.5 w-3.5 text-primary shrink-0" />
-                    <span className="text-[11px] font-medium break-all">{g.descricao}</span>
-                    <Badge variant="outline" className="text-[9px]">{g.totalEventos} ação(ões)</Badge>
-                    {g.erros > 0 && (
-                      <Badge variant="destructive" className="text-[9px]">{g.erros} falha(s)</Badge>
-                    )}
+              {listaPaginada.map((g) => (
+                <button
+                  key={g.chave}
+                  type="button"
+                  onClick={() => setChaveAberta(g.chave)}
+                  className="w-full text-left p-3 flex items-center justify-between gap-3 hover:bg-muted/50 transition-colors"
+                >
+                  <div className="min-w-0 space-y-1">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <TagIcon className="h-3.5 w-3.5 text-primary shrink-0" />
+                      <span className="text-[11px] font-medium break-all">{g.descricao}</span>
+                      <Badge variant="outline" className="text-[9px]">{g.totalEventos} ação(ões)</Badge>
+                      {g.erros > 0 && (
+                        <Badge variant="destructive" className="text-[9px]">{g.erros} falha(s)</Badge>
+                      )}
+                    </div>
+                    <div className="text-[9px] text-muted-foreground break-all">
+                      {g.nmConfiguracao ? `Configuração: ${g.nmConfiguracao}` : 'Sem configuração'}
+                      {' · '}Última: {formatarDataTag(g.ultimoEm)}
+                      {g.autores.length > 0 && ` · ${g.autores.join(', ')}`}
+                    </div>
                   </div>
-                  <div className="text-[9px] text-muted-foreground break-all">
-                    {g.nmConfiguracao ? `Configuração: ${g.nmConfiguracao}` : 'Sem configuração'}
-                    {' · '}Última: {formatarDataTag(g.ultimoEm)}
-                    {g.autores.length > 0 && ` · ${g.autores.join(', ')}`}
-                  </div>
-                </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-              </button>
-            ))}
-          </div>
-          <Pagination
-            totalItems={lista.length}
-            pageSize={pageSize}
-            currentPage={currentPage}
-            onPageChange={setCurrentPage}
-            onPageSizeChange={setPageSize}
-            className="p-3 border-t"
-          />
+                  <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                </button>
+              ))}
+            </div>
+            <Pagination
+              totalItems={lista.length}
+              pageSize={pageSize}
+              currentPage={currentPage}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={setPageSize}
+              className="p-3 border-t"
+            />
+          </>
         )}
       </Card>
 
