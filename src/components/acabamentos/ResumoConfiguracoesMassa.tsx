@@ -1,117 +1,89 @@
-import React, { useMemo } from 'react';
-import { motion } from 'framer-motion';
-import { Layers, ChevronRight, Sparkles, Loader2 } from 'lucide-react';
+import React from 'react';
+import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
-import { useTagCustomConfigurationSearch } from '@/hooks/useTagCustomConfigurationSearch';
+import { Button } from '@/components/ui/button';
+import { motion, AnimatePresence } from 'framer-motion';
+import { CheckCircle2, AlertTriangle, ArrowRight, Save, Trash2 } from 'lucide-react';
 
-interface ResumoConfiguracoesMassaProps {
-  termoBusca: string;
-  customAberta: { cd: string; nm: string } | null;
-  setCustomAberta: (v: { cd: string; nm: string } | null) => void;
-  obrigatoriasCount: number;
+interface ConfigResumo {
+  cd_configuracao: string;
+  nm_configuracao: string;
+  count: number;
 }
 
-export function ResumoConfiguracoesMassa({
-  termoBusca,
-  customAberta,
-  setCustomAberta,
-  obrigatoriasCount
-}: ResumoConfiguracoesMassaProps) {
-  const termo = termoBusca.trim();
-  const { data: configsResumo = [], isLoading: carregandoResumo } = useTagCustomConfigurationSearch(termo);
+interface ResumoConfiguracoesMassaProps {
+  configs: ConfigResumo[];
+  onRemove: (cd: string) => void;
+  onClear: () => void;
+}
 
-  const totalTagsMassa = useMemo(() => 
-    configsResumo.reduce((s, c) => s + (c.qtd_tags ?? 0), 0),
-    [configsResumo]
-  );
-
-  if (termo.length < 2) return null;
+export function ResumoConfiguracoesMassa({ configs, onRemove, onClear }: ResumoConfiguracoesMassaProps) {
+  if (configs.length === 0) return null;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="rounded-lg border bg-muted/30 overflow-hidden"
-    >
-      <details className="group">
-        <summary className="flex items-center justify-between p-3 cursor-pointer hover:bg-muted/50 transition-colors list-none">
-          <div className="flex items-center gap-2">
-            <Layers className="h-4 w-4 text-primary" />
-            <span className="text-[11px] font-semibold uppercase tracking-wider">
-              Resumo{' '}
-              {configsResumo.length > 0
-                ? `(${configsResumo.length} configurações · ${totalTagsMassa} TAGs)`
-                : carregandoResumo
-                  ? '(buscando…)'
-                  : '(nenhuma configuração encontrada)'}
-            </span>
-          </div>
-          <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-90" />
-        </summary>
-        <div className="px-3 pb-3 space-y-3 border-t pt-2">
-          {configsResumo.length > 0 ? (
-            <>
-              <div className="space-y-2">
-                <div className="text-[10px] text-muted-foreground leading-relaxed flex items-center justify-between">
-                  <span>
-                    Exibindo configurações que possuam <strong>TODOS</strong> os tokens/palavras inseridas na busca (Curinga SAP B1).
-                    As alterações realizadas na composição abaixo serão aplicadas a todas as configurações listadas aqui.
-                  </span>
-                  {obrigatoriasCount > 0 && (
-                    <Badge variant="outline" className="text-[9px] border-blue-500/30 text-blue-600 bg-blue-50/50">
-                      {obrigatoriasCount} TAGs Reconhecidas
-                    </Badge>
-                  )}
-                </div>
-
-                <div className="space-y-1">
-                  <div className="text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-1.5 px-1">
-                    <Sparkles className="h-2.5 w-2.5" /> Configurações que serão alteradas ({configsResumo.length})
-                  </div>
-                  <div className="flex flex-wrap gap-1.5 max-h-64 overflow-y-auto pr-1 p-1 bg-background/40 rounded-md border border-dashed">
-                    {configsResumo.map((cfg) => {
-                      const isSelected = customAberta?.cd === cfg.cd_configuracao;
-                      return (
-                        <button
-                          key={cfg.cd_configuracao}
-                          onClick={() => setCustomAberta({ cd: cfg.cd_configuracao, nm: cfg.nm_configuracao })}
-                          className={cn(
-                            "px-2 py-1 rounded-full border text-[10px] transition-all flex items-center gap-1.5",
-                            isSelected
-                              ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                              : "bg-background hover:border-primary/50 text-muted-foreground"
-                          )}
-                        >
-                          <span className="truncate max-w-[150px]">{cfg.nm_configuracao}</span>
-                          <Badge variant="secondary" className={cn(
-                            "h-3.5 px-1 text-[8px] min-w-[1.2rem] flex justify-center",
-                            isSelected ? "bg-primary-foreground/20 text-primary-foreground border-transparent" : ""
-                          )}>
-                            {cfg.qtd_tags}
-                          </Badge>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="p-4 text-center">
-              {carregandoResumo ? (
-                <div className="flex items-center justify-center gap-2 text-[10px] text-muted-foreground">
-                  <Loader2 className="h-3 w-3 animate-spin" /> Buscando configurações compatíveis...
-                </div>
-              ) : (
-                <div className="text-[10px] text-muted-foreground italic">
-                  Nenhuma configuração encontrada para os termos digitados.
-                </div>
-              )}
-            </div>
-          )}
+    <Card className="overflow-hidden border-primary/20 shadow-lg shadow-primary/5">
+      <div className="bg-primary/5 px-4 py-3 border-b border-primary/10 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+          <h3 className="text-sm font-bold text-primary tracking-tight uppercase">Resumo da Operação</h3>
+          <Badge variant="secondary" className="ml-2 bg-primary/10 text-primary border-none text-[10px] px-1.5 py-0">
+            {configs.length} Configurações
+          </Badge>
         </div>
-      </details>
-    </motion.div>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={onClear}
+          className="h-7 text-[10px] text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
+        >
+          Limpar Tudo
+        </Button>
+      </div>
+      
+      <div className="p-3 max-h-[300px] overflow-y-auto custom-scrollbar">
+        <div className="grid gap-2">
+          <AnimatePresence initial={false}>
+            {configs.map((cfg) => (
+              <motion.div
+                key={cfg.cd_configuracao}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="group flex items-center justify-between gap-3 p-2.5 rounded-lg border bg-card hover:border-primary/30 hover:shadow-md transition-all duration-200"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-[10px] text-primary/70 font-bold bg-primary/5 px-1.5 py-0.5 rounded">
+                      #{cfg.cd_configuracao}
+                    </span>
+                    <span className="text-xs font-semibold truncate group-hover:text-primary transition-colors">
+                      {cfg.nm_configuracao}
+                    </span>
+                  </div>
+                  <div className="mt-1 flex items-center gap-2 text-[10px] text-muted-foreground">
+                    <ArrowRight className="h-3 w-3 text-primary/40" />
+                    <span>{cfg.count} itens afetados</span>
+                  </div>
+                </div>
+                
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
+                  onClick={() => onRemove(cfg.cd_configuracao)}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+      </div>
+      
+      <div className="p-3 bg-muted/30 border-t border-primary/5 text-[10px] text-muted-foreground italic flex items-center gap-2">
+        <AlertTriangle className="h-3 w-3 text-amber-500 shrink-0" />
+        <span>Ações em massa impactam diretamente a integridade do banco de dados Auge. Revise antes de consolidar.</span>
+      </div>
+    </Card>
   );
 }
