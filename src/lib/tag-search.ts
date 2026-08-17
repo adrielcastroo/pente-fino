@@ -112,8 +112,8 @@ export function toIlikeTokens(raw: string): string[] {
   return clean
     .split(/[\s*]+/)
     .map((t) => t.trim())
-    .filter((t) => t.length >= 2)
-    .slice(0, 12)
+    .filter((t) => t.length >= 1) // Permitimos tokens de 1 char (importante para buscas como "cortina 1")
+    .slice(0, 15)
     .map((t) => `%${t}%`);
 }
 
