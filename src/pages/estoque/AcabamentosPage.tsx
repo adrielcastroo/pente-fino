@@ -244,11 +244,11 @@ export default function AcabamentosPage() {
 
       <Tabs value={tab} onValueChange={setTab} className="space-y-4">
         <TabsList className="grid grid-cols-2 md:grid-cols-5 w-full md:w-auto">
-          <TabsTrigger value="consulta" className="text-xs">Consulta</TabsTrigger>
-          <TabsTrigger value="massa" className="text-xs">Incluir em massa</TabsTrigger>
-          <TabsTrigger value="tags" className="text-xs">TAGs</TabsTrigger>
-          <TabsTrigger value="gerar" className="text-xs">Gerar TAG</TabsTrigger>
-          <TabsTrigger value="historico" className="text-xs">Histórico</TabsTrigger>
+          <TabsTrigger value="consulta" className="text-xs">Consulta de Itens</TabsTrigger>
+          <TabsTrigger value="massa" className="text-xs">Ações em Massa</TabsTrigger>
+          <TabsTrigger value="tags" className="text-xs">Monitor de TAGs</TabsTrigger>
+          <TabsTrigger value="gerar" className="text-xs">Configurar TAG Custom</TabsTrigger>
+          <TabsTrigger value="historico" className="text-xs">Auditoria e Histórico</TabsTrigger>
         </TabsList>
 
         <TabsContent value="consulta" className="space-y-4 mt-0">
