@@ -253,6 +253,14 @@ export default function IncluirItemMassaTab() {
     );
   }, [acabamentos, busca]);
 
+  const {
+    currentPage,
+    setCurrentPage,
+    pageSize,
+    setPageSize,
+    paginatedItems: filtradosPaginados,
+  } = usePagination(filtrados, 25);
+
   const acabByCd = useMemo(() => {
     const m = new Map<string, Acabamento>();
     acabamentos.forEach((a) => m.set(a.cd_acabamento, a));
