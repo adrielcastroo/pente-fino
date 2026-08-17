@@ -18,6 +18,7 @@ import IncluirItemMassaTab from '@/components/acabamentos/IncluirItemMassaTab';
 import TagsTab from '@/components/acabamentos/TagsTab';
 import GerarTagTab from '@/components/acabamentos/GerarTagTab';
 import HistoricoTagsTab from '@/components/acabamentos/HistoricoTagsTab';
+import { Pagination, usePagination } from '@/components/ui/pagination-simple';
 
 interface SyncRun {
   id: string;
@@ -182,6 +183,13 @@ export default function AcabamentosPage() {
     return arr;
   }, [acabamentos, busca, sortBy, sortDir]);
 
+  const {
+    currentPage,
+    setCurrentPage,
+    pageSize,
+    setPageSize,
+    paginatedItems: filtradosPaginados,
+  } = usePagination(filtrados, 25);
 
   const acabSelObj = acabamentos.find((a: any) => a.cd_acabamento === acabSel);
 
@@ -356,9 +364,9 @@ export default function AcabamentosPage() {
               </Button>
             </div>
           </div>
-          <div className="max-h-[70vh] overflow-auto space-y-1">
+          <div className="max-h-[60vh] overflow-auto space-y-1 pr-2">
             {isLoading && <div className="p-4 text-center"><Loader2 className="h-4 w-4 animate-spin inline" /></div>}
-            {filtrados.map((a: any) => (
+            {filtradosPaginados.map((a: any) => (
               <button
                 key={a.cd_acabamento}
                 onClick={() => setAcabSel(a.cd_acabamento)}
@@ -380,6 +388,15 @@ export default function AcabamentosPage() {
               <div className="p-4 text-center text-xs text-muted-foreground">Nenhum acabamento. Rode a sincronização.</div>
             )}
           </div>
+          <Pagination
+            totalItems={filtrados.length}
+            pageSize={pageSize}
+            currentPage={currentPage}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setPageSize}
+            pageSizeOptions={[25, 50, 100]}
+            className="border-t pt-2"
+          />
         </Card>
 
         <Card className="overflow-hidden">

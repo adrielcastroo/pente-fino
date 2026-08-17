@@ -266,6 +266,14 @@ export default function TagsTab() {
   const lastActivityMs = Math.max(lastScanMs, runStartMs);
   const isStalled = isActive && lastActivityMs > 0 && Date.now() - lastActivityMs > 90000;
 
+  const {
+    currentPage,
+    setCurrentPage,
+    pageSize,
+    setPageSize,
+    paginatedItems: listaPaginada,
+  } = usePagination(lista, 50);
+
   useEffect(() => {
     if (!isStalled) return;
     resumeRun(true);
@@ -362,7 +370,7 @@ export default function TagsTab() {
           </Button>
         </div>
 
-        <div className="overflow-auto max-h-[70vh] rounded border">
+        <div className="overflow-auto max-h-[60vh] rounded border">
           <table className="w-full text-xs">
             <thead className="bg-muted sticky top-0 z-10">
               <tr className="text-left">
@@ -391,7 +399,7 @@ export default function TagsTab() {
               {isLoading && (
                 <tr><td colSpan={4} className="p-6 text-center"><Loader2 className="h-4 w-4 animate-spin inline" /></td></tr>
               )}
-              {lista.map((r) => {
+              {listaPaginada.map((r) => {
                 const tags = tagsByCfg[r.cd_configuracao] ?? [];
                 return (
                   <tr key={r.cd_configuracao} className="border-t align-top hover:bg-muted/30 transition-colors duration-150 group">
@@ -440,6 +448,14 @@ export default function TagsTab() {
             </tbody>
           </table>
         </div>
+        <Pagination
+          totalItems={lista.length}
+          pageSize={pageSize}
+          currentPage={currentPage}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+          className="mt-2"
+        />
       </Card>
     </div>
   );
