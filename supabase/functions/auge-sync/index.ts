@@ -5170,10 +5170,10 @@ Deno.serve(async (req) => {
           let ultimoCd = '';
 
           for (const cdTagCalculada of tentativas) {
-            // Se estamos atualizando um registro existente e o usuário NÃO selecionou uma TAG calculada, 
-            // devemos manter o que já estava lá (dsTextoLivre ou cdTagCalculada) em vez de limpar.
-            const dsTextoLivre = cdTagCalculada ? '' : (registroExistente?.dsTextoLivre || String(it?.dsTagTexto ?? dsTagCustomizada).trim());
-            const cdCalculadaFinal = cdTagCalculada || (registroExistente?.cdTagCalculada ? String(registroExistente.cdTagCalculada) : '');
+            // Se estamos atualizando um registro existente e o usuário NÃO alterou a TAG calculada
+            // ou forneceu uma vazia, preservamos o que já existia no Auge.
+            const dsTextoLivre = cdTagCalculada ? '' : (String(it?.dsTagTexto ?? '').trim() || registroExistente?.dsTextoLivre || String(dsTagCustomizada).trim());
+            const cdCalculadaFinal = cdTagCalculada || (it?.cdTagCalculada ? String(it.cdTagCalculada) : (registroExistente?.cdTagCalculada ? String(registroExistente.cdTagCalculada) : ''));
 
             ultimoCd = cdTagCalculada;
             try {
