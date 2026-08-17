@@ -31,7 +31,6 @@ import {
  */
 export default function HistoricoTagsTab() {
   const qc = useQueryClient();
-  const qc = useQueryClient();
   const [busca, setBusca] = useState('');
   const [chaveAberta, setChaveAberta] = useState<string | null>(null);
   const [removendo, setRemovendo] = useState(false);
