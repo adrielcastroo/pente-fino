@@ -57,8 +57,8 @@ export default function CarrierSelectorDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
+      <DialogContent className="max-w-[95vw] sm:max-w-[500px] p-0 gap-0 overflow-hidden flex flex-col">
+        <DialogHeader className="p-5 sm:p-6 pb-4 sm:pb-4 mb-0">
           <DialogTitle className="flex items-center gap-2">
             <Truck className="size-5" />
             Selecionar Transportadora
@@ -68,7 +68,7 @@ export default function CarrierSelectorDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="flex-1 p-5 sm:p-6 space-y-4 pt-2">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -114,7 +114,8 @@ export default function CarrierSelectorDialog({
           </ScrollArea>
         </div>
 
-        <DialogFooter>
+        </div>
+        <DialogFooter className="p-5 sm:p-6 pt-4 sm:pt-4 mt-0">
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>

@@ -43,14 +43,15 @@ export default function NovoPickingDialog({ open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
+      <DialogContent className="max-w-[95vw] sm:max-w-lg p-0 gap-0 overflow-hidden">
+        <DialogHeader className="p-5 sm:p-6 pb-4 sm:pb-4 mb-0">
           <DialogTitle>Novo picking</DialogTitle>
           <DialogDescription>
             Cadastre uma ordem de separação para a expedição.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={submit} className="space-y-3">
+        <form onSubmit={submit} className="flex flex-col">
+          <div className="p-5 sm:p-6 space-y-4 pt-2">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="numero">Número *</Label>
@@ -89,7 +90,8 @@ export default function NovoPickingDialog({ open, onOpenChange }: Props) {
             <Label htmlFor="obs">Observação</Label>
             <Textarea id="obs" rows={2} value={form.observacao} onChange={e => setForm(f => ({ ...f, observacao: e.target.value }))} />
           </div>
-          <DialogFooter>
+          </div>
+          <DialogFooter className="p-5 sm:p-6 pt-4 sm:pt-4 mt-0">
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
             <Button type="submit" disabled={create.isPending}>
               {create.isPending ? 'Criando...' : 'Criar picking'}
