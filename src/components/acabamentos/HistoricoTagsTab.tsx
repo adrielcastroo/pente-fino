@@ -282,17 +282,17 @@ export default function HistoricoTagsTab() {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="h-7 px-2 text-[10px] gap-1 hover:bg-amber-500/10 hover:text-amber-600 hover:border-amber-500/50"
-                          onClick={() => reverterPara(ev)}
+                          className="h-7 px-2 text-[10px] gap-1 hover:bg-emerald-500/10 hover:text-emerald-600 hover:border-emerald-500/50"
+                          onClick={() => restaurarOriginalAuge(ev)}
                           disabled={!!revertendo}
                         >
                           {revertendo === ev.id ? (
                             <Loader2 className="h-3 w-3 animate-spin" />
                           ) : (
-                            <ArrowLeftCircle className="h-3 w-3" />
+                            <RefreshCw className="h-3 w-3" />
                           )
                           }
-                          O botão reverter para este estado, faz o que exatamente?
+                          Restaurar Original Auge
                         </Button>
                       )}
                     </div>
