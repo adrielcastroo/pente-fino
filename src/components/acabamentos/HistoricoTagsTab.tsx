@@ -356,7 +356,13 @@ export default function HistoricoTagsTab() {
 
                             </tbody>
                           </table>
+                          {filtroAlteradas === ev.id && ev.linhas.filter(l => l.valor === l.valor_antigo).length > 0 && (
+                            <div className="p-2 text-[9px] text-muted-foreground bg-muted/50 border-t italic">
+                              * {ev.linhas.filter(l => l.valor === l.valor_antigo).length} tags ocultadas por não terem sofrido alteração de valor.
+                            </div>
+                          )}
                         </div>
+
                       </details>
                     </div>
                   )}
