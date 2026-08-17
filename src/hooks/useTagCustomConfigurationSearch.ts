@@ -50,11 +50,9 @@ export function useTagCustomConfigurationSearch(searchTerm: string) {
       for (const tabela of tabelas) {
         let q = supabase.from(tabela as any).select('cd_configuracao, nm_configuracao, qtd_tags');
         
-        // Aplicamos TODOS os tokens no banco para reduzir o dataset e garantir AND no servidor
+        // Aplicamos o primeiro token no banco para reduzir o dataset
         if (tokens.length > 0) {
-          for (const tk of tokens) {
-            q = q.ilike('nm_configuracao', tk);
-          }
+          q = q.ilike('nm_configuracao', tokens[0]);
         }
 
         const { data } = await q.limit(1000);

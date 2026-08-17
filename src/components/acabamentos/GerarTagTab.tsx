@@ -705,7 +705,6 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   const [descricao, setDescricao] = useState(rascunho.descricao);
   const [linhas, setLinhas] = useState<LinhaTag[]>(rascunho.linhas);
   const [customAberta, setCustomAberta] = useState<{ cd: string; nm: string } | null>(rascunho.customAberta);
-  const [removidasResumo, setRemovidasResumo] = useState<Set<string>>(new Set());
   const [enviando, setEnviando] = useState(false);
   const [resultado, setResultado] = useState<ResultadoAuge | null>(rascunho.resultado);
   const [tentouEnviar, setTentouEnviar] = useState(false);
@@ -1699,7 +1698,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
             onSearchStateChange={setCfgSearch}
           />
           <p className="text-[10px] text-muted-foreground leading-relaxed whitespace-pre-line">
-            Aplique a solução que vc aplicou para esse problema de filtro fraco, ou seja, estou tentando procurar configurações que tenham todas essas palavras, mas o app me mostra diversas configs que possuem palavras aleatórias
+            o bloco resumo teve alguma alteração neste mesmo periodo?
           </p>
         </div>
 
@@ -1721,16 +1720,10 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         )}
 
         <ResumoConfiguracoesMassa 
-          configs={resumoConfigs
-            .filter(c => !removidasResumo.has(c.cd_configuracao))
-            .map(c => ({
-              cd_configuracao: c.cd_configuracao,
-              nm_configuracao: c.nm_configuracao,
-              count: c.qtd_tags
-            }))
-          }
-          onRemove={(cd) => setRemovidasResumo(prev => new Set(prev).add(cd))}
-          onClear={() => setRemovidasResumo(new Set(resumoConfigs.map(c => c.cd_configuracao)))}
+          termoBusca={termoBusca}
+          customAberta={customAberta}
+          setCustomAberta={setCustomAberta}
+          obrigatoriasCount={obrigatorias.length}
         />
       </Card>
 
