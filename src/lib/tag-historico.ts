@@ -22,6 +22,10 @@ export interface TagHistoricoLinha {
   calculada?: string | null;
   /** Fórmula da TAG Calculada, quando conhecida. */
   formula?: string | null;
+  /** Nome da configuração (persistido na linha para auditoria granular). */
+  nmConfiguracao?: string | null;
+  /** Código da configuração. */
+  cdConfiguracao?: string | null;
 }
 
 export interface TagHistoricoEvento {
