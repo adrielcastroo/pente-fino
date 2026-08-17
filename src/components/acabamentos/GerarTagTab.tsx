@@ -1698,9 +1698,8 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
             onSearchStateChange={setCfgSearch}
           />
           <p className="text-[10px] text-muted-foreground leading-relaxed">
-            o campo de busca precisa voltar com o comportamento que tinha até o dia 16/08 as 22:40, assim como o bloco resumo que esta interligado ao campo de busca.
-            {"\n\n"}
-            Verifique a possibilidade e veja se algo neste periodo realmente foi alterado neste campo e me diga o que foi alterado e se é possível retomar o funcionamento anterior.
+            Identifique o padrão técnico (ex.: <code className="font-mono text-primary">Rollo Pro</code>) para que o sistema orquestre automaticamente as configurações e TAGs vinculadas no bloco de Resumo. Você possui autoridade total para <span className="text-foreground font-semibold">incluir, excluir e editar</span> a composição global no Auge de forma centralizada e estratégica.
+            <span className="font-semibold text-foreground ml-1">Dica Pro:</span> Utilize <code className="font-mono text-primary">*</code> para buscas flexíveis padrão SAP B1.
           </p>
         </div>
 
