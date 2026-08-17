@@ -309,6 +309,26 @@ export default function IncluirItemMassaTab() {
       .sort((a, b) => (a.acab?.nm_acabamento ?? '').localeCompare(b.acab?.nm_acabamento ?? ''));
   }, [vinculos, acabByCd]);
 
+  const {
+    currentPage: currentExcluir,
+    setCurrentPage: setCurrentExcluir,
+    pageSize: pageSizeExcluir,
+    setPageSize: setPageSizeExcluir,
+    paginatedItems: vinculosPaginados,
+  } = usePagination(vinculos, 50);
+
+  const vinculosGroupedPaginados = useMemo(() => {
+    const map = new Map<string, ItemVinculo[]>();
+    vinculosPaginados.forEach((v) => {
+      const arr = map.get(v.cd_acabamento) ?? [];
+      arr.push(v);
+      map.set(v.cd_acabamento, arr);
+    });
+    return Array.from(map.entries())
+      .map(([cd, list]) => ({ cd, list, acab: acabByCd.get(cd) }))
+      .sort((a, b) => (a.acab?.nm_acabamento ?? '').localeCompare(b.acab?.nm_acabamento ?? ''));
+  }, [vinculosPaginados, acabByCd]);
+
   useEffect(() => () => {
     if (channelRef.current) supabase.removeChannel(channelRef.current);
   }, []);
