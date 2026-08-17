@@ -5115,10 +5115,10 @@ Deno.serve(async (req) => {
           console.warn(`[cdConfiguracao ${cdConfiguracao}] erro ao listar existentes:`, getErrorMessage(e));
         }
 
-        const mapaExistentes = new Map<string, string>(); // normalizeTagCode -> cdTagCustomizada
+        const mapaExistentes = new Map<string, any>(); // normalizeTagCode -> full row object
         for (const ext of tagsExistentes) {
           const valor = String(ext.dsTagCustomizada ?? ext.nmTagCustomizada ?? '').trim().toUpperCase().replace(/&/g, '').replace(/\s+/g, '');
-          if (valor) mapaExistentes.set(valor, String(ext.cdTagCustomizada));
+          if (valor) mapaExistentes.set(valor, ext);
         }
 
         for (const it of itens) {
@@ -5138,7 +5138,8 @@ Deno.serve(async (req) => {
           }
 
           const normCode = dsTagCustomizada.toUpperCase().replace(/&/g, '').replace(/\s+/g, '');
-          const cdTagCustomizadaExistente = mapaExistentes.get(normCode) || String(it?.cdTagCustomizada ?? '').trim();
+          const registroExistente = mapaExistentes.get(normCode);
+          const cdTagCustomizadaExistente = registroExistente ? String(registroExistente.cdTagCustomizada) : String(it?.cdTagCustomizada ?? '').trim();
 
           const doEspelho = dsTagCalculada ? (mapaCalculadas.get(dsTagCalculada.toLowerCase()) ?? []) : [];
           const informado = String(it?.cdTagCalculada ?? '').trim();
@@ -5169,14 +5170,18 @@ Deno.serve(async (req) => {
           let ultimoCd = '';
 
           for (const cdTagCalculada of tentativas) {
-            const dsTextoLivre = cdTagCalculada ? '' : String(it?.dsTagTexto ?? dsTagCustomizada).trim();
+            // Se estamos atualizando um registro existente e o usuário NÃO selecionou uma TAG calculada, 
+            // devemos manter o que já estava lá (dsTextoLivre ou cdTagCalculada) em vez de limpar.
+            const dsTextoLivre = cdTagCalculada ? '' : (registroExistente?.dsTextoLivre || String(it?.dsTagTexto ?? dsTagCustomizada).trim());
+            const cdCalculadaFinal = cdTagCalculada || (registroExistente?.cdTagCalculada ? String(registroExistente.cdTagCalculada) : '');
+
             ultimoCd = cdTagCalculada;
             try {
               const auge = await saveTagCustomizada(auth, {
                 cdConfiguracao,
                 cdTagCustomizada: cdTagCustomizadaExistente,
                 dsTagCustomizada,
-                cdTagCalculada,
+                cdTagCalculada: cdCalculadaFinal,
                 dsTextoLivre,
               });
               results.push({
