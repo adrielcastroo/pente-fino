@@ -1451,6 +1451,8 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         cdTagCustomizada: l.cdTagCustomizada ?? null,
         cdTagCalculada: l.cdTagCalculada ?? null,
         dsTagTexto: l.dsTagTexto ?? null,
+        nmConfiguracao: l.cfgNome || customAberta?.nm || null,
+        cdConfiguracao: customAberta?.cd || null,
       })),
       gravadas: res?.gravadas ?? null,
       total: res?.total ?? null,
@@ -1478,6 +1480,8 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         valor: l.valor,
         calculada: l.calculada ?? null,
         formula: l.formula ?? null,
+        nmConfiguracao: l.cfgNome || reg.configuracao?.nm || null,
+        cdConfiguracao: reg.configuracao?.cd || null,
       })),
     });
     toast.success('Registro carregado — edite e grave novamente.');
@@ -1619,7 +1623,6 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         cdConfiguracao: customAberta?.cd ?? resultado?.cdConfiguracao ?? null,
         nmConfiguracao: customAberta?.nm ?? null,
         linhas: (itens as any[]).map((it, idx) => {
-          // Buscamos o valor antigo na linha correspondente da UI
           const uiLine = linhas.find(l => l.valor === it.dsTagCustomizada);
           return {
             code: uiLine?.code || null,
@@ -1627,6 +1630,8 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
             valor_antigo: uiLine?.valorAntigo || null,
             calculada: it.dsTagCalculada || null,
             formula: it.dsFormula || null,
+            nmConfiguracao: uiLine?.cfgNome || customAberta?.nm || null,
+            cdConfiguracao: customAberta?.cd || null,
           };
         }),
         gravadas: res?.gravadas ?? null,
