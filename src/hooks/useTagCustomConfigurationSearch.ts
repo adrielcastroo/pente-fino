@@ -48,30 +48,41 @@ export function useTagCustomConfigurationSearch(searchTerm: string) {
       const map = new Map<string, TagCustomSearchResult>();
 
       for (const tabela of tabelas) {
-        let q = supabase.from(tabela as any).select('cd_configuracao, nm_configuracao, qtd_tags');
+        let q = (supabase as any).from(tabela).select('cd_configuracao, nm_configuracao, qtd_tags');
         
-        // Aplicamos o primeiro token no banco para reduzir o dataset
+        // Aplicamos TODOS os tokens no banco (PostgREST AND) para máxima precisão e performance
         if (tokens.length > 0) {
-          q = q.ilike('nm_configuracao', tokens[0]);
+          for (const tk of tokens) {
+            if (tk && tk !== '%%') {
+              q = q.ilike('nm_configuracao', tk);
+            }
+          }
         }
 
-        const { data } = await q.limit(1000);
-        if (data) {
+        const { data, error } = await q.limit(1000);
+        if (!error && data) {
           for (const r of data as any[]) {
+            const cd = String(r.cd_configuracao ?? '').trim();
+            if (!cd) continue;
+            
             const nm = r.nm_configuracao || '';
-            // Validamos TODOS os tokens no cliente para garantir lógica AND perfeita
+            // Double check no cliente para garantir normalização de acentos/case (matchesIlike lida com isso)
             if (tokens.every(tk => matchesIlike(nm, tk))) {
-              map.set(r.cd_configuracao, {
-                cd_configuracao: String(r.cd_configuracao),
-                nm_configuracao: nm,
-                qtd_tags: Number(r.qtd_tags || 0)
-              });
+              if (!map.has(cd)) {
+                map.set(cd, {
+                  cd_configuracao: cd,
+                  nm_configuracao: nm,
+                  qtd_tags: Number(r.qtd_tags || 0)
+                });
+              }
             }
           }
         }
       }
 
-      return Array.from(map.values()).sort((a, b) => a.nm_configuracao.localeCompare(b.nm_configuracao, 'pt-BR'));
+      return Array.from(map.values()).sort((a, b) => 
+        a.nm_configuracao.localeCompare(b.nm_configuracao, 'pt-BR')
+      );
     }
   });
 
