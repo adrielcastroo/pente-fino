@@ -112,8 +112,8 @@ export function toIlikeTokens(raw: string): string[] {
   return clean
     .split(/[\s*]+/)
     .map((t) => t.trim())
-    .filter((t) => t.length >= 2)
-    .slice(0, 12)
+    .filter((t) => t.length >= 1) // Permitimos tokens de 1 char (importante para buscas como "cortina 1")
+    .slice(0, 15)
     .map((t) => `%${t}%`);
 }
 
@@ -131,12 +131,22 @@ export function ilikeCacheKey(padrao: string, tokens: string[]): string {
  */
 export function matchesIlike(text: string, pattern: string): boolean {
   if (!pattern) return true;
+  // O padrão pode vir como "%token%" ou "prefix%middle%suffix"
+  // Para a comparação no cliente, normalizamos ambos.
   const normText = (text || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  const normPattern = (pattern || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  const escaped = normPattern
+  
+  // Remove os % das extremidades se for um token simples, ou trata % internos
+  let cleanPattern = pattern.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  
+  // Se o padrão é literal (ex: "cortina"), ele deve ser contido.
+  // Se tem %, transformamos em .* para Regex.
+  const escaped = cleanPattern
     .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
-    .replace(/[%*]/g, '.*');
-  const regex = new RegExp(`^${escaped}$`, 'i');
+    .replace(/%/g, '.*');
+  
+  // Se o padrão original não tinha % no início/fim, o LIKE do SQL seria exato.
+  // Mas como toIlikeTokens adiciona %, aqui sempre será uma busca de substring.
+  const regex = new RegExp(escaped, 'i');
   return regex.test(normText);
 }
 
