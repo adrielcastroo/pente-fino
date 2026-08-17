@@ -2,10 +2,11 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
   CheckCircle2, XCircle, Clock, Loader2, 
-  ExternalLink, ChevronRight, Info
+  ChevronRight, Info
 } from 'lucide-react';
 import { formatDateBR } from '@/lib/app-utils';
 import { cn } from '@/lib/utils';
@@ -152,16 +153,3 @@ function SyncRunCard({ run }: { run: Run }) {
   );
 }
 
-function Button({ className, variant, size, asChild, ...props }: any) {
-  const Comp = asChild ? 'span' : 'button';
-  return (
-    <Comp
-      className={cn(
-        "inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
-        variant === 'ghost' && "hover:bg-accent hover:text-accent-foreground",
-        className
-      )}
-      {...props}
-    />
-  );
-}
