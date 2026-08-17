@@ -80,7 +80,7 @@ export default function TransferenciaDetailDialog({ transferencia, open, onOpenC
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
+        <DialogContent className="max-w-[95vw] sm:max-w-xl max-h-[92vh] overflow-hidden flex flex-col p-0 gap-0">
           <ErpDialogHeader className="p-5 sm:p-6 pb-4 sm:pb-4 mb-0"
             icon={ClipboardList}
             title="Transferência"

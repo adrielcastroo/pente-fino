@@ -221,8 +221,8 @@ export default function LoteSelectorDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
-        <DialogHeader>
+      <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[92vh] overflow-hidden flex flex-col p-0 gap-0">
+        <DialogHeader className="p-5 sm:p-6 pb-4 sm:pb-4 mb-0">
           <DialogTitle className="flex items-center gap-2 text-base">
             <Layers className="w-4 h-4 text-primary" />
             Selecionar {modo === 'serie' ? 'séries' : 'lotes'}
@@ -237,7 +237,7 @@ export default function LoteSelectorDialog({
           </p>
         </DialogHeader>
 
-        <div className="flex flex-col gap-2 border-b pb-3">
+        <div className="flex flex-col gap-2 border-b pb-3 px-5 sm:px-6">
           <div className="flex items-center gap-2 flex-wrap">
             <div className="relative flex-1 min-w-[180px]">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/50" />
@@ -283,7 +283,7 @@ export default function LoteSelectorDialog({
           </div>
         </div>
 
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-auto custom-scrollbar px-5 sm:px-6">
           {loading ? (
             <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
           ) : lotes.length === 0 ? (
@@ -377,7 +377,7 @@ export default function LoteSelectorDialog({
           )}
         </div>
 
-        <DialogFooter className="border-t pt-3 sm:justify-between">
+        <DialogFooter className="p-5 sm:p-6 pt-4 sm:pt-4 mt-0 border-t sm:justify-between">
           <div className="flex items-center gap-2 text-xs">
             <Badge variant="secondary" className="font-mono">
               {Object.keys(sel).filter(k => sel[k] > 0).length} selecionados
