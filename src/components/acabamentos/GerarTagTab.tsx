@@ -1655,7 +1655,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       {/* Espelha o diálogo "Manter Tag Customizada" do Auge */}
       <Card className="p-4 space-y-4">
         <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-          <Wand2 className="h-3.5 w-3.5" /> Manter Tag Customizada
+          <Wand2 className="h-3.5 w-3.5" /> Motor de Configuração de TAGs Custom
         </div>
 
         {/* Configuração: busca a TAG Custom (configuração) existente */}
@@ -1671,11 +1671,9 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
             onChange={(v) => setCustomAberta(v)}
             onSearchStateChange={setCfgSearch}
           />
-          <p className="text-[10px] text-muted-foreground">
-            Digite aqui (ex.: <code className="font-mono">Rollo Pro</code>) — o sistema reconhecerá todas as configurações 
-            e TAGs correspondentes e as listará no bloco "Resumo" abaixo automaticamente. O usuário terá capacidade de 
-            poder incluir, excluir, editar e alterar todas as configurações que estão exibidas no bloco "resumo" de uma vez só no Auge.
-            <span className="font-semibold text-foreground"> Curinga:</span> <code className="font-mono">*</code> como no SAP B1.
+          <p className="text-[10px] text-muted-foreground leading-relaxed">
+            Identifique o padrão técnico (ex.: <code className="font-mono text-primary">Rollo Pro</code>) para que o sistema orquestre automaticamente as configurações e TAGs vinculadas no bloco de Resumo. Você possui autoridade total para <span className="text-foreground font-semibold">incluir, excluir e editar</span> a composição global no Auge de forma centralizada e estratégica.
+            <span className="font-semibold text-foreground ml-1">Dica Pro:</span> Utilize <code className="font-mono text-primary">*</code> para buscas flexíveis padrão SAP B1.
           </p>
         </div>
 
