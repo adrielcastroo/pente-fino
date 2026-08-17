@@ -1939,7 +1939,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
               {!!resultado.augeRows?.length && (
                 <div className="space-y-1">
                   <div className="text-[9px] uppercase text-muted-foreground flex items-center gap-1.5">
-                    Como ficou no Auge
+                    Persistência de Dados no Auge
                     {editandoAuge && (
                       <Badge variant="outline" className="text-[8px] border-blue-500/50 text-blue-700 dark:text-blue-400">
                         edição — a TAG calculada antiga será substituída
