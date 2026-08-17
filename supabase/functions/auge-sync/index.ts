@@ -6347,9 +6347,9 @@ Deno.serve(async (req) => {
       // peças produzidas. Simulamos a requisição para obter os últimos registros e
       // popular o Painel de Expedição no Pente Fino.
       const columns = [
-        'id', 'document', 'customer', 'status', 'user', 'quantity', 'created_at', 'updated_at'
+        'id', 'document', 'customer', 'status', 'user', 'quantity', 'created_at', 'updated_at', 'order'
       ];
-      const body = dtBody(columns, 200); // Buscar as últimas 200 peças
+      const body = dtBody(columns, 300); // Aumentar para 300 para melhor cobertura inicial
       
       const res = await postApi(auth, '/record-manufactured-documents/list', body);
       const rows = Array.isArray(res) ? res : [];
@@ -6383,7 +6383,7 @@ Deno.serve(async (req) => {
             total_pecas: 0
           });
         }
-        pedidosMap.get(r.auge_pedido_codigo).total_pecas += (r.quantidade || 1);
+        pedidosMap.get(r.auge_pedido_codigo).total_pecas += (r.quantidade || r.quantity || 1);
       });
 
       const pickings = Array.from(pedidosMap.values());
