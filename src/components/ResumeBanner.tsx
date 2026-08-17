@@ -114,15 +114,21 @@ export default function ResumeBanner() {
       </AnimatePresence>
 
       <AlertDialog open={confirmCancel} onOpenChange={setConfirmCancel}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
+        <AlertDialogContent className="max-w-[95vw] sm:max-w-md p-0 gap-0 overflow-hidden">
+          <AlertDialogHeader className="p-5 sm:p-6 pb-4 sm:pb-4 mb-0">
             <AlertDialogTitle>Descartar itens novos?</AlertDialogTitle>
             <AlertDialogDescription>
               Você adicionou {newCount} item(ns) novos que ainda não foram salvos no histórico.
               Cancelar agora vai descartá-los.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <div className="p-5 sm:p-6 pt-2 sm:pt-2 space-y-4">
+            <AlertDialogDescription>
+              Você adicionou {newCount} item(ns) novos que ainda não foram salvos no histórico.
+              Cancelar agora vai descartá-los.
+            </AlertDialogDescription>
+          </div>
+          <AlertDialogFooter className="p-5 sm:p-6 pt-4 sm:pt-4 mt-0">
             <AlertDialogCancel>Continuar editando</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {

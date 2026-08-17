@@ -186,14 +186,16 @@ const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCo
                 </TooltipTrigger>
                 <TooltipContent className="rounded-lg shadow-xl border-border/40">Remover Registro</TooltipContent>
               </Tooltip>
-              <AlertDialogContent className="max-w-[95vw] sm:max-w-md">
-                <AlertDialogHeader>
+              <AlertDialogContent className="max-w-[95vw] sm:max-w-md p-0 gap-0 overflow-hidden">
+                <AlertDialogHeader className="p-5 sm:p-6 pb-4 sm:pb-4 mb-0">
                   <AlertDialogTitle>Remover registro?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Esta ação remove o registro <span className="font-mono font-bold">{r.item || '(sem item)'}</span> desta sessão. Você pode desfazer com Ctrl+Z.
-                  </AlertDialogDescription>
+                  <div className="p-5 sm:p-6 pt-2 sm:pt-2 space-y-4">
+                    <AlertDialogDescription>
+                      Esta ação remove o registro <span className="font-mono font-bold">{r.item || '(sem item)'}</span> desta sessão. Você pode desfazer com Ctrl+Z.
+                    </AlertDialogDescription>
+                  </div>
                 </AlertDialogHeader>
-                <AlertDialogFooter>
+                <AlertDialogFooter className="p-5 sm:p-6 pt-4 sm:pt-4 mt-0">
                   <AlertDialogCancel>Cancelar</AlertDialogCancel>
                   <AlertDialogAction onClick={() => onDelete(r.id)} className="bg-destructive hover:bg-destructive/90">Remover</AlertDialogAction>
                 </AlertDialogFooter>
