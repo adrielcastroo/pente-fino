@@ -400,7 +400,7 @@ export default function HistoricoTagsTab() {
                 <table className="w-full text-[11px]">
                   <thead className="bg-muted text-muted-foreground">
                     <tr className="text-left border-b">
-                      <th className="p-3 font-medium uppercase tracking-wider">TAG</th>
+                      <th className="p-3 font-medium uppercase tracking-wider">TAG Custom</th>
                       <th className="p-3 font-medium uppercase tracking-wider">Anterior (Auge)</th>
                       <th className="p-3 font-medium uppercase tracking-wider text-emerald-600">Implementado</th>
                       <th className="p-3 font-medium uppercase tracking-wider">Fórmula</th>
