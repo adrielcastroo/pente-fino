@@ -1451,6 +1451,8 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         cdTagCustomizada: l.cdTagCustomizada ?? null,
         cdTagCalculada: l.cdTagCalculada ?? null,
         dsTagTexto: l.dsTagTexto ?? null,
+        nmConfiguracao: l.cfgNome || customAberta?.nm || null,
+        cdConfiguracao: customAberta?.cd || null,
       })),
       gravadas: res?.gravadas ?? null,
       total: res?.total ?? null,
@@ -1478,6 +1480,8 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         valor: l.valor,
         calculada: l.calculada ?? null,
         formula: l.formula ?? null,
+        nmConfiguracao: l.cfgNome || reg.configuracao?.nm || null,
+        cdConfiguracao: reg.configuracao?.cd || null,
       })),
     });
     toast.success('Registro carregado — edite e grave novamente.');
