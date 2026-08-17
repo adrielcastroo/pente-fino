@@ -289,7 +289,7 @@ export default function HistoricoTagsTab() {
                     </div>
 
                     {ev.ok && ev.linhas.length > 0 && (
-                      <div className="flex justify-end">
+                      <div className="flex justify-end hidden">
                         <Button
                           variant="outline"
                           size="sm"
