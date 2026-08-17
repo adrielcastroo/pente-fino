@@ -1031,7 +1031,7 @@ export default function EstoquePage() {
 
       {/* ===== DETAIL DIALOG ===== */}
       <Dialog open={!!detailPos} onOpenChange={() => setDetailPos(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 gap-0 border border-border bg-card overflow-hidden rounded-lg shadow-xl max-h-[90vh] flex flex-col translate-y-[-50%] top-[50%]">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 gap-0 border border-border bg-card overflow-hidden rounded-lg shadow-xl max-h-[90vh] flex flex-col">
           {detailPos && (() => {
             const statusCfg = STATUS_CONFIG[detailPos.status] || STATUS_CONFIG.livre;
             const info = resolveItemInfo(detailPos.item);
@@ -1151,7 +1151,7 @@ export default function EstoquePage() {
 
       {/* ===== STAT DETAIL DIALOG ===== */}
       <Dialog open={!!selectedStat} onOpenChange={(o) => { if (!o) { setSelectedStat(null); setDrillTec(null); } }}>
-        <DialogContent className="max-w-[95vw] sm:max-w-5xl h-[85vh] sm:h-[80vh] flex flex-col p-0 gap-0 overflow-hidden relative border border-border bg-card rounded-lg shadow-xl translate-y-[-50%] top-[50%]">
+        <DialogContent className="max-w-[95vw] sm:max-w-5xl h-[85vh] sm:h-[80vh] flex flex-col p-0 gap-0 overflow-hidden relative border border-border bg-card rounded-lg shadow-xl">
 
           {selectedStat && (() => {
             const statItems: { label: string; value: number; percent: number; color: string; bg: string; hex: string }[] = [
