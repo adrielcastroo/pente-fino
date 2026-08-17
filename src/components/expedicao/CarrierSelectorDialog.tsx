@@ -114,7 +114,6 @@ export default function CarrierSelectorDialog({
           </ScrollArea>
         </div>
 
-        </div>
         <DialogFooter className="p-5 sm:p-6 pt-4 sm:pt-4 mt-0">
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             Cancelar
