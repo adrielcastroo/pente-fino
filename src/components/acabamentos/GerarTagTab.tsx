@@ -1699,7 +1699,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
             onSearchStateChange={setCfgSearch}
           />
           <p className="text-[10px] text-muted-foreground leading-relaxed whitespace-pre-line">
-            o bloco resumo teve alguma alteração neste mesmo periodo?
+            quero retornar com o bloco resumo para a versão anterior que vc mencionou: Llista de "configurações afetadas"
           </p>
         </div>
 
