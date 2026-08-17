@@ -494,7 +494,7 @@ function ConfiguracaoSelect({
 
       await Promise.all(
         tabelas.map(async (tabela) => {
-          const q = (supabase as any)
+          let q = (supabase as any)
             .from(tabela)
             .select('cd_configuracao, nm_configuracao, qtd_tags');
           
