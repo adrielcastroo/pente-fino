@@ -700,7 +700,7 @@ export default function IncluirItemMassaTab() {
               <div className="flex items-center gap-2">
                 <div className="relative flex-1">
                   <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                  <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar acabamentos para incluir..." className="h-9 pl-7 text-xs" />
+                  <Input value={busca} onChange={(e) => { setBusca(e.target.value); setCurrentPage(1); }} placeholder="Buscar acabamentos para incluir..." className="h-9 pl-7 text-xs" />
                 </div>
                 <Button size="sm" variant="outline" onClick={toggleAllFiltrados} className="h-9 text-[11px]">
                   {filtrados.every((a) => selecionados.has(a.cd_acabamento)) ? 'Desmarcar' : 'Marcar'} filtrados
