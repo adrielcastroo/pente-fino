@@ -357,7 +357,7 @@ function TagCalculadaCell({
           autoFocus={aberto}
           onFocus={() => setAberto(true)}
           onChange={(e) => { setBusca(e.target.value); setAberto(true); }}
-          placeholder={compacto ? 'Nome, descrição ou fórmula' : 'Buscar por nome, descrição ou fórmula (use * como curinga)'}
+          placeholder={compacto ? 'Nome, descrição ou fórmula' : 'Identifique a TAG pela descrição, fórmula ou código (use * como curinga)'}
           className="h-8 pl-7 text-[11px] font-mono"
         />
       </div>
@@ -1655,7 +1655,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       {/* Espelha o diálogo "Manter Tag Customizada" do Auge */}
       <Card className="p-4 space-y-4">
         <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-          <Wand2 className="h-3.5 w-3.5" /> Manter Tag Customizada
+          <Wand2 className="h-3.5 w-3.5" /> Motor de Configuração de TAGs Custom
         </div>
 
         {/* Configuração: busca a TAG Custom (configuração) existente */}
@@ -1671,11 +1671,9 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
             onChange={(v) => setCustomAberta(v)}
             onSearchStateChange={setCfgSearch}
           />
-          <p className="text-[10px] text-muted-foreground">
-            Digite aqui (ex.: <code className="font-mono">Rollo Pro</code>) — o sistema reconhecerá todas as configurações 
-            e TAGs correspondentes e as listará no bloco "Resumo" abaixo automaticamente. O usuário terá capacidade de 
-            poder incluir, excluir, editar e alterar todas as configurações que estão exibidas no bloco "resumo" de uma vez só no Auge.
-            <span className="font-semibold text-foreground"> Curinga:</span> <code className="font-mono">*</code> como no SAP B1.
+          <p className="text-[10px] text-muted-foreground leading-relaxed">
+            Identifique o padrão técnico (ex.: <code className="font-mono text-primary">Rollo Pro</code>) para que o sistema orquestre automaticamente as configurações e TAGs vinculadas no bloco de Resumo. Você possui autoridade total para <span className="text-foreground font-semibold">incluir, excluir e editar</span> a composição global no Auge de forma centralizada e estratégica.
+            <span className="font-semibold text-foreground ml-1">Dica Pro:</span> Utilize <code className="font-mono text-primary">*</code> para buscas flexíveis padrão SAP B1.
           </p>
         </div>
 
@@ -1782,7 +1780,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                 {linhas.length === 0 && !addManual && (
                   <tr>
                     <td colSpan={4} className="p-6 text-center text-muted-foreground text-[11px]">
-                      Nenhuma TAG adicionada à composição.
+                      Aguardando composição. Utilize o buscador acima para definir o padrão técnico.
                     </td>
                   </tr>
                 )}
@@ -1822,7 +1820,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
               className="w-full h-10 gap-2 text-xs"
             >
               {enviando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-              {enviando ? 'Gravando no Auge…' : `Adicionar TAG Custom (${linhas.length})`}
+              {enviando ? 'Sincronizando com o Auge…' : `Consolidar Configuração Global (${linhas.length})`}
             </Button>
             {obrigatoriasFaltando.length > 0 && (
               <p className="text-[10px] text-destructive flex items-start gap-1">
@@ -1840,7 +1838,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                 <div className="text-[10px] uppercase flex items-center gap-1 font-semibold">
                   {resultado.ok
                     ? <><CheckCircle2 className="h-3 w-3 text-emerald-600" /> Gravada no Auge</>
-                    : <><AlertTriangle className="h-3 w-3 text-destructive" /> Falha na gravação</>}
+                    : <><AlertTriangle className="h-3 3 text-destructive" /> Divergência Técnica na Gravação</>}
                   {typeof resultado.gravadas === 'number' && (
                     <Badge variant="outline" className="text-[9px]">
                       {resultado.gravadas}/{resultado.total} ok
@@ -1941,7 +1939,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
               {!!resultado.augeRows?.length && (
                 <div className="space-y-1">
                   <div className="text-[9px] uppercase text-muted-foreground flex items-center gap-1.5">
-                    Como ficou no Auge
+                    Persistência de Dados no Auge
                     {editandoAuge && (
                       <Badge variant="outline" className="text-[8px] border-blue-500/50 text-blue-700 dark:text-blue-400">
                         edição — a TAG calculada antiga será substituída

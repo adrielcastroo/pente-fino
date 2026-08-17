@@ -851,12 +851,12 @@ function ImportPlanilhaDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileSpreadsheet className="h-4 w-4 text-primary" />
-            Importar planilha em massa
+            Orquestração de Dados em Massa
           </DialogTitle>
           <DialogDescription className="text-xs">
-            Envie um arquivo <code>.xlsx</code>, <code>.csv</code> ou <code>.ods</code> ou baixe o modelo pronto.
-            Use a coluna <span className="font-semibold">Acabamentos</span> com códigos separados por <code>;</code>
-            para direcionar cada item aos seus acabamentos.
+            Maximize sua produtividade enviando arquivos <code>.xlsx</code> ou <code>.csv</code>. 
+            Utilize a coluna <span className="font-semibold text-primary">Acabamentos</span> com códigos segmentados por <code>;</code> 
+            para garantir que cada item seja vinculado ao seu destino técnico com precisão absoluta.
           </DialogDescription>
         </DialogHeader>
 
@@ -865,7 +865,7 @@ function ImportPlanilhaDialog({
             <FileUp className="h-10 w-10 text-muted-foreground" />
             <div className="text-center space-y-1">
               <div className="text-sm font-medium">Nenhum arquivo selecionado</div>
-              <div className="text-xs text-muted-foreground">Escolha uma planilha ou baixe o modelo para começar.</div>
+              <div className="text-xs text-muted-foreground">Importe arquivos (.xlsx, .csv) para vincular múltiplos itens com precisão estratégica.</div>
             </div>
             <div className="flex items-center gap-2">
               <Button onClick={onPickFile} className="gap-2">
@@ -990,7 +990,7 @@ function ProgressCard({ run, results, total, current, pct, okCount, errCount, is
             <CheckCircle2 className="h-4 w-4 text-emerald-500" />}
           <div className="text-xs font-semibold">
             {isActive ? `${verbActive} item ${run.detalhes?.item ?? ''}…` :
-              run.status === 'error' ? 'Concluído com erros' : 'Concluído'}
+              run.status === 'error' ? 'Finalizado com Ressalvas' : 'Execução Concluída'}
           </div>
         </div>
         {!isActive && (
