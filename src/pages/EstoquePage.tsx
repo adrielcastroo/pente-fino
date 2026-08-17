@@ -1116,7 +1116,7 @@ export default function EstoquePage() {
                       })}
                       {!isGuest && (
                         <Button
-                          onClick={() => handleStatusChange(detailPos, 'saida')}
+                          onClick={() => setConfirmSaida(true)}
                           variant="outline"
                           size="sm"
                           className="h-9 text-xs gap-2 justify-start col-span-2"

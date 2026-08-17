@@ -186,7 +186,7 @@ const TableRow = memo(({ r, i, columns, searchQuery, onStartEdit, onDelete, onCo
                 </TooltipTrigger>
                 <TooltipContent className="rounded-lg shadow-xl border-border/40">Remover Registro</TooltipContent>
               </Tooltip>
-              <AlertDialogContent>
+              <AlertDialogContent className="max-w-[95vw] sm:max-w-md">
                 <AlertDialogHeader>
                   <AlertDialogTitle>Remover registro?</AlertDialogTitle>
                   <AlertDialogDescription>
