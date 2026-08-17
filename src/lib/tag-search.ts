@@ -107,12 +107,10 @@ export function toIlikePattern(raw: string): string {
  */
 export function toIlikeTokens(raw: string): string[] {
   const clean = sanitizeTerm(raw).replace(/%/g, ' ');
-  // Tratamos o "*" como um separador de tokens, mas preservamos a intenção de AND.
-  // Ex: "cortina*cm" -> ["%cortina%", "%cm%"]
   return clean
     .split(/[\s*]+/)
     .map((t) => t.trim())
-    .filter((t) => t.length >= 2)
+    .filter((t) => t.length >= 1) // Mantém tokens de 1 caractere (ex: T, A, 1)
     .slice(0, 12)
     .map((t) => `%${t}%`);
 }
@@ -206,7 +204,9 @@ export function ilikeAnd<T extends IlikeBuilder>(query: T, col: string, padrao: 
   // Se houver tokens, aplicamos AND (cada token precisa estar na coluna)
   if (tokens.length > 0) {
     for (const t of tokens) {
-      if (t && t !== '%%') q = q.ilike(col, t) as T;
+      if (t && t !== '%%') {
+        q = q.ilike(col, t) as T;
+      }
     }
     return q;
   }
@@ -217,22 +217,22 @@ export function ilikeAnd<T extends IlikeBuilder>(query: T, col: string, padrao: 
 
 /** Combina `padrao` + `tokens` em uma única cláusula `or(...)` do PostgREST. */
 export function ilikeOr(cols: string[], padrao: string, tokens: string[]): string {
+  const parts: string[] = [];
+  
+  // Se houver tokens, a regra principal é AND entre eles, mas OR entre colunas para cada token.
+  // PostgREST: (col1.ilike.%A%,col2.ilike.%A%),(col1.ilike.%B%,col2.ilike.%B%)
   if (tokens.length > 0) {
-    // Para implementar lógica AND entre tokens em várias colunas, o PostgREST
-    // exige que todos os tokens casem com pelo menos UMA das colunas.
-    // Ex: (col1.ilike.%A% | col2.ilike.%A%) & (col1.ilike.%B% | col2.ilike.%B%)
-    const groups = tokens.map(t => {
-      const orGroup = cols.map(c => `${c}.ilike.${JSON.stringify(t)}`).join(',');
-      return `and(${orGroup})`;
-    });
-    return groups.join(',');
+    return tokens.map(t => {
+      return `or(${cols.map(c => `${c}.ilike.${JSON.stringify(t)}`).join(',')})`;
+    }).join(',');
   }
 
-  const parts: string[] = [];
-  for (const c of cols) {
-    if (padrao) parts.push(`${c}.ilike.${JSON.stringify(padrao)}`);
+  // Se não houver tokens, apenas o padrão simples em qualquer uma das colunas
+  if (padrao) {
+    return cols.map(c => `${c}.ilike.${JSON.stringify(padrao)}`).join(',');
   }
-  return parts.join(',');
+  
+  return '';
 }
 
 /**
