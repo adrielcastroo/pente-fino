@@ -390,7 +390,7 @@ export default function HistoricoTagsTab() {
               </Badge>
             </DialogTitle>
             <p className="text-xs text-muted-foreground mt-1">
-              Exibindo as tags que sofreram alteração real de valor na operação de {formatarDataTag(eventoParaAuditoria?.em)}.
+              Exibindo as TAGs Custom que sofreram alteração real de valor na operação de {formatarDataTag(eventoParaAuditoria?.em)}.
             </p>
           </DialogHeader>
 
