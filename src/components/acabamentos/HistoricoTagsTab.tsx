@@ -386,11 +386,11 @@ export default function HistoricoTagsTab() {
               <CheckCircle2 className="h-5 w-5" />
               Auditoria de Impacto
               <Badge variant="outline" className="ml-2 text-[10px] uppercase border-primary/30">
-                Apenas Alteradas
+                TAGs Custom Alteradas
               </Badge>
             </DialogTitle>
             <p className="text-xs text-muted-foreground mt-1">
-              Exibindo as tags que sofreram alteração real de valor na operação de {formatarDataTag(eventoParaAuditoria?.em)}.
+              Exibindo as TAGs Custom que sofreram alteração real de valor na operação de {formatarDataTag(eventoParaAuditoria?.em)}.
             </p>
           </DialogHeader>
 
@@ -400,7 +400,7 @@ export default function HistoricoTagsTab() {
                 <table className="w-full text-[11px]">
                   <thead className="bg-muted text-muted-foreground">
                     <tr className="text-left border-b">
-                      <th className="p-3 font-medium uppercase tracking-wider">TAG</th>
+                      <th className="p-3 font-medium uppercase tracking-wider">TAG Custom</th>
                       <th className="p-3 font-medium uppercase tracking-wider">Anterior (Auge)</th>
                       <th className="p-3 font-medium uppercase tracking-wider text-emerald-600">Implementado</th>
                       <th className="p-3 font-medium uppercase tracking-wider">Fórmula</th>
@@ -440,7 +440,7 @@ export default function HistoricoTagsTab() {
           
           <div className="p-4 border-t bg-muted/30 flex justify-between items-center px-6">
             <div className="text-[11px] text-muted-foreground font-medium">
-              Total de Impacto: <span className="text-primary">{eventoParaAuditoria?.linhas?.filter((l: any) => l.valor !== l.valor_antigo).length || 0}</span> tags alteradas
+              Total de Impacto: <span className="text-primary">{eventoParaAuditoria?.linhas?.filter((l: any) => l.valor !== l.valor_antigo).length || 0}</span> TAGs Custom alteradas
             </div>
             <Button size="sm" onClick={() => setEventoParaAuditoria(null)} className="h-8 px-4 text-xs">
               Fechar Auditoria
