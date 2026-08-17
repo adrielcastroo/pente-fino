@@ -283,6 +283,7 @@ export default function TagsTab() {
   const toggleSort = (col: 'nome' | 'codigo' | 'qtd') => {
     if (sortBy === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
     else { setSortBy(col); setSortDir('asc'); }
+    setCurrentPage(1);
   };
 
   return (
