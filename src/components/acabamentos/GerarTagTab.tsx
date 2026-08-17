@@ -1471,29 +1471,46 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
   /** Recarrega um registro do histórico na composição para editar e relançar. */
   const relancarRegistro = (reg: RegistroGerarTag) => {
-    setCustomAberta(reg.configuracao);
-    setDescricao(reg.descricao ?? '');
-    setLinhas(reg.linhas.map((l) => ({ ...l })));
+    // 1. Limpar estados de busca e resultados anteriores
+    setTermoBusca('');
     setResultado(null);
     setEditandoAuge(false);
     setEdicoesAuge({});
     setTentouEnviar(false);
+    setRemovidasManualmente(new Set());
+
+    // 2. Restaurar configuração (nome/código)
+    setCustomAberta(reg.configuracao);
+    setDescricao(reg.descricao ?? '');
+    
+    // 3. Restaurar as linhas mantendo a integridade dos dados (códigos de tag e fórmulas)
+    const linhasRestauradas = reg.linhas.map((l) => ({ 
+      ...l,
+      // Garante que o ID seja único para evitar colisões se relançado múltiplas vezes
+      id: l.id.startsWith('relanc|') ? l.id : `relanc|${Date.now()}|${l.id}`
+    }));
+    
+    setLinhas(linhasRestauradas);
+
     registrarEventoTag({
       ok: true,
       tipo: 'relancamento',
       descricao: reg.descricao || '—',
       cdConfiguracao: reg.configuracao?.cd ?? null,
       nmConfiguracao: reg.configuracao?.nm ?? null,
-      linhas: reg.linhas.map((l) => ({
+      linhas: linhasRestauradas.map((l) => ({
         code: l.code,
         valor: l.valor,
         calculada: l.calculada ?? null,
         formula: l.formula ?? null,
+        cdTagCalculada: l.cdTagCalculada ?? null,
+        dsTagTexto: l.dsTagTexto ?? null,
         nmConfiguracao: l.cfgNome || reg.configuracao?.nm || null,
         cdConfiguracao: reg.configuracao?.cd || null,
       })),
     });
-    toast.success('Registro carregado — edite e grave novamente.');
+
+    toast.success('Composição carregada — você pode editar e gravar novamente.');
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -2016,72 +2033,87 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         {/* Últimos registros: as 10 últimas alterações feitas nesta aba */}
         <Card className="overflow-hidden">
           <div className="p-3 border-b flex items-center justify-between gap-2">
-            <div className="text-xs font-semibold flex items-center gap-1.5">
-              <History className="h-3.5 w-3.5 text-muted-foreground" />
+            <div className="text-xs font-semibold flex items-center gap-1.5 uppercase tracking-wider text-muted-foreground">
+              <History className="h-3.5 w-3.5" />
               Últimos registros
-              <span className="text-[10px] font-normal text-muted-foreground">
-                {historico.length}/{HISTORICO_MAX}
+              <span className="text-[10px] font-normal lowercase">
+                ({historico.length})
               </span>
-            </div>
-            <div className="flex items-center gap-1">
-              {onVerHistorico && (
-                <Button size="sm" variant="outline" className="h-7 px-2 text-[10px] gap-1" onClick={onVerHistorico}>
-                  <History className="h-3 w-3" /> Ver histórico completo
-                </Button>
-              )}
-              {historico.length > 0 && (
-                <Button size="sm" variant="ghost" className="h-7 px-2 text-[10px]" onClick={limparHistorico}>
-                  Limpar
-                </Button>
-              )}
             </div>
           </div>
 
           {historico.length === 0 ? (
             <div className="p-6 text-center text-[11px] text-muted-foreground">
-              Nenhum lançamento ainda. Ao gravar uma TAG Custom, ela aparece aqui para reedição.
+              Nenhum lançamento recente nesta sessão.
             </div>
           ) : (
-            <div className="divide-y">
+            <div className="divide-y max-h-[500px] overflow-y-auto">
               {historico.map((reg) => (
-                <div key={reg.id} className="p-3 flex items-start justify-between gap-3">
-                  <div className="min-w-0 space-y-1">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      {reg.ok
-                        ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                        : <AlertTriangle className="h-3.5 w-3.5 text-destructive shrink-0" />}
-                      <span className="text-[11px] font-medium break-all">{reg.descricao || '—'}</span>
-                      <Badge variant="outline" className="text-[9px]">{reg.linhas.length} TAG(s)</Badge>
-                      <span className="text-[9px] text-muted-foreground">{formatarData(reg.em)}</span>
-                    </div>
-                    {reg.configuracao?.nm && (
-                      <div className="text-[9px] text-muted-foreground break-all">
-                        Configuração: {reg.configuracao.nm}
+                <div key={reg.id} className="p-3 space-y-3 bg-muted/5 hover:bg-muted/10 transition-colors">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                        {reg.ok
+                          ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                          : <AlertTriangle className="h-3.5 w-3.5 text-destructive shrink-0" />}
+                        <span className="text-[11px] font-bold break-all">{reg.descricao || '—'}</span>
+                        <Badge variant="outline" className="text-[9px] h-4">{reg.linhas.length} TAG(s)</Badge>
                       </div>
-                    )}
-                    <div className="flex flex-wrap gap-1">
-                      {reg.linhas.slice(0, 8).map((l) => (
-                        <span
-                          key={l.id}
-                          title={l.calculada ? `${l.valor} = ${l.calculada}` : l.valor}
-                          className="rounded border bg-muted/50 px-1.5 py-0.5 font-mono text-[9px]"
-                        >
-                          {l.code}
-                        </span>
-                      ))}
-                      {reg.linhas.length > 8 && (
-                        <span className="text-[9px] text-muted-foreground">+{reg.linhas.length - 8}</span>
-                      )}
+                      
+                      <div className="text-[10px] text-muted-foreground font-mono flex items-center gap-2">
+                        <span>{formatarData(reg.em)}</span>
+                        {reg.configuracao?.nm && (
+                          <>
+                            <span>·</span>
+                            <span className="truncate max-w-[200px]">{reg.configuracao.nm}</span>
+                          </>
+                        )}
+                      </div>
                     </div>
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 px-2 text-[10px] gap-1 shrink-0 border-primary/20 text-primary hover:bg-primary/5"
+                      onClick={() => relancarRegistro(reg)}
+                    >
+                      <Pencil className="h-3 w-3" /> Editar e relançar
+                    </Button>
                   </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-7 px-2 text-[10px] gap-1 shrink-0"
-                    onClick={() => relancarRegistro(reg)}
-                  >
-                    <Pencil className="h-3 w-3" /> Editar e relançar
-                  </Button>
+
+                  {/* Visualização de composição similar ao histórico consolidado (Auditoria) */}
+                  <details className="group border rounded-md bg-background/50 overflow-hidden">
+                    <summary className="p-2 text-[10px] font-medium text-primary cursor-pointer hover:bg-muted/30 list-none flex items-center gap-1.5">
+                      <ChevronRight className="h-3 w-3 transition-transform group-open:rotate-90" />
+                      Ver composição técnica
+                    </summary>
+                    <div className="border-t overflow-x-auto">
+                      <table className="w-full text-[10px]">
+                        <thead className="bg-muted/50">
+                          <tr className="text-left">
+                            <th className="p-1.5 text-blue-600 font-bold whitespace-nowrap min-w-[60px]">TAG</th>
+                            <th className="p-1.5 whitespace-nowrap min-w-[150px]">Configurada</th>
+                            <th className="p-1.5 text-emerald-600 font-bold whitespace-nowrap min-w-[150px]">Calculada</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y">
+                          {reg.linhas.map((l, i) => (
+                            <tr key={i} className="hover:bg-muted/20">
+                              <td className="p-1.5 font-mono font-bold text-blue-600">
+                                {l.code || '—'}
+                              </td>
+                              <td className="p-1.5 font-mono text-muted-foreground break-all">
+                                {l.valor || '—'}
+                              </td>
+                              <td className="p-1.5 font-mono font-bold text-emerald-600 break-all">
+                                {l.calculada || '—'}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </details>
                 </div>
               ))}
             </div>
