@@ -35,6 +35,8 @@ export default function HistoricoTagsTab() {
   const [chaveAberta, setChaveAberta] = useState<string | null>(null);
   const [removendo, setRemovendo] = useState(false);
   const [revertendo, setRevertendo] = useState<string | null>(null);
+  const [filtroAlteradas, setFiltroAlteradas] = useState<string | null>(null);
+
 
   const { data: eventos = [], isLoading, isFetching, refetch } = useQuery({
     queryKey: ['tag-custom-historico'],
@@ -290,26 +292,30 @@ export default function HistoricoTagsTab() {
                   {ev.ok && ev.tipo === 'edicao' && ev.linhas.length > 0 && (
                     <div className="mt-2 p-2 bg-primary/5 rounded border border-primary/20">
                       <div className="flex items-center justify-between gap-2">
-                        <div className="text-[10px] font-semibold text-primary">Alteração em Massa</div>
+                        <div className="text-[10px] font-semibold text-primary">Auditoria de Impacto</div>
                         <Button 
                           variant="outline" 
                           size="sm" 
-                          className="h-6 px-2 text-[9px] gap-1 hover:bg-primary/10"
+                          className={`h-6 px-2 text-[9px] gap-1 ${filtroAlteradas === ev.id ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'hover:bg-primary/10'}`}
                           onClick={() => {
-                            // Abrir um resumo detalhado apenas das tags que mudaram de fato
-                            const alteradas = ev.linhas.filter(l => l.valor !== l.valor_antigo);
-                            toast.info(`Nesta operação, ${alteradas.length} das ${ev.linhas.length} tags enviadas foram efetivamente alteradas no Auge.`, {
-                              duration: 5000,
-                              description: "Verifique o resumo abaixo para o detalhamento completo."
-                            });
+                            if (filtroAlteradas === ev.id) {
+                              setFiltroAlteradas(null);
+                            } else {
+                              const alteradas = ev.linhas.filter(l => l.valor !== l.valor_antigo);
+                              setFiltroAlteradas(ev.id);
+                              toast.info(`Mostrando apenas as ${alteradas.length} tags que tiveram alteração real de valor.`, {
+                                duration: 3000
+                              });
+                            }
                           }}
                         >
-                          <History className="h-3 w-3" />
-                          Ver Auditoria de Impacto
+                          <CheckCircle2 className="h-3 w-3" />
+                          {filtroAlteradas === ev.id ? 'Mostrar Todas' : 'Ver Apenas Alteradas'}
                         </Button>
                       </div>
                     </div>
                   )}
+
 
                   {ev.linhas.length > 0 && (
                     <div className="space-y-2">
@@ -329,22 +335,25 @@ export default function HistoricoTagsTab() {
                               </tr>
                             </thead>
                             <tbody>
-                              {ev.linhas.map((l, i) => (
-                                <tr key={i} className="border-t align-top bg-background/50">
-                                  <td className="p-1.5 font-mono break-all font-semibold">
-                                    {l.code || '—'}
-                                  </td>
-                                  <td className="p-1.5 font-mono break-all text-muted-foreground">
-                                    {l.valor_antigo || '—'}
-                                  </td>
-                                  <td className="p-1.5 font-mono break-all text-emerald-600 font-medium">
-                                    {l.valor || '—'}
-                                  </td>
-                                  <td className="p-1.5 font-mono break-all text-muted-foreground italic">
-                                    {l.formula || '—'}
-                                  </td>
-                                </tr>
-                              ))}
+                              {ev.linhas
+                                .filter(l => filtroAlteradas === ev.id ? l.valor !== l.valor_antigo : true)
+                                .map((l, i) => (
+                                  <tr key={i} className={`border-t align-top ${l.valor !== l.valor_antigo ? 'bg-emerald-500/5' : 'bg-background/50'}`}>
+                                    <td className="p-1.5 font-mono break-all font-semibold">
+                                      {l.code || '—'}
+                                    </td>
+                                    <td className="p-1.5 font-mono break-all text-muted-foreground">
+                                      {l.valor_antigo || '—'}
+                                    </td>
+                                    <td className={`p-1.5 font-mono break-all font-medium ${l.valor !== l.valor_antigo ? 'text-emerald-600' : 'text-foreground'}`}>
+                                      {l.valor || '—'}
+                                    </td>
+                                    <td className="p-1.5 font-mono break-all text-muted-foreground italic">
+                                      {l.formula || '—'}
+                                    </td>
+                                  </tr>
+                                ))}
+
                             </tbody>
                           </table>
                         </div>
