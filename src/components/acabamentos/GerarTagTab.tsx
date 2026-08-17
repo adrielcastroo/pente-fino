@@ -1838,7 +1838,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                 <div className="text-[10px] uppercase flex items-center gap-1 font-semibold">
                   {resultado.ok
                     ? <><CheckCircle2 className="h-3 w-3 text-emerald-600" /> Gravada no Auge</>
-                    : <><AlertTriangle className="h-3 w-3 text-destructive" /> Falha na gravação</>}
+                    : <><AlertTriangle className="h-3 3 text-destructive" /> Divergência Técnica na Gravação</>}
                   {typeof resultado.gravadas === 'number' && (
                     <Badge variant="outline" className="text-[9px]">
                       {resultado.gravadas}/{resultado.total} ok

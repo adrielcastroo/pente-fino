@@ -990,7 +990,7 @@ function ProgressCard({ run, results, total, current, pct, okCount, errCount, is
             <CheckCircle2 className="h-4 w-4 text-emerald-500" />}
           <div className="text-xs font-semibold">
             {isActive ? `${verbActive} item ${run.detalhes?.item ?? ''}…` :
-              run.status === 'error' ? 'Concluído com erros' : 'Concluído'}
+              run.status === 'error' ? 'Finalizado com Ressalvas' : 'Execução Concluída'}
           </div>
         </div>
         {!isActive && (
