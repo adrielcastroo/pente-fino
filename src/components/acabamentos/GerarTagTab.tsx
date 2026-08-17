@@ -1483,11 +1483,11 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     setCustomAberta(reg.configuracao);
     setDescricao(reg.descricao ?? '');
     
-    // 3. Restaurar as linhas mantendo a integridade dos dados (códigos de tag e fórmulas)
+    // 3. Restaurar as linhas garantindo a integridade dos dados (códigos de tag e fórmulas)
+    // O id deve ser único para o React, mas preservamos os metadados para o relançamento.
     const linhasRestauradas = reg.linhas.map((l) => ({ 
       ...l,
-      // Garante que o ID seja único para evitar colisões se relançado múltiplas vezes
-      id: l.id.startsWith('relanc|') ? l.id : `relanc|${Date.now()}|${l.id}`
+      id: `relanc|${Date.now()}|${l.code}|${Math.random().toString(36).slice(2, 5)}`
     }));
     
     setLinhas(linhasRestauradas);
@@ -1510,7 +1510,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       })),
     });
 
-    toast.success('Composição carregada — você pode editar e gravar novamente.');
+    toast.success('Composição carregada — os valores originais foram restaurados para edição.');
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
