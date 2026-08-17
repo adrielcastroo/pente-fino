@@ -288,19 +288,6 @@ export default function HistoricoTagsTab() {
                       )}
                     </div>
 
-                    {ev.ok && ev.linhas.length > 0 && (
-                      <div className="flex justify-end">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-7 px-2 text-[10px] gap-1 hover:bg-primary/10 border-primary/20 text-primary"
-                          onClick={() => setEventoParaAuditoria(ev)}
-                        >
-                          <CheckCircle2 className="h-3 w-3" />
-                          Ver Apenas Alteradas
-                        </Button>
-                      </div>
-                    )}
                   </div>
 
                   {ev.erro && (
@@ -389,12 +376,9 @@ export default function HistoricoTagsTab() {
             <DialogTitle className="flex items-center gap-2 flex-wrap text-primary">
               <CheckCircle2 className="h-5 w-5" />
               Auditoria de Impacto
-              <Badge variant="outline" className="ml-2 text-[10px] uppercase border-primary/30">
-                TAGs Custom Alteradas
-              </Badge>
             </DialogTitle>
-            <div className="text-[11px] text-muted-foreground mt-1 leading-relaxed max-w-full whitespace-pre-line">
-              <p className="font-semibold text-foreground/80 mb-2">
+            <div className="mt-1 text-xs text-muted-foreground">
+              <p className="font-semibold text-[11px] mb-1">
                 Preciso que as informações que aparecem, sejam mais certeiras e concisas, sem gerar erro ou informações pela metade. Ajuste também somente o necessário para as informações dentro do modal não ficarem com quebra de linha, para melhor visualização.
               </p>
               Exibindo as TAGs Custom que sofreram alteração real de valor na operação de {formatarDataTag(eventoParaAuditoria?.em)}.
