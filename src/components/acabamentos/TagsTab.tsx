@@ -356,7 +356,7 @@ export default function TagsTab() {
                 key={f}
                 size="sm"
                 variant={filtro === f ? 'default' : 'ghost'}
-                onClick={() => setFiltro(f)}
+                onClick={() => { setFiltro(f); setCurrentPage(1); }}
                 className="h-7 text-[10px] px-2"
               >
                 {f === 'sem_tag' ? 'Pendentes' : f === 'com_tag' ? 'Configuradas' : 'Ver Tudo'}
