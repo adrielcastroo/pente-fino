@@ -39,6 +39,7 @@ import {
   toIlikePattern,
   toIlikeTokens,
 } from '@/lib/tag-search';
+import { Pagination, usePagination } from '@/components/ui/pagination-simple';
 
 interface ConfiguracaoLite {
   cd_configuracao: string;
@@ -1206,6 +1207,14 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     }
   }, [recomendadas, termoBusca, removidasManualmente]);
 
+  const {
+    currentPage,
+    setCurrentPage,
+    pageSize,
+    setPageSize,
+    paginatedItems: linhasPaginadas,
+  } = usePagination(linhas, 50);
+
   // ---------- Padrão obrigatório de TAGs ----------
   /**
    * Agrupa as configurações (TAG Customs) já existentes que casam com o texto
@@ -1727,9 +1736,9 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
             )}
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto max-h-[60vh] overflow-y-auto">
             <table className="w-full text-xs">
-              <thead className="bg-muted">
+              <thead className="bg-muted sticky top-0 z-10">
                 <tr className="text-left">
                   <th className="p-2 w-[32%]">Tag Configurada</th>
                   <th className="p-2 w-[34%]">Tag Calculada</th>
@@ -1738,7 +1747,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                 </tr>
               </thead>
               <tbody>
-                {linhas.map((l) => {
+                {linhasPaginadas.map((l) => {
                   const obrigatoria = obrigatorias.some((o) => o.code === l.code);
                   return (
                     <tr key={l.id} className="border-t align-top">
@@ -1811,6 +1820,14 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
               </tbody>
             </table>
           </div>
+          <Pagination
+            totalItems={linhas.length}
+            pageSize={pageSize}
+            currentPage={currentPage}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setPageSize}
+            className="px-3 py-1 border-t"
+          />
 
 
           <div className="p-3 border-t space-y-1.5">

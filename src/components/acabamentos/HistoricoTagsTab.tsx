@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import {
   History, Search, CheckCircle2, AlertTriangle, Trash2, Tag as TagIcon,
-  ChevronRight, Loader2, RefreshCw, User, ArrowLeftCircle,
+  ChevronRight, Loader2, RefreshCw, User,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -23,6 +23,7 @@ import {
   removerGrupoTag,
   registrarEventoTag,
 } from '@/lib/tag-historico';
+import { Pagination, usePagination } from '@/components/ui/pagination-simple';
 
 /**
  * Aba "Histórico": consolida todas as ações e edições feitas nas TAGs Custom
@@ -71,6 +72,14 @@ export default function HistoricoTagsTab() {
       g.autores.some((a) => a.toLowerCase().includes(t)),
     );
   }, [grupos, busca]);
+
+  const {
+    currentPage,
+    setCurrentPage,
+    pageSize,
+    setPageSize,
+    paginatedItems: listaPaginada,
+  } = usePagination(lista, 25);
 
   const grupoAberto: TagHistoricoGrupo | null = useMemo(
     () => (chaveAberta ? grupos.find((g) => g.chave === chaveAberta) ?? null : null),
@@ -178,7 +187,7 @@ export default function HistoricoTagsTab() {
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
               value={busca}
-              onChange={(e) => setBusca(e.target.value)}
+              onChange={(e) => { setBusca(e.target.value); setCurrentPage(1); }}
               placeholder="Buscar por TAG Custom, configuração ou autor…"
               className="h-9 pl-7 text-xs"
             />
@@ -205,33 +214,43 @@ export default function HistoricoTagsTab() {
               : 'Nenhuma TAG Custom encontrada para esta busca.'}
           </div>
         ) : (
-          <div className="divide-y">
-            {lista.map((g) => (
-              <button
-                key={g.chave}
-                type="button"
-                onClick={() => setChaveAberta(g.chave)}
-                className="w-full text-left p-3 flex items-center justify-between gap-3 hover:bg-muted/50 transition-colors"
-              >
-                <div className="min-w-0 space-y-1">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <TagIcon className="h-3.5 w-3.5 text-primary shrink-0" />
-                    <span className="text-[11px] font-medium break-all">{g.descricao}</span>
-                    <Badge variant="outline" className="text-[9px]">{g.totalEventos} ação(ões)</Badge>
-                    {g.erros > 0 && (
-                      <Badge variant="destructive" className="text-[9px]">{g.erros} falha(s)</Badge>
-                    )}
+          <>
+            <div className="divide-y max-h-[60vh] overflow-auto">
+              {listaPaginada.map((g) => (
+                <button
+                  key={g.chave}
+                  type="button"
+                  onClick={() => setChaveAberta(g.chave)}
+                  className="w-full text-left p-3 flex items-center justify-between gap-3 hover:bg-muted/50 transition-colors"
+                >
+                  <div className="min-w-0 space-y-1">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <TagIcon className="h-3.5 w-3.5 text-primary shrink-0" />
+                      <span className="text-[11px] font-medium break-all">{g.descricao}</span>
+                      <Badge variant="outline" className="text-[9px]">{g.totalEventos} ação(ões)</Badge>
+                      {g.erros > 0 && (
+                        <Badge variant="destructive" className="text-[9px]">{g.erros} falha(s)</Badge>
+                      )}
+                    </div>
+                    <div className="text-[9px] text-muted-foreground break-all">
+                      {g.nmConfiguracao ? `Configuração: ${g.nmConfiguracao}` : 'Sem configuração'}
+                      {' · '}Última: {formatarDataTag(g.ultimoEm)}
+                      {g.autores.length > 0 && ` · ${g.autores.join(', ')}`}
+                    </div>
                   </div>
-                  <div className="text-[9px] text-muted-foreground break-all">
-                    {g.nmConfiguracao ? `Configuração: ${g.nmConfiguracao}` : 'Sem configuração'}
-                    {' · '}Última: {formatarDataTag(g.ultimoEm)}
-                    {g.autores.length > 0 && ` · ${g.autores.join(', ')}`}
-                  </div>
-                </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-              </button>
-            ))}
-          </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                </button>
+              ))}
+            </div>
+            <Pagination
+              totalItems={lista.length}
+              pageSize={pageSize}
+              currentPage={currentPage}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={setPageSize}
+              className="p-3 border-t"
+            />
+          </>
         )}
       </Card>
 

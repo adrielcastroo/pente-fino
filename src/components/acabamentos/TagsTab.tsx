@@ -11,6 +11,7 @@ import {
   RefreshCw, CheckCircle2, Tag as TagIcon, Filter
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Pagination, usePagination } from '@/components/ui/pagination-simple';
 
 interface ScanRow {
   cd_configuracao: string;
@@ -265,6 +266,14 @@ export default function TagsTab() {
   const lastActivityMs = Math.max(lastScanMs, runStartMs);
   const isStalled = isActive && lastActivityMs > 0 && Date.now() - lastActivityMs > 90000;
 
+  const {
+    currentPage,
+    setCurrentPage,
+    pageSize,
+    setPageSize,
+    paginatedItems: listaPaginada,
+  } = usePagination(lista, 50);
+
   useEffect(() => {
     if (!isStalled) return;
     resumeRun(true);
@@ -274,6 +283,7 @@ export default function TagsTab() {
   const toggleSort = (col: 'nome' | 'codigo' | 'qtd') => {
     if (sortBy === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
     else { setSortBy(col); setSortDir('asc'); }
+    setCurrentPage(1);
   };
 
   return (
@@ -335,7 +345,7 @@ export default function TagsTab() {
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
               value={busca}
-              onChange={(e) => setBusca(e.target.value)}
+              onChange={(e) => { setBusca(e.target.value); setCurrentPage(1); }}
               placeholder="Localize configurações por nome, padrão técnico ou identificador…"
               className="h-9 pl-7 text-xs"
             />
@@ -347,7 +357,7 @@ export default function TagsTab() {
                 key={f}
                 size="sm"
                 variant={filtro === f ? 'default' : 'ghost'}
-                onClick={() => setFiltro(f)}
+                onClick={() => { setFiltro(f); setCurrentPage(1); }}
                 className="h-7 text-[10px] px-2"
               >
                 {f === 'sem_tag' ? 'Pendentes' : f === 'com_tag' ? 'Configuradas' : 'Ver Tudo'}
@@ -361,7 +371,7 @@ export default function TagsTab() {
           </Button>
         </div>
 
-        <div className="overflow-auto max-h-[70vh] rounded border">
+        <div className="overflow-auto max-h-[60vh] rounded border">
           <table className="w-full text-xs">
             <thead className="bg-muted sticky top-0 z-10">
               <tr className="text-left">
@@ -390,7 +400,7 @@ export default function TagsTab() {
               {isLoading && (
                 <tr><td colSpan={4} className="p-6 text-center"><Loader2 className="h-4 w-4 animate-spin inline" /></td></tr>
               )}
-              {lista.map((r) => {
+              {listaPaginada.map((r) => {
                 const tags = tagsByCfg[r.cd_configuracao] ?? [];
                 return (
                   <tr key={r.cd_configuracao} className="border-t align-top hover:bg-muted/30 transition-colors duration-150 group">
@@ -439,6 +449,14 @@ export default function TagsTab() {
             </tbody>
           </table>
         </div>
+        <Pagination
+          totalItems={lista.length}
+          pageSize={pageSize}
+          currentPage={currentPage}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+          className="mt-2"
+        />
       </Card>
     </div>
   );
