@@ -350,7 +350,7 @@ export default function TagsTab() {
                 onClick={() => setFiltro(f)}
                 className="h-7 text-[10px] px-2"
               >
-                {f === 'sem_tag' ? 'Sem TAG' : f === 'com_tag' ? 'Com TAG' : 'Todos'}
+                {f === 'sem_tag' ? 'Pendentes' : f === 'com_tag' ? 'Configuradas' : 'Ver Tudo'}
               </Button>
             ))}
           </div>
