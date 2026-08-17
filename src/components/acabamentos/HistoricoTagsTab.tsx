@@ -320,7 +320,7 @@ export default function HistoricoTagsTab() {
                           <table className="w-full text-[10px]">
                             <thead className="bg-muted">
                               <tr className="text-left">
-                                <th className="p-1.5">TAG Custom</th>
+                                <th className="p-1.5 text-blue-600 font-bold">Configuração (TAG Custom)</th>
                                 <th className="p-1.5">Anterior (Auge)</th>
                                 <th className="p-1.5">TAG Calculada</th>
                                 <th className="p-1.5">Fórmula</th>
@@ -331,13 +331,13 @@ export default function HistoricoTagsTab() {
                                 .filter(l => filtroAlteradas === ev.id ? l.valor !== l.valor_antigo : true)
                                 .map((l, i) => (
                                   <tr key={i} className={`border-t align-top ${l.valor !== l.valor_antigo ? 'bg-emerald-500/5' : 'bg-background/50'}`}>
-                                    <td className="p-1.5 font-mono break-all font-semibold">
-                                      {l.valor || '—'}
+                                    <td className="p-1.5 font-mono break-all font-bold text-blue-600">
+                                      {ev.nmConfiguracao || ev.cdConfiguracao || '—'}
                                     </td>
                                     <td className="p-1.5 font-mono break-all text-muted-foreground">
                                       {l.valor_antigo || '—'}
                                     </td>
-                                    <td className={`p-1.5 font-mono break-all font-medium ${l.valor !== l.valor_antigo ? 'text-emerald-600' : 'text-foreground'}`}>
+                                    <td className={`p-1.5 font-mono break-all font-medium ${l.valor !== l.valor_antigo ? 'text-emerald-600 bg-emerald-500/5' : 'text-foreground'}`}>
                                       {l.calculada || '—'}
                                     </td>
                                     <td className="p-1.5 font-mono break-all text-muted-foreground italic">
@@ -400,7 +400,7 @@ export default function HistoricoTagsTab() {
                 <table className="w-full text-[11px]">
                   <thead className="bg-muted text-muted-foreground">
                     <tr className="text-left border-b">
-                      <th className="p-3 font-medium uppercase tracking-wider">TAG Custom</th>
+                      <th className="p-3 font-bold uppercase tracking-wider text-blue-600">Configuração (TAG Custom)</th>
                       <th className="p-3 font-medium uppercase tracking-wider">Anterior (Auge)</th>
                       <th className="p-3 font-medium uppercase tracking-wider text-emerald-600">TAG Calculada</th>
                       <th className="p-3 font-medium uppercase tracking-wider">Fórmula</th>
@@ -411,8 +411,8 @@ export default function HistoricoTagsTab() {
                       .filter((l: any) => l.valor !== l.valor_antigo)
                       .map((l: any, i: number) => (
                         <tr key={i} className="hover:bg-muted/30 transition-colors">
-                          <td className="p-3 font-mono font-bold text-primary">
-                            {l.valor || '—'}
+                          <td className="p-3 font-mono font-bold text-blue-600 bg-blue-500/5">
+                            {eventoParaAuditoria?.nmConfiguracao || eventoParaAuditoria?.cdConfiguracao || '—'}
                           </td>
                           <td className="p-3 font-mono text-muted-foreground line-through decoration-destructive/30">
                             {l.valor_antigo || '—'}
