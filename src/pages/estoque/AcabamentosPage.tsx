@@ -342,6 +342,7 @@ export default function AcabamentosPage() {
                 onClick={() => {
                   if (sortBy === 'nome') setSortDir(d => d === 'asc' ? 'desc' : 'asc');
                   else { setSortBy('nome'); setSortDir('asc'); }
+                  setCurrentPage(1);
                 }}
                 className="h-7 px-2 gap-1 text-[10px]"
                 title="Ordenar por descrição"
