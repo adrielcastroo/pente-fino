@@ -79,12 +79,10 @@ interface LinhaTag {
   formula: string;
   /** Código da linha no Auge — quando presente, a gravação sobrescreve. */
   cdTagCustomizada?: string;
-  /**
-   * Código da TAG calculada no Auge (`cd_tag`). Quando o usuário escolhe a
-   * opção na lista já temos o código: enviá-lo evita que o backend precise
-   * reencontrar a TAG pelo nome (fórmulas com vírgula quebravam essa busca).
-   */
+  /** Código da TAG calculada no Auge (`cd_tag`). */
   cdTagCalculada?: string;
+  /** Valor original da TAG calculada (se era texto livre). */
+  dsTagTexto?: string;
 }
 
 interface ResultadoAuge {
@@ -1052,6 +1050,8 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           ds_tag_customizada: r.dsTagCustomizada ?? null,
           ds_tag_calculada: r.dsTagCalculada ?? null,
           ds_tag_texto: r.dsTagTexto ?? null,
+          cd_tag_customizada: r.cdTagCustomizada ?? null,
+          cd_tag_calculada: r.cdTagCalculada ?? null,
         })) as CustomTag[];
       } catch {
         return locais;
@@ -1327,7 +1327,10 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         valor: r.valor,
         cfgNome: r.cfgNome,
         calculada: r.calculada,
-        formula: '',
+        formula: r.formula || '',
+        cdTagCustomizada: (r as any).cdTagCustomizada,
+        cdTagCalculada: (r as any).cdTagCalculada,
+        dsTagTexto: (r as any).dsTagTexto,
       }];
     });
   };
