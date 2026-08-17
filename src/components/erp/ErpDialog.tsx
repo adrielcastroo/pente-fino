@@ -29,11 +29,12 @@ export function ErpDialogHeader({
   icon?: LucideIcon;
   title: string;
   docs?: ErpDocNumero[];
+  className?: string;
 }) {
   const visiveis = docs.filter((d) => !(d.hideWhenEmpty && !d.value));
 
   return (
-    <DialogHeader className="pb-2 border-b border-border/60">
+    <DialogHeader className={cn("pb-2 border-b border-border/60", className)}>
       <div className="flex items-start justify-between gap-4 pr-6">
         <DialogTitle className="flex items-center gap-2 text-base font-semibold">
           {Icon && <Icon className="h-4 w-4 text-primary shrink-0" />}
