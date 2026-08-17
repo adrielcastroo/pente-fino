@@ -223,13 +223,15 @@ export function ilikeOr(cols: string[], padrao: string, tokens: string[]): strin
   // PostgREST: (col1.ilike.%A%,col2.ilike.%A%),(col1.ilike.%B%,col2.ilike.%B%)
   if (tokens.length > 0) {
     return tokens.map(t => {
-      return `or(${cols.map(c => `${c}.ilike.${JSON.stringify(t)}`).join(',')})`;
+      const escapedToken = JSON.stringify(t);
+      return `or(${cols.map(c => `${c}.ilike.${escapedToken}`).join(',')})`;
     }).join(',');
   }
 
   // Se não houver tokens, apenas o padrão simples em qualquer uma das colunas
   if (padrao) {
-    return cols.map(c => `${c}.ilike.${JSON.stringify(padrao)}`).join(',');
+    const escapedPattern = JSON.stringify(padrao);
+    return cols.map(c => `${c}.ilike.${escapedPattern}`).join(',');
   }
   
   return '';
