@@ -1065,7 +1065,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     const seen = new Set<string>();
     const out: CustomTag[] = [];
     for (const t of [...tagsDaCustom, ...tagsTop, ...tagsBusca, ...tagsPalavras]) {
-      const k = `${t.cd_configuracao}|${t.ds_tag_customizada ?? t.nm_tag_customizada ?? ''}|${t.ds_tag_texto ?? ''}`;
+      const k = `${t.cd_configuracao}|${t.ds_tag_customizada ?? t.nm_tag_customizada ?? ''}|${t.ds_tag_texto ?? ''}|${(t as any).cd_tag_customizada ?? ''}`;
       if (seen.has(k)) continue;
       seen.add(k);
       out.push(t);
