@@ -440,7 +440,7 @@ export default function HistoricoTagsTab() {
           
           <div className="p-4 border-t bg-muted/30 flex justify-between items-center px-6">
             <div className="text-[11px] text-muted-foreground font-medium">
-              Total de Impacto: <span className="text-primary">{eventoParaAuditoria?.linhas?.filter((l: any) => l.valor !== l.valor_antigo).length || 0}</span> tags alteradas
+              Total de Impacto: <span className="text-primary">{eventoParaAuditoria?.linhas?.filter((l: any) => l.valor !== l.valor_antigo).length || 0}</span> TAGs Custom alteradas
             </div>
             <Button size="sm" onClick={() => setEventoParaAuditoria(null)} className="h-8 px-4 text-xs">
               Fechar Auditoria
