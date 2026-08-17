@@ -80,8 +80,8 @@ export default function TransferenciaDetailDialog({ transferencia, open, onOpenC
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-xl max-h-[90vh] overflow-hidden flex flex-col gap-3">
-          <ErpDialogHeader
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
+          <ErpDialogHeader className="p-5 sm:p-6 pb-4 sm:pb-4 mb-0"
             icon={ClipboardList}
             title="Transferência"
             docs={[
@@ -90,7 +90,7 @@ export default function TransferenciaDetailDialog({ transferencia, open, onOpenC
             ]}
           />
 
-          <div className="space-y-3 overflow-auto pr-1">
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-5 sm:p-6 space-y-4 pt-2">
             {/* 1 — Observação */}
             <ErpSection label="Observação" icon={FileText}>
               <p className="text-sm text-foreground/90 leading-snug whitespace-pre-wrap">
