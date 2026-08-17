@@ -1699,7 +1699,9 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
             onSearchStateChange={setCfgSearch}
           />
           <p className="text-[10px] text-muted-foreground leading-relaxed whitespace-pre-line">
-            Aplique a solução que vc aplicou para esse problema de filtro fraco, ou seja, estou tentando procurar configurações que tenham todas essas palavras, mas o app me mostra diversas configs que possuem palavras aleatórias
+            Como ele funcionava na versão do dia 16/08 as 22:40?
+
+            bloco resumo e campo de busca/pesquisa
           </p>
         </div>
 
