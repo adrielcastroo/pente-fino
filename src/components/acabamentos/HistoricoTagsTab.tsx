@@ -177,8 +177,8 @@ export default function HistoricoTagsTab() {
       </Card>
 
       <Dialog open={!!grupoAberto} onOpenChange={(v) => !v && setChaveAberta(null)}>
-        <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
-          <DialogHeader>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col p-0 gap-0">
+          <DialogHeader className="p-5 sm:p-6 pb-4 sm:pb-4 mb-0">
             <DialogTitle className="flex items-center gap-2 flex-wrap">
               <TagIcon className="h-4 w-4 text-primary" />
               <span className="break-all">{grupoAberto?.descricao ?? ''}</span>
@@ -192,7 +192,7 @@ export default function HistoricoTagsTab() {
             )}
           </DialogHeader>
 
-          <ScrollArea className="flex-1 pr-3">
+          <ScrollArea className="flex-1 px-5 sm:px-6">
             <div className="space-y-3">
               {(grupoAberto?.eventos ?? []).map((ev) => (
                 <div key={ev.id} className="rounded-md border p-3 space-y-2">
@@ -248,7 +248,7 @@ export default function HistoricoTagsTab() {
           </ScrollArea>
 
           {grupoAberto && (
-            <div className="pt-2 border-t flex justify-end">
+            <div className="p-4 border-t flex justify-end">
               <Button
                 size="sm"
                 variant="ghost"
