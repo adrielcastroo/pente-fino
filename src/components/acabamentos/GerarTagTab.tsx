@@ -357,7 +357,7 @@ function TagCalculadaCell({
           autoFocus={aberto}
           onFocus={() => setAberto(true)}
           onChange={(e) => { setBusca(e.target.value); setAberto(true); }}
-          placeholder={compacto ? 'Nome, descrição ou fórmula' : 'Buscar por nome, descrição ou fórmula (use * como curinga)'}
+          placeholder={compacto ? 'Nome, descrição ou fórmula' : 'Identifique a TAG pela descrição, fórmula ou código (use * como curinga)'}
           className="h-8 pl-7 text-[11px] font-mono"
         />
       </div>
