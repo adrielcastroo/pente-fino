@@ -103,6 +103,18 @@ export default function PainelPage() {
       <PageHeader
         title="Painel da expedição"
         subtitle="Pickings aguardando movimentação e conferência."
+        action={
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSyncProduction}
+            disabled={isSyncing}
+            className="h-9 gap-2"
+          >
+            <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+            Sincronizar Produção
+          </Button>
+        }
       />
 
       <AlertsPanel />
