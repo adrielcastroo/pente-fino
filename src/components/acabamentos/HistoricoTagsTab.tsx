@@ -403,6 +403,7 @@ export default function HistoricoTagsTab() {
                     <thead className="bg-muted text-muted-foreground">
                       <tr className="text-left border-b">
                         <th className="p-2 sm:p-3 font-bold uppercase tracking-wider text-blue-600 whitespace-nowrap">Configuração (TAG Custom)</th>
+                        <th className="p-2 sm:p-3 font-medium uppercase tracking-wider whitespace-nowrap">Código</th>
                         <th className="p-2 sm:p-3 font-medium uppercase tracking-wider whitespace-nowrap">Anterior (Auge)</th>
                         <th className="p-2 sm:p-3 font-medium uppercase tracking-wider text-emerald-600 whitespace-nowrap">Tag Configurada</th>
                         <th className="p-2 sm:p-3 font-bold uppercase tracking-wider text-emerald-700 whitespace-nowrap">TAG Calculada (Implementada)</th>
@@ -415,6 +416,9 @@ export default function HistoricoTagsTab() {
                           <tr key={i} className="hover:bg-muted/30 transition-colors">
                             <td className="p-2 sm:p-3 font-mono font-bold text-blue-600 bg-blue-500/5 whitespace-nowrap">
                               {eventoParaAuditoria?.nmConfiguracao || grupoAberto?.nmConfiguracao || eventoParaAuditoria?.cdConfiguracao || grupoAberto?.cdConfiguracao || '—'}
+                            </td>
+                            <td className="p-2 sm:p-3 font-mono text-muted-foreground whitespace-nowrap">
+                              {l.code || '—'}
                             </td>
                             <td className="p-2 sm:p-3 font-mono text-muted-foreground line-through decoration-destructive/30 whitespace-nowrap">
                               {l.valor_antigo || '—'}
@@ -429,7 +433,7 @@ export default function HistoricoTagsTab() {
                         ))}
                       {eventoParaAuditoria.linhas.filter((l: any) => l.valor !== l.valor_antigo).length === 0 && (
                         <tr>
-                          <td colSpan={4} className="p-6 text-center text-muted-foreground italic">
+                          <td colSpan={5} className="p-6 text-center text-muted-foreground italic">
                             Nenhuma alteração real de valor detectada neste registro.
                           </td>
                         </tr>
