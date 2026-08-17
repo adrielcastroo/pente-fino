@@ -37,8 +37,8 @@ export default function CancelPickingDialog({ picking, open, onOpenChange }: Pro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="max-w-[95vw] sm:max-w-md p-0 gap-0 overflow-hidden flex flex-col">
+        <DialogHeader className="p-5 sm:p-6 pb-4 sm:pb-4 mb-0">
           <DialogTitle className="flex items-center gap-2">
             <AlertTriangle className="size-5 text-warning" />
             {isEstorno ? 'Estornar picking faturado' : 'Cancelar picking'}
@@ -48,7 +48,8 @@ export default function CancelPickingDialog({ picking, open, onOpenChange }: Pro
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-2">
+        <div className="flex-1 p-5 sm:p-6 space-y-4 pt-2">
+          <div className="space-y-2">
           <Label htmlFor="motivo">Motivo (obrigatório)</Label>
           <Textarea
             id="motivo"
@@ -63,7 +64,8 @@ export default function CancelPickingDialog({ picking, open, onOpenChange }: Pro
           </p>
         </div>
 
-        <DialogFooter>
+        </div>
+        <DialogFooter className="p-5 sm:p-6 pt-4 sm:pt-4 mt-0">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={cancelar.isPending}>
             Voltar
           </Button>

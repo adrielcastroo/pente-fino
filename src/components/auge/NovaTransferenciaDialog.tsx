@@ -194,8 +194,8 @@ export default function NovaTransferenciaDialog({
   return (
     <>
     <Dialog open={open} onOpenChange={(o) => { if (!loading) onOpenChange(o); }}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
+        <DialogHeader className="p-5 sm:p-6 pb-4 sm:pb-4 mb-0">
           <DialogTitle className="flex items-center gap-2">
             <ArrowRightLeft className="w-4 h-4 text-primary" />
             {isEdit
@@ -206,7 +206,7 @@ export default function NovaTransferenciaDialog({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 py-2 overflow-auto pr-1">
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-5 sm:p-6 space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label className="text-xs">Origem padrão</Label>
@@ -374,7 +374,7 @@ export default function NovaTransferenciaDialog({
           )}
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="p-5 sm:p-6 pt-4 sm:pt-4 mt-0">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>Cancelar</Button>
           <Button onClick={submit} disabled={!canSubmit} className="gap-2">
             {loading && <Loader2 className="w-4 h-4 animate-spin" />}

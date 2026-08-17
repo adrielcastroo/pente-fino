@@ -118,12 +118,12 @@ export default function AugeUserCredentialsDialog({ open, onOpenChange, required
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!required || hasPassword) onOpenChange(o); }}>
       <DialogContent
-        className="sm:max-w-lg backdrop-blur-xl"
+        className="sm:max-w-lg backdrop-blur-xl p-0 gap-0 overflow-hidden"
         onEscapeKeyDown={(e) => { if (required && !hasPassword) e.preventDefault(); }}
         onPointerDownOutside={(e) => { if (required && !hasPassword) e.preventDefault(); }}
         onInteractOutside={(e) => { if (required && !hasPassword) e.preventDefault(); }}
       >
-        <DialogHeader>
+        <DialogHeader className="p-5 sm:p-6 pb-4 sm:pb-4 mb-0">
           <DialogTitle className="flex items-center gap-2">
             <KeyRound className="h-5 w-5 text-primary" />
             Configure suas credenciais do Auge
@@ -145,7 +145,8 @@ export default function AugeUserCredentialsDialog({ open, onOpenChange, required
           </DialogDescription>
         </DialogHeader>
 
-        {loading ? (
+        <div className="flex-1 p-5 sm:p-6 space-y-4 pt-2">
+          {loading ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground py-6">
             <Loader2 className="h-4 w-4 animate-spin" /> Carregando…
           </div>
@@ -187,9 +188,10 @@ export default function AugeUserCredentialsDialog({ open, onOpenChange, required
               </div>
             </div>
           </div>
-        )}
+          )}
+        </div>
 
-        <DialogFooter className="gap-2 sm:gap-2">
+        <DialogFooter className="p-5 sm:p-6 pt-4 sm:pt-4 mt-0 gap-2 sm:gap-2">
           {(!required || hasPassword) && (
             <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={saving}>
               {hasPassword ? 'Fechar' : 'Depois'}

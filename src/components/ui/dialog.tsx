@@ -38,10 +38,10 @@ const DialogContent = React.forwardRef<
       className={cn(
         // Posição base centralizada (funciona em mobile e desktop)
         "fixed left-[50%] top-[50%] z-50 flex flex-col w-[95vw] -translate-x-1/2 -translate-y-1/2 gap-3 border border-border bg-card p-4 shadow-2xl rounded-lg overflow-hidden",
-        // Mobile-first: max-width para telas pequenas, mobile height
+        // Mobile-first: max-height para telas pequenas
         "max-h-[92vh] sm:max-h-[85vh]",
         // Desktop (sm+): largura padrão do shadcn
-        "sm:max-w-lg sm:p-6 sm:border sm:border-border sm:rounded-lg",
+        "sm:max-w-lg sm:p-6 sm:rounded-lg",
         // Animações: centralização absoluta no centro da viewport
         "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-1/2 data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-1/2 duration-300 ease-in-out",
         className,

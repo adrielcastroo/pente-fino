@@ -48,8 +48,8 @@ export default function CadastroDetailDialog({ item, open, onOpenChange, onEdit 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl max-h-[85vh] overflow-y-auto">
-        <ErpDialogHeader
+      <DialogContent className="max-w-xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
+        <ErpDialogHeader className="p-5 sm:p-6 pb-4 sm:pb-4 mb-0"
           icon={Package}
           title="Cadastro do item"
           docs={[
@@ -58,7 +58,7 @@ export default function CadastroDetailDialog({ item, open, onOpenChange, onEdit 
           ]}
         />
 
-        <div className="space-y-4 pt-3">
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-5 sm:p-6 space-y-4 pt-2">
           {/* Item em destaque */}
           <ErpSection label="Item">
             <ErpItemHeadline descricao={item.descricao} codigo={item.codigo_interno} />
@@ -133,12 +133,13 @@ export default function CadastroDetailDialog({ item, open, onOpenChange, onEdit 
             </div>
           </ErpSection>
 
-          {onEdit && (
-            <div className="flex justify-end pt-1 border-t border-border">
+        </div>
+        {onEdit && (
+          <div className="p-5 sm:p-6 pt-4 sm:pt-4 border-t border-border flex justify-end">
               <Button
                 variant="default"
                 size="sm"
-                className="gap-1.5 mt-3"
+                className="gap-1.5"
                 onClick={() => { onOpenChange(false); onEdit(item); }}
               >
                 <Pencil className="w-4 h-4" />
@@ -146,7 +147,6 @@ export default function CadastroDetailDialog({ item, open, onOpenChange, onEdit 
               </Button>
             </div>
           )}
-        </div>
       </DialogContent>
     </Dialog>
   );

@@ -919,7 +919,7 @@ export default function EstoquePage() {
 
       {/* ===== POSITIONS GRID DIALOG ===== */}
       <Dialog open={!!selectedCell} onOpenChange={() => setSelectedCell(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-3xl p-0 gap-0 border border-border bg-card overflow-hidden rounded-lg shadow-xl max-h-[90vh] flex flex-col">
+        <DialogContent className="max-w-[95vw] sm:max-w-3xl p-0 gap-0 overflow-hidden flex flex-col">
           {selectedCell && (
             <>
               {/* Header */}
@@ -1031,7 +1031,7 @@ export default function EstoquePage() {
 
       {/* ===== DETAIL DIALOG ===== */}
       <Dialog open={!!detailPos} onOpenChange={() => setDetailPos(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 gap-0 border border-border bg-card overflow-hidden rounded-lg shadow-xl max-h-[90vh] flex flex-col">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 gap-0 overflow-hidden flex flex-col">
           {detailPos && (() => {
             const statusCfg = STATUS_CONFIG[detailPos.status] || STATUS_CONFIG.livre;
             const info = resolveItemInfo(detailPos.item);
@@ -1116,7 +1116,7 @@ export default function EstoquePage() {
                       })}
                       {!isGuest && (
                         <Button
-                          onClick={() => handleStatusChange(detailPos, 'saida')}
+                          onClick={() => setConfirmSaida(true)}
                           variant="outline"
                           size="sm"
                           className="h-9 text-xs gap-2 justify-start col-span-2"
@@ -1151,7 +1151,7 @@ export default function EstoquePage() {
 
       {/* ===== STAT DETAIL DIALOG ===== */}
       <Dialog open={!!selectedStat} onOpenChange={(o) => { if (!o) { setSelectedStat(null); setDrillTec(null); } }}>
-        <DialogContent className="max-w-[95vw] sm:max-w-5xl h-[85vh] sm:h-[80vh] flex flex-col p-0 gap-0 overflow-hidden relative border border-border bg-card rounded-lg shadow-xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-5xl h-[85vh] sm:h-[80vh] flex flex-col p-0 gap-0 overflow-hidden">
 
           {selectedStat && (() => {
             const statItems: { label: string; value: number; percent: number; color: string; bg: string; hex: string }[] = [
@@ -1408,7 +1408,7 @@ export default function EstoquePage() {
 
       {/* Confirmação Dar Saída */}
       <AlertDialog open={confirmSaida} onOpenChange={setConfirmSaida}>
-        <AlertDialogContent className="border-border/40 bg-card rounded-md max-h-[90vh] overflow-y-auto">
+        <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="text-base font-semibold">Confirmar Saída</AlertDialogTitle>
             <AlertDialogDescription className="text-sm text-muted-foreground">
@@ -1426,7 +1426,7 @@ export default function EstoquePage() {
 
       {/* Confirmação Excluir */}
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
-        <AlertDialogContent className="border-border/40 bg-card rounded-md max-h-[90vh] overflow-y-auto">
+        <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="text-base font-semibold">Excluir Item</AlertDialogTitle>
             <AlertDialogDescription className="text-sm text-muted-foreground">
@@ -1444,7 +1444,7 @@ export default function EstoquePage() {
 
       {/* Scan Mode Dialog */}
       <Dialog open={scanMode} onOpenChange={setScanMode}>
-        <DialogContent className="max-w-[95vw] sm:max-w-lg p-0 gap-0 border-border/40 bg-card overflow-hidden rounded-md max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[95vw] sm:max-w-lg p-0 gap-0 overflow-hidden">
           <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/20 bg-muted/20">
             <div className="flex items-center gap-3">
               <div className="p-2.5 rounded-md bg-violet-500/10 border border-violet-500/20 text-violet-500">
@@ -1505,7 +1505,7 @@ export default function EstoquePage() {
 
       {/* Confirm Scan Saida */}
       <AlertDialog open={!!confirmScan} onOpenChange={() => setConfirmScan(null)}>
-        <AlertDialogContent className="border-border/40 bg-card rounded-md max-h-[90vh] overflow-y-auto">
+        <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="text-base font-semibold">Confirmar Saída por Bipagem</AlertDialogTitle>
             <AlertDialogDescription className="text-sm text-muted-foreground space-y-2">

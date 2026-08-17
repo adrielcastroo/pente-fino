@@ -143,8 +143,8 @@ export default function FichaItemDialog({ codigo, open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
+        <DialogHeader className="p-5 sm:p-6 pb-4 sm:pb-4 mb-0">
           <DialogTitle className="flex items-center gap-2 text-base">
             <Package className="h-5 w-5 text-primary" />
             Ficha do Item
@@ -162,7 +162,7 @@ export default function FichaItemDialog({ codigo, open, onOpenChange }: Props) {
             Item <span className="font-mono">{cod}</span> não encontrado no espelho do Auge.
           </div>
         ) : (
-          <div className="space-y-3 overflow-auto pr-1">
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-5 sm:p-6 space-y-4 pt-2">
             {/* Cabeçalho */}
             <Card className="p-3">
               <div className="flex items-start justify-between gap-3">

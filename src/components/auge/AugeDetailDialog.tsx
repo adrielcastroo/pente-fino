@@ -18,15 +18,15 @@ export default function AugeDetailDialog({
 }: AugeDetailDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
-        <DialogHeader>
+      <DialogContent className="max-w-[95vw] sm:max-w-3xl max-h-[92vh] overflow-hidden flex flex-col p-0 gap-0">
+        <DialogHeader className="p-5 sm:p-6 pb-4 sm:pb-4 mb-0">
           <DialogTitle className="flex items-center gap-2 flex-wrap">
             <span className="font-mono">{title}</span>
             <Badge variant="outline" className="text-[10px] uppercase">Auge ERP</Badge>
           </DialogTitle>
           {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
         </DialogHeader>
-        <ScrollArea className="flex-1 pr-4">
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-5 sm:p-6 space-y-4 pt-2">
           <div className="grid grid-cols-2 gap-x-4 gap-y-3 mb-4">
             {fields.map((f, i) => (
               <div key={i} className={f.span === 2 ? 'col-span-2' : ''}>
@@ -54,7 +54,7 @@ export default function AugeDetailDialog({
               </pre>
             </details>
           )}
-        </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );

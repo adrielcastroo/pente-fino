@@ -128,8 +128,8 @@ export function NFeSefazDialog({ nfeId, onClose }: Props) {
 
   return (
     <Dialog open={!!nfeId} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
+      <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 gap-0 overflow-hidden flex flex-col">
+        <DialogHeader className="p-5 sm:p-6 pb-4 sm:pb-4 mb-0">
           <DialogTitle>NF-e {nfe?.numero ?? '—'} / série {nfe?.serie ?? '—'}</DialogTitle>
           <DialogDescription className="font-mono text-xs break-all">
             {nfe?.chave_acesso ?? ''}
@@ -139,7 +139,7 @@ export function NFeSefazDialog({ nfeId, onClose }: Props) {
         {isLoading || !nfe ? (
           <div className="py-8 flex justify-center"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
         ) : (
-          <div className="space-y-5">
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-5 sm:p-6 space-y-5 pt-2">
             <section className="border border-border rounded-md p-3 space-y-3">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-medium flex items-center gap-2">
@@ -203,7 +203,7 @@ export function NFeSefazDialog({ nfeId, onClose }: Props) {
                 />
               </div>
             </section>
-          </div>
+            </div>
         )}
       </DialogContent>
     </Dialog>
