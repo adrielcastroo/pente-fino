@@ -379,8 +379,9 @@ export default function HistoricoTagsTab() {
             </DialogTitle>
             <div className="mt-1 text-xs text-muted-foreground">
               <p className="font-semibold text-[11px] mb-1">
-                Preciso que as informações que aparecem, sejam mais certeiras e concisas, sem gerar erro ou informações pela metade. Ajuste também somente o necessário para as informações dentro do modal não ficarem com quebra de linha, para melhor visualização.
+                Auditoria detalhada da composição de TAGs. Visualize as alterações, verifique os valores calculados vs. configurados e valide a integridade dos dados implementados.
               </p>
+
               Exibindo as TAGs Custom que sofreram alteração real de valor na operação de {formatarDataTag(eventoParaAuditoria?.em)}.
             </div>
           </DialogHeader>

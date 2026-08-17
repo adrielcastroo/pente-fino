@@ -550,7 +550,7 @@ export default function IncluirItemMassaTab() {
           {/* Formulário do item */}
           <Card className="p-4 space-y-3 h-fit">
             <div className="flex items-center justify-between gap-2">
-              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dados do item</div>
+              <div className="text-xs font-semibold uppercase tracking-wider text-primary">Inteligência de Importação</div>
               <input
                 ref={importInputRef}
                 type="file"

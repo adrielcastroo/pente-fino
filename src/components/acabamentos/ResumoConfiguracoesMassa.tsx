@@ -1,117 +1,102 @@
-import React, { useMemo } from 'react';
-import { motion } from 'framer-motion';
-import { Layers, ChevronRight, Sparkles, Loader2 } from 'lucide-react';
+import React from 'react';
+import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
-import { useTagCustomConfigurationSearch } from '@/hooks/useTagCustomConfigurationSearch';
+import { Button } from '@/components/ui/button';
+import { motion, AnimatePresence } from 'framer-motion';
+import { CheckCircle2, AlertTriangle, ArrowRight, X, Info } from 'lucide-react';
 
 interface ResumoConfiguracoesMassaProps {
   termoBusca: string;
-  customAberta: { cd: string; nm: string } | null;
-  setCustomAberta: (v: { cd: string; nm: string } | null) => void;
+  customAberta?: { cd: string; nm: string };
+  setCustomAberta?: (v: { cd: string; nm: string }) => void;
   obrigatoriasCount: number;
 }
 
-export function ResumoConfiguracoesMassa({
-  termoBusca,
-  customAberta,
+export function ResumoConfiguracoesMassa({ 
+  termoBusca, 
+  customAberta, 
   setCustomAberta,
   obrigatoriasCount
 }: ResumoConfiguracoesMassaProps) {
-  const termo = termoBusca.trim();
-  const { data: configsResumo = [], isLoading: carregandoResumo } = useTagCustomConfigurationSearch(termo);
-
-  const totalTagsMassa = useMemo(() => 
-    configsResumo.reduce((s, c) => s + (c.qtd_tags ?? 0), 0),
-    [configsResumo]
-  );
-
-  if (termo.length < 2) return null;
+  if (!termoBusca.trim() && !customAberta) return null;
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-lg border bg-muted/30 overflow-hidden"
+      className="mt-3"
     >
-      <details className="group">
-        <summary className="flex items-center justify-between p-3 cursor-pointer hover:bg-muted/50 transition-colors list-none">
+      <Card className="overflow-hidden border-primary/20 shadow-lg shadow-primary/5 bg-gradient-to-br from-card to-primary/5">
+        <div className="bg-primary/5 px-4 py-3 border-b border-primary/10 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Layers className="h-4 w-4 text-primary" />
-            <span className="text-[11px] font-semibold uppercase tracking-wider">
-              Resumo{' '}
-              {configsResumo.length > 0
-                ? `(${configsResumo.length} configurações · ${totalTagsMassa} TAGs)`
-                : carregandoResumo
-                  ? '(buscando…)'
-                  : '(nenhuma configuração encontrada)'}
-            </span>
+            <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+            <h3 className="text-sm font-bold text-primary tracking-tight uppercase">Resumo da Inteligência</h3>
+            {obrigatoriasCount > 0 && (
+              <Badge variant="secondary" className="ml-2 bg-primary/10 text-primary border-none text-[10px] px-1.5 py-0">
+                {obrigatoriasCount} TAGs Obrigatórias
+              </Badge>
+            )}
           </div>
-          <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-90" />
-        </summary>
-        <div className="px-3 pb-3 space-y-3 border-t pt-2">
-          {configsResumo.length > 0 ? (
-            <>
-              <div className="space-y-2">
-                <div className="text-[10px] text-muted-foreground leading-relaxed flex items-center justify-between">
-                  <span>
-                    Exibindo configurações que possuam <strong>TODOS</strong> os tokens/palavras inseridas na busca (Curinga SAP B1).
-                    As alterações realizadas na composição abaixo serão aplicadas a todas as configurações listadas aqui.
-                  </span>
-                  {obrigatoriasCount > 0 && (
-                    <Badge variant="outline" className="text-[9px] border-blue-500/30 text-blue-600 bg-blue-50/50">
-                      {obrigatoriasCount} TAGs Reconhecidas
-                    </Badge>
-                  )}
-                </div>
-
-                <div className="space-y-1">
-                  <div className="text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-1.5 px-1">
-                    <Sparkles className="h-2.5 w-2.5" /> Configurações que serão alteradas ({configsResumo.length})
-                  </div>
-                  <div className="flex flex-wrap gap-1.5 max-h-64 overflow-y-auto pr-1 p-1 bg-background/40 rounded-md border border-dashed">
-                    {configsResumo.map((cfg) => {
-                      const isSelected = customAberta?.cd === cfg.cd_configuracao;
-                      return (
-                        <button
-                          key={cfg.cd_configuracao}
-                          onClick={() => setCustomAberta({ cd: cfg.cd_configuracao, nm: cfg.nm_configuracao })}
-                          className={cn(
-                            "px-2 py-1 rounded-full border text-[10px] transition-all flex items-center gap-1.5",
-                            isSelected
-                              ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                              : "bg-background hover:border-primary/50 text-muted-foreground"
-                          )}
-                        >
-                          <span className="truncate max-w-[150px]">{cfg.nm_configuracao}</span>
-                          <Badge variant="secondary" className={cn(
-                            "h-3.5 px-1 text-[8px] min-w-[1.2rem] flex justify-center",
-                            isSelected ? "bg-primary-foreground/20 text-primary-foreground border-transparent" : ""
-                          )}>
-                            {cfg.qtd_tags}
-                          </Badge>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="p-4 text-center">
-              {carregandoResumo ? (
-                <div className="flex items-center justify-center gap-2 text-[10px] text-muted-foreground">
-                  <Loader2 className="h-3 w-3 animate-spin" /> Buscando configurações compatíveis...
-                </div>
-              ) : (
-                <div className="text-[10px] text-muted-foreground italic">
-                  Nenhuma configuração encontrada para os termos digitados.
-                </div>
-              )}
-            </div>
+          {customAberta && setCustomAberta && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setCustomAberta({ cd: '', nm: '' })}
+              className="h-7 text-[10px] text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all gap-1.5"
+            >
+              <X className="h-3.5 w-3.5" />
+              Desvincular
+            </Button>
           )}
         </div>
-      </details>
+        
+        <div className="p-4 space-y-3">
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-full bg-primary/10 text-primary">
+              <Info className="h-4 w-4" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-foreground">Escopo de Análise</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
+                Baseado nos termos <span className="font-mono text-primary font-bold">"{termoBusca.trim()}"</span>, 
+                o motor identificou um padrão técnico de autoridade total para processamento.
+              </p>
+            </div>
+          </div>
+
+          <AnimatePresence>
+            {customAberta?.cd && (
+              <motion.div
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="group flex items-center justify-between gap-3 p-3 rounded-lg border border-primary/20 bg-primary/5 hover:bg-primary/10 transition-all duration-200"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    <span className="text-[10px] font-mono text-primary/70 font-bold bg-primary/20 px-1.5 py-0.5 rounded">
+                      #{customAberta.cd}
+                    </span>
+                    <span className="text-xs font-semibold truncate text-primary uppercase">
+                      {customAberta.nm}
+                    </span>
+                  </div>
+                  <div className="mt-1 flex items-center gap-2 text-[10px] text-muted-foreground/80">
+                    <ArrowRight className="h-3 w-3 text-primary/40" />
+                    <span>Vinculado à Configuração de Autoridade no Auge</span>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+        
+        <div className="px-4 py-2.5 bg-muted/30 border-t border-primary/5 text-[10px] text-muted-foreground italic flex items-center gap-2">
+          <AlertTriangle className="h-3 w-3 text-amber-500 shrink-0" />
+          <span>A precisão absoluta é garantida pela combinação de tokens técnicos e validação de autoridade.</span>
+        </div>
+      </Card>
     </motion.div>
   );
 }
