@@ -49,7 +49,7 @@ export function tokenize(input: string): string[] {
   return normKey(input)
     .split(SEPARATORS)
     .map((t) => t.trim())
-    .filter((t) => t.length >= 2);
+    .filter((t) => t.length >= 1); // Mantém tokens de 1 caractere (ex: T, A, 1)
 }
 
 export function uniqTokens(list: string[]): string[] {
