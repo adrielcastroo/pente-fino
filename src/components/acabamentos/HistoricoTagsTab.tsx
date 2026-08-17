@@ -329,22 +329,26 @@ export default function HistoricoTagsTab() {
                             <tbody>
                               {ev.linhas
                                 .filter(l => filtroAlteradas === ev.id ? l.valor !== l.valor_antigo : true)
-                                .map((l, i) => (
-                                  <tr key={i} className={`border-t align-top ${l.valor !== l.valor_antigo ? 'bg-emerald-500/5' : 'bg-background/50'}`}>
-                                    <td className="p-1.5 font-mono break-all font-bold text-blue-600">
-                                      {l.nmConfiguracao || ev.nmConfiguracao || grupoAberto?.nmConfiguracao || l.cdConfiguracao || ev.cdConfiguracao || grupoAberto?.cdConfiguracao || '—'}
-                                    </td>
-                                    <td className="p-1.5 font-mono break-all text-muted-foreground">
-                                      {l.valor_antigo || '—'}
-                                    </td>
-                                    <td className={`p-1.5 font-mono break-all font-medium ${l.valor !== l.valor_antigo ? 'text-emerald-600 bg-emerald-500/5' : 'text-foreground'}`}>
-                                      {l.valor || '—'}
-                                    </td>
-                                    <td className={`p-1.5 font-mono break-all font-bold ${l.valor !== l.valor_antigo ? 'text-emerald-600' : 'text-muted-foreground'}`}>
-                                      {l.calculada || '—'}
-                                    </td>
-                                  </tr>
-                                ))}
+                                  .map((l, i) => {
+                                    const nm = l.nmConfiguracao || ev.nmConfiguracao || grupoAberto?.nmConfiguracao;
+                                    const cd = l.cdConfiguracao || ev.cdConfiguracao || grupoAberto?.cdConfiguracao;
+                                    return (
+                                      <tr key={i} className={`border-t align-top ${l.valor !== l.valor_antigo ? 'bg-emerald-500/5' : 'bg-background/50'}`}>
+                                        <td className="p-1.5 font-mono break-all font-bold text-blue-600">
+                                          {nm || '—'} {cd ? `[${cd}]` : ''}
+                                        </td>
+                                        <td className="p-1.5 font-mono break-all text-muted-foreground">
+                                          {l.valor_antigo || '—'}
+                                        </td>
+                                        <td className={`p-1.5 font-mono break-all font-medium ${l.valor !== l.valor_antigo ? 'text-emerald-600 bg-emerald-500/5' : 'text-foreground'}`}>
+                                          {l.valor || '—'}
+                                        </td>
+                                        <td className={`p-1.5 font-mono break-all font-bold ${l.valor !== l.valor_antigo ? 'text-emerald-600' : 'text-muted-foreground'}`}>
+                                          {l.calculada || '—'}
+                                        </td>
+                                      </tr>
+                                    );
+                                  })}
 
                             </tbody>
                           </table>
@@ -391,7 +395,7 @@ export default function HistoricoTagsTab() {
             </DialogTitle>
             <div className="text-[11px] text-muted-foreground mt-1 leading-relaxed max-w-full whitespace-pre-line">
               <p className="font-semibold text-foreground/80 mb-2">
-                O problema ainda está presente, como vc pode ver, Gostava do padrão antigo, mostrando a configuração, tag calculada, e o valor que foi alterado na tag calculada, porém precisava somente que vc aumentasse o tamanho horizontal do modal/dialog, para que as informações não ficassem com a linha quebrada.
+                Preciso que as informações que aparecem, sejam mais certeiras e concisas, sem gerar erro ou informações pela metade. Ajuste também somente o necessário para as informações dentro do modal não ficarem com quebra de linha, para melhor visualização.
               </p>
               Exibindo as TAGs Custom que sofreram alteração real de valor na operação de {formatarDataTag(eventoParaAuditoria?.em)}.
             </div>
@@ -419,7 +423,7 @@ export default function HistoricoTagsTab() {
                           const configCodigo = l.cdConfiguracao || eventoParaAuditoria?.cdConfiguracao || grupoAberto?.cdConfiguracao;
                           
                           return (
-                            <tr key={i} className="hover:bg-muted/30 transition-colors">
+                            <tr key={i} className="hover:bg-muted/30 transition-colors border-b">
                               <td className="p-2 sm:p-3 font-mono font-bold text-blue-600 bg-blue-500/5 whitespace-nowrap">
                                 {configNome || '—'} {configCodigo ? `[${configCodigo}]` : ''}
                               </td>
