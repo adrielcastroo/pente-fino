@@ -35,19 +35,26 @@ const SEPARATORS = /[\s_\-/.,;:()[\]]+/;
 
 /** Normalização usada nas comparações por palavra-chave. */
 export function normKey(s: string): string {
-  return (s ?? '')
+  if (!s) return '';
+  return s
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/[^a-z0-9*]+/g, ' ') // Preserva o asterisco para o tokenize quebrar depois se necessário, mas aqui normKey é geral
     .trim();
 }
 
 /** Quebra o input em tokens (sem acentos, sem símbolos). */
 export function tokenize(input: string): string[] {
   if (!input) return [];
-  return normKey(input)
-    .split(SEPARATORS)
+  // Para o tokenize, queremos normalizar mas manter a separação por asterisco ou espaços
+  const normalized = input
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+    
+  return normalized
+    .split(/[\s*_\-/.,;:()[\]]+/)
     .map((t) => t.trim())
     .filter((t) => t.length >= 1); // Mantém tokens de 1 caractere (ex: T, A, 1)
 }
@@ -148,8 +155,6 @@ export function filtrarPorIlike<T extends { nm_configuracao?: string | null }>(
   return rows.filter((r) => {
     const nm = r.nm_configuracao ?? '';
     // Se temos tokens, o filtro deve ser AND estrito entre ELES.
-    // O 'padrao' é apenas uma forma diferente de expressar a mesma busca,
-    // então se temos tokens (AND), ignoramos o 'padrao' (OR/Seq) para não trazer lixo.
     if (tokens.length > 0) {
       return tokens.every((t) => matchesIlike(nm, t));
     }
@@ -217,10 +222,7 @@ export function ilikeAnd<T extends IlikeBuilder>(query: T, col: string, padrao: 
 
 /** Combina `padrao` + `tokens` em uma única cláusula `or(...)` do PostgREST. */
 export function ilikeOr(cols: string[], padrao: string, tokens: string[]): string {
-  const parts: string[] = [];
-  
   // Se houver tokens, a regra principal é AND entre eles, mas OR entre colunas para cada token.
-  // PostgREST: (col1.ilike.%A%,col2.ilike.%A%),(col1.ilike.%B%,col2.ilike.%B%)
   if (tokens.length > 0) {
     return tokens.map(t => {
       const escapedToken = JSON.stringify(t);
@@ -236,40 +238,3 @@ export function ilikeOr(cols: string[], padrao: string, tokens: string[]): strin
   
   return '';
 }
-
-/**
- * PROMPT PARA DESENVOLVIMENTO - CORREÇÃO DE FILTRAGEM NO BLOCO RESUMO
- * 
- * === INTRODUÇÃO ===
- * O módulo de busca do catálogo de configurações reproduz a experiência de filtros do 
- * SAP B1 usando o curinga “*” como coringa do usuário. O input é convertido em 
- * padrão ILIKE e em lista de tokens para busca AND (todas as palavras devem existir 
- * na descrição, em qualquer ordem). Atualmente, a interface está retornando registros 
- * que não contêm todas as palavras pesquisadas, indicando que a lógica de combinação 
- * entre padrão e tokens ou entre os próprios tokens está incorreta na consulta ou na 
- * renderização do resumo.
- *
- * === LÓGICA ===
- * 1. Entrada do usuário (ex: cortina*cm*35*liso*10*balance) é sanitizada e normalizada 
- *    (sem acentos, case-insensitive).
- * 2. Duas representações são geradas:
- *    - Padrão único via toIlikePattern: cortina%cm%35%liso%10%balance (ordem exata, opcional).
- *    - Lista de tokens via toIlikeTokens: [%cortina%, %cm%, %35%, %liso%, %10%, %balance%], 
- *      com corte em 12 itens e filtro de tokens vazios/inválidos (<2 chars).
- *
- * A consulta deve aplicar AND estrito entre tokens (cada token deve existir na coluna).
- * Não deve haver mistura com OR entre tokens, nem união (OR) entre resultados de padrão 
- * e tokens que viole a regra AND.
- *
- * === OBJETIVO ===
- * Corrigir o fluxo de busca para que o Resumo exiba exclusivamente configurações que 
- * contenham todas as palavras pesquisadas (cortina, cm, 35, liso, 10, balance), 
- * independentemente de ordem, respeitando o comportamento SAP B1 do curinga “*”.
- * 
- * === RESULTADO ESPERADO ===
- * - Busca por cortina*cm*35*liso*10*balance retorna apenas configurações contendo 
- *   todas essas palavras.
- * - Buscas com menos termos ou com curingas em posições variadas (*motor, t*42, cm35) 
- *   continuam funcionando com AND estrito quando múltiplos tokens estão presentes.
- * - O Resumo não exibe mais registros que faltem qualquer uma das palavras pesquisadas.
- */
