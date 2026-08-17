@@ -10,15 +10,23 @@ interface ResumoConfiguracoesMassaProps {
   customAberta?: { cd: string; nm: string };
   setCustomAberta?: (v: { cd: string; nm: string }) => void;
   obrigatoriasCount: number;
+  configuracoesAtivas: Array<{ cd_configuracao: string; nm_configuracao: string; qtd_tags: number }>;
+  onRemove: (cd: string) => void;
+  onClear: () => void;
 }
 
 export function ResumoConfiguracoesMassa({ 
   termoBusca, 
   customAberta, 
   setCustomAberta,
-  obrigatoriasCount
+  obrigatoriasCount,
+  configuracoesAtivas,
+  onRemove,
+  onClear
 }: ResumoConfiguracoesMassaProps) {
   if (!termoBusca.trim() && !customAberta) return null;
+  
+  const hasAtivas = configuracoesAtivas.length > 0;
 
   return (
     <motion.div

@@ -1731,6 +1731,16 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           customAberta={customAberta}
           setCustomAberta={setCustomAberta}
           obrigatoriasCount={obrigatorias.length}
+          configuracoesAtivas={configuracoesAtivas}
+          onRemove={(cd) => setRemovidasManualmente(prev => new Set(prev).add(cd))}
+          onClear={() => {
+            const allCodes = configuracoesAtivas.map(c => c.cd_configuracao);
+            setRemovidasManualmente(prev => {
+              const next = new Set(prev);
+              allCodes.forEach(cd => next.add(cd));
+              return next;
+            });
+          }}
         />
       </Card>
 
