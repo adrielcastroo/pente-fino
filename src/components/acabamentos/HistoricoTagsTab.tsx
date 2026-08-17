@@ -187,7 +187,7 @@ export default function HistoricoTagsTab() {
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
               value={busca}
-              onChange={(e) => setBusca(e.target.value)}
+              onChange={(e) => { setBusca(e.target.value); setCurrentPage(1); }}
               placeholder="Buscar por TAG Custom, configuração ou autor…"
               className="h-9 pl-7 text-xs"
             />
