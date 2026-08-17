@@ -498,9 +498,19 @@ function ConfiguracaoSelect({
             .from(tabela)
             .select('cd_configuracao, nm_configuracao, qtd_tags');
           
-          // Se houver tokens (AND), aplicamos a restrição total na query
-          const { data, error } = await ilikeAnd(q, 'nm_configuracao', padrao, tokens).limit(1000);
-          if (!error && data) acumulado.push(...(data as ConfiguracaoLite[]));
+          // Aplicação direta de tokens (AND) no servidor para o dropdown
+          for (const t of tokens) {
+            if (t && t !== '%%') q = q.ilike('nm_configuracao', t);
+          }
+          
+          const { data, error } = await q.limit(1000);
+          if (!error && data) {
+            // Refiltro no cliente para acentos
+            const valid = (data as ConfiguracaoLite[]).filter(r => 
+              tokens.every(tk => matchesIlike(r.nm_configuracao ?? '', tk))
+            );
+            acumulado.push(...valid);
+          }
         }),
       );
 
@@ -835,9 +845,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       for (const t of tokensBusca) {
         qBase = qBase.ilike('nm_configuracao', t);
       }
-      if (tokensBusca.length === 0 && padraoBusca) {
-        qBase = qBase.ilike('nm_configuracao', padraoBusca);
-      }
+      
       const { data, error } = await qBase.limit(2000);
       if (!error) acc.push(...((data ?? []) as CustomTag[]));
 

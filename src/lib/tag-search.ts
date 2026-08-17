@@ -113,11 +113,16 @@ export function toIlikePattern(raw: string): string {
  *   "Cortina*CM*35*Liso*10*" → ["%cortina%", "%cm%", "%35%", "%liso%", "%10%"]
  */
 export function toIlikeTokens(raw: string): string[] {
-  const clean = sanitizeTerm(raw).replace(/%/g, ' ');
-  return clean
+  const clean = sanitizeTerm(raw);
+  if (!clean) return [];
+  
+  // Normaliza o termo base para extração de tokens sem acentos
+  const norm = clean.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  
+  return norm
     .split(/[\s*]+/)
     .map((t) => t.trim())
-    .filter((t) => t.length >= 1) // Mantém tokens de 1 caractere (ex: T, A, 1)
+    .filter((t) => t.length >= 1)
     .slice(0, 12)
     .map((t) => `%${t}%`);
 }
