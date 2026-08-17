@@ -1107,7 +1107,14 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       for (const item of cat.items) {
         const calc = normalizeTagFormatC(item.tag.ds_tag_calculada ?? '');
         if (!calc) continue;
-        const cur = contagemCalculadas.get(calc) ?? { n: 0, valor: normalizeTagFormatC(item.tag.ds_tag_customizada ?? item.tag.nm_tag_customizada ?? ''), cfgNome: item.cfgNome };
+        const cur = contagemCalculadas.get(calc) ?? { 
+          n: 0, 
+          valor: normalizeTagFormatC(item.tag.ds_tag_customizada ?? item.tag.nm_tag_customizada ?? ''), 
+          cfgNome: item.cfgNome,
+          cdTagCustomizada: (item.tag as any).cd_tag_customizada,
+          cdTagCalculada: (item.tag as any).cd_tag_calculada,
+          dsTagTexto: item.tag.ds_tag_texto ?? undefined
+        };
         cur.n += 1;
         contagemCalculadas.set(calc, cur);
       }
@@ -1126,6 +1133,9 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           cfgNome: best.cfgNome,
           calculada: '',
           formula: '',
+          cdTagCustomizada: (best.tag as any).cd_tag_customizada,
+          cdTagCalculada: (best.tag as any).cd_tag_calculada,
+          dsTagTexto: best.tag.ds_tag_texto ?? undefined,
         });
         continue;
       }
@@ -1140,6 +1150,9 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         cfgNome: info.cfgNome,
         calculada: calculadaMaisFrequente,
         formula: '',
+        cdTagCustomizada: (info as any).cdTagCustomizada,
+        cdTagCalculada: (info as any).cdTagCalculada,
+        dsTagTexto: (info as any).dsTagTexto,
       });
     }
     return out;
