@@ -1472,7 +1472,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   /** Recarrega um registro do histórico na composição para editar e relançar. */
   const relancarRegistro = (reg: RegistroGerarTag) => {
     // 1. Limpar estados de busca e resultados anteriores
-    setTermoBusca('');
+    setCfgSearch({ termo: '', hasResults: false, isSearching: false, pesquisou: false });
     setResultado(null);
     setEditandoAuge(false);
     setEdicoesAuge({});
