@@ -103,7 +103,7 @@ export default function PainelPage() {
       <PageHeader
         title="Painel da expedição"
         subtitle="Pickings aguardando movimentação e conferência."
-        action={
+        actions={
           <Button
             variant="outline"
             size="sm"
