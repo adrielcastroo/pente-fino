@@ -336,7 +336,7 @@ export default function TagsTab() {
             <Input
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
-              placeholder="Buscar por configuração ou código…"
+              placeholder="Localize configurações por nome, padrão técnico ou identificador…"
               className="h-9 pl-7 text-xs"
             />
           </div>
