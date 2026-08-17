@@ -386,7 +386,7 @@ export default function HistoricoTagsTab() {
               <CheckCircle2 className="h-5 w-5" />
               Auditoria de Impacto
               <Badge variant="outline" className="ml-2 text-[10px] uppercase border-primary/30">
-                Apenas Alteradas
+                TAGs Custom Alteradas
               </Badge>
             </DialogTitle>
             <p className="text-xs text-muted-foreground mt-1">
