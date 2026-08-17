@@ -11,6 +11,7 @@ import {
   RefreshCw, CheckCircle2, Tag as TagIcon, Filter
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Pagination, usePagination } from '@/components/ui/pagination-simple';
 
 interface ScanRow {
   cd_configuracao: string;
