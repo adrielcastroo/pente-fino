@@ -1175,6 +1175,9 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
               cfgNome: rec.cfgNome,
               calculada: rec.calculada,
               formula: '',
+              cdTagCustomizada: rec.cdTagCustomizada,
+              cdTagCalculada: rec.cdTagCalculada,
+              dsTagTexto: rec.dsTagTexto,
             });
           }
         }
