@@ -332,7 +332,7 @@ export default function HistoricoTagsTab() {
                                 .map((l, i) => (
                                   <tr key={i} className={`border-t align-top ${l.valor !== l.valor_antigo ? 'bg-emerald-500/5' : 'bg-background/50'}`}>
                                     <td className="p-1.5 font-mono break-all font-bold text-blue-600">
-                                      {ev.nmConfiguracao || ev.cdConfiguracao || '—'}
+                                      {ev.nmConfiguracao || grupoAberto?.nmConfiguracao || ev.cdConfiguracao || grupoAberto?.cdConfiguracao || '—'}
                                     </td>
                                     <td className="p-1.5 font-mono break-all text-muted-foreground">
                                       {l.valor_antigo || '—'}
@@ -412,7 +412,7 @@ export default function HistoricoTagsTab() {
                       .map((l: any, i: number) => (
                         <tr key={i} className="hover:bg-muted/30 transition-colors">
                           <td className="p-3 font-mono font-bold text-blue-600 bg-blue-500/5">
-                            {eventoParaAuditoria?.nmConfiguracao || eventoParaAuditoria?.cdConfiguracao || '—'}
+                            {eventoParaAuditoria?.nmConfiguracao || grupoAberto?.nmConfiguracao || eventoParaAuditoria?.cdConfiguracao || grupoAberto?.cdConfiguracao || '—'}
                           </td>
                           <td className="p-3 font-mono text-muted-foreground line-through decoration-destructive/30">
                             {l.valor_antigo || '—'}
