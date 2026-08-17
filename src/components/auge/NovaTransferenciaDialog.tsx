@@ -374,7 +374,7 @@ export default function NovaTransferenciaDialog({
           )}
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="p-5 sm:p-6 pt-4 sm:pt-4 mt-0">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>Cancelar</Button>
           <Button onClick={submit} disabled={!canSubmit} className="gap-2">
             {loading && <Loader2 className="w-4 h-4 animate-spin" />}
