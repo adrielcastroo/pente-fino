@@ -1820,6 +1820,14 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
               </tbody>
             </table>
           </div>
+          <Pagination
+            totalItems={linhas.length}
+            pageSize={pageSize}
+            currentPage={currentPage}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setPageSize}
+            className="px-3 py-1 border-t"
+          />
 
 
           <div className="p-3 border-t space-y-1.5">
