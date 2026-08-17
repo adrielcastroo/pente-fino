@@ -288,19 +288,6 @@ export default function HistoricoTagsTab() {
                       )}
                     </div>
 
-                    {ev.ok && ev.linhas.length > 0 && (
-                      <div className="flex justify-end hidden">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-7 px-2 text-[10px] gap-1 hover:bg-primary/10 border-primary/20 text-primary"
-                          onClick={() => setEventoParaAuditoria(ev)}
-                        >
-                          <CheckCircle2 className="h-3 w-3" />
-                          Ver Apenas Alteradas
-                        </Button>
-                      </div>
-                    )}
                   </div>
 
                   {ev.erro && (
