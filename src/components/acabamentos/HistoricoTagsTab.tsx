@@ -322,8 +322,8 @@ export default function HistoricoTagsTab() {
                               <tr className="text-left">
                                 <th className="p-1.5 text-blue-600 font-bold">Configuração (TAG Custom)</th>
                                 <th className="p-1.5">Anterior (Auge)</th>
-                                <th className="p-1.5">TAG Calculada</th>
-                                <th className="p-1.5">Fórmula</th>
+                                <th className="p-1.5">Tag Configurada</th>
+                                <th className="p-1.5 text-emerald-600 font-bold text-[11px]">TAG Calculada (Implementada)</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -338,10 +338,10 @@ export default function HistoricoTagsTab() {
                                       {l.valor_antigo || '—'}
                                     </td>
                                     <td className={`p-1.5 font-mono break-all font-medium ${l.valor !== l.valor_antigo ? 'text-emerald-600 bg-emerald-500/5' : 'text-foreground'}`}>
-                                      {l.calculada || '—'}
+                                      {l.valor || '—'}
                                     </td>
-                                    <td className="p-1.5 font-mono break-all text-muted-foreground italic">
-                                      {l.formula || '—'}
+                                    <td className={`p-1.5 font-mono break-all font-bold ${l.valor !== l.valor_antigo ? 'text-emerald-600' : 'text-muted-foreground'}`}>
+                                      {l.calculada || '—'}
                                     </td>
                                   </tr>
                                 ))}
@@ -402,8 +402,8 @@ export default function HistoricoTagsTab() {
                     <tr className="text-left border-b">
                       <th className="p-3 font-bold uppercase tracking-wider text-blue-600">Configuração (TAG Custom)</th>
                       <th className="p-3 font-medium uppercase tracking-wider">Anterior (Auge)</th>
-                      <th className="p-3 font-medium uppercase tracking-wider text-emerald-600">TAG Calculada</th>
-                      <th className="p-3 font-medium uppercase tracking-wider">Fórmula</th>
+                      <th className="p-3 font-medium uppercase tracking-wider text-emerald-600">Tag Configurada</th>
+                      <th className="p-3 font-bold uppercase tracking-wider text-emerald-700">TAG Calculada (Implementada)</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
@@ -418,10 +418,10 @@ export default function HistoricoTagsTab() {
                             {l.valor_antigo || '—'}
                           </td>
                           <td className="p-3 font-mono font-semibold text-emerald-600 bg-emerald-500/5">
-                            {l.calculada || '—'}
+                            {l.valor || '—'}
                           </td>
-                          <td className="p-3 font-mono text-muted-foreground italic text-[10px]">
-                            {l.formula || '—'}
+                          <td className="p-3 font-mono font-bold text-emerald-700 bg-emerald-500/10">
+                            {l.calculada || '—'}
                           </td>
                         </tr>
                       ))}
