@@ -1619,7 +1619,6 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         cdConfiguracao: customAberta?.cd ?? resultado?.cdConfiguracao ?? null,
         nmConfiguracao: customAberta?.nm ?? null,
         linhas: (itens as any[]).map((it, idx) => {
-          // Buscamos o valor antigo na linha correspondente da UI
           const uiLine = linhas.find(l => l.valor === it.dsTagCustomizada);
           return {
             code: uiLine?.code || null,
@@ -1627,6 +1626,8 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
             valor_antigo: uiLine?.valorAntigo || null,
             calculada: it.dsTagCalculada || null,
             formula: it.dsFormula || null,
+            nmConfiguracao: uiLine?.cfgNome || customAberta?.nm || null,
+            cdConfiguracao: customAberta?.cd || null,
           };
         }),
         gravadas: res?.gravadas ?? null,
