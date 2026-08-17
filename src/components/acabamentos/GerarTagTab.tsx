@@ -1697,10 +1697,8 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
             onChange={(v) => setCustomAberta(v)}
             onSearchStateChange={setCfgSearch}
           />
-          <p className="text-[10px] text-muted-foreground leading-relaxed whitespace-pre-line">
-            Retorne para o modelo de busca que fizemos, lembra como funcionava?{"\n\n"}
-            antes das alterações feitas hoje.{"\n\n"}
-            Mas somente esse campo de pesquisa e o bloco resumo
+          <p className="text-[10px] text-muted-foreground leading-relaxed">
+            Restaure o comportamento do campo de pesquisa para voltar exatamente ao modelo que funcionava antes das alterações de hoje.
           </p>
         </div>
 
