@@ -25,6 +25,7 @@ export function ErpDialogHeader({
   icon: Icon,
   title,
   docs = [],
+  className,
 }: {
   icon?: LucideIcon;
   title: string;
