@@ -36,7 +36,7 @@ export default function HistoricoTagsTab() {
   const [removendo, setRemovendo] = useState(false);
   const [revertendo, setRevertendo] = useState<string | null>(null);
   const [filtroAlteradas, setFiltroAlteradas] = useState<string | null>(null);
-  const [eventoParaAuditoria, setEventoParaAuditoria] = useState<any | null>(null);
+  
 
 
 
