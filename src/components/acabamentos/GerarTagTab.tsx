@@ -715,6 +715,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   const [resultado, setResultado] = useState<ResultadoAuge | null>(rascunho.resultado);
   const [tentouEnviar, setTentouEnviar] = useState(false);
   const [editandoAuge, setEditandoAuge] = useState(false);
+  const [modoEdicaoRelancamento, setModoEdicaoRelancamento] = useState(false);
   const [edicoesAuge, setEdicoesAuge] = useState<Record<string, TagCalculadaSel>>({});
   const [regravando, setRegravando] = useState(false);
   const [addManual, setAddManual] = useState(false);
