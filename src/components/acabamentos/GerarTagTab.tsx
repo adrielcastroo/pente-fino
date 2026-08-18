@@ -1925,6 +1925,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                           size="sm"
                           variant="outline"
                           className="h-8 px-2 text-[10px] gap-1"
+                          disabled={modoEdicaoRelancamento}
                           onClick={() => setAddManual(true)}
                         >
                           <Plus className="h-3 w-3" /> Adicionar TAG Configurada
