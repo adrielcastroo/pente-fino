@@ -1534,6 +1534,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       setCustomAberta(cfg);
       setLinhas(linhasReais);
       setModoEdicaoRelancamento(true);
+      setAddManual(false);
       setResultado(null);
       setEditandoAuge(false);
       setEdicoesAuge({});
@@ -1636,23 +1637,33 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       setEditandoAuge(false);
       setModoEdicaoRelancamento(false);
       setEdicoesAuge({});
+      setSnapshotLinhas(null);
       
-      // O histórico registra o número REAL de configurações afetadas devolvido pelo Auge.
-      // Corrigimos aqui para passar o número real de configurações únicas afetadas
-      // Se configsAlvo tinha 102 mas o Auge alterou 90, o total será 90.
       const totalConfiguracoesAfetadas = res?.lote?.length || (res?.ok ? configuracoesAlvo.length : 0);
-      registrarHistorico(res?.ok === true, { ...res, gravadas: totalConfiguracoesAfetadas, total: totalConfiguracoesAfetadas }, 'criacao');
+      registrarHistorico(res?.ok === true, { 
+        ...res, 
+        gravadas: totalConfiguracoesAfetadas, 
+        total: totalConfiguracoesAfetadas 
+      }, modoEdicaoRelancamento ? 'edicao' : 'criacao');
       
       if (res?.ok) {
         toast.success(`TAG Custom gravada no Auge (${res.gravadas}/${res.total}).`);
         
-        // 2. Re-leitura de segurança após gravar para confirmar persistência
+        // 2. Re-leitura de segurança após gravar para confirmar persistência e ausência de duplicatas
         if (customAberta?.cd) {
           try {
-            await supabase.functions.invoke('auge-sync?action=tag_custom_por_config', {
+            const { data: checkData } = await supabase.functions.invoke('auge-sync?action=tag_custom_por_config', {
               body: { cdConfiguracao: customAberta.cd, nmConfiguracao: customAberta.nm },
             });
-            console.log(`[AugeSync] Re-leitura de segurança concluída para ${customAberta.cd}`);
+            const checkRows = (checkData as any)?.rows || [];
+            console.log(`[AugeSync] Verificação pós-gravação: ${checkRows.length} TAGs encontradas para ${customAberta.cd}`);
+            
+            // Se o número de TAGs for diferente do que enviamos, ou se houver duplicatas nominais, o backend falhou na deduplicação
+            const nomes = checkRows.map((r: any) => String(r.dsTagCustomizada || r.nmTagCustomizada || '').trim().toUpperCase());
+            const unicos = new Set(nomes);
+            if (unicos.size !== nomes.length) {
+              console.warn('[AugeSync] Detectadas duplicatas no Auge após gravação!');
+            }
           } catch (e) {
             console.warn('[AugeSync] Falha na re-leitura de segurança:', e);
           }
@@ -1719,6 +1730,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       setResultado(res);
       setEdicoesAuge({});
       setEditandoAuge(false);
+      setSnapshotLinhas(null);
       const configId = customAberta?.cd ?? resultado?.cdConfiguracao ?? null;
       registrarEventoTag({
         ok: res?.ok === true,
@@ -1727,15 +1739,14 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         cdConfiguracao: configId,
         nmConfiguracao: customAberta?.nm ?? null,
         linhas: (itens as any[]).map((it, idx) => {
-          // Buscamos o valor antigo na linha correspondente da UI
-          const uiLine = linhas.find(l => l.valor === it.dsTagCustomizada);
+          const uiLine = snapshotLinhas?.find(l => l.valor === it.dsTagCustomizada) || linhas.find(l => l.valor === it.dsTagCustomizada);
           return {
             code: uiLine?.code || null,
             valor: it.dsTagCustomizada,
             valor_antigo: uiLine?.valorAntigo || null,
             calculada: it.dsTagCalculada || null,
             formula: it.dsFormula || null,
-            cdTagCustomizada: uiLine?.cdTagCustomizada || null,
+            cdTagCustomizada: it.cdTagCustomizada || uiLine?.cdTagCustomizada || null,
             cdConfiguracaoLinha: configId,
           };
         }),
@@ -1772,6 +1783,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
             valor={customAberta}
             onChange={(v) => setCustomAberta(v)}
             onSearchStateChange={setCfgSearch}
+            disabled={modoEdicaoRelancamento}
           />
           <p className="text-[10px] text-muted-foreground">
             Digite aqui (ex.: <code className="font-mono">Rollo Pro</code>) — o sistema reconhecerá todas as configurações 
@@ -1985,7 +1997,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                   )}
                 </div>
                 <div className="flex items-center gap-1.5">
-                  {!!resultado.augeRows?.length && !editandoAuge && (
+                  {!!resultado.augeRows?.length && !editandoAuge && !modoEdicaoRelancamento && (
                     <Button
                       size="sm"
                       variant="outline"

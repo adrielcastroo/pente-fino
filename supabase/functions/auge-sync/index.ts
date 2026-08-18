@@ -5167,18 +5167,29 @@ Deno.serve(async (req) => {
                 return extValor === normCode;
               });
 
-          // O registro principal será o primeiro encontrado ou o que o usuário já tinha
-          let registroExistente = registrosMesmoNome[0];
-          const cdTagCustomizadaExistente = String(it?.cdTagCustomizada || registroExistente?.cdTagCustomizada || '').trim();
+          // O registro principal será o primeiro encontrado ou o que o usuário já tinha.
+          // Prioridade 1: ID real enviado pelo frontend (idLinhaReal)
+          // Prioridade 2: Primeiro registro encontrado com o mesmo nome no Auge
+          let registroExistente = idLinhaReal 
+            ? tagsExistentes.find(ext => String(ext.cdTagCustomizada || ext.cdTagCustom || ext.id || '').trim() === idLinhaReal)
+            : registrosMesmoNome[0];
 
-          // Se houver mais de um registro com o mesmo nome, excluímos os excedentes
-          if (registrosMesmoNome.length > 1) {
-            console.log(`[cdConfiguracao ${cdConfiguracao}] Detectadas ${registrosMesmoNome.length} tags duplicadas para "${dsTagCustomizada}". Removendo excedentes...`);
-            for (let i = 1; i < registrosMesmoNome.length; i++) {
+          const cdTagCustomizadaExistente = String(idLinhaReal || registroExistente?.cdTagCustomizada || '').trim();
+
+          // Se houver mais de um registro com o mesmo nome, excluímos os excedentes (Deduplicação Atômica)
+          // Isso garante que para cada nome de TAG configurada, exista apenas UM registro no Auge.
+          const duplicatasParaRemover = registrosMesmoNome.filter(ext => {
+            const extId = String(ext.cdTagCustomizada || ext.cdTagCustom || ext.id || '').trim();
+            return extId !== cdTagCustomizadaExistente;
+          });
+
+          if (duplicatasParaRemover.length > 0) {
+            console.log(`[cdConfiguracao ${cdConfiguracao}] Detectadas ${duplicatasParaRemover.length} tags duplicadas para "${dsTagCustomizada}". Removendo...`);
+            for (const dup of duplicatasParaRemover) {
               try {
-                await deleteTagCustomizada(auth, cdConfiguracao, String(registrosMesmoNome[i].cdTagCustomizada));
+                await deleteTagCustomizada(auth, cdConfiguracao, String(dup.cdTagCustomizada));
               } catch (e) {
-                console.warn(`Erro ao remover tag duplicada ${registrosMesmoNome[i].cdTagCustomizada}:`, getErrorMessage(e));
+                console.warn(`Erro ao remover tag duplicada ${dup.cdTagCustomizada}:`, getErrorMessage(e));
               }
             }
           }
