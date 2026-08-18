@@ -24,6 +24,8 @@ export interface TagHistoricoLinha {
   formula?: string | null;
   /** Código técnico da TAG no Auge. */
   cdTagCustomizada?: string | null;
+  /** Código da configuração (cd_configuracao) da tabela auge_tag_custom. */
+  cdConfiguracaoLinha?: string | null;
 }
 
 export interface TagHistoricoEvento {

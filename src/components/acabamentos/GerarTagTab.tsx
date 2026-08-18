@@ -1479,6 +1479,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         calculada: l.calculada ?? null,
         formula: l.formula ?? null,
         cdTagCustomizada: l.cdTagCustomizada ?? null,
+        cdConfiguracaoLinha: l.cfgNome, // No GerarTagTab, cfgNome guarda o cd_configuracao vindo do Auge
       })),
     });
     toast.success('Registro carregado — edite e grave novamente.');
@@ -1629,6 +1630,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
             calculada: it.dsTagCalculada || null,
             formula: it.dsFormula || null,
             cdTagCustomizada: uiLine?.cdTagCustomizada || null,
+            cdConfiguracaoLinha: cdConfiguracao,
           };
         }),
         gravadas: res?.gravadas ?? null,
