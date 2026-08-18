@@ -105,6 +105,13 @@ interface ResultadoAuge {
   }>;
   augeRows?: any[];
   error?: string;
+  lote?: Array<{
+    configuracao: string;
+    ok: boolean;
+    total: number;
+    gravadas: number;
+    detalhes: any[];
+  }>;
 }
 
 /**
