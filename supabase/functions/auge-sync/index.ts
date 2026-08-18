@@ -5118,6 +5118,7 @@ Deno.serve(async (req) => {
           calculada: string;
           formula?: string;
           cdTagCustomizada?: string;
+          cdTagCalculada?: string;
           ok: boolean;
           erro?: string;
           auge?: any;
