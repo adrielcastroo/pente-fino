@@ -288,8 +288,6 @@ export default function HistoricoTagsTab() {
                       )}
                     </div>
 
-                    {ev.ok && ev.linhas.length > 0 && (
-                    )}
                   </div>
 
                   {ev.erro && (
