@@ -2122,8 +2122,9 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                         {resultado.augeRows.map((r: any, i: number) => {
                           const chave = String(r?.cdTagCustomizada ?? i);
                           const edicao = edicoesAuge[chave];
-                          const calculadaAtual = String(r?.dsTagCalculada ?? r?.dsTagTexto ?? '').trim();
-                          const formulaAtual = String(r?.dsFormula ?? '').trim();
+                          // dsTagCalculada e dsFormula vêm do lookup no backend (auge_tags_calculadas)
+                          const calculadaAtual = String(r?.dsTagCalculada || r?.nmTagCalculada || r?.dsTagTexto || '').trim();
+                          const formulaAtual = String(r?.dsFormula || r?.formula || '').trim();
                           return (
                             <tr key={chave} className="border-t align-top">
                               <td className="p-1.5 font-mono break-all">{r.dsTagCustomizada ?? r.nmTagCustomizada ?? '—'}</td>
