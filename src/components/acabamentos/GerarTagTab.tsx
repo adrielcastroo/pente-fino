@@ -1636,23 +1636,29 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       setEditandoAuge(false);
       setModoEdicaoRelancamento(false);
       setEdicoesAuge({});
+      setSnapshotLinhas(null);
       
-      // O histórico registra o número REAL de configurações afetadas devolvido pelo Auge.
-      // Corrigimos aqui para passar o número real de configurações únicas afetadas
-      // Se configsAlvo tinha 102 mas o Auge alterou 90, o total será 90.
       const totalConfiguracoesAfetadas = res?.lote?.length || (res?.ok ? configuracoesAlvo.length : 0);
       registrarHistorico(res?.ok === true, { ...res, gravadas: totalConfiguracoesAfetadas, total: totalConfiguracoesAfetadas }, 'criacao');
       
       if (res?.ok) {
         toast.success(`TAG Custom gravada no Auge (${res.gravadas}/${res.total}).`);
         
-        // 2. Re-leitura de segurança após gravar para confirmar persistência
+        // 2. Re-leitura de segurança após gravar para confirmar persistência e ausência de duplicatas
         if (customAberta?.cd) {
           try {
-            await supabase.functions.invoke('auge-sync?action=tag_custom_por_config', {
+            const { data: checkData } = await supabase.functions.invoke('auge-sync?action=tag_custom_por_config', {
               body: { cdConfiguracao: customAberta.cd, nmConfiguracao: customAberta.nm },
             });
-            console.log(`[AugeSync] Re-leitura de segurança concluída para ${customAberta.cd}`);
+            const checkRows = (checkData as any)?.rows || [];
+            console.log(`[AugeSync] Verificação pós-gravação: ${checkRows.length} TAGs encontradas para ${customAberta.cd}`);
+            
+            // Se o número de TAGs for diferente do que enviamos, ou se houver duplicatas nominais, o backend falhou na deduplicação
+            const nomes = checkRows.map((r: any) => String(r.dsTagCustomizada || r.nmTagCustomizada || '').trim().toUpperCase());
+            const unicos = new Set(nomes);
+            if (unicos.size !== nomes.length) {
+              console.warn('[AugeSync] Detectadas duplicatas no Auge após gravação!');
+            }
           } catch (e) {
             console.warn('[AugeSync] Falha na re-leitura de segurança:', e);
           }
