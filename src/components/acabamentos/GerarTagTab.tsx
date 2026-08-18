@@ -1534,6 +1534,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       setCustomAberta(cfg);
       setLinhas(linhasReais);
       setModoEdicaoRelancamento(true);
+      setAddManual(false);
       setResultado(null);
       setEditandoAuge(false);
       setEdicoesAuge({});
