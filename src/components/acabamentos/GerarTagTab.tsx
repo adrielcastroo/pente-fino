@@ -1474,6 +1474,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     setLinhas(reg.linhas.map((l) => ({ ...l })));
     setResultado(null);
     setEditandoAuge(false);
+    setModoEdicaoRelancamento(true);
     setEdicoesAuge({});
     setTentouEnviar(false);
     registrarEventoTag({
