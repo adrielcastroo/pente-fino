@@ -1538,18 +1538,24 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           descricao: descricaoFinal,
           itens: linhas.map((l) => {
             const calculada = (l.calculada ?? '').trim();
+            // Em modo de edição/relançamento, se o campo estiver vazio, preservamos o valor original (dsTagTexto) se disponível.
+            // Isso impede a remoção acidental no Auge.
+            const valorEfetivo = (modoEdicaoRelancamento && !calculada && l.dsTagTexto) 
+              ? l.dsTagTexto 
+              : calculada;
+
             return {
               // TAG (Pente Fino) -> Tag (Auge)
               dsTagCustomizada: l.valor,
               // TAG Calculada (Pente Fino) -> Tag Calculada (Auge)
-              dsTagCalculada: calculada,
+              dsTagCalculada: valorEfetivo,
               // Código já resolvido na busca — dispensa o lookup por nome.
               cdTagCalculada: l.cdTagCalculada ?? '',
               dsFormula: l.formula ?? '',
               // Quando a linha já existe no Auge, sobrescreve em vez de duplicar.
               cdTagCustomizada: l.cdTagCustomizada ?? '',
               // "Texto Livre" só é usado quando não há Tag Calculada (são mutuamente exclusivos no Auge)
-              dsTagTexto: calculada ? '' : l.valor,
+              dsTagTexto: valorEfetivo ? '' : l.valor,
             };
           }),
         },
