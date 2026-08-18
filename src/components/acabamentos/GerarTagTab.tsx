@@ -558,7 +558,8 @@ function ConfiguracaoSelect({
         <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
         <Input
           value={busca}
-          onFocus={() => setAberto(true)}
+          disabled={disabled}
+          onFocus={() => !disabled && setAberto(true)}
           onChange={(e) => { setBusca(e.target.value); setAberto(true); }}
           placeholder="Digite para procurar a configuração (use * como curinga)"
           className="h-10 pl-7 text-[11px]"
