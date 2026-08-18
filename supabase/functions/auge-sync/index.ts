@@ -5243,6 +5243,7 @@ Deno.serve(async (req) => {
                 calculada: dsTagCalculada,
                 formula: dsFormula,
                 cdTagCustomizada: String(auge?.cdTagCustomizada ?? cdTagCustomizadaExistente ?? ''),
+                cdTagCalculada: cdCalculadaFinal,
                 ok: true,
                 auge,
               });
