@@ -2061,6 +2061,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                       tag: l.valor,
                       calculada: l.calculada,
                       formula: l.formula,
+                      cdTagCalculada: l.cdTagCalculada,
                       ok: false,
                       erro: resultado.error ?? 'Sem retorno detalhado do Auge para esta linha.',
                     }));
@@ -2075,18 +2076,24 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                         <th className="p-1.5">Status</th>
                       </tr></thead>
                       <tbody>
-                        {linhasResultado.map((r, i) => (
-                          <tr key={i} className="border-t">
-                            <td className="p-1.5 font-mono break-all">{r.tag || '—'}</td>
-                            <td className="p-1.5 font-mono break-all">{r.calculada || '—'}</td>
-                            <td className="p-1.5 font-mono break-all text-muted-foreground">{r.formula || '—'}</td>
-                            <td className="p-1.5">
-                              {r.ok
-                                ? <span className="text-emerald-600">OK</span>
-                                : <span className="text-destructive break-words">{r.erro}</span>}
-                            </td>
-                          </tr>
-                        ))}
+                        {linhasResultado.map((r, i) => {
+                          // Busca o nome da TAG calculada se o Auge retornar apenas o código
+                          const nomeCalculada = r.calculada || (r.cdTagCalculada ? `Cód. ${r.cdTagCalculada}` : '—');
+                          const formulaCalculada = r.formula || '—';
+                          
+                          return (
+                            <tr key={i} className="border-t">
+                              <td className="p-1.5 font-mono break-all">{r.tag || '—'}</td>
+                              <td className="p-1.5 font-mono break-all">{nomeCalculada}</td>
+                              <td className="p-1.5 font-mono break-all text-muted-foreground">{formulaCalculada}</td>
+                              <td className="p-1.5">
+                                {r.ok
+                                  ? <span className="text-emerald-600">OK</span>
+                                  : <span className="text-destructive break-words">{r.erro}</span>}
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
@@ -2115,8 +2122,9 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                         {resultado.augeRows.map((r: any, i: number) => {
                           const chave = String(r?.cdTagCustomizada ?? i);
                           const edicao = edicoesAuge[chave];
-                          const calculadaAtual = String(r?.dsTagCalculada ?? r?.dsTagTexto ?? '').trim();
-                          const formulaAtual = String(r?.dsFormula ?? '').trim();
+                          // dsTagCalculada e dsFormula vêm do lookup no backend (auge_tags_calculadas)
+                          const calculadaAtual = String(r?.dsTagCalculada || r?.nmTagCalculada || r?.dsTagTexto || '').trim();
+                          const formulaAtual = String(r?.dsFormula || r?.formula || '').trim();
                           return (
                             <tr key={chave} className="border-t align-top">
                               <td className="p-1.5 font-mono break-all">{r.dsTagCustomizada ?? r.nmTagCustomizada ?? '—'}</td>

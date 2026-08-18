@@ -5118,6 +5118,7 @@ Deno.serve(async (req) => {
           calculada: string;
           formula?: string;
           cdTagCustomizada?: string;
+          cdTagCalculada?: string;
           ok: boolean;
           erro?: string;
           auge?: any;
@@ -5243,6 +5244,7 @@ Deno.serve(async (req) => {
                 calculada: dsTagCalculada,
                 formula: dsFormula,
                 cdTagCustomizada: String(auge?.cdTagCustomizada ?? cdTagCustomizadaExistente ?? ''),
+                cdTagCalculada: cdCalculadaFinal,
                 ok: true,
                 auge,
               });
@@ -5283,7 +5285,30 @@ Deno.serve(async (req) => {
       // Tenta retornar o estado da primeira configuração do lote para manter compatibilidade com o preview
       let augeRows: any[] = [];
       try {
-        augeRows = await fetchListaTagsCustomizadas(auth, alvosValidos[0]);
+        const rows = await fetchListaTagsCustomizadas(auth, alvosValidos[0]);
+        // Faz o lookup dos nomes das tags calculadas para as linhas retornadas
+        const cdsParaLookup = Array.from(new Set(rows.map((r: any) => String(r.cdTagCalculada || '').trim()).filter(Boolean)));
+        if (cdsParaLookup.length) {
+          const { data: tagsInfo } = await admin
+            .from('auge_tags_calculadas')
+            .select('cd_tag, nm_tag, nome, descricao, formula')
+            .in('cd_tag', cdsParaLookup);
+          
+          const infoMap = new Map();
+          (tagsInfo ?? []).forEach((t: any) => infoMap.set(String(t.cd_tag), t));
+          
+          augeRows = rows.map((r: any) => {
+            const info = infoMap.get(String(r.cdTagCalculada));
+            return {
+              ...r,
+              nmTagCalculada: info?.nm_tag || info?.nome || info?.descricao || null,
+              dsTagCalculada: info?.nm_tag || info?.nome || info?.descricao || null,
+              dsFormula: info?.formula || null
+            };
+          });
+        } else {
+          augeRows = rows;
+        }
       } catch { /* ignore */ }
 
       return new Response(JSON.stringify({
