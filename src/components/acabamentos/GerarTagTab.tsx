@@ -1859,7 +1859,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
               {enviando ? <Loader2 className="h-4 w-4 animate-spin" /> : (modoEdicaoRelancamento ? <CheckCircle2 className="h-4 w-4" /> : <Plus className="h-4 w-4" />)}
               {enviando ? 'Gravando no Auge…' : (modoEdicaoRelancamento ? `Confirmar Alterações (${linhas.length})` : `Adicionar TAG Custom (${linhas.length})`)}
             </Button>
-            {obrigatoriasFaltando.length > 0 && (
+            {obrigatoriasFaltando.length > 0 && !modoEdicaoRelancamento && (
               <p className="text-[10px] text-destructive flex items-start gap-1">
                 <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
                 Obrigatório incluir: {obrigatoriasFaltando.map((o) => o.code).join(', ')}.
