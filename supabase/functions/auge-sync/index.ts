@@ -3817,7 +3817,7 @@ async function saveTagCustomizada(
     dsTagCustomizada: row.dsTagCustomizada ?? '',
     cdTagCalculada: row.cdTagCalculada ?? '',
     dsTextoLivre: row.cdTagCalculada ? '' : (row.dsTextoLivre ?? ''),
-    idAcao: row.cdTagCustomizada ? '2' : '1',
+    idAcao: row.cdTagCustomizada ? '2' : '1', // 1=Incluir, 2=Alterar
   };
   if (row.cdTagCustomizada) params.cdTagCustomizada = row.cdTagCustomizada;
   const body = new URLSearchParams(params);
@@ -5142,6 +5142,7 @@ Deno.serve(async (req) => {
           const dsTagCustomizada = String(it?.dsTagCustomizada ?? '').trim();
           const dsTagCalculada = String(it?.dsTagCalculada ?? '').trim();
           const dsFormula = String(it?.dsFormula ?? '').trim();
+          const idLinhaReal = String(it?.cdTagCustomizada ?? '').trim();
           
           if (!dsTagCustomizada) {
             results.push({
@@ -5158,14 +5159,17 @@ Deno.serve(async (req) => {
           
           // Lógica de "Somente uma por nome": se houver duplicatas no Auge com o mesmo nome, 
           // limpamos as extras para manter apenas a que o usuário definiu.
-          const registrosMesmoNome = tagsExistentes.filter(ext => {
-            const extValor = String(ext.dsTagCustomizada ?? ext.nmTagCustomizada ?? '').trim().toUpperCase().replace(/&/g, '').replace(/\s+/g, '');
-            return extValor === normCode;
-          });
+          // Em MODO DE EDIÇÃO (idLinhaReal presente), priorizamos a busca pelo ID real.
+          const registrosMesmoNome = idLinhaReal 
+            ? tagsExistentes.filter(ext => String(ext.cdTagCustomizada || ext.cdTagCustom || ext.id || '') === idLinhaReal)
+            : tagsExistentes.filter(ext => {
+                const extValor = String(ext.dsTagCustomizada || ext.nmTagCustomizada || '').trim().toUpperCase().replace(/&/g, '').replace(/\s+/g, '');
+                return extValor === normCode;
+              });
 
           // O registro principal será o primeiro encontrado ou o que o usuário já tinha
           let registroExistente = registrosMesmoNome[0];
-          const cdTagCustomizadaExistente = registroExistente ? String(registroExistente.cdTagCustomizada) : String(it?.cdTagCustomizada ?? '').trim();
+          const cdTagCustomizadaExistente = String(it?.cdTagCustomizada || registroExistente?.cdTagCustomizada || '').trim();
 
           // Se houver mais de um registro com o mesmo nome, excluímos os excedentes
           if (registrosMesmoNome.length > 1) {

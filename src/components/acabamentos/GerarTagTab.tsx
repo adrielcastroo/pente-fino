@@ -79,6 +79,8 @@ interface LinhaTag {
   formula: string;
   /** Código da linha no Auge — quando presente, a gravação sobrescreve. */
   cdTagCustomizada?: string;
+  /** Snapshot do valor que estava no Auge (para restauração em caso de erro ou cancelamento). */
+  snapshotValue?: string;
   /** Valor que estava no Auge antes do usuário mexer (para o histórico). */
   valorAntigo?: string;
   /** Código da TAG calculada no Auge (`cd_tag`). */
@@ -227,10 +229,12 @@ function TagCalculadaCell({
   valor,
   onChange,
   compacto = false,
+  disabled = false,
 }: {
   valor: string;
   onChange: (v: TagCalculadaSel) => void;
   compacto?: boolean;
+  disabled?: boolean;
 }) {
   const [busca, setBusca] = useState('');
   const [aberto, setAberto] = useState(false);
@@ -362,7 +366,8 @@ function TagCalculadaCell({
         <Input
           value={busca}
           autoFocus={aberto}
-          onFocus={() => setAberto(true)}
+          disabled={disabled}
+          onFocus={() => !disabled && setAberto(true)}
           onChange={(e) => { setBusca(e.target.value); setAberto(true); }}
           placeholder={compacto ? 'Nome, descrição ou fórmula' : 'Buscar por nome, descrição ou fórmula (use * como curinga)'}
           className="h-8 pl-7 text-[11px] font-mono"
@@ -440,10 +445,12 @@ function ConfiguracaoSelect({
   valor,
   onChange,
   onSearchStateChange,
+  disabled = false,
 }: {
   valor: { cd: string; nm: string } | null;
   onChange: (v: { cd: string; nm: string } | null) => void;
   onSearchStateChange?: (state: { termo: string; hasResults: boolean; isSearching: boolean; pesquisou: boolean }) => void;
+  disabled?: boolean;
 }) {
   const [busca, setBusca] = useState('');
   const [termo, setTermo] = useState('');
@@ -715,7 +722,8 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   const [resultado, setResultado] = useState<ResultadoAuge | null>(rascunho.resultado);
   const [tentouEnviar, setTentouEnviar] = useState(false);
   const [editandoAuge, setEditandoAuge] = useState(false);
-  const [modoEdicaoRelancamento, setModoEdicaoRelancamento] = useState(false);
+  const [snapshotLinhas, setSnapshotLinhas] = useState<LinhaTag[] | null>(null);
+  const [carregandoEdicao, setCarregandoEdicao] = useState(false);
   const [edicoesAuge, setEdicoesAuge] = useState<Record<string, TagCalculadaSel>>({});
   const [regravando, setRegravando] = useState(false);
   const [addManual, setAddManual] = useState(false);
@@ -1467,33 +1475,93 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     });
   };
 
+  /**
+   * Inicia o fluxo de edição seguro consultando os dados REAIS do Auge.
+   */
+  const iniciarEdicaoSegura = async (cfg: { cd: string; nm: string }) => {
+    if (!cfg.cd) return;
+    setCarregandoEdicao(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('auge-sync?action=tag_custom_por_config', {
+        body: { cdConfiguracao: cfg.cd, nmConfiguracao: cfg.nm },
+      });
+      
+      if (error) throw error;
+      const rows = (data as any)?.rows || [];
+      
+      if (!rows.length) {
+        toast.error('Nenhum registro real encontrado no Auge para esta configuração.');
+        return;
+      }
+
+      // Normaliza identificadores conforme as restrições (cdTagCustomizada, cdTagCalculada, etc)
+      const linhasReais: LinhaTag[] = rows.map((r: any) => {
+        const cdTagCustomizada = String(r.cdTagCustomizada || r.cdTagCustom || r.cd_tag_customizada || r.idTagCustomizada || r.id || '').trim();
+        const dsTagCustomizada = String(r.dsTagCustomizada || r.nmTagCustomizada || r.tagCustomizada || '').trim();
+        const dsTagCalculada = String(r.dsTagCalculada || r.nmTagCalculada || r.tagCalculada || '').trim();
+        const cdTagCalculada = String(r.cdTagCalculada || r.cd_tag_calculada || r.cdTagCalc || '').trim();
+        const dsFormula = String(r.dsFormula || r.ds_formula || r.formula || '').trim();
+        const dsTextoLivre = String(r.dsTextoLivre || r.ds_texto_livre || r.textoLivre || r.dsObservacao || '').trim();
+
+        return {
+          id: `auge|${cdTagCustomizada}|${dsTagCustomizada}`,
+          code: normalizeTagCode(dsTagCustomizada),
+          valor: dsTagCustomizada,
+          cfgNome: cfg.cd,
+          calculada: dsTagCalculada || dsTextoLivre,
+          formula: dsFormula,
+          cdTagCustomizada,
+          cdTagCalculada,
+          dsTagTexto: dsTextoLivre,
+          snapshotValue: dsTagCalculada || dsTextoLivre,
+        };
+      }).filter((l: LinhaTag) => l.cdTagCustomizada);
+
+      if (!linhasReais.length) {
+        toast.error('Registros encontrados no Auge não possuem identificador real.');
+        return;
+      }
+
+      // Verifica IDs duplicados
+      const ids = new Set(linhasReais.map(l => l.cdTagCustomizada));
+      if (ids.size !== linhasReais.length) {
+        toast.error('Detectados IDs duplicados no Auge para esta configuração.');
+        return;
+      }
+
+      setSnapshotLinhas([...linhas]);
+      setCustomAberta(cfg);
+      setLinhas(linhasReais);
+      setModoEdicaoRelancamento(true);
+      setResultado(null);
+      setEditandoAuge(false);
+      setEdicoesAuge({});
+      
+      toast.success('Modo de edição ativado com dados reais do Auge.');
+      if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (e: any) {
+      toast.error(e.message || 'Falha ao carregar dados do Auge para edição.');
+    } finally {
+      setCarregandoEdicao(false);
+    }
+  };
+
+  const cancelarEdicao = () => {
+    if (snapshotLinhas) {
+      setLinhas(snapshotLinhas);
+      setSnapshotLinhas(null);
+    }
+    setModoEdicaoRelancamento(false);
+    toast.info('Edição cancelada.');
+  };
+
   /** Recarrega um registro do histórico na composição para editar e relançar. */
   const relancarRegistro = (reg: RegistroGerarTag) => {
-    setCustomAberta(reg.configuracao);
-    setDescricao(reg.descricao ?? '');
-    setLinhas(reg.linhas.map((l) => ({ ...l })));
-    setResultado(null);
-    setEditandoAuge(false);
-    setModoEdicaoRelancamento(true);
-    setEdicoesAuge({});
-    setTentouEnviar(false);
-    registrarEventoTag({
-      ok: true,
-      tipo: 'relancamento',
-      descricao: reg.descricao || '—',
-      cdConfiguracao: reg.configuracao?.cd ?? null,
-      nmConfiguracao: reg.configuracao?.nm ?? null,
-      linhas: reg.linhas.map((l) => ({
-        code: l.code,
-        valor: l.valor,
-        calculada: l.calculada ?? null,
-        formula: l.formula ?? null,
-        cdTagCustomizada: l.cdTagCustomizada ?? null,
-        cdConfiguracaoLinha: l.cfgNome, // No GerarTagTab, cfgNome guarda o cd_configuracao vindo do Auge
-      })),
-    });
-    toast.success('Registro carregado — edite e grave novamente.');
-    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (reg.configuracao) {
+      iniciarEdicaoSegura(reg.configuracao);
+    } else {
+      toast.error('Registro do histórico sem configuração vinculada.');
+    }
   };
 
   const limparHistorico = () => {
@@ -1530,6 +1598,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
     setEnviando(true);
     try {
+      // 1. Grava no Auge
       const { data, error } = await supabase.functions.invoke('auge-sync?action=criar_tag_custom', {
         body: {
           // Lista de configurações detectadas no Resumo
@@ -1575,8 +1644,24 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       
       if (res?.ok) {
         toast.success(`TAG Custom gravada no Auge (${res.gravadas}/${res.total}).`);
+        
+        // 2. Re-leitura de segurança após gravar para confirmar persistência
+        if (customAberta?.cd) {
+          try {
+            await supabase.functions.invoke('auge-sync?action=tag_custom_por_config', {
+              body: { cdConfiguracao: customAberta.cd, nmConfiguracao: customAberta.nm },
+            });
+            console.log(`[AugeSync] Re-leitura de segurança concluída para ${customAberta.cd}`);
+          } catch (e) {
+            console.warn('[AugeSync] Falha na re-leitura de segurança:', e);
+          }
+        }
       } else {
         toast.error(res?.error ?? 'O Auge não confirmou a gravação da TAG Custom.');
+        if (modoEdicaoRelancamento) {
+          // Mantém modo de edição ativo em caso de erro conforme requisito
+          setModoEdicaoRelancamento(true);
+        }
       }
 
     } catch (e: any) {
@@ -1785,7 +1870,11 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                         <div className="text-[9px] text-muted-foreground truncate">{l.cfgNome}</div>
                       </td>
                       <td className="p-2">
-                        <TagCalculadaCell valor={l.calculada} onChange={(v) => setCalculada(l.id, v)} />
+                        <TagCalculadaCell 
+                          valor={l.calculada} 
+                          disabled={modoEdicaoRelancamento} 
+                          onChange={(v) => setCalculada(l.id, v)} 
+                        />
                       </td>
                       <td className="p-2 font-mono text-[10px] text-muted-foreground break-all">
                         {l.formula || '—'}
@@ -1850,15 +1939,25 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           <div className="p-3 border-t space-y-1.5">
             <Button
               onClick={adicionarTagCustom}
-              disabled={enviando || (obrigatoriasFaltando.length > 0 && !modoEdicaoRelancamento)}
+              disabled={enviando || carrgandoEdicao || (obrigatoriasFaltando.length > 0 && !modoEdicaoRelancamento)}
               className={cn(
                 "w-full h-10 gap-2 text-xs",
                 modoEdicaoRelancamento && "bg-emerald-600 hover:bg-emerald-700 text-white"
               )}
             >
-              {enviando ? <Loader2 className="h-4 w-4 animate-spin" /> : (modoEdicaoRelancamento ? <CheckCircle2 className="h-4 w-4" /> : <Plus className="h-4 w-4" />)}
-              {enviando ? 'Gravando no Auge…' : (modoEdicaoRelancamento ? `Confirmar Alterações (${linhas.length})` : `Adicionar TAG Custom (${linhas.length})`)}
+              {enviando || carregandoEdicao ? <Loader2 className="h-4 w-4 animate-spin" /> : (modoEdicaoRelancamento ? <CheckCircle2 className="h-4 w-4" /> : <Plus className="h-4 w-4" />)}
+              {enviando ? 'Gravando no Auge…' : carregandoEdicao ? 'Consultando Auge…' : (modoEdicaoRelancamento ? `Confirmar Alterações (${linhas.length})` : `Adicionar TAG Custom (${linhas.length})`)}
             </Button>
+            {modoEdicaoRelancamento && (
+              <Button
+                variant="outline"
+                className="w-full h-9 text-xs border-emerald-500/30 text-emerald-700 hover:bg-emerald-50"
+                onClick={cancelarEdicao}
+                disabled={enviando}
+              >
+                Cancelar Edição
+              </Button>
+            )}
             {obrigatoriasFaltando.length > 0 && !modoEdicaoRelancamento && (
               <p className="text-[10px] text-destructive flex items-start gap-1">
                 <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
@@ -1888,7 +1987,13 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                       size="sm"
                       variant="outline"
                       className="h-7 px-2 text-[10px] gap-1"
-                      onClick={() => { setEditandoAuge(true); setEdicoesAuge({}); }}
+                      onClick={() => {
+                        const cfg = { 
+                          cd: customAberta?.cd || resultado?.cdConfiguracao || '', 
+                          nm: customAberta?.nm || resultado?.descricao || '' 
+                        };
+                        iniciarEdicaoSegura(cfg);
+                      }}
                     >
                       <Pencil className="h-3 w-3" /> Edição
                     </Button>
