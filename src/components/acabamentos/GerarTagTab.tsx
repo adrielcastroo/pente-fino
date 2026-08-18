@@ -1725,11 +1725,19 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
       <div className="grid grid-cols-1 gap-4 items-start">
         {/* Tabela principal */}
-        <Card className="overflow-hidden">
+        <Card className={cn(
+          "overflow-hidden transition-all duration-300",
+          modoEdicaoRelancamento && "border-2 border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.1)]"
+        )}>
           <div className="p-3 border-b flex items-center justify-between gap-2">
-            <div className="text-xs font-semibold">
+            <div className="text-xs font-semibold flex items-center gap-2">
               Composição da TAG Custom
-              <span className="ml-2 text-[10px] font-normal text-muted-foreground">
+              {modoEdicaoRelancamento && (
+                <Badge className="bg-emerald-500 text-emerald-950 hover:bg-emerald-500 text-[9px] gap-1 animate-pulse">
+                  <Pencil className="h-2.5 w-2.5" /> MODO DE EDIÇÃO
+                </Badge>
+              )}
+              <span className="text-[10px] font-normal text-muted-foreground">
                 {linhas.length} TAG(s)
               </span>
             </div>
