@@ -2016,16 +2016,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
               </span>
             </div>
             <div className="flex items-center gap-1">
-              {onVerHistorico && (
-                <Button size="sm" variant="outline" className="h-7 px-2 text-[10px] gap-1" onClick={onVerHistorico}>
-                  <History className="h-3 w-3" /> Ver histórico completo
-                </Button>
-              )}
-              {historico.length > 0 && (
-                <Button size="sm" variant="ghost" className="h-7 px-2 text-[10px]" onClick={limparHistorico}>
-                  Limpar
-                </Button>
-              )}
+              {/* Botões "Ver histórico completo" e "Limpar" removidos conforme solicitado */}
             </div>
           </div>
 
