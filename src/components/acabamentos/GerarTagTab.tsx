@@ -1614,11 +1614,12 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       setResultado(res);
       setEdicoesAuge({});
       setEditandoAuge(false);
+      const configId = customAberta?.cd ?? resultado?.cdConfiguracao ?? null;
       registrarEventoTag({
         ok: res?.ok === true,
         tipo: 'edicao',
         descricao: (resultado?.descricao ?? descricao).trim() || descricaoFinal || '—',
-        cdConfiguracao: customAberta?.cd ?? resultado?.cdConfiguracao ?? null,
+        cdConfiguracao: configId,
         nmConfiguracao: customAberta?.nm ?? null,
         linhas: (itens as any[]).map((it, idx) => {
           // Buscamos o valor antigo na linha correspondente da UI
@@ -1630,12 +1631,9 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
             calculada: it.dsTagCalculada || null,
             formula: it.dsFormula || null,
             cdTagCustomizada: uiLine?.cdTagCustomizada || null,
-            cdConfiguracaoLinha: cdConfiguracao,
+            cdConfiguracaoLinha: configId,
           };
         }),
-        gravadas: res?.gravadas ?? null,
-        total: res?.total ?? null,
-        erro: res?.ok === false ? (res?.error ?? null) : null,
       });
       if (res?.ok) toast.success(`Edição gravada no Auge (${res.gravadas}/${res.total}).`);
       else toast.error(res?.error ?? 'O Auge não confirmou a edição.');
