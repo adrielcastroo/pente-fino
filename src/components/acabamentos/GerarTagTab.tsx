@@ -1997,7 +1997,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                   )}
                 </div>
                 <div className="flex items-center gap-1.5">
-                  {!!resultado.augeRows?.length && !editandoAuge && (
+                  {!!resultado.augeRows?.length && !editandoAuge && !modoEdicaoRelancamento && (
                     <Button
                       size="sm"
                       variant="outline"
