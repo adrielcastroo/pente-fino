@@ -105,6 +105,13 @@ interface ResultadoAuge {
   }>;
   augeRows?: any[];
   error?: string;
+  lote?: Array<{
+    configuracao: string;
+    ok: boolean;
+    total: number;
+    gravadas: number;
+    detalhes: any[];
+  }>;
 }
 
 /**
@@ -1552,8 +1559,10 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       setEdicoesAuge({});
       
       // O histórico registra o número REAL de configurações afetadas devolvido pelo Auge.
+      // Corrigimos aqui para passar o número real de configurações únicas afetadas
       // Se configsAlvo tinha 102 mas o Auge alterou 90, o total será 90.
-      registrarHistorico(res?.ok === true, res, 'criacao');
+      const totalConfiguracoesAfetadas = res?.lote?.length || (res?.ok ? configuracoesAlvo.length : 0);
+      registrarHistorico(res?.ok === true, { ...res, gravadas: totalConfiguracoesAfetadas, total: totalConfiguracoesAfetadas }, 'criacao');
       
       if (res?.ok) {
         toast.success(`TAG Custom gravada no Auge (${res.gravadas}/${res.total}).`);
