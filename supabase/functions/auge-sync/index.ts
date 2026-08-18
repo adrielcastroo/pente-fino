@@ -5239,10 +5239,14 @@ Deno.serve(async (req) => {
                 cdTagCalculada: cdCalculadaFinal,
                 dsTextoLivre,
               });
+              // Garante que o dsTagCalculada e dsFormula sejam retornados mesmo se o saveTagCustomizada for opaco
+              // e o registro vier do snapshot 'it' ou do lookup 'doEspelho'
+              const infoCalc = cdCalculadaFinal ? Array.from(codigoTemFormula.keys()).find(k => k === cdCalculadaFinal) : null;
+              
               results.push({
                 tag: dsTagCustomizada,
-                calculada: dsTagCalculada,
-                formula: dsFormula,
+                calculada: dsTagCalculada || (it?.nmTagCalculada) || '',
+                formula: dsFormula || (it?.dsFormula) || '',
                 cdTagCustomizada: String(auge?.cdTagCustomizada ?? cdTagCustomizadaExistente ?? ''),
                 cdTagCalculada: cdCalculadaFinal,
                 ok: true,
