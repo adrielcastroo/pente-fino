@@ -722,6 +722,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   const [resultado, setResultado] = useState<ResultadoAuge | null>(rascunho.resultado);
   const [tentouEnviar, setTentouEnviar] = useState(false);
   const [editandoAuge, setEditandoAuge] = useState(false);
+  const [modoEdicaoRelancamento, setModoEdicaoRelancamento] = useState(false);
   const [snapshotLinhas, setSnapshotLinhas] = useState<LinhaTag[] | null>(null);
   const [carregandoEdicao, setCarregandoEdicao] = useState(false);
   const [edicoesAuge, setEdicoesAuge] = useState<Record<string, TagCalculadaSel>>({});
@@ -1939,7 +1940,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           <div className="p-3 border-t space-y-1.5">
             <Button
               onClick={adicionarTagCustom}
-              disabled={enviando || carrgandoEdicao || (obrigatoriasFaltando.length > 0 && !modoEdicaoRelancamento)}
+              disabled={enviando || carregandoEdicao || (obrigatoriasFaltando.length > 0 && !modoEdicaoRelancamento)}
               className={cn(
                 "w-full h-10 gap-2 text-xs",
                 modoEdicaoRelancamento && "bg-emerald-600 hover:bg-emerald-700 text-white"
