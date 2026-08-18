@@ -22,10 +22,6 @@ export interface TagHistoricoLinha {
   calculada?: string | null;
   /** Fórmula da TAG Calculada, quando conhecida. */
   formula?: string | null;
-  /** Nome da configuração (persistido na linha para auditoria granular). */
-  nmConfiguracao?: string | null;
-  /** Código da configuração. */
-  cdConfiguracao?: string | null;
 }
 
 export interface TagHistoricoEvento {
@@ -132,22 +128,13 @@ export async function registrarEventoTag(
   try {
     const autor = await resolverAutor();
     if (!autor.id) return; // a política de escrita exige usuário autenticado
-    
-    // Normalização defensiva: se a linha não tem a configuração, herda do evento pai.
-    // Isso garante persistência granular mesmo em alterações em massa.
-    const linhasProcessadas = (evento.linhas ?? []).map(l => ({
-      ...l,
-      nmConfiguracao: l.nmConfiguracao || evento.nmConfiguracao || null,
-      cdConfiguracao: l.cdConfiguracao || evento.cdConfiguracao || null,
-    }));
-
     const { error } = await (supabase as any).from(TABELA).insert({
       tipo: evento.tipo,
       ok: evento.ok,
       descricao: evento.descricao || '—',
       cd_configuracao: evento.cdConfiguracao,
       nm_configuracao: evento.nmConfiguracao,
-      linhas: linhasProcessadas,
+      linhas: evento.linhas ?? [],
       gravadas: evento.gravadas ?? null,
       total: evento.total ?? null,
       erro: evento.erro ?? null,

@@ -11,7 +11,6 @@ import {
   RefreshCw, CheckCircle2, Tag as TagIcon, Filter
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { Pagination, usePagination } from '@/components/ui/pagination-simple';
 
 interface ScanRow {
   cd_configuracao: string;
@@ -266,14 +265,6 @@ export default function TagsTab() {
   const lastActivityMs = Math.max(lastScanMs, runStartMs);
   const isStalled = isActive && lastActivityMs > 0 && Date.now() - lastActivityMs > 90000;
 
-  const {
-    currentPage,
-    setCurrentPage,
-    pageSize,
-    setPageSize,
-    paginatedItems: listaPaginada,
-  } = usePagination(lista, 50);
-
   useEffect(() => {
     if (!isStalled) return;
     resumeRun(true);
@@ -283,7 +274,6 @@ export default function TagsTab() {
   const toggleSort = (col: 'nome' | 'codigo' | 'qtd') => {
     if (sortBy === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
     else { setSortBy(col); setSortDir('asc'); }
-    setCurrentPage(1);
   };
 
   return (
@@ -291,15 +281,15 @@ export default function TagsTab() {
       <Card className="p-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div>
-            <div className="text-[10px] uppercase text-muted-foreground">Monitoradas</div>
+            <div className="text-[10px] uppercase text-muted-foreground">Escaneadas</div>
             <div className="text-lg font-semibold font-mono">{totais.totalScan}</div>
           </div>
           <div>
-            <div className="text-[10px] uppercase text-muted-foreground">Lacunas Críticas</div>
+            <div className="text-[10px] uppercase text-muted-foreground">Sem TAG</div>
             <div className="text-lg font-semibold font-mono text-destructive">{totais.semTag}</div>
           </div>
           <div>
-            <div className="text-[10px] uppercase text-muted-foreground">Otimizadas</div>
+            <div className="text-[10px] uppercase text-muted-foreground">Com TAG</div>
             <div className="text-lg font-semibold font-mono text-emerald-500">{totais.comTag}</div>
           </div>
           <div>
@@ -316,8 +306,8 @@ export default function TagsTab() {
               run.status === 'error' ? <AlertTriangle className="h-4 w-4 text-destructive" /> :
               <CheckCircle2 className="h-4 w-4 text-emerald-500" />}
             <div className="text-xs font-semibold">
-              {isActive ? `Sincronizando com o Auge… ${run.detalhes?.phase ?? ''}` :
-                run.status === 'error' ? 'Atenção Necessária' : 'Integridade Validada'}
+              {isActive ? `Varrendo Auge… ${run.detalhes?.phase ?? ''}` :
+                run.status === 'error' ? 'Falhou' : 'Concluído'}
             </div>
             <div className="ml-auto text-[11px] font-mono text-muted-foreground">
               {current}/{total} · {totais.totalScan} config. · {totais.comTag} c/tag · {totais.semTag} s/tag · restam {totais.pendentes}
@@ -345,8 +335,8 @@ export default function TagsTab() {
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
               value={busca}
-              onChange={(e) => { setBusca(e.target.value); setCurrentPage(1); }}
-              placeholder="Localize configurações por nome, padrão técnico ou identificador…"
+              onChange={(e) => setBusca(e.target.value)}
+              placeholder="Buscar por configuração ou código…"
               className="h-9 pl-7 text-xs"
             />
           </div>
@@ -357,10 +347,10 @@ export default function TagsTab() {
                 key={f}
                 size="sm"
                 variant={filtro === f ? 'default' : 'ghost'}
-                onClick={() => { setFiltro(f); setCurrentPage(1); }}
+                onClick={() => setFiltro(f)}
                 className="h-7 text-[10px] px-2"
               >
-                {f === 'sem_tag' ? 'Pendentes' : f === 'com_tag' ? 'Configuradas' : 'Ver Tudo'}
+                {f === 'sem_tag' ? 'Sem TAG' : f === 'com_tag' ? 'Com TAG' : 'Todos'}
               </Button>
             ))}
           </div>
@@ -371,7 +361,7 @@ export default function TagsTab() {
           </Button>
         </div>
 
-        <div className="overflow-auto max-h-[60vh] rounded border">
+        <div className="overflow-auto max-h-[70vh] rounded border">
           <table className="w-full text-xs">
             <thead className="bg-muted sticky top-0 z-10">
               <tr className="text-left">
@@ -400,10 +390,10 @@ export default function TagsTab() {
               {isLoading && (
                 <tr><td colSpan={4} className="p-6 text-center"><Loader2 className="h-4 w-4 animate-spin inline" /></td></tr>
               )}
-              {listaPaginada.map((r) => {
+              {lista.map((r) => {
                 const tags = tagsByCfg[r.cd_configuracao] ?? [];
                 return (
-                  <tr key={r.cd_configuracao} className="border-t align-top hover:bg-muted/30 transition-colors duration-150 group">
+                  <tr key={r.cd_configuracao} className="border-t align-top hover:bg-muted/50">
                     <td className="p-2">
                       <div className="font-medium">{r.nm_configuracao ?? '—'}</div>
                       {r.erro && <div className="text-[10px] text-amber-500 mt-0.5">⚠ {r.erro}</div>}
@@ -449,14 +439,6 @@ export default function TagsTab() {
             </tbody>
           </table>
         </div>
-        <Pagination
-          totalItems={lista.length}
-          pageSize={pageSize}
-          currentPage={currentPage}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={setPageSize}
-          className="mt-2"
-        />
       </Card>
     </div>
   );

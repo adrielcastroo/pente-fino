@@ -26,8 +26,8 @@ describe('tag-search / normKey + tokenize + uniqTokens', () => {
     expect(normKey(null as unknown as string)).toBe('');
   });
 
-  it('tokenize mantém tokens com pelo menos 1 caractere', () => {
-    expect(tokenize('A B 12 CD')).toEqual(['a', 'b', '12', 'cd']);
+  it('tokenize remove tokens com menos de 2 caracteres', () => {
+    expect(tokenize('A B 12 CD')).toEqual(['12', 'cd']);
     expect(tokenize('')).toEqual([]);
   });
 
@@ -59,7 +59,6 @@ describe('tag-search / curingas SAP B1', () => {
   it('toIlikeTokens quebra AND por tokens (mantém capitalização)', () => {
     expect(toIlikeTokens('cortina*35*liso')).toEqual(['%cortina%', '%35%', '%liso%']);
     expect(toIlikeTokens('Rollo Pro')).toEqual(['%Rollo%', '%Pro%']);
-    expect(toIlikeTokens('T')).toEqual(['%T%']);
     expect(toIlikeTokens('')).toEqual([]);
   });
 
@@ -178,23 +177,22 @@ describe('tag-search / builders PostgREST', () => {
     expect(ilikeCacheKey('%foo%', ['%bar%'])).not.toBe(ilikeCacheKey('%foo%', ['%baz%']));
   });
 
-  it('ilikeOr monta lógica AND entre tokens (OR entre colunas para cada token)', () => {
-    const or = ilikeOr(['col1', 'col2'], '%preto%', ['%t45%']);
-    // PostgREST: or(col1.ilike."%t45%",col2.ilike."%t45%")
-    expect(or).toBe('or(col1.ilike."%t45%",col2.ilike."%t45%")');
-    
-    const orMulti = ilikeOr(['col1'], '', ['%A%', '%B%']);
-    expect(orMulti).toBe('or(col1.ilike."%A%"),or(col1.ilike."%B%")');
+  it('ilikeOr monta cláusulas separadas por vírgula (ordem coluna → padrão → tokens)', () => {
+    const or = ilikeOr(['nm_configuracao', 'ds_tag_customizada'], '%preto%', ['%t45%']);
+    expect(or).toBe(
+      'nm_configuracao.ilike."%preto%",nm_configuracao.ilike."%t45%",ds_tag_customizada.ilike."%preto%",ds_tag_customizada.ilike."%t45%"',
+    );
   });
 
   it('ilikeOr retorna string vazia sem padrão nem tokens', () => {
     expect(ilikeOr(['x'], '', [])).toBe('');
   });
 
-  it('ilikeAnd aplica AND estrito entre tokens (ignora padrão se tokens existirem)', () => {
+  it('ilikeAnd adiciona um ilike para o padrao + um por token', () => {
     const fakeQuery = { calls: [] as Array<[string, string]>, ilike(col: string, val: string) { this.calls.push([col, val]); return this; } };
     ilikeAnd(fakeQuery as any, 'nm_configuracao', '%foo%', ['%bar%', '%baz%']);
     expect(fakeQuery.calls).toEqual([
+      ['nm_configuracao', '%foo%'],
       ['nm_configuracao', '%bar%'],
       ['nm_configuracao', '%baz%'],
     ]);

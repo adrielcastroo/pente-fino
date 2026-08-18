@@ -12,7 +12,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Search, Loader2, Send, CheckCircle2, AlertTriangle, X, Trash2, Plus, FileSpreadsheet, Upload, Download, FileUp } from 'lucide-react';
 import { toast } from 'sonner';
-import { Pagination, usePagination } from '@/components/ui/pagination-simple';
 
 interface Acabamento {
   cd_acabamento: string;
@@ -253,14 +252,6 @@ export default function IncluirItemMassaTab() {
     );
   }, [acabamentos, busca]);
 
-  const {
-    currentPage,
-    setCurrentPage,
-    pageSize,
-    setPageSize,
-    paginatedItems: filtradosPaginados,
-  } = usePagination(filtrados, 25);
-
   const acabByCd = useMemo(() => {
     const m = new Map<string, Acabamento>();
     acabamentos.forEach((a) => m.set(a.cd_acabamento, a));
@@ -308,26 +299,6 @@ export default function IncluirItemMassaTab() {
       .map(([cd, list]) => ({ cd, list, acab: acabByCd.get(cd) }))
       .sort((a, b) => (a.acab?.nm_acabamento ?? '').localeCompare(b.acab?.nm_acabamento ?? ''));
   }, [vinculos, acabByCd]);
-
-  const {
-    currentPage: currentExcluir,
-    setCurrentPage: setCurrentExcluir,
-    pageSize: pageSizeExcluir,
-    setPageSize: setPageSizeExcluir,
-    paginatedItems: vinculosPaginados,
-  } = usePagination(vinculos, 50);
-
-  const vinculosGroupedPaginados = useMemo(() => {
-    const map = new Map<string, ItemVinculo[]>();
-    vinculosPaginados.forEach((v) => {
-      const arr = map.get(v.cd_acabamento) ?? [];
-      arr.push(v);
-      map.set(v.cd_acabamento, arr);
-    });
-    return Array.from(map.entries())
-      .map(([cd, list]) => ({ cd, list, acab: acabByCd.get(cd) }))
-      .sort((a, b) => (a.acab?.nm_acabamento ?? '').localeCompare(b.acab?.nm_acabamento ?? ''));
-  }, [vinculosPaginados, acabByCd]);
 
   useEffect(() => () => {
     if (channelRef.current) supabase.removeChannel(channelRef.current);
@@ -400,11 +371,10 @@ export default function IncluirItemMassaTab() {
     });
   };
 
-   const buscarVinculos = () => {
+  const buscarVinculos = () => {
     if (!codigoExcluir.trim()) return toast.error('Informe o código do item.');
     setSelecionadosExcluir(new Set());
     setCodigoBuscado(codigoExcluir.trim());
-    setCurrentExcluir(1);
   };
 
   const handleImportFile = async (file: File) => {
@@ -580,7 +550,7 @@ export default function IncluirItemMassaTab() {
           {/* Formulário do item */}
           <Card className="p-4 space-y-3 h-fit">
             <div className="flex items-center justify-between gap-2">
-              <div className="text-xs font-semibold uppercase tracking-wider text-primary">Inteligência de Importação</div>
+              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dados do item</div>
               <input
                 ref={importInputRef}
                 type="file"
@@ -701,7 +671,7 @@ export default function IncluirItemMassaTab() {
               <div className="flex items-center gap-2">
                 <div className="relative flex-1">
                   <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                  <Input value={busca} onChange={(e) => { setBusca(e.target.value); setCurrentPage(1); }} placeholder="Buscar acabamentos para incluir..." className="h-9 pl-7 text-xs" />
+                  <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar acabamentos para incluir..." className="h-9 pl-7 text-xs" />
                 </div>
                 <Button size="sm" variant="outline" onClick={toggleAllFiltrados} className="h-9 text-[11px]">
                   {filtrados.every((a) => selecionados.has(a.cd_acabamento)) ? 'Desmarcar' : 'Marcar'} filtrados
@@ -715,7 +685,7 @@ export default function IncluirItemMassaTab() {
               <div className="text-[10px] text-muted-foreground">{filtrados.length} de {acabamentos.length} · {selecionados.size} selecionados</div>
               <div className="max-h-[60vh] overflow-auto space-y-1">
                 {isLoading && <div className="p-6 text-center"><Loader2 className="h-4 w-4 animate-spin inline" /></div>}
-                {filtradosPaginados.map((a) => {
+                {filtrados.map((a) => {
                   const sel = selecionados.has(a.cd_acabamento);
                   return (
                     <button
@@ -736,15 +706,6 @@ export default function IncluirItemMassaTab() {
                   );
                 })}
               </div>
-              <Pagination
-                totalItems={filtrados.length}
-                pageSize={pageSize}
-                currentPage={currentPage}
-                onPageChange={setCurrentPage}
-                onPageSizeChange={setPageSize}
-                pageSizeOptions={[25, 50, 100]}
-                className="border-t pt-2"
-              />
             </Card>
           </div>
         </div>
@@ -811,7 +772,8 @@ export default function IncluirItemMassaTab() {
                     Nenhum acabamento encontrado com este item.
                   </div>
                 )}
-                {vinculosGroupedPaginados.map(({ cd, list, acab }) => {
+                {vinculosGrouped.map(({ cd, list, acab }) => {
+                  // exibe uma linha por vínculo (cd_acabamento_item)
                   return list.map((v) => {
                     const sel = selecionadosExcluir.has(v.cd_acabamento_item);
                     return (
@@ -840,14 +802,6 @@ export default function IncluirItemMassaTab() {
                   });
                 })}
               </div>
-              <Pagination
-                totalItems={vinculos.length}
-                pageSize={pageSizeExcluir}
-                currentPage={currentExcluir}
-                onPageChange={setCurrentExcluir}
-                onPageSizeChange={setPageSizeExcluir}
-                className="border-t pt-2"
-              />
             </Card>
           )}
         </div>
@@ -897,12 +851,12 @@ function ImportPlanilhaDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileSpreadsheet className="h-4 w-4 text-primary" />
-            Orquestração de Dados em Massa
+            Importar planilha em massa
           </DialogTitle>
           <DialogDescription className="text-xs">
-            Maximize sua produtividade enviando arquivos <code>.xlsx</code> ou <code>.csv</code>. 
-            Utilize a coluna <span className="font-semibold text-primary">Acabamentos</span> com códigos segmentados por <code>;</code> 
-            para garantir que cada item seja vinculado ao seu destino técnico com precisão absoluta.
+            Envie um arquivo <code>.xlsx</code>, <code>.csv</code> ou <code>.ods</code> ou baixe o modelo pronto.
+            Use a coluna <span className="font-semibold">Acabamentos</span> com códigos separados por <code>;</code>
+            para direcionar cada item aos seus acabamentos.
           </DialogDescription>
         </DialogHeader>
 
@@ -911,7 +865,7 @@ function ImportPlanilhaDialog({
             <FileUp className="h-10 w-10 text-muted-foreground" />
             <div className="text-center space-y-1">
               <div className="text-sm font-medium">Nenhum arquivo selecionado</div>
-              <div className="text-xs text-muted-foreground">Importe arquivos (.xlsx, .csv) para vincular múltiplos itens com precisão estratégica.</div>
+              <div className="text-xs text-muted-foreground">Escolha uma planilha ou baixe o modelo para começar.</div>
             </div>
             <div className="flex items-center gap-2">
               <Button onClick={onPickFile} className="gap-2">
@@ -1036,7 +990,7 @@ function ProgressCard({ run, results, total, current, pct, okCount, errCount, is
             <CheckCircle2 className="h-4 w-4 text-emerald-500" />}
           <div className="text-xs font-semibold">
             {isActive ? `${verbActive} item ${run.detalhes?.item ?? ''}…` :
-              run.status === 'error' ? 'Finalizado com Ressalvas' : 'Execução Concluída'}
+              run.status === 'error' ? 'Concluído com erros' : 'Concluído'}
           </div>
         </div>
         {!isActive && (

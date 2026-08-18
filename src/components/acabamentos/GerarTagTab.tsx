@@ -39,7 +39,6 @@ import {
   toIlikePattern,
   toIlikeTokens,
 } from '@/lib/tag-search';
-import { Pagination, usePagination } from '@/components/ui/pagination-simple';
 
 interface ConfiguracaoLite {
   cd_configuracao: string;
@@ -358,7 +357,7 @@ function TagCalculadaCell({
           autoFocus={aberto}
           onFocus={() => setAberto(true)}
           onChange={(e) => { setBusca(e.target.value); setAberto(true); }}
-          placeholder={compacto ? 'Nome, descrição ou fórmula' : 'Identifique a TAG pela descrição, fórmula ou código (use * como curinga)'}
+          placeholder={compacto ? 'Nome, descrição ou fórmula' : 'Buscar por nome, descrição ou fórmula (use * como curinga)'}
           className="h-8 pl-7 text-[11px] font-mono"
         />
       </div>
@@ -494,23 +493,13 @@ function ConfiguracaoSelect({
 
       await Promise.all(
         tabelas.map(async (tabela) => {
-          let q = (supabase as any)
+          const q = (supabase as any)
             .from(tabela)
             .select('cd_configuracao, nm_configuracao, qtd_tags');
           
-          // Aplicação direta de tokens (AND) no servidor para o dropdown
-          for (const t of tokens) {
-            if (t && t !== '%%') q = q.ilike('nm_configuracao', t);
-          }
-          
-          const { data, error } = await q.limit(1000);
-          if (!error && data) {
-            // Refiltro no cliente para acentos
-            const valid = (data as ConfiguracaoLite[]).filter(r => 
-              tokens.every(tk => matchesIlike(r.nm_configuracao ?? '', tk))
-            );
-            acumulado.push(...valid);
-          }
+          // Se houver tokens (AND), aplicamos a restrição total na query
+          const { data, error } = await ilikeAnd(q, 'nm_configuracao', padrao, tokens).limit(1000);
+          if (!error && data) acumulado.push(...(data as ConfiguracaoLite[]));
         }),
       );
 
@@ -724,7 +713,6 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   const [addManual, setAddManual] = useState(false);
   const [historico, setHistorico] = useState<RegistroGerarTag[]>([]);
   const [removidasManualmente, setRemovidasManualmente] = useState<Set<string>>(new Set());
-  const [configuracoesAtivas, setConfiguracoesAtivas] = useState<ConfiguracaoLite[]>([]);
   const [cfgSearch, setCfgSearch] = useState<{ termo: string; hasResults: boolean; isSearching: boolean; pesquisou: boolean }>({
     termo: '',
     hasResults: false,
@@ -845,7 +833,9 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       for (const t of tokensBusca) {
         qBase = qBase.ilike('nm_configuracao', t);
       }
-      
+      if (tokensBusca.length === 0 && padraoBusca) {
+        qBase = qBase.ilike('nm_configuracao', padraoBusca);
+      }
       const { data, error } = await qBase.limit(2000);
       if (!error) acc.push(...((data ?? []) as CustomTag[]));
 
@@ -949,54 +939,73 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     staleTime: 60 * 1000,
     queryFn: async () => {
       const termo = termoDeferido.trim();
+      const padrao = toIlikePattern(termo);
       const tokens = toIlikeTokens(termo);
 
       const map = new Map<string, ConfiguracaoLite>();
       const PAGE = 1000;
-      const MAX_PAGES = 5; // Limita a 5000 registros para evitar travamento de UI
+      const MAX = 80000;
 
-      for (let page = 0; page < MAX_PAGES; page++) {
-        const from = page * PAGE;
-        const to = from + PAGE - 1;
+      for (let from = 0; from < MAX; from += PAGE) {
+        // Fonte 1: auge_tag_custom_configuracoes (Configurações com TAGs vinculadas)
+        // CRITICAL: We MUST search only in nm_configuracao to respect the "Configuration" input filter
+        // CORREÇÃO: Aplicar ilikeAnd garante que todos os tokens sejam filtrados no SELECT
+        // Garantimos que o filtro seja aplicado APENAS em nm_configuracao para o bloco Resumo
+        let query1 = (supabase as any)
+          .from('auge_tag_custom_configuracoes')
+          .select('cd_configuracao, nm_configuracao');
+        
+        for (const t of tokens) {
+          query1 = query1.ilike('nm_configuracao', t);
+        }
+        if (tokens.length === 0 && padrao) {
+          query1 = query1.ilike('nm_configuracao', padrao);
+        }
 
-        // Buscamos em ambas as tabelas
-        const [res1, res2] = await Promise.all([
-          (async () => {
-            let q = (supabase as any).from('auge_tag_custom_configuracoes').select('cd_configuracao, nm_configuracao, qtd_tags');
-            for (const t of tokens) q = q.ilike('nm_configuracao', t);
-            return q.order('cd_configuracao', { ascending: true }).range(from, to);
-          })(),
-          (async () => {
-            let q = (supabase as any).from('auge_tag_custom_scan').select('cd_configuracao, nm_configuracao, qtd_tags');
-            for (const t of tokens) q = q.ilike('nm_configuracao', t);
-            return q.order('cd_configuracao', { ascending: true }).range(from, to);
-          })()
-        ]);
+        const res1 = await query1
+          .order('cd_configuracao', { ascending: true })
+          .range(from, from + PAGE - 1);
+        
+        let query2 = (supabase as any)
+          .from('auge_tag_custom_scan')
+          .select('cd_configuracao, nm_configuracao');
+          
+        for (const t of tokens) {
+          query2 = query2.ilike('nm_configuracao', t);
+        }
+        if (tokens.length === 0 && padrao) {
+          query2 = query2.ilike('nm_configuracao', padrao);
+        }
+
+        const res2 = await query2
+          .order('cd_configuracao', { ascending: true })
+          .range(from, from + PAGE - 1);
 
         const data1 = res1.data || [];
         const data2 = res2.data || [];
         const data = [...data1, ...data2];
         
-        if (data.length === 0) break;
+        if (data.length === 0 && from > 0) break;
 
         for (const r of data) {
           const cd = String(r.cd_configuracao ?? '').trim();
           if (!cd) continue;
           const nm = r.nm_configuracao ?? cd;
           
-          // Double-check no cliente (acentos/case)
-          if (tokens.every(tk => matchesIlike(nm, tk))) {
-            if (!map.has(cd)) {
-              map.set(cd, { 
-                cd_configuracao: cd, 
-                nm_configuracao: nm, 
-                qtd_tags: Number(r.qtd_tags || 0) 
-              });
-            }
+          // Validação extra no cliente para garantir 100% de precisão (lógica AND estrita)
+          // Normalizamos ambos para garantir que espaços e acentos não quebrem a busca
+          const nmNorm = nm.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+          const tokensNorm = tokens.map(t => t.replace(/%/g, '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
+          
+          const passaNoFiltro = tokensNorm.every(tk => nmNorm.includes(tk));
+          
+          if (!passaNoFiltro) continue;
+
+          if (!map.has(cd)) {
+            map.set(cd, { cd_configuracao: cd, nm_configuracao: nm, qtd_tags: 0 });
           }
         }
         
-        // Se ambos vieram com menos que a página, acabou
         if (data1.length < PAGE && data2.length < PAGE) break;
       }
 
@@ -1009,16 +1018,11 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
 
 
-  // Sincroniza as configurações ativas baseadas na busca e nas remoções manuais
-  useEffect(() => {
-    const ativas = configsMassa.filter(c => !removidasManualmente.has(c.cd_configuracao));
-    setConfiguracoesAtivas(ativas);
-  }, [configsMassa, removidasManualmente]);
 
-  // TAGs Custom existentes que casam com o termo pesquisado
+  // TAGs Custom existentes que casam com o termo pesquisado (removido lógica duplicada)
   const customsEncontradas = useMemo(() => {
-    return configuracoesAtivas.map(c => ({ cd: c.cd_configuracao, nm: c.nm_configuracao, qtd: c.qtd_tags }));
-  }, [configuracoesAtivas]);
+    return configsMassa.map(c => ({ cd: c.cd_configuracao, nm: c.nm_configuracao, qtd: c.qtd_tags }));
+  }, [configsMassa]);
 
   const { data: tagsDaCustom = [], isFetching: loadingCustom } = useQuery({
     queryKey: ['auge-tag-custom-detalhe', customAberta?.cd ?? ''],
@@ -1201,14 +1205,6 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       setLinhas([]);
     }
   }, [recomendadas, termoBusca, removidasManualmente]);
-
-  const {
-    currentPage,
-    setCurrentPage,
-    pageSize,
-    setPageSize,
-    paginatedItems: linhasPaginadas,
-  } = usePagination(linhas, 50);
 
   // ---------- Padrão obrigatório de TAGs ----------
   /**
@@ -1455,8 +1451,6 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         cdTagCustomizada: l.cdTagCustomizada ?? null,
         cdTagCalculada: l.cdTagCalculada ?? null,
         dsTagTexto: l.dsTagTexto ?? null,
-        nmConfiguracao: l.cfgNome || customAberta?.nm || null,
-        cdConfiguracao: customAberta?.cd || null,
       })),
       gravadas: res?.gravadas ?? null,
       total: res?.total ?? null,
@@ -1466,46 +1460,27 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
   /** Recarrega um registro do histórico na composição para editar e relançar. */
   const relancarRegistro = (reg: RegistroGerarTag) => {
-    // 1. Limpar estados de busca e resultados anteriores
-    setCfgSearch({ termo: '', hasResults: false, isSearching: false, pesquisou: false });
+    setCustomAberta(reg.configuracao);
+    setDescricao(reg.descricao ?? '');
+    setLinhas(reg.linhas.map((l) => ({ ...l })));
     setResultado(null);
     setEditandoAuge(false);
     setEdicoesAuge({});
     setTentouEnviar(false);
-    setRemovidasManualmente(new Set());
-
-    // 2. Restaurar configuração (nome/código)
-    setCustomAberta(reg.configuracao);
-    setDescricao(reg.descricao ?? '');
-    
-    // 3. Restaurar as linhas garantindo a integridade dos dados (códigos de tag e fórmulas)
-    // O id deve ser único para o React, mas preservamos os metadados para o relançamento.
-    const linhasRestauradas = reg.linhas.map((l) => ({ 
-      ...l,
-      id: `relanc|${Date.now()}|${l.code}|${Math.random().toString(36).slice(2, 5)}`
-    }));
-    
-    setLinhas(linhasRestauradas);
-
     registrarEventoTag({
       ok: true,
       tipo: 'relancamento',
       descricao: reg.descricao || '—',
       cdConfiguracao: reg.configuracao?.cd ?? null,
       nmConfiguracao: reg.configuracao?.nm ?? null,
-      linhas: linhasRestauradas.map((l) => ({
+      linhas: reg.linhas.map((l) => ({
         code: l.code,
         valor: l.valor,
         calculada: l.calculada ?? null,
         formula: l.formula ?? null,
-        cdTagCalculada: l.cdTagCalculada ?? null,
-        dsTagTexto: l.dsTagTexto ?? null,
-        nmConfiguracao: l.cfgNome || reg.configuracao?.nm || null,
-        cdConfiguracao: reg.configuracao?.cd || null,
       })),
     });
-
-    toast.success('Composição carregada — os valores originais foram restaurados para edição.');
+    toast.success('Registro carregado — edite e grave novamente.');
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -1520,7 +1495,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     
     const configuracoesAlvo = Array.from(
       new Set(
-        configuracoesAtivas
+        [...resumoConfigs, ...configsMassa]
           .map((cfg) => String(cfg.cd_configuracao ?? '').trim())
           .filter(Boolean)
       )
@@ -1644,6 +1619,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         cdConfiguracao: customAberta?.cd ?? resultado?.cdConfiguracao ?? null,
         nmConfiguracao: customAberta?.nm ?? null,
         linhas: (itens as any[]).map((it, idx) => {
+          // Buscamos o valor antigo na linha correspondente da UI
           const uiLine = linhas.find(l => l.valor === it.dsTagCustomizada);
           return {
             code: uiLine?.code || null,
@@ -1651,8 +1627,6 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
             valor_antigo: uiLine?.valorAntigo || null,
             calculada: it.dsTagCalculada || null,
             formula: it.dsFormula || null,
-            nmConfiguracao: uiLine?.cfgNome || customAberta?.nm || null,
-            cdConfiguracao: customAberta?.cd || null,
           };
         }),
         gravadas: res?.gravadas ?? null,
@@ -1675,8 +1649,8 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     <div className="space-y-4">
       {/* Espelha o diálogo "Manter Tag Customizada" do Auge */}
       <Card className="p-4 space-y-4">
-        <div className="text-xs font-semibold uppercase tracking-wider text-primary flex items-center gap-2">
-          <Wand2 className="h-3.5 w-3.5" /> Motor de Configuração de TAGs Custom
+        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+          <Wand2 className="h-3.5 w-3.5" /> Manter Tag Customizada
         </div>
 
         {/* Configuração: busca a TAG Custom (configuração) existente */}
@@ -1692,9 +1666,11 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
             onChange={(v) => setCustomAberta(v)}
             onSearchStateChange={setCfgSearch}
           />
-          <p className="text-[10px] text-muted-foreground leading-relaxed">
-            Identifique o padrão técnico (ex.: <code className="font-mono text-primary">Rollo Pro</code>) para que o sistema orquestre automaticamente as configurações e TAGs vinculadas no bloco de Resumo. Você possui autoridade total para <span className="text-foreground font-semibold">incluir, excluir e editar</span> a composição global no Auge de forma centralizada e estratégica.
-            <span className="font-semibold text-foreground ml-1">Dica Pro:</span> Utilize <code className="font-mono text-primary">*</code> para buscas flexíveis padrão SAP B1.
+          <p className="text-[10px] text-muted-foreground">
+            Digite aqui (ex.: <code className="font-mono">Rollo Pro</code>) — o sistema reconhecerá todas as configurações 
+            e TAGs correspondentes e as listará no bloco "Resumo" abaixo automaticamente. O usuário terá capacidade de 
+            poder incluir, excluir, editar e alterar todas as configurações que estão exibidas no bloco "resumo" de uma vez só no Auge.
+            <span className="font-semibold text-foreground"> Curinga:</span> <code className="font-mono">*</code> como no SAP B1.
           </p>
         </div>
 
@@ -1720,16 +1696,6 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           customAberta={customAberta}
           setCustomAberta={setCustomAberta}
           obrigatoriasCount={obrigatorias.length}
-          configuracoesAtivas={configuracoesAtivas}
-          onRemove={(cd) => setRemovidasManualmente(prev => new Set(prev).add(cd))}
-          onClear={() => {
-            const allCodes = configuracoesAtivas.map(c => c.cd_configuracao);
-            setRemovidasManualmente(prev => {
-              const next = new Set(prev);
-              allCodes.forEach(cd => next.add(cd));
-              return next;
-            });
-          }}
         />
       </Card>
 
@@ -1758,9 +1724,9 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
             )}
           </div>
 
-          <div className="overflow-x-auto max-h-[60vh] overflow-y-auto">
+          <div className="overflow-x-auto">
             <table className="w-full text-xs">
-              <thead className="bg-muted sticky top-0 z-10">
+              <thead className="bg-muted">
                 <tr className="text-left">
                   <th className="p-2 w-[32%]">Tag Configurada</th>
                   <th className="p-2 w-[34%]">Tag Calculada</th>
@@ -1769,7 +1735,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                 </tr>
               </thead>
               <tbody>
-                {linhasPaginadas.map((l) => {
+                {linhas.map((l) => {
                   const obrigatoria = obrigatorias.some((o) => o.code === l.code);
                   return (
                     <tr key={l.id} className="border-t align-top">
@@ -1811,7 +1777,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                 {linhas.length === 0 && !addManual && (
                   <tr>
                     <td colSpan={4} className="p-6 text-center text-muted-foreground text-[11px]">
-                      Aguardando composição. Utilize o buscador acima para definir o padrão técnico.
+                      Nenhuma TAG adicionada à composição.
                     </td>
                   </tr>
                 )}
@@ -1842,14 +1808,6 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
               </tbody>
             </table>
           </div>
-          <Pagination
-            totalItems={linhas.length}
-            pageSize={pageSize}
-            currentPage={currentPage}
-            onPageChange={setCurrentPage}
-            onPageSizeChange={setPageSize}
-            className="px-3 py-1 border-t"
-          />
 
 
           <div className="p-3 border-t space-y-1.5">
@@ -1859,7 +1817,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
               className="w-full h-10 gap-2 text-xs"
             >
               {enviando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-              {enviando ? 'Sincronizando com o Auge…' : `Consolidar Configuração Global (${linhas.length})`}
+              {enviando ? 'Gravando no Auge…' : `Adicionar TAG Custom (${linhas.length})`}
             </Button>
             {obrigatoriasFaltando.length > 0 && (
               <p className="text-[10px] text-destructive flex items-start gap-1">
@@ -1877,7 +1835,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                 <div className="text-[10px] uppercase flex items-center gap-1 font-semibold">
                   {resultado.ok
                     ? <><CheckCircle2 className="h-3 w-3 text-emerald-600" /> Gravada no Auge</>
-                    : <><AlertTriangle className="h-3 3 text-destructive" /> Divergência Técnica na Gravação</>}
+                    : <><AlertTriangle className="h-3 w-3 text-destructive" /> Falha na gravação</>}
                   {typeof resultado.gravadas === 'number' && (
                     <Badge variant="outline" className="text-[9px]">
                       {resultado.gravadas}/{resultado.total} ok
@@ -1978,7 +1936,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
               {!!resultado.augeRows?.length && (
                 <div className="space-y-1">
                   <div className="text-[9px] uppercase text-muted-foreground flex items-center gap-1.5">
-                    Persistência de Dados no Auge
+                    Como ficou no Auge
                     {editandoAuge && (
                       <Badge variant="outline" className="text-[8px] border-blue-500/50 text-blue-700 dark:text-blue-400">
                         edição — a TAG calculada antiga será substituída
@@ -2038,87 +1996,72 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         {/* Últimos registros: as 10 últimas alterações feitas nesta aba */}
         <Card className="overflow-hidden">
           <div className="p-3 border-b flex items-center justify-between gap-2">
-            <div className="text-xs font-semibold flex items-center gap-1.5 uppercase tracking-wider text-muted-foreground">
-              <History className="h-3.5 w-3.5" />
+            <div className="text-xs font-semibold flex items-center gap-1.5">
+              <History className="h-3.5 w-3.5 text-muted-foreground" />
               Últimos registros
-              <span className="text-[10px] font-normal lowercase">
-                ({historico.length})
+              <span className="text-[10px] font-normal text-muted-foreground">
+                {historico.length}/{HISTORICO_MAX}
               </span>
+            </div>
+            <div className="flex items-center gap-1">
+              {onVerHistorico && (
+                <Button size="sm" variant="outline" className="h-7 px-2 text-[10px] gap-1" onClick={onVerHistorico}>
+                  <History className="h-3 w-3" /> Ver histórico completo
+                </Button>
+              )}
+              {historico.length > 0 && (
+                <Button size="sm" variant="ghost" className="h-7 px-2 text-[10px]" onClick={limparHistorico}>
+                  Limpar
+                </Button>
+              )}
             </div>
           </div>
 
           {historico.length === 0 ? (
             <div className="p-6 text-center text-[11px] text-muted-foreground">
-              Nenhum lançamento recente nesta sessão.
+              Nenhum lançamento ainda. Ao gravar uma TAG Custom, ela aparece aqui para reedição.
             </div>
           ) : (
-            <div className="divide-y max-h-[500px] overflow-y-auto">
+            <div className="divide-y">
               {historico.map((reg) => (
-                <div key={reg.id} className="p-3 space-y-3 bg-muted/5 hover:bg-muted/10 transition-colors">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5 flex-wrap mb-1">
-                        {reg.ok
-                          ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                          : <AlertTriangle className="h-3.5 w-3.5 text-destructive shrink-0" />}
-                        <span className="text-[11px] font-bold break-all">{reg.descricao || '—'}</span>
-                        <Badge variant="outline" className="text-[9px] h-4">{reg.linhas.length} TAG(s)</Badge>
-                      </div>
-                      
-                      <div className="text-[10px] text-muted-foreground font-mono flex items-center gap-2">
-                        <span>{formatarData(reg.em)}</span>
-                        {reg.configuracao?.nm && (
-                          <>
-                            <span>·</span>
-                            <span className="truncate max-w-[200px]">{reg.configuracao.nm}</span>
-                          </>
-                        )}
-                      </div>
+                <div key={reg.id} className="p-3 flex items-start justify-between gap-3">
+                  <div className="min-w-0 space-y-1">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {reg.ok
+                        ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                        : <AlertTriangle className="h-3.5 w-3.5 text-destructive shrink-0" />}
+                      <span className="text-[11px] font-medium break-all">{reg.descricao || '—'}</span>
+                      <Badge variant="outline" className="text-[9px]">{reg.linhas.length} TAG(s)</Badge>
+                      <span className="text-[9px] text-muted-foreground">{formatarData(reg.em)}</span>
                     </div>
-
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-7 px-2 text-[10px] gap-1 shrink-0 border-primary/20 text-primary hover:bg-primary/5"
-                      onClick={() => relancarRegistro(reg)}
-                    >
-                      <Pencil className="h-3 w-3" /> Editar e relançar
-                    </Button>
+                    {reg.configuracao?.nm && (
+                      <div className="text-[9px] text-muted-foreground break-all">
+                        Configuração: {reg.configuracao.nm}
+                      </div>
+                    )}
+                    <div className="flex flex-wrap gap-1">
+                      {reg.linhas.slice(0, 8).map((l) => (
+                        <span
+                          key={l.id}
+                          title={l.calculada ? `${l.valor} = ${l.calculada}` : l.valor}
+                          className="rounded border bg-muted/50 px-1.5 py-0.5 font-mono text-[9px]"
+                        >
+                          {l.code}
+                        </span>
+                      ))}
+                      {reg.linhas.length > 8 && (
+                        <span className="text-[9px] text-muted-foreground">+{reg.linhas.length - 8}</span>
+                      )}
+                    </div>
                   </div>
-
-                  {/* Visualização de composição similar ao histórico consolidado (Auditoria) */}
-                  <details className="group border rounded-md bg-background/50 overflow-hidden">
-                    <summary className="p-2 text-[10px] font-medium text-primary cursor-pointer hover:bg-muted/30 list-none flex items-center gap-1.5">
-                      <ChevronRight className="h-3 w-3 transition-transform group-open:rotate-90" />
-                      Ver composição técnica
-                    </summary>
-                    <div className="border-t overflow-x-auto">
-                      <table className="w-full text-[10px]">
-                        <thead className="bg-muted/50">
-                          <tr className="text-left">
-                            <th className="p-1.5 text-blue-600 font-bold whitespace-nowrap min-w-[60px]">TAG</th>
-                            <th className="p-1.5 whitespace-nowrap min-w-[150px]">Configurada</th>
-                            <th className="p-1.5 text-emerald-600 font-bold whitespace-nowrap min-w-[150px]">Calculada</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y">
-                          {reg.linhas.map((l, i) => (
-                            <tr key={i} className="hover:bg-muted/20">
-                              <td className="p-1.5 font-mono font-bold text-blue-600">
-                                {l.code || '—'}
-                              </td>
-                              <td className="p-1.5 font-mono text-muted-foreground break-all">
-                                {l.valor || '—'}
-                              </td>
-                              <td className="p-1.5 font-mono font-bold text-emerald-600 break-all">
-                                {l.calculada || '—'}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </details>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 px-2 text-[10px] gap-1 shrink-0"
+                    onClick={() => relancarRegistro(reg)}
+                  >
+                    <Pencil className="h-3 w-3" /> Editar e relançar
+                  </Button>
                 </div>
               ))}
             </div>

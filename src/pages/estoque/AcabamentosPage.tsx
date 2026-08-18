@@ -18,7 +18,6 @@ import IncluirItemMassaTab from '@/components/acabamentos/IncluirItemMassaTab';
 import TagsTab from '@/components/acabamentos/TagsTab';
 import GerarTagTab from '@/components/acabamentos/GerarTagTab';
 import HistoricoTagsTab from '@/components/acabamentos/HistoricoTagsTab';
-import { Pagination, usePagination } from '@/components/ui/pagination-simple';
 
 interface SyncRun {
   id: string;
@@ -183,13 +182,6 @@ export default function AcabamentosPage() {
     return arr;
   }, [acabamentos, busca, sortBy, sortDir]);
 
-  const {
-    currentPage,
-    setCurrentPage,
-    pageSize,
-    setPageSize,
-    paginatedItems: filtradosPaginados,
-  } = usePagination(filtrados, 25);
 
   const acabSelObj = acabamentos.find((a: any) => a.cd_acabamento === acabSel);
 
@@ -235,7 +227,7 @@ export default function AcabamentosPage() {
   return (
     <div className="p-4 md:p-6 space-y-4">
       <PageHeader
-        title="Gestão de Acabamentos"
+        title="Acabamentos"
         actions={
           <div className="flex items-center gap-2">
             {run && !showPanel && (
@@ -252,11 +244,11 @@ export default function AcabamentosPage() {
 
       <Tabs value={tab} onValueChange={setTab} className="space-y-4">
         <TabsList className="grid grid-cols-2 md:grid-cols-5 w-full md:w-auto">
-          <TabsTrigger value="consulta" className="text-xs">Consulta de Itens</TabsTrigger>
-          <TabsTrigger value="massa" className="text-xs">Ações em Massa</TabsTrigger>
-          <TabsTrigger value="tags" className="text-xs">Monitor de TAGs</TabsTrigger>
-          <TabsTrigger value="gerar" className="text-xs">Configurar TAG Custom</TabsTrigger>
-          <TabsTrigger value="historico" className="text-xs">Auditoria e Histórico</TabsTrigger>
+          <TabsTrigger value="consulta" className="text-xs">Consulta</TabsTrigger>
+          <TabsTrigger value="massa" className="text-xs">Incluir em massa</TabsTrigger>
+          <TabsTrigger value="tags" className="text-xs">TAGs</TabsTrigger>
+          <TabsTrigger value="gerar" className="text-xs">Gerar TAG</TabsTrigger>
+          <TabsTrigger value="historico" className="text-xs">Histórico</TabsTrigger>
         </TabsList>
 
         <TabsContent value="consulta" className="space-y-4 mt-0">
@@ -331,7 +323,7 @@ export default function AcabamentosPage() {
         <Card className="p-3 space-y-3">
           <div className="relative">
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input value={busca} onChange={(e) => { setBusca(e.target.value); setCurrentPage(1); }} placeholder="Buscar acabamento..." className="h-9 pl-7 text-xs" />
+            <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar acabamento..." className="h-9 pl-7 text-xs" />
           </div>
           <div className="flex items-center justify-between gap-2">
             <div className="text-[10px] text-muted-foreground">{filtrados.length} de {acabamentos.length}</div>
@@ -342,7 +334,6 @@ export default function AcabamentosPage() {
                 onClick={() => {
                   if (sortBy === 'nome') setSortDir(d => d === 'asc' ? 'desc' : 'asc');
                   else { setSortBy('nome'); setSortDir('asc'); }
-                  setCurrentPage(1);
                 }}
                 className="h-7 px-2 gap-1 text-[10px]"
                 title="Ordenar por descrição"
@@ -356,7 +347,6 @@ export default function AcabamentosPage() {
                 onClick={() => {
                   if (sortBy === 'codigo') setSortDir(d => d === 'asc' ? 'desc' : 'asc');
                   else { setSortBy('codigo'); setSortDir('asc'); }
-                  setCurrentPage(1);
                 }}
                 className="h-7 px-2 gap-1 text-[10px]"
                 title="Ordenar por código"
@@ -366,13 +356,13 @@ export default function AcabamentosPage() {
               </Button>
             </div>
           </div>
-          <div className="max-h-[60vh] overflow-auto space-y-1 pr-2">
+          <div className="max-h-[70vh] overflow-auto space-y-1">
             {isLoading && <div className="p-4 text-center"><Loader2 className="h-4 w-4 animate-spin inline" /></div>}
-            {filtradosPaginados.map((a: any) => (
+            {filtrados.map((a: any) => (
               <button
                 key={a.cd_acabamento}
                 onClick={() => setAcabSel(a.cd_acabamento)}
-                className={`w-full text-left rounded-lg border p-3 text-xs transition-all duration-200 group active:scale-[0.98] ${acabSel === a.cd_acabamento ? 'bg-primary/10 border-primary shadow-sm ring-1 ring-primary/20' : 'hover:bg-muted hover:border-muted-foreground/30'}`}
+                className={`w-full text-left rounded border p-2 text-xs transition ${acabSel === a.cd_acabamento ? 'bg-primary/10 border-primary' : 'hover:bg-muted'}`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
@@ -390,15 +380,6 @@ export default function AcabamentosPage() {
               <div className="p-4 text-center text-xs text-muted-foreground">Nenhum acabamento. Rode a sincronização.</div>
             )}
           </div>
-          <Pagination
-            totalItems={filtrados.length}
-            pageSize={pageSize}
-            currentPage={currentPage}
-            onPageChange={setCurrentPage}
-            onPageSizeChange={setPageSize}
-            pageSizeOptions={[25, 50, 100]}
-            className="border-t pt-2"
-          />
         </Card>
 
         <Card className="overflow-hidden">

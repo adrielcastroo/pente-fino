@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import {
   History, Search, CheckCircle2, AlertTriangle, Trash2, Tag as TagIcon,
-  ChevronRight, Loader2, RefreshCw, User,
+  ChevronRight, Loader2, RefreshCw, User, ArrowLeftCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -23,7 +23,6 @@ import {
   removerGrupoTag,
   registrarEventoTag,
 } from '@/lib/tag-historico';
-import { Pagination, usePagination } from '@/components/ui/pagination-simple';
 
 /**
  * Aba "Histórico": consolida todas as ações e edições feitas nas TAGs Custom
@@ -73,14 +72,6 @@ export default function HistoricoTagsTab() {
     );
   }, [grupos, busca]);
 
-  const {
-    currentPage,
-    setCurrentPage,
-    pageSize,
-    setPageSize,
-    paginatedItems: listaPaginada,
-  } = usePagination(lista, 25);
-
   const grupoAberto: TagHistoricoGrupo | null = useMemo(
     () => (chaveAberta ? grupos.find((g) => g.chave === chaveAberta) ?? null : null),
     [chaveAberta, grupos],
@@ -101,18 +92,11 @@ export default function HistoricoTagsTab() {
     }
   };
 
-  const restaurarOriginalAuge = async (ev: any) => {
+  const reverterPara = async (ev: any) => {
     if (!ev.linhas || ev.linhas.length === 0) {
-      toast.error('Este registro não possui dados de composição para restaurar.');
+      toast.error('Este registro não possui dados de composição para reverter.');
       return;
     }
-
-    const temOriginal = ev.linhas.some((l: any) => l.valor_antigo !== undefined && l.valor_antigo !== null);
-    if (!temOriginal) {
-      toast.error('Não há registros do valor original do Auge para este histórico.');
-      return;
-    }
-
     setRevertendo(ev.id);
     try {
       const { data, error } = await supabase.functions.invoke('auge-sync?action=criar_tag_custom', {
@@ -120,35 +104,33 @@ export default function HistoricoTagsTab() {
           cdConfiguracao: ev.cdConfiguracao,
           descricao: ev.descricao,
           itens: ev.linhas.map((l: any) => ({
-            dsTagCustomizada: l.valor_antigo || '',
-            dsTagCalculada: '', // Remove a calculada para voltar ao padrão Auge
-            dsFormula: '',      // Remove a fórmula
-            dsTagTexto: l.valor_antigo || '',
+            dsTagCustomizada: l.valor,
+            dsTagCalculada: l.calculada || '',
+            dsFormula: l.formula || '',
+            dsTagTexto: l.calculada ? '' : l.valor,
           })),
         },
       });
-
       if (error) throw error;
       const res = data as any;
-
       if (res?.ok) {
-        toast.success(`Valores originais do Auge restaurados com sucesso (${res.gravadas}/${res.total}).`);
+        toast.success(`Configuração revertida com sucesso no Auge (${res.gravadas}/${res.total}).`);
         await registrarEventoTag({
           ok: true,
           tipo: 'reversao',
-          descricao: `[RESTAURO AUGE] ${ev.descricao}`,
+          descricao: ev.descricao,
           cdConfiguracao: ev.cdConfiguracao,
           nmConfiguracao: ev.nmConfiguracao,
-          linhas: ev.linhas.map((l: any) => ({ ...l, valor: l.valor_antigo || '' })),
+          linhas: ev.linhas,
           gravadas: res.gravadas,
           total: res.total,
         });
         qc.invalidateQueries({ queryKey: ['tag-custom-historico'] });
       } else {
-        throw new Error(res?.error || 'O Auge não confirmou o restauro.');
+        throw new Error(res?.error || 'O Auge não confirmou a reversão.');
       }
     } catch (e: any) {
-      toast.error(e?.message || 'Falha ao restaurar valores no Auge.');
+      toast.error(e?.message || 'Falha ao reverter no Auge.');
     } finally {
       setRevertendo(null);
     }
@@ -187,7 +169,7 @@ export default function HistoricoTagsTab() {
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
               value={busca}
-              onChange={(e) => { setBusca(e.target.value); setCurrentPage(1); }}
+              onChange={(e) => setBusca(e.target.value)}
               placeholder="Buscar por TAG Custom, configuração ou autor…"
               className="h-9 pl-7 text-xs"
             />
@@ -210,52 +192,42 @@ export default function HistoricoTagsTab() {
           <div className="p-8 text-center text-[11px] text-muted-foreground">
             <History className="h-5 w-5 mx-auto mb-2 opacity-50" />
             {eventos.length === 0
-              ? 'Nenhum registro encontrado. Suas ações de configuração e edição de TAGs Custom serão listadas aqui em tempo real para auditoria da equipe.'
+              ? 'Nenhuma ação registrada ainda. Ao gravar ou editar uma TAG Custom na aba "Gerar TAG", ela aparece aqui para toda a equipe.'
               : 'Nenhuma TAG Custom encontrada para esta busca.'}
           </div>
         ) : (
-          <>
-            <div className="divide-y max-h-[60vh] overflow-auto">
-              {listaPaginada.map((g) => (
-                <button
-                  key={g.chave}
-                  type="button"
-                  onClick={() => setChaveAberta(g.chave)}
-                  className="w-full text-left p-3 flex items-center justify-between gap-3 hover:bg-muted/50 transition-colors"
-                >
-                  <div className="min-w-0 space-y-1">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <TagIcon className="h-3.5 w-3.5 text-primary shrink-0" />
-                      <span className="text-[11px] font-medium break-all">{g.descricao}</span>
-                      <Badge variant="outline" className="text-[9px]">{g.totalEventos} ação(ões)</Badge>
-                      {g.erros > 0 && (
-                        <Badge variant="destructive" className="text-[9px]">{g.erros} falha(s)</Badge>
-                      )}
-                    </div>
-                    <div className="text-[9px] text-muted-foreground break-all">
-                      {g.nmConfiguracao ? `Configuração: ${g.nmConfiguracao}` : 'Sem configuração'}
-                      {' · '}Última: {formatarDataTag(g.ultimoEm)}
-                      {g.autores.length > 0 && ` · ${g.autores.join(', ')}`}
-                    </div>
+          <div className="divide-y">
+            {lista.map((g) => (
+              <button
+                key={g.chave}
+                type="button"
+                onClick={() => setChaveAberta(g.chave)}
+                className="w-full text-left p-3 flex items-center justify-between gap-3 hover:bg-muted/50 transition-colors"
+              >
+                <div className="min-w-0 space-y-1">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <TagIcon className="h-3.5 w-3.5 text-primary shrink-0" />
+                    <span className="text-[11px] font-medium break-all">{g.descricao}</span>
+                    <Badge variant="outline" className="text-[9px]">{g.totalEventos} ação(ões)</Badge>
+                    {g.erros > 0 && (
+                      <Badge variant="destructive" className="text-[9px]">{g.erros} falha(s)</Badge>
+                    )}
                   </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                </button>
-              ))}
-            </div>
-            <Pagination
-              totalItems={lista.length}
-              pageSize={pageSize}
-              currentPage={currentPage}
-              onPageChange={setCurrentPage}
-              onPageSizeChange={setPageSize}
-              className="p-3 border-t"
-            />
-          </>
+                  <div className="text-[9px] text-muted-foreground break-all">
+                    {g.nmConfiguracao ? `Configuração: ${g.nmConfiguracao}` : 'Sem configuração'}
+                    {' · '}Última: {formatarDataTag(g.ultimoEm)}
+                    {g.autores.length > 0 && ` · ${g.autores.join(', ')}`}
+                  </div>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+              </button>
+            ))}
+          </div>
         )}
       </Card>
 
       <Dialog open={!!grupoAberto} onOpenChange={(v) => !v && setChaveAberta(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-[90vw] lg:max-w-[1400px] max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col p-0 gap-0">
           <DialogHeader className="p-5 sm:p-6 pb-4 sm:pb-4 mb-0">
             <DialogTitle className="flex items-center gap-2 flex-wrap">
               <TagIcon className="h-4 w-4 text-primary" />
@@ -301,21 +273,34 @@ export default function HistoricoTagsTab() {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="h-7 px-2 text-[10px] gap-1 hover:bg-emerald-500/10 hover:text-emerald-600 hover:border-emerald-500/50"
-                          onClick={() => restaurarOriginalAuge(ev)}
+                          className="h-7 px-2 text-[10px] gap-1 hover:bg-amber-500/10 hover:text-amber-600 hover:border-amber-500/50"
+                          onClick={() => reverterPara(ev)}
                           disabled={!!revertendo}
                         >
                           {revertendo === ev.id ? (
                             <Loader2 className="h-3 w-3 animate-spin" />
                           ) : (
-                            <RefreshCw className="h-3 w-3" />
+                            <ArrowLeftCircle className="h-3 w-3" />
                           )
                           }
-                          Restaurar Original Auge
+                          Reverter para este estado
                         </Button>
                       )}
                     </div>
 
+                    {ev.ok && ev.linhas.length > 0 && (
+                      <div className="flex justify-end">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 px-2 text-[10px] gap-1 hover:bg-primary/10 border-primary/20 text-primary"
+                          onClick={() => setEventoParaAuditoria(ev)}
+                        >
+                          <CheckCircle2 className="h-3 w-3" />
+                          Ver Apenas Alteradas
+                        </Button>
+                      </div>
+                    )}
                   </div>
 
                   {ev.erro && (
@@ -335,35 +320,31 @@ export default function HistoricoTagsTab() {
                           <table className="w-full text-[10px]">
                             <thead className="bg-muted">
                               <tr className="text-left">
-                                <th className="p-2 text-blue-600 font-bold whitespace-nowrap min-w-[200px]">Configuração (TAG Custom)</th>
-                                <th className="p-2 whitespace-nowrap min-w-[120px]">Anterior (Auge)</th>
-                                <th className="p-2 whitespace-nowrap min-w-[120px]">Tag Configurada</th>
-                                <th className="p-2 text-emerald-600 font-bold text-[11px] whitespace-nowrap min-w-[200px]">TAG Calculada (Implementada)</th>
+                                <th className="p-1.5">TAG Custom</th>
+                                <th className="p-1.5">Anterior (Auge)</th>
+                                <th className="p-1.5">TAG Calculada</th>
+                                <th className="p-1.5">Fórmula</th>
                               </tr>
                             </thead>
                             <tbody>
                               {ev.linhas
                                 .filter(l => filtroAlteradas === ev.id ? l.valor !== l.valor_antigo : true)
-                                  .map((l, i) => {
-                                    const nm = l.nmConfiguracao || ev.nmConfiguracao || grupoAberto?.nmConfiguracao;
-                                    const cd = l.cdConfiguracao || ev.cdConfiguracao || grupoAberto?.cdConfiguracao;
-                                    return (
-                                      <tr key={i} className={`border-t align-top ${l.valor !== l.valor_antigo ? 'bg-emerald-500/5' : 'bg-background/50'}`}>
-                                        <td className="p-2 font-mono font-bold text-blue-600 whitespace-nowrap">
-                                          {nm || '—'} {cd ? `[${cd}]` : ''}
-                                        </td>
-                                        <td className="p-2 font-mono text-muted-foreground whitespace-nowrap">
-                                          {l.valor_antigo || '—'}
-                                        </td>
-                                        <td className={`p-2 font-mono font-medium whitespace-nowrap ${l.valor !== l.valor_antigo ? 'text-emerald-600 bg-emerald-500/5' : 'text-foreground'}`}>
-                                          {l.valor || '—'}
-                                        </td>
-                                        <td className={`p-2 font-mono font-bold whitespace-nowrap ${l.valor !== l.valor_antigo ? 'text-emerald-600' : 'text-muted-foreground'}`}>
-                                          {l.calculada || '—'}
-                                        </td>
-                                      </tr>
-                                    );
-                                  })}
+                                .map((l, i) => (
+                                  <tr key={i} className={`border-t align-top ${l.valor !== l.valor_antigo ? 'bg-emerald-500/5' : 'bg-background/50'}`}>
+                                    <td className="p-1.5 font-mono break-all font-semibold">
+                                      {l.valor || '—'}
+                                    </td>
+                                    <td className="p-1.5 font-mono break-all text-muted-foreground">
+                                      {l.valor_antigo || '—'}
+                                    </td>
+                                    <td className={`p-1.5 font-mono break-all font-medium ${l.valor !== l.valor_antigo ? 'text-emerald-600' : 'text-foreground'}`}>
+                                      {l.calculada || '—'}
+                                    </td>
+                                    <td className="p-1.5 font-mono break-all text-muted-foreground italic">
+                                      {l.formula || '—'}
+                                    </td>
+                                  </tr>
+                                ))}
 
                             </tbody>
                           </table>
@@ -399,81 +380,69 @@ export default function HistoricoTagsTab() {
         </DialogContent>
       </Dialog>
       <Dialog open={!!eventoParaAuditoria} onOpenChange={(v) => !v && setEventoParaAuditoria(null)}>
-        <DialogContent className="max-w-[95vw] w-full sm:w-[85vw] md:w-[75vw] lg:w-[1200px] max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0 border-primary/20 shadow-2xl">
-          <DialogHeader className="p-4 sm:p-5 border-b bg-muted/30">
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col p-0 gap-0 border-primary/20 shadow-2xl">
+          <DialogHeader className="p-5 sm:p-6 pb-4 border-b bg-muted/30">
             <DialogTitle className="flex items-center gap-2 flex-wrap text-primary">
               <CheckCircle2 className="h-5 w-5" />
               Auditoria de Impacto
+              <Badge variant="outline" className="ml-2 text-[10px] uppercase border-primary/30">
+                TAGs Custom Alteradas
+              </Badge>
             </DialogTitle>
-            <div className="mt-1 text-xs text-muted-foreground">
-              <p className="font-semibold text-[11px] mb-1">
-                Auditoria detalhada da composição de TAGs. Visualize as alterações, verifique os valores calculados vs. configurados e valide a integridade dos dados implementados.
-              </p>
-
+            <p className="text-xs text-muted-foreground mt-1">
               Exibindo as TAGs Custom que sofreram alteração real de valor na operação de {formatarDataTag(eventoParaAuditoria?.em)}.
-            </div>
+            </p>
           </DialogHeader>
 
-          <ScrollArea className="flex-1">
+          <ScrollArea className="flex-1 p-5">
             {eventoParaAuditoria && (
-              <div className="min-w-max p-4">
-                <div className="rounded border bg-card overflow-hidden">
-                  <table className="w-full text-[10px] sm:text-[11px] border-collapse">
-                    <thead className="bg-muted text-muted-foreground">
-                      <tr className="text-left border-b">
-                        <th className="p-2 sm:p-3 font-bold uppercase tracking-wider text-blue-600 whitespace-nowrap">Configuração (TAG Custom)</th>
-                        <th className="p-2 sm:p-3 font-medium uppercase tracking-wider whitespace-nowrap">TAG Calculada</th>
-                        <th className="p-2 sm:p-3 font-medium uppercase tracking-wider whitespace-nowrap">Vlr. Antigo</th>
-                        <th className="p-2 sm:p-3 font-medium uppercase tracking-wider text-emerald-600 whitespace-nowrap">Vlr. Atual</th>
-                        <th className="p-2 sm:p-3 font-bold uppercase tracking-wider text-emerald-700 whitespace-nowrap">Implementado (Fórmula)</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y">
-                      {eventoParaAuditoria.linhas
-                        .filter((l: any) => l.valor !== l.valor_antigo)
-                        .map((l: any, i: number) => {
-                          const configNome = l.nmConfiguracao || eventoParaAuditoria?.nmConfiguracao || grupoAberto?.nmConfiguracao;
-                          const configCodigo = l.cdConfiguracao || eventoParaAuditoria?.cdConfiguracao || grupoAberto?.cdConfiguracao;
-                          
-                          return (
-                            <tr key={i} className="hover:bg-muted/30 transition-colors border-b">
-                              <td className="p-2 sm:p-3 font-mono font-bold text-blue-600 bg-blue-500/5 whitespace-nowrap">
-                                {configNome || '—'} {configCodigo ? `[${configCodigo}]` : ''}
-                              </td>
-                              <td className="p-2 sm:p-3 font-mono font-medium text-foreground whitespace-nowrap">
-                                {l.valor || '—'}
-                              </td>
-                              <td className="p-2 sm:p-3 font-mono text-muted-foreground line-through decoration-destructive/30 whitespace-nowrap">
-                                {l.valor_antigo || '—'}
-                              </td>
-                              <td className="p-2 sm:p-3 font-mono font-semibold text-emerald-600 bg-emerald-500/5 whitespace-nowrap">
-                                {l.valor || '—'}
-                              </td>
-                              <td className="p-2 sm:p-3 font-mono font-bold text-emerald-700 bg-emerald-500/10 whitespace-nowrap">
-                                {l.calculada || '—'}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      {eventoParaAuditoria.linhas.filter((l: any) => l.valor !== l.valor_antigo).length === 0 && (
-                        <tr>
-                          <td colSpan={5} className="p-6 text-center text-muted-foreground italic">
-                            Nenhuma alteração real de valor detectada neste registro.
+              <div className="rounded border bg-card">
+                <table className="w-full text-[11px]">
+                  <thead className="bg-muted text-muted-foreground">
+                    <tr className="text-left border-b">
+                      <th className="p-3 font-medium uppercase tracking-wider">TAG Custom</th>
+                      <th className="p-3 font-medium uppercase tracking-wider">Anterior (Auge)</th>
+                      <th className="p-3 font-medium uppercase tracking-wider text-emerald-600">TAG Calculada</th>
+                      <th className="p-3 font-medium uppercase tracking-wider">Fórmula</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {eventoParaAuditoria.linhas
+                      .filter((l: any) => l.valor !== l.valor_antigo)
+                      .map((l: any, i: number) => (
+                        <tr key={i} className="hover:bg-muted/30 transition-colors">
+                          <td className="p-3 font-mono font-bold text-primary">
+                            {l.valor || '—'}
+                          </td>
+                          <td className="p-3 font-mono text-muted-foreground line-through decoration-destructive/30">
+                            {l.valor_antigo || '—'}
+                          </td>
+                          <td className="p-3 font-mono font-semibold text-emerald-600 bg-emerald-500/5">
+                            {l.calculada || '—'}
+                          </td>
+                          <td className="p-3 font-mono text-muted-foreground italic text-[10px]">
+                            {l.formula || '—'}
                           </td>
                         </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                      ))}
+                    {eventoParaAuditoria.linhas.filter((l: any) => l.valor !== l.valor_antigo).length === 0 && (
+                      <tr>
+                        <td colSpan={4} className="p-8 text-center text-muted-foreground italic">
+                          Nenhuma alteração real de valor detectada neste registro.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             )}
           </ScrollArea>
           
-          <div className="p-3 sm:p-4 border-t bg-muted/30 flex justify-between items-center px-4 sm:px-6">
-            <div className="text-[10px] sm:text-[11px] text-muted-foreground font-medium">
-              Impacto: <span className="text-primary font-bold">{eventoParaAuditoria?.linhas?.filter((l: any) => l.valor !== l.valor_antigo).length || 0}</span> TAGs
+          <div className="p-4 border-t bg-muted/30 flex justify-between items-center px-6">
+            <div className="text-[11px] text-muted-foreground font-medium">
+              Total de Impacto: <span className="text-primary">{eventoParaAuditoria?.linhas?.filter((l: any) => l.valor !== l.valor_antigo).length || 0}</span> TAGs Custom alteradas
             </div>
-            <Button size="sm" onClick={() => setEventoParaAuditoria(null)} className="h-8 px-4 text-[11px]">
+            <Button size="sm" onClick={() => setEventoParaAuditoria(null)} className="h-8 px-4 text-xs">
               Fechar Auditoria
             </Button>
           </div>
