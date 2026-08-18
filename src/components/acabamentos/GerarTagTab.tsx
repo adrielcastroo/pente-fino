@@ -2076,18 +2076,24 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                         <th className="p-1.5">Status</th>
                       </tr></thead>
                       <tbody>
-                        {linhasResultado.map((r, i) => (
-                          <tr key={i} className="border-t">
-                            <td className="p-1.5 font-mono break-all">{r.tag || '—'}</td>
-                            <td className="p-1.5 font-mono break-all">{r.calculada || '—'}</td>
-                            <td className="p-1.5 font-mono break-all text-muted-foreground">{r.formula || '—'}</td>
-                            <td className="p-1.5">
-                              {r.ok
-                                ? <span className="text-emerald-600">OK</span>
-                                : <span className="text-destructive break-words">{r.erro}</span>}
-                            </td>
-                          </tr>
-                        ))}
+                        {linhasResultado.map((r, i) => {
+                          // Busca o nome da TAG calculada se o Auge retornar apenas o código
+                          const nomeCalculada = r.calculada || (r.cdTagCalculada ? `Cód. ${r.cdTagCalculada}` : '—');
+                          const formulaCalculada = r.formula || '—';
+                          
+                          return (
+                            <tr key={i} className="border-t">
+                              <td className="p-1.5 font-mono break-all">{r.tag || '—'}</td>
+                              <td className="p-1.5 font-mono break-all">{nomeCalculada}</td>
+                              <td className="p-1.5 font-mono break-all text-muted-foreground">{formulaCalculada}</td>
+                              <td className="p-1.5">
+                                {r.ok
+                                  ? <span className="text-emerald-600">OK</span>
+                                  : <span className="text-destructive break-words">{r.erro}</span>}
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
