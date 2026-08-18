@@ -3837,10 +3837,27 @@ async function saveTagCustomizada(
   return j;
 }
 
-
-
+async function deleteTagCustomizada(auth: any, cdConfiguracao: string, cdTagCustomizada: string): Promise<any> {
+  const body = new URLSearchParams({
+    idAcao: '3',
+    cdConfiguracao,
+    cdTagCustomizada,
+  });
+  const txt = await postAugePhp(
+    auth,
+    '/l.unilux/modInventario/tag/controle/ctlTagCustomizada.php',
+    body,
+    '/l.unilux/modInventario/tag/manterTagCustomizada.php',
+  );
+  let j: any = { message: txt };
+  try { j = JSON.parse(txt); } catch { /* mantém texto cru */ }
+  const msg = typeof j?.message === 'string' ? j.message : '';
+  if (msg && !/sucesso/i.test(msg)) throw new Error(msg);
+  return j;
+}
 
 function mapAcabamentoRow(r: any) {
+
   return {
     cd_acabamento: String(r.cdAcabamento),
     nr_acabamento: r.nrAcabamento ?? null,
@@ -5138,8 +5155,29 @@ Deno.serve(async (req) => {
           }
 
           const normCode = dsTagCustomizada.toUpperCase().replace(/&/g, '').replace(/\s+/g, '');
-          const registroExistente = mapaExistentes.get(normCode);
+          
+          // Lógica de "Somente uma por nome": se houver duplicatas no Auge com o mesmo nome, 
+          // limpamos as extras para manter apenas a que o usuário definiu.
+          const registrosMesmoNome = tagsExistentes.filter(ext => {
+            const extValor = String(ext.dsTagCustomizada ?? ext.nmTagCustomizada ?? '').trim().toUpperCase().replace(/&/g, '').replace(/\s+/g, '');
+            return extValor === normCode;
+          });
+
+          // O registro principal será o primeiro encontrado ou o que o usuário já tinha
+          let registroExistente = registrosMesmoNome[0];
           const cdTagCustomizadaExistente = registroExistente ? String(registroExistente.cdTagCustomizada) : String(it?.cdTagCustomizada ?? '').trim();
+
+          // Se houver mais de um registro com o mesmo nome, excluímos os excedentes
+          if (registrosMesmoNome.length > 1) {
+            console.log(`[cdConfiguracao ${cdConfiguracao}] Detectadas ${registrosMesmoNome.length} tags duplicadas para "${dsTagCustomizada}". Removendo excedentes...`);
+            for (let i = 1; i < registrosMesmoNome.length; i++) {
+              try {
+                await deleteTagCustomizada(auth, cdConfiguracao, String(registrosMesmoNome[i].cdTagCustomizada));
+              } catch (e) {
+                console.warn(`Erro ao remover tag duplicada ${registrosMesmoNome[i].cdTagCustomizada}:`, getErrorMessage(e));
+              }
+            }
+          }
 
           const doEspelho = dsTagCalculada ? (mapaCalculadas.get(dsTagCalculada.toLowerCase()) ?? []) : [];
           const informado = String(it?.cdTagCalculada ?? '').trim();
@@ -5163,6 +5201,7 @@ Deno.serve(async (req) => {
             });
             continue;
           }
+
 
           const tentativas = candidatos.length ? candidatos : [''];
           let gravou = false;
