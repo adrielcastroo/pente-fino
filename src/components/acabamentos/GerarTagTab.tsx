@@ -1725,6 +1725,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       setResultado(res);
       setEdicoesAuge({});
       setEditandoAuge(false);
+      setSnapshotLinhas(null);
       const configId = customAberta?.cd ?? resultado?.cdConfiguracao ?? null;
       registrarEventoTag({
         ok: res?.ok === true,
@@ -1733,15 +1734,14 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         cdConfiguracao: configId,
         nmConfiguracao: customAberta?.nm ?? null,
         linhas: (itens as any[]).map((it, idx) => {
-          // Buscamos o valor antigo na linha correspondente da UI
-          const uiLine = linhas.find(l => l.valor === it.dsTagCustomizada);
+          const uiLine = snapshotLinhas?.find(l => l.valor === it.dsTagCustomizada) || linhas.find(l => l.valor === it.dsTagCustomizada);
           return {
             code: uiLine?.code || null,
             valor: it.dsTagCustomizada,
             valor_antigo: uiLine?.valorAntigo || null,
             calculada: it.dsTagCalculada || null,
             formula: it.dsFormula || null,
-            cdTagCustomizada: uiLine?.cdTagCustomizada || null,
+            cdTagCustomizada: it.cdTagCustomizada || uiLine?.cdTagCustomizada || null,
             cdConfiguracaoLinha: configId,
           };
         }),
