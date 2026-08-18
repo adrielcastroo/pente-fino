@@ -1642,8 +1642,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       registrarHistorico(res?.ok === true, { 
         ...res, 
         gravadas: totalConfiguracoesAfetadas, 
-        total: totalConfiguracoesAfetadas,
-        tipo: modoEdicaoRelancamento ? 'edicao' : 'criacao'
+        total: totalConfiguracoesAfetadas 
       }, modoEdicaoRelancamento ? 'edicao' : 'criacao');
       
       if (res?.ok) {
