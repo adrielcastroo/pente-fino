@@ -1451,6 +1451,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         cdTagCustomizada: l.cdTagCustomizada ?? null,
         cdTagCalculada: l.cdTagCalculada ?? null,
         dsTagTexto: l.dsTagTexto ?? null,
+        cdConfiguracaoLinha: l.cfgNome, // Código técnico da configuração
       })),
       gravadas: res?.gravadas ?? null,
       total: res?.total ?? null,
