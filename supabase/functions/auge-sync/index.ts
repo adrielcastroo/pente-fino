@@ -3837,10 +3837,27 @@ async function saveTagCustomizada(
   return j;
 }
 
-
-
+async function deleteTagCustomizada(auth: any, cdConfiguracao: string, cdTagCustomizada: string): Promise<any> {
+  const body = new URLSearchParams({
+    idAcao: '3',
+    cdConfiguracao,
+    cdTagCustomizada,
+  });
+  const txt = await postAugePhp(
+    auth,
+    '/l.unilux/modInventario/tag/controle/ctlTagCustomizada.php',
+    body,
+    '/l.unilux/modInventario/tag/manterTagCustomizada.php',
+  );
+  let j: any = { message: txt };
+  try { j = JSON.parse(txt); } catch { /* mantém texto cru */ }
+  const msg = typeof j?.message === 'string' ? j.message : '';
+  if (msg && !/sucesso/i.test(msg)) throw new Error(msg);
+  return j;
+}
 
 function mapAcabamentoRow(r: any) {
+
   return {
     cd_acabamento: String(r.cdAcabamento),
     nr_acabamento: r.nrAcabamento ?? null,
