@@ -1451,6 +1451,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         cdTagCustomizada: l.cdTagCustomizada ?? null,
         cdTagCalculada: l.cdTagCalculada ?? null,
         dsTagTexto: l.dsTagTexto ?? null,
+        cdConfiguracaoLinha: l.cfgNome, // Código técnico da configuração
       })),
       gravadas: res?.gravadas ?? null,
       total: res?.total ?? null,
@@ -1479,6 +1480,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         calculada: l.calculada ?? null,
         formula: l.formula ?? null,
         cdTagCustomizada: l.cdTagCustomizada ?? null,
+        cdConfiguracaoLinha: l.cfgNome, // No GerarTagTab, cfgNome guarda o cd_configuracao vindo do Auge
       })),
     });
     toast.success('Registro carregado — edite e grave novamente.');
@@ -1613,11 +1615,12 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       setResultado(res);
       setEdicoesAuge({});
       setEditandoAuge(false);
+      const configId = customAberta?.cd ?? resultado?.cdConfiguracao ?? null;
       registrarEventoTag({
         ok: res?.ok === true,
         tipo: 'edicao',
         descricao: (resultado?.descricao ?? descricao).trim() || descricaoFinal || '—',
-        cdConfiguracao: customAberta?.cd ?? resultado?.cdConfiguracao ?? null,
+        cdConfiguracao: configId,
         nmConfiguracao: customAberta?.nm ?? null,
         linhas: (itens as any[]).map((it, idx) => {
           // Buscamos o valor antigo na linha correspondente da UI
@@ -1629,11 +1632,9 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
             calculada: it.dsTagCalculada || null,
             formula: it.dsFormula || null,
             cdTagCustomizada: uiLine?.cdTagCustomizada || null,
+            cdConfiguracaoLinha: configId,
           };
         }),
-        gravadas: res?.gravadas ?? null,
-        total: res?.total ?? null,
-        erro: res?.ok === false ? (res?.error ?? null) : null,
       });
       if (res?.ok) toast.success(`Edição gravada no Auge (${res.gravadas}/${res.total}).`);
       else toast.error(res?.error ?? 'O Auge não confirmou a edição.');
