@@ -1746,7 +1746,11 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                 size="sm"
                 variant="ghost"
                 className="h-7 px-2 text-[10px]"
-                onClick={() => { setLinhas([]); setResultado(null); }}
+                onClick={() => { 
+                  setLinhas([]); 
+                  setResultado(null); 
+                  setModoEdicaoRelancamento(false);
+                }}
               >
                 Limpar
               </Button>
