@@ -319,7 +319,7 @@ export default function HistoricoTagsTab() {
                                 .map((l, i) => (
                                   <tr key={i} className={`border-t align-top ${l.valor !== l.valor_antigo ? 'bg-emerald-500/5' : 'bg-background/50'}`}>
                                     <td className="p-1.5 font-mono break-all font-semibold">
-                                      {l.valor || '—'}
+                                      {l.cdTagCustomizada || l.code || '—'}
                                     </td>
                                     <td className="p-1.5 font-mono break-all text-muted-foreground">
                                       {l.valor_antigo || '—'}
