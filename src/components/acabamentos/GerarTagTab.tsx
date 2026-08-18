@@ -1783,6 +1783,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
             valor={customAberta}
             onChange={(v) => setCustomAberta(v)}
             onSearchStateChange={setCfgSearch}
+            disabled={modoEdicaoRelancamento}
           />
           <p className="text-[10px] text-muted-foreground">
             Digite aqui (ex.: <code className="font-mono">Rollo Pro</code>) — o sistema reconhecerá todas as configurações 
