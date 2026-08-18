@@ -1564,6 +1564,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       const res = data as ResultadoAuge;
       setResultado(res);
       setEditandoAuge(false);
+      setModoEdicaoRelancamento(false);
       setEdicoesAuge({});
       
       // O histórico registra o número REAL de configurações afetadas devolvido pelo Auge.
