@@ -2061,6 +2061,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                       tag: l.valor,
                       calculada: l.calculada,
                       formula: l.formula,
+                      cdTagCalculada: l.cdTagCalculada,
                       ok: false,
                       erro: resultado.error ?? 'Sem retorno detalhado do Auge para esta linha.',
                     }));
