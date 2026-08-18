@@ -1478,6 +1478,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         valor: l.valor,
         calculada: l.calculada ?? null,
         formula: l.formula ?? null,
+        cdTagCustomizada: l.cdTagCustomizada ?? null,
       })),
     });
     toast.success('Registro carregado — edite e grave novamente.');
@@ -1627,6 +1628,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
             valor_antigo: uiLine?.valorAntigo || null,
             calculada: it.dsTagCalculada || null,
             formula: it.dsFormula || null,
+            cdTagCustomizada: uiLine?.cdTagCustomizada || null,
           };
         }),
         gravadas: res?.gravadas ?? null,

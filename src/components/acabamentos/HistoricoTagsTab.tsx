@@ -307,7 +307,7 @@ export default function HistoricoTagsTab() {
                           <table className="w-full text-[10px]">
                             <thead className="bg-muted">
                               <tr className="text-left">
-                                <th className="p-1.5">TAG Custom</th>
+                                <th className="p-1.5">Cód. Configuração</th>
                                 <th className="p-1.5">Anterior (Auge)</th>
                                 <th className="p-1.5">TAG Calculada</th>
                                 <th className="p-1.5">Fórmula</th>
@@ -319,7 +319,7 @@ export default function HistoricoTagsTab() {
                                 .map((l, i) => (
                                   <tr key={i} className={`border-t align-top ${l.valor !== l.valor_antigo ? 'bg-emerald-500/5' : 'bg-background/50'}`}>
                                     <td className="p-1.5 font-mono break-all font-semibold">
-                                      {l.valor || '—'}
+                                      {l.cdTagCustomizada || l.code || '—'}
                                     </td>
                                     <td className="p-1.5 font-mono break-all text-muted-foreground">
                                       {l.valor_antigo || '—'}

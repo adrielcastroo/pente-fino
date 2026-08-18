@@ -22,6 +22,8 @@ export interface TagHistoricoLinha {
   calculada?: string | null;
   /** Fórmula da TAG Calculada, quando conhecida. */
   formula?: string | null;
+  /** Código técnico da TAG no Auge. */
+  cdTagCustomizada?: string | null;
 }
 
 export interface TagHistoricoEvento {
