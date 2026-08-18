@@ -1628,6 +1628,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
             valor_antigo: uiLine?.valorAntigo || null,
             calculada: it.dsTagCalculada || null,
             formula: it.dsFormula || null,
+            cdTagCustomizada: uiLine?.cdTagCustomizada || null,
           };
         }),
         gravadas: res?.gravadas ?? null,
