@@ -5155,8 +5155,29 @@ Deno.serve(async (req) => {
           }
 
           const normCode = dsTagCustomizada.toUpperCase().replace(/&/g, '').replace(/\s+/g, '');
-          const registroExistente = mapaExistentes.get(normCode);
+          
+          // Lógica de "Somente uma por nome": se houver duplicatas no Auge com o mesmo nome, 
+          // limpamos as extras para manter apenas a que o usuário definiu.
+          const registrosMesmoNome = tagsExistentes.filter(ext => {
+            const extValor = String(ext.dsTagCustomizada ?? ext.nmTagCustomizada ?? '').trim().toUpperCase().replace(/&/g, '').replace(/\s+/g, '');
+            return extValor === normCode;
+          });
+
+          // O registro principal será o primeiro encontrado ou o que o usuário já tinha
+          let registroExistente = registrosMesmoNome[0];
           const cdTagCustomizadaExistente = registroExistente ? String(registroExistente.cdTagCustomizada) : String(it?.cdTagCustomizada ?? '').trim();
+
+          // Se houver mais de um registro com o mesmo nome, excluímos os excedentes
+          if (registrosMesmoNome.length > 1) {
+            console.log(`[cdConfiguracao ${cdConfiguracao}] Detectadas ${registrosMesmoNome.length} tags duplicadas para "${dsTagCustomizada}". Removendo excedentes...`);
+            for (let i = 1; i < registrosMesmoNome.length; i++) {
+              try {
+                await deleteTagCustomizada(auth, cdConfiguracao, String(registrosMesmoNome[i].cdTagCustomizada));
+              } catch (e) {
+                console.warn(`Erro ao remover tag duplicada ${registrosMesmoNome[i].cdTagCustomizada}:`, getErrorMessage(e));
+              }
+            }
+          }
 
           const doEspelho = dsTagCalculada ? (mapaCalculadas.get(dsTagCalculada.toLowerCase()) ?? []) : [];
           const informado = String(it?.cdTagCalculada ?? '').trim();
@@ -5180,6 +5201,7 @@ Deno.serve(async (req) => {
             });
             continue;
           }
+
 
           const tentativas = candidatos.length ? candidatos : [''];
           let gravou = false;
