@@ -379,8 +379,8 @@ export default function HistoricoTagsTab() {
           )}
         </DialogContent>
       </Dialog>
-      <Dialog open={!!eventoParaAuditoria} onOpenChange={(v) => !v && setEventoParaAuditoria(null)}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col p-0 gap-0 border-primary/20 shadow-2xl">
+      <Dialog open={!!eventoParaAuditoria} onOpenChange={(v) => !v && setEventoParaAuditoria(null)} modal={false}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col p-0 gap-0 border-primary/20 shadow-2xl fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] z-[60]">
           <DialogHeader className="p-5 sm:p-6 pb-4 border-b bg-muted/30">
             <DialogTitle className="flex items-center gap-2 flex-wrap text-primary">
               <CheckCircle2 className="h-5 w-5" />
