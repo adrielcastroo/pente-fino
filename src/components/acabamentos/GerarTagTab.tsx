@@ -1791,18 +1791,20 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                         {l.formula || '—'}
                       </td>
                       <td className="p-2 text-right">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-7 w-7"
-                          onClick={() => {
-                            setLinhas((prev) => prev.filter((x) => x.id !== l.id));
-                            setRemovidasManualmente((prev) => new Set(prev).add(l.code));
-                          }}
-                          aria-label="Remover TAG"
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </Button>
+                        {!modoEdicaoRelancamento && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7"
+                            onClick={() => {
+                              setLinhas((prev) => prev.filter((x) => x.id !== l.id));
+                              setRemovidasManualmente((prev) => new Set(prev).add(l.code));
+                            }}
+                            aria-label="Remover TAG"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
                       </td>
                     </tr>
                   );
