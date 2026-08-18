@@ -1850,11 +1850,14 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           <div className="p-3 border-t space-y-1.5">
             <Button
               onClick={adicionarTagCustom}
-              disabled={enviando || obrigatoriasFaltando.length > 0}
-              className="w-full h-10 gap-2 text-xs"
+              disabled={enviando || (obrigatoriasFaltando.length > 0 && !modoEdicaoRelancamento)}
+              className={cn(
+                "w-full h-10 gap-2 text-xs",
+                modoEdicaoRelancamento && "bg-emerald-600 hover:bg-emerald-700 text-white"
+              )}
             >
-              {enviando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-              {enviando ? 'Gravando no Auge…' : `Adicionar TAG Custom (${linhas.length})`}
+              {enviando ? <Loader2 className="h-4 w-4 animate-spin" /> : (modoEdicaoRelancamento ? <CheckCircle2 className="h-4 w-4" /> : <Plus className="h-4 w-4" />)}
+              {enviando ? 'Gravando no Auge…' : (modoEdicaoRelancamento ? `Confirmar Alterações (${linhas.length})` : `Adicionar TAG Custom (${linhas.length})`)}
             </Button>
             {obrigatoriasFaltando.length > 0 && (
               <p className="text-[10px] text-destructive flex items-start gap-1">
