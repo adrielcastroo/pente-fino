@@ -2081,7 +2081,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                 );
               })()}
 
-              {!!resultado.augeRows?.length && (
+              {!!resultado.augeRows?.length && !modoEdicaoRelancamento && (
                 <div className="space-y-1">
                   <div className="text-[9px] uppercase text-muted-foreground flex items-center gap-1.5">
                     Como ficou no Auge
