@@ -437,7 +437,6 @@ function TagCalculadaCell({
 }
 
 
-// ============================================================
 // Busca de Configuração (equivale ao campo "Configuração" do Auge)
 // ============================================================
 
@@ -1803,6 +1802,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           customAberta={customAberta}
           setCustomAberta={setCustomAberta}
           obrigatoriasCount={obrigatorias.length}
+          disabled={modoEdicaoRelancamento}
         />
       </Card>
 
