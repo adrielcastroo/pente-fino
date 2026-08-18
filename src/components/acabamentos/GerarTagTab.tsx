@@ -437,7 +437,6 @@ function TagCalculadaCell({
 }
 
 
-// ============================================================
 // Busca de Configuração (equivale ao campo "Configuração" do Auge)
 // ============================================================
 
@@ -559,7 +558,8 @@ function ConfiguracaoSelect({
         <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
         <Input
           value={busca}
-          onFocus={() => setAberto(true)}
+          disabled={disabled}
+          onFocus={() => !disabled && setAberto(true)}
           onChange={(e) => { setBusca(e.target.value); setAberto(true); }}
           placeholder="Digite para procurar a configuração (use * como curinga)"
           className="h-10 pl-7 text-[11px]"
@@ -1803,6 +1803,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           customAberta={customAberta}
           setCustomAberta={setCustomAberta}
           obrigatoriasCount={obrigatorias.length}
+          disabled={modoEdicaoRelancamento}
         />
       </Card>
 
@@ -1924,6 +1925,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                           size="sm"
                           variant="outline"
                           className="h-8 px-2 text-[10px] gap-1"
+                          disabled={modoEdicaoRelancamento}
                           onClick={() => setAddManual(true)}
                         >
                           <Plus className="h-3 w-3" /> Adicionar TAG Configurada
@@ -2038,7 +2040,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                 <div className="text-[11px] text-destructive break-words">{resultado.error}</div>
               )}
 
-              {(() => {
+              {!modoEdicaoRelancamento && (() => {
                 // Se o Auge não devolveu detalhamento, mostramos ao menos o que
                 // foi enviado — a tabela nunca mais fica vazia sem explicação.
                 const linhasResultado = resultado.results?.length
@@ -2079,7 +2081,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                 );
               })()}
 
-              {!!resultado.augeRows?.length && (
+              {!!resultado.augeRows?.length && !modoEdicaoRelancamento && (
                 <div className="space-y-1">
                   <div className="text-[9px] uppercase text-muted-foreground flex items-center gap-1.5">
                     Como ficou no Auge

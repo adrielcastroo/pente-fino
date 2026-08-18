@@ -10,13 +10,15 @@ interface ResumoConfiguracoesMassaProps {
   customAberta: { cd: string; nm: string } | null;
   setCustomAberta: (v: { cd: string; nm: string } | null) => void;
   obrigatoriasCount: number;
+  disabled?: boolean;
 }
 
 export function ResumoConfiguracoesMassa({
   termoBusca,
   customAberta,
   setCustomAberta,
-  obrigatoriasCount
+  obrigatoriasCount,
+  disabled = false
 }: ResumoConfiguracoesMassaProps) {
   const termo = termoBusca.trim();
   const { data: configsResumo = [], isLoading: carregandoResumo } = useTagCustomConfigurationSearch(termo);
@@ -75,7 +77,8 @@ export function ResumoConfiguracoesMassa({
                       return (
                         <button
                           key={cfg.cd_configuracao}
-                          onClick={() => setCustomAberta({ cd: cfg.cd_configuracao, nm: cfg.nm_configuracao })}
+                          onClick={() => !disabled && setCustomAberta({ cd: cfg.cd_configuracao, nm: cfg.nm_configuracao })}
+                          disabled={disabled}
                           className={cn(
                             "px-2 py-1 rounded-full border text-[10px] transition-all flex items-center gap-1.5",
                             isSelected

@@ -5161,7 +5161,7 @@ Deno.serve(async (req) => {
           // limpamos as extras para manter apenas a que o usuário definiu.
           // Em MODO DE EDIÇÃO (idLinhaReal presente), priorizamos a busca pelo ID real.
           const registrosMesmoNome = idLinhaReal 
-            ? tagsExistentes.filter(ext => String(ext.cdTagCustomizada || ext.cdTagCustom || ext.id || '') === idLinhaReal)
+            ? tagsExistentes.filter(ext => String(ext.cdTagCustomizada || ext.cdTagCustom || ext.id || '').trim() === idLinhaReal)
             : tagsExistentes.filter(ext => {
                 const extValor = String(ext.dsTagCustomizada || ext.nmTagCustomizada || '').trim().toUpperCase().replace(/&/g, '').replace(/\s+/g, '');
                 return extValor === normCode;
