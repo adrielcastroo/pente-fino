@@ -1639,7 +1639,12 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       setSnapshotLinhas(null);
       
       const totalConfiguracoesAfetadas = res?.lote?.length || (res?.ok ? configuracoesAlvo.length : 0);
-      registrarHistorico(res?.ok === true, { ...res, gravadas: totalConfiguracoesAfetadas, total: totalConfiguracoesAfetadas }, 'criacao');
+      registrarHistorico(res?.ok === true, { 
+        ...res, 
+        gravadas: totalConfiguracoesAfetadas, 
+        total: totalConfiguracoesAfetadas,
+        tipo: modoEdicaoRelancamento ? 'edicao' : 'criacao'
+      }, modoEdicaoRelancamento ? 'edicao' : 'criacao');
       
       if (res?.ok) {
         toast.success(`TAG Custom gravada no Auge (${res.gravadas}/${res.total}).`);
