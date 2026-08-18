@@ -2039,7 +2039,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                 <div className="text-[11px] text-destructive break-words">{resultado.error}</div>
               )}
 
-              {(() => {
+              {!modoEdicaoRelancamento && (() => {
                 // Se o Auge não devolveu detalhamento, mostramos ao menos o que
                 // foi enviado — a tabela nunca mais fica vazia sem explicação.
                 const linhasResultado = resultado.results?.length
