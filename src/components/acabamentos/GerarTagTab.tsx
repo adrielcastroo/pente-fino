@@ -715,6 +715,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   const [resultado, setResultado] = useState<ResultadoAuge | null>(rascunho.resultado);
   const [tentouEnviar, setTentouEnviar] = useState(false);
   const [editandoAuge, setEditandoAuge] = useState(false);
+  const [modoEdicaoRelancamento, setModoEdicaoRelancamento] = useState(false);
   const [edicoesAuge, setEdicoesAuge] = useState<Record<string, TagCalculadaSel>>({});
   const [regravando, setRegravando] = useState(false);
   const [addManual, setAddManual] = useState(false);
@@ -1473,6 +1474,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     setLinhas(reg.linhas.map((l) => ({ ...l })));
     setResultado(null);
     setEditandoAuge(false);
+    setModoEdicaoRelancamento(true);
     setEdicoesAuge({});
     setTentouEnviar(false);
     registrarEventoTag({
@@ -1536,18 +1538,24 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           descricao: descricaoFinal,
           itens: linhas.map((l) => {
             const calculada = (l.calculada ?? '').trim();
+            // Em modo de edição/relançamento, se o campo estiver vazio, preservamos o valor original (dsTagTexto) se disponível.
+            // Isso impede a remoção acidental no Auge.
+            const valorEfetivo = (modoEdicaoRelancamento && !calculada && l.dsTagTexto) 
+              ? l.dsTagTexto 
+              : calculada;
+
             return {
               // TAG (Pente Fino) -> Tag (Auge)
               dsTagCustomizada: l.valor,
               // TAG Calculada (Pente Fino) -> Tag Calculada (Auge)
-              dsTagCalculada: calculada,
+              dsTagCalculada: valorEfetivo,
               // Código já resolvido na busca — dispensa o lookup por nome.
               cdTagCalculada: l.cdTagCalculada ?? '',
               dsFormula: l.formula ?? '',
               // Quando a linha já existe no Auge, sobrescreve em vez de duplicar.
               cdTagCustomizada: l.cdTagCustomizada ?? '',
               // "Texto Livre" só é usado quando não há Tag Calculada (são mutuamente exclusivos no Auge)
-              dsTagTexto: calculada ? '' : l.valor,
+              dsTagTexto: valorEfetivo ? '' : l.valor,
             };
           }),
         },
@@ -1556,6 +1564,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       const res = data as ResultadoAuge;
       setResultado(res);
       setEditandoAuge(false);
+      setModoEdicaoRelancamento(false);
       setEdicoesAuge({});
       
       // O histórico registra o número REAL de configurações afetadas devolvido pelo Auge.
@@ -1716,11 +1725,19 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
       <div className="grid grid-cols-1 gap-4 items-start">
         {/* Tabela principal */}
-        <Card className="overflow-hidden">
+        <Card className={cn(
+          "overflow-hidden transition-all duration-300",
+          modoEdicaoRelancamento && "border-2 border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.1)]"
+        )}>
           <div className="p-3 border-b flex items-center justify-between gap-2">
-            <div className="text-xs font-semibold">
+            <div className="text-xs font-semibold flex items-center gap-2">
               Composição da TAG Custom
-              <span className="ml-2 text-[10px] font-normal text-muted-foreground">
+              {modoEdicaoRelancamento && (
+                <Badge className="bg-emerald-500 text-emerald-950 hover:bg-emerald-500 text-[9px] gap-1 animate-pulse">
+                  <Pencil className="h-2.5 w-2.5" /> MODO DE EDIÇÃO
+                </Badge>
+              )}
+              <span className="text-[10px] font-normal text-muted-foreground">
                 {linhas.length} TAG(s)
               </span>
             </div>
@@ -1729,7 +1746,11 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                 size="sm"
                 variant="ghost"
                 className="h-7 px-2 text-[10px]"
-                onClick={() => { setLinhas([]); setResultado(null); }}
+                onClick={() => { 
+                  setLinhas([]); 
+                  setResultado(null); 
+                  setModoEdicaoRelancamento(false);
+                }}
               >
                 Limpar
               </Button>
@@ -1770,18 +1791,20 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                         {l.formula || '—'}
                       </td>
                       <td className="p-2 text-right">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-7 w-7"
-                          onClick={() => {
-                            setLinhas((prev) => prev.filter((x) => x.id !== l.id));
-                            setRemovidasManualmente((prev) => new Set(prev).add(l.code));
-                          }}
-                          aria-label="Remover TAG"
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </Button>
+                        {!modoEdicaoRelancamento && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7"
+                            onClick={() => {
+                              setLinhas((prev) => prev.filter((x) => x.id !== l.id));
+                              setRemovidasManualmente((prev) => new Set(prev).add(l.code));
+                            }}
+                            aria-label="Remover TAG"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
                       </td>
                     </tr>
                   );
@@ -1793,29 +1816,31 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                     </td>
                   </tr>
                 )}
-                {addManual ? (
-                  <tr className="border-t align-top bg-muted/20">
-                    <td colSpan={4} className="p-2">
-                      <TagConfiguradaSearch
-                        inline
-                        onPick={(o) => { adicionarTagConfiguradaManual(o); setAddManual(false); }}
-                        onCancel={() => setAddManual(false)}
-                      />
-                    </td>
-                  </tr>
-                ) : (
-                  <tr className="border-t">
-                    <td colSpan={4} className="p-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-8 px-2 text-[10px] gap-1"
-                        onClick={() => setAddManual(true)}
-                      >
-                        <Plus className="h-3 w-3" /> Adicionar TAG Configurada
-                      </Button>
-                    </td>
-                  </tr>
+                {!modoEdicaoRelancamento && (
+                  addManual ? (
+                    <tr className="border-t align-top bg-muted/20">
+                      <td colSpan={4} className="p-2">
+                        <TagConfiguradaSearch
+                          inline
+                          onPick={(o) => { adicionarTagConfiguradaManual(o); setAddManual(false); }}
+                          onCancel={() => setAddManual(false)}
+                        />
+                      </td>
+                    </tr>
+                  ) : (
+                    <tr className="border-t">
+                      <td colSpan={4} className="p-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 px-2 text-[10px] gap-1"
+                          onClick={() => setAddManual(true)}
+                        >
+                          <Plus className="h-3 w-3" /> Adicionar TAG Configurada
+                        </Button>
+                      </td>
+                    </tr>
+                  )
                 )}
               </tbody>
             </table>
@@ -1825,13 +1850,16 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           <div className="p-3 border-t space-y-1.5">
             <Button
               onClick={adicionarTagCustom}
-              disabled={enviando || obrigatoriasFaltando.length > 0}
-              className="w-full h-10 gap-2 text-xs"
+              disabled={enviando || (obrigatoriasFaltando.length > 0 && !modoEdicaoRelancamento)}
+              className={cn(
+                "w-full h-10 gap-2 text-xs",
+                modoEdicaoRelancamento && "bg-emerald-600 hover:bg-emerald-700 text-white"
+              )}
             >
-              {enviando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-              {enviando ? 'Gravando no Auge…' : `Adicionar TAG Custom (${linhas.length})`}
+              {enviando ? <Loader2 className="h-4 w-4 animate-spin" /> : (modoEdicaoRelancamento ? <CheckCircle2 className="h-4 w-4" /> : <Plus className="h-4 w-4" />)}
+              {enviando ? 'Gravando no Auge…' : (modoEdicaoRelancamento ? `Confirmar Alterações (${linhas.length})` : `Adicionar TAG Custom (${linhas.length})`)}
             </Button>
-            {obrigatoriasFaltando.length > 0 && (
+            {obrigatoriasFaltando.length > 0 && !modoEdicaoRelancamento && (
               <p className="text-[10px] text-destructive flex items-start gap-1">
                 <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
                 Obrigatório incluir: {obrigatoriasFaltando.map((o) => o.code).join(', ')}.
@@ -1841,7 +1869,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           </div>
 
           {/* Retorno do Auge */}
-          {resultado && (
+          {resultado && !modoEdicaoRelancamento && (
             <div className={`m-3 rounded border p-3 space-y-2 ${resultado.ok ? 'border-emerald-500/40 bg-emerald-500/5' : 'border-destructive/40 bg-destructive/5'}`}>
               <div className="flex items-start justify-between gap-2 flex-wrap">
                 <div className="text-[10px] uppercase flex items-center gap-1 font-semibold">
