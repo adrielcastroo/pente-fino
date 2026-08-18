@@ -1816,29 +1816,31 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                     </td>
                   </tr>
                 )}
-                {addManual ? (
-                  <tr className="border-t align-top bg-muted/20">
-                    <td colSpan={4} className="p-2">
-                      <TagConfiguradaSearch
-                        inline
-                        onPick={(o) => { adicionarTagConfiguradaManual(o); setAddManual(false); }}
-                        onCancel={() => setAddManual(false)}
-                      />
-                    </td>
-                  </tr>
-                ) : (
-                  <tr className="border-t">
-                    <td colSpan={4} className="p-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-8 px-2 text-[10px] gap-1"
-                        onClick={() => setAddManual(true)}
-                      >
-                        <Plus className="h-3 w-3" /> Adicionar TAG Configurada
-                      </Button>
-                    </td>
-                  </tr>
+                {!modoEdicaoRelancamento && (
+                  addManual ? (
+                    <tr className="border-t align-top bg-muted/20">
+                      <td colSpan={4} className="p-2">
+                        <TagConfiguradaSearch
+                          inline
+                          onPick={(o) => { adicionarTagConfiguradaManual(o); setAddManual(false); }}
+                          onCancel={() => setAddManual(false)}
+                        />
+                      </td>
+                    </tr>
+                  ) : (
+                    <tr className="border-t">
+                      <td colSpan={4} className="p-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 px-2 text-[10px] gap-1"
+                          onClick={() => setAddManual(true)}
+                        >
+                          <Plus className="h-3 w-3" /> Adicionar TAG Configurada
+                        </Button>
+                      </td>
+                    </tr>
+                  )
                 )}
               </tbody>
             </table>
