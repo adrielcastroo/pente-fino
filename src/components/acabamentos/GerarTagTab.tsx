@@ -1451,6 +1451,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       formula: '',
     }]);
     setRemovidasManualmente((prev) => {
+      if (!(prev instanceof Set)) return new Set();
       const next = new Set(prev);
       next.delete(code);
       return next;
