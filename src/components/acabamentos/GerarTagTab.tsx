@@ -751,8 +751,10 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
   // Sincroniza o termo da busca local com a store para persistência
   useEffect(() => {
-    setTermoBuscaCfg(cfgSearch.termo);
-  }, [cfgSearch.termo, setTermoBuscaCfg]);
+    if (cfgSearch.termo !== termoBuscaCfg) {
+      setTermoBuscaCfg(cfgSearch.termo);
+    }
+  }, [cfgSearch.termo, termoBuscaCfg, setTermoBuscaCfg]);
 
 
   // O texto da CONFIGURAÇÃO (não o nome da Tag) é o único driver das análises:
