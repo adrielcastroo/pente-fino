@@ -1618,7 +1618,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       setSnapshotLinhas(null);
     }
     setModoEdicaoRelancamento(false);
-    if (removidasManualmente instanceof Set && removidasManualmente.size > 0) {
+    if (removidasManualmente instanceof Set ? removidasManualmente.size > 0 : false) {
       setRemovidasManualmente(new Set());
     }
     toast.info('Edição cancelada.');
@@ -1947,7 +1947,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                   setLinhas([]); 
                   setResultado(null); 
                   setModoEdicaoRelancamento(false);
-                  if (removidasManualmente instanceof Set && removidasManualmente.size > 0) {
+                  if (removidasManualmente instanceof Set ? removidasManualmente.size > 0 : false) {
                     setRemovidasManualmente(new Set());
                   }
                 }}
