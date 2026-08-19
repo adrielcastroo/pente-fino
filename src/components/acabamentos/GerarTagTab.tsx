@@ -1220,9 +1220,9 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
   // Sincroniza automaticamente a tabela com as recomendações do sistema
   useEffect(() => {
-    // Usamos stringify para detectar mudanças reais nas recomendações e evitar loops de atualização
+    // Usamos memoização de referência para evitar loops quando o conteúdo não mudou
     const recsStr = JSON.stringify(recomendadas);
-    const prevStr = JSON.stringify(linhas);
+    const linesStr = JSON.stringify(linhas);
     
     // Só prosseguimos se houver recomendações ou se o termo de busca for limpo
     if (recomendadas.length > 0) {
