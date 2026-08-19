@@ -539,14 +539,20 @@ function ConfiguracaoSelect({
     },
   });
 
+  const lastStateRef = useRef<string>('');
   useEffect(() => {
-    onSearchStateChange?.({
+    const newState = {
       termo,
       hasResults: opcoes.length > 0,
       isSearching: isFetching,
       pesquisou: isSuccess && !isFetching && termo.length >= 2,
-    });
-  }, [termo, opcoes.length, isFetching, isSuccess, padrao.length, onSearchStateChange]);
+    };
+    const newStateStr = JSON.stringify(newState);
+    if (lastStateRef.current !== newStateStr) {
+      lastStateRef.current = newStateStr;
+      onSearchStateChange?.(newState);
+    }
+  }, [termo, opcoes.length, isFetching, isSuccess, onSearchStateChange]);
 
   // A exibição de valor selecionado individualmente foi removida para priorizar o fluxo automatizado global
   // que atua sobre todas as configurações encontradas pelo termo de busca.
