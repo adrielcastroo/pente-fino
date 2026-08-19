@@ -1220,10 +1220,6 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
   // Sincroniza automaticamente a tabela com as recomendações do sistema
   useEffect(() => {
-    // Usamos memoização de referência para evitar loops quando o conteúdo não mudou
-    const recsStr = JSON.stringify(recomendadas);
-    const linesStr = JSON.stringify(linhas);
-    
     // Só prosseguimos se houver recomendações ou se o termo de busca for limpo
     if (recomendadas.length > 0) {
       setLinhas((prev) => {
@@ -1270,7 +1266,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         }
 
         // Só atualiza se algo realmente mudou para evitar Maximum update depth exceeded
-        // e se o resultado final for diferente do estado anterior
+        // Usamos stringify para comparação profunda final antes de disparar o set
         if (changed) {
           const finalStr = JSON.stringify(filtered);
           const currentStr = JSON.stringify(prev);
@@ -1281,7 +1277,8 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     } else if (termoBusca.trim().length < 2 && linhas.length > 0) {
       setLinhas([]);
     }
-  }, [recomendadas, termoBusca, removidasManualmente, setLinhas, linhas.length]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recomendadas, termoBusca, removidasManualmente, setLinhas]);
 
   // ---------- Padrão obrigatório de TAGs ----------
   /**
