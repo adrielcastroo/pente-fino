@@ -247,9 +247,12 @@ function TagCalculadaCell({
   }, []);
 
   useEffect(() => {
-    const t = setTimeout(() => setTermo(busca.trim()), 300);
+    const t = setTimeout(() => {
+      const b = busca.trim();
+      if (b !== termo) setTermo(b);
+    }, 300);
     return () => clearTimeout(t);
-  }, [busca]);
+  }, [busca, termo]);
 
 
   const padrao = useMemo(() => toIlikePattern(termo), [termo]);
@@ -457,16 +460,21 @@ function ConfiguracaoSelect({
   const wrapRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const t = setTimeout(() => setTermo(busca.trim()), 300);
+    const t = setTimeout(() => {
+      const b = busca.trim();
+      if (b !== termo) setTermo(b);
+    }, 300);
     return () => clearTimeout(t);
-  }, [busca]);
+  }, [busca, termo]);
 
   // Clicar fora apenas fecha a lista suspensa: o termo e o resultado da busca
   // permanecem, então a configuração NÃO passa a ser tratada como nova.
   useEffect(() => {
     const onDocDown = (ev: MouseEvent) => {
       if (!wrapRef.current) return;
-      if (!wrapRef.current.contains(ev.target as Node)) setAberto(false);
+      if (!wrapRef.current.contains(ev.target as Node)) {
+        setAberto(false);
+      }
     };
     document.addEventListener('mousedown', onDocDown);
     return () => document.removeEventListener('mousedown', onDocDown);
@@ -539,14 +547,31 @@ function ConfiguracaoSelect({
     },
   });
 
+  const lastStateRef = useRef<string>('');
   useEffect(() => {
-    onSearchStateChange?.({
+    const newState = {
       termo,
       hasResults: opcoes.length > 0,
       isSearching: isFetching,
       pesquisou: isSuccess && !isFetching && termo.length >= 2,
-    });
-  }, [termo, opcoes.length, isFetching, isSuccess, padrao.length, onSearchStateChange]);
+    };
+    const newStateStr = JSON.stringify(newState);
+    if (lastStateRef.current !== newStateStr) {
+      lastStateRef.current = newStateStr;
+      onSearchStateChange?.(newState);
+    }
+  }, [termo, opcoes.length, isFetching, isSuccess, onSearchStateChange]);
+
+  const lastValueRef = useRef<string>('');
+  useEffect(() => {
+    const valStr = JSON.stringify(valor);
+    if (valStr !== lastValueRef.current) {
+      lastValueRef.current = valStr;
+      if (valor && !aberto) {
+        setBusca(valor.nm || '');
+      }
+    }
+  }, [valor, aberto]);
 
   // A exibição de valor selecionado individualmente foi removida para priorizar o fluxo automatizado global
   // que atua sobre todas as configurações encontradas pelo termo de busca.
@@ -589,9 +614,12 @@ function TagConfiguradaSearch({
   const [termo, setTermo] = useState('');
 
   useEffect(() => {
-    const t = setTimeout(() => setTermo(busca.trim()), 300);
+    const t = setTimeout(() => {
+      const b = busca.trim();
+      if (b !== termo) setTermo(b);
+    }, 300);
     return () => clearTimeout(t);
-  }, [busca]);
+  }, [busca, termo]);
 
   const padrao = useMemo(() => toIlikePattern(termo), [termo]);
   const tokens = useMemo(() => toIlikeTokens(termo), [termo]);
@@ -751,8 +779,10 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
   // Sincroniza o termo da busca local com a store para persistência
   useEffect(() => {
-    setTermoBuscaCfg(cfgSearch.termo);
-  }, [cfgSearch.termo, setTermoBuscaCfg]);
+    if (cfgSearch.termo !== termoBuscaCfg) {
+      setTermoBuscaCfg(cfgSearch.termo);
+    }
+  }, [cfgSearch.termo, termoBuscaCfg, setTermoBuscaCfg]);
 
 
   // O texto da CONFIGURAÇÃO (não o nome da Tag) é o único driver das análises:
@@ -767,10 +797,12 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   const termoAnteriorRef = useRef(termoBusca);
   useEffect(() => {
     if (termoAnteriorRef.current !== termoBusca) {
-      setRemovidasManualmente(new Set());
+      if (removidasManualmente.size > 0) {
+        setRemovidasManualmente(new Set());
+      }
       termoAnteriorRef.current = termoBusca;
     }
-  }, [termoBusca]);
+  }, [termoBusca, removidasManualmente.size, setRemovidasManualmente]);
 
   // ---------- Configurações (catálogo leve) ----------
   const { data: configuracoes = [], isLoading: loadingCfgs } = useQuery({
@@ -1809,8 +1841,16 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           </div>
           <ConfiguracaoSelect
             valor={customAberta}
-            onChange={(v) => setCustomAberta(v)}
-            onSearchStateChange={setCfgSearch}
+            onChange={(v) => {
+              if (JSON.stringify(v) !== JSON.stringify(customAberta)) {
+                setCustomAberta(v);
+              }
+            }}
+            onSearchStateChange={(state) => {
+              if (JSON.stringify(state) !== JSON.stringify(cfgSearch)) {
+                setCfgSearch(state);
+              }
+            }}
             disabled={modoEdicaoRelancamento}
           />
           <p className="text-[10px] text-muted-foreground">
