@@ -798,7 +798,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   const termoAnteriorRef = useRef(termoBusca);
   useEffect(() => {
     if (termoAnteriorRef.current !== termoBusca) {
-      if (removidasManualmente.size > 0) {
+      if (removidasManualmente instanceof Set && removidasManualmente.size > 0) {
         setRemovidasManualmente(new Set());
       }
       termoAnteriorRef.current = termoBusca;
