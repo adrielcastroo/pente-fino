@@ -1107,7 +1107,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     for (const tag of tagsUnificadas) {
       const code = normalizeTagCode(tag.ds_tag_customizada ?? tag.nm_tag_customizada);
       if (!code) continue;
-      const score = scoreByCfg.get(tag.cd_configuracao) ?? 0;
+      const score = (scoreByCfg.get(tag.cd_configuracao) as number) ?? 0;
       const cfgNome = tag.nm_configuracao ?? tag.cd_configuracao;
       const cat = byCode.get(code) ?? { code, items: [] };
       cat.items.push({ tag, cfgNome, score });
