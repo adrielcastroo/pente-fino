@@ -61,13 +61,17 @@ export const useGerarTagStore = create<GerarTagState>()(
           const str = localStorage.getItem(name);
           if (!str) return null;
           try {
-            const { state, version } = JSON.parse(str);
-            // Re-hidratar o Set
+            const parsed = JSON.parse(str);
+            const state = parsed.state;
+            const version = parsed.version;
+            
+            // Re-hidratar o Set se vier como array do localStorage
             if (state.removidasManualmente && Array.isArray(state.removidasManualmente)) {
               state.removidasManualmente = new Set(state.removidasManualmente);
-            } else if (!state.removidasManualmente) {
+            } else if (!state.removidasManualmente || !(state.removidasManualmente instanceof Set)) {
               state.removidasManualmente = new Set();
             }
+            
             return JSON.stringify({ state, version });
           } catch (e) {
             console.error('[useGerarTagStore] storage.getItem failed', e);
@@ -76,11 +80,15 @@ export const useGerarTagStore = create<GerarTagState>()(
         },
         setItem: (name, value) => {
           try {
-            const { state, version } = JSON.parse(value);
-            // Serializar o Set
+            const parsed = JSON.parse(value);
+            const state = { ...parsed.state };
+            const version = parsed.version;
+            
+            // Serializar o Set para array antes de salvar
             if (state.removidasManualmente instanceof Set) {
               state.removidasManualmente = Array.from(state.removidasManualmente);
             }
+            
             localStorage.setItem(name, JSON.stringify({ state, version }));
           } catch (e) {
             console.error('[useGerarTagStore] storage.setItem failed', e);
