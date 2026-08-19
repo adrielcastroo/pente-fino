@@ -247,9 +247,12 @@ function TagCalculadaCell({
   }, []);
 
   useEffect(() => {
-    const t = setTimeout(() => setTermo(busca.trim()), 300);
+    const t = setTimeout(() => {
+      const b = busca.trim();
+      if (b !== termo) setTermo(b);
+    }, 300);
     return () => clearTimeout(t);
-  }, [busca]);
+  }, [busca, termo]);
 
 
   const padrao = useMemo(() => toIlikePattern(termo), [termo]);
@@ -457,16 +460,21 @@ function ConfiguracaoSelect({
   const wrapRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const t = setTimeout(() => setTermo(busca.trim()), 300);
+    const t = setTimeout(() => {
+      const b = busca.trim();
+      if (b !== termo) setTermo(b);
+    }, 300);
     return () => clearTimeout(t);
-  }, [busca]);
+  }, [busca, termo]);
 
   // Clicar fora apenas fecha a lista suspensa: o termo e o resultado da busca
   // permanecem, então a configuração NÃO passa a ser tratada como nova.
   useEffect(() => {
     const onDocDown = (ev: MouseEvent) => {
       if (!wrapRef.current) return;
-      if (!wrapRef.current.contains(ev.target as Node)) setAberto(false);
+      if (!wrapRef.current.contains(ev.target as Node)) {
+        setAberto(false);
+      }
     };
     document.addEventListener('mousedown', onDocDown);
     return () => document.removeEventListener('mousedown', onDocDown);
@@ -595,9 +603,12 @@ function TagConfiguradaSearch({
   const [termo, setTermo] = useState('');
 
   useEffect(() => {
-    const t = setTimeout(() => setTermo(busca.trim()), 300);
+    const t = setTimeout(() => {
+      const b = busca.trim();
+      if (b !== termo) setTermo(b);
+    }, 300);
     return () => clearTimeout(t);
-  }, [busca]);
+  }, [busca, termo]);
 
   const padrao = useMemo(() => toIlikePattern(termo), [termo]);
   const tokens = useMemo(() => toIlikeTokens(termo), [termo]);
