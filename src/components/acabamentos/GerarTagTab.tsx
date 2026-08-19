@@ -775,10 +775,12 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   const termoAnteriorRef = useRef(termoBusca);
   useEffect(() => {
     if (termoAnteriorRef.current !== termoBusca) {
-      setRemovidasManualmente(new Set());
+      if (removidasManualmente.size > 0) {
+        setRemovidasManualmente(new Set());
+      }
       termoAnteriorRef.current = termoBusca;
     }
-  }, [termoBusca]);
+  }, [termoBusca, removidasManualmente.size, setRemovidasManualmente]);
 
   // ---------- Configurações (catálogo leve) ----------
   const { data: configuracoes = [], isLoading: loadingCfgs } = useQuery({
