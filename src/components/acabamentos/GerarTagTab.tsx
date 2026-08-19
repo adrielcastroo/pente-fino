@@ -1276,7 +1276,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       });
     } else if (termoBusca.trim().length < 2 && linhas.length > 0) {
       setLinhas([]);
-      if (removidasManualmente instanceof Set && removidasManualmente.size > 0) {
+      if (removidasManualmente instanceof Set ? removidasManualmente.size > 0 : false) {
         setRemovidasManualmente(new Set());
       }
     }
