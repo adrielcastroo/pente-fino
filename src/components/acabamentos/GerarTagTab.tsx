@@ -1270,7 +1270,13 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         }
 
         // Só atualiza se algo realmente mudou para evitar Maximum update depth exceeded
-        return changed ? filtered : prev;
+        // e se o resultado final for diferente do estado anterior
+        if (changed) {
+          const finalStr = JSON.stringify(filtered);
+          const currentStr = JSON.stringify(prev);
+          if (finalStr !== currentStr) return filtered;
+        }
+        return prev;
       });
     } else if (termoBusca.trim().length < 2 && linhas.length > 0) {
       setLinhas([]);
