@@ -779,6 +779,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
   // Sincroniza o termo da busca local com a store para persistência
   useEffect(() => {
+    // Só atualiza a store se o termo for diferente e não for apenas a inicialização
     if (cfgSearch.termo !== termoBuscaCfg) {
       setTermoBuscaCfg(cfgSearch.termo);
     }
@@ -1219,8 +1220,10 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
   // Sincroniza automaticamente a tabela com as recomendações do sistema
   useEffect(() => {
+    // Só prosseguimos se houver recomendações ou se o termo de busca for limpo
     if (recomendadas.length > 0) {
       setLinhas((prev) => {
+        let changed = false;
         const next = [...prev];
         
         // 1. Adiciona recomendações que ainda não estão na tabela e não foram removidas
@@ -1239,11 +1242,12 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
               cdTagCalculada: rec.cdTagCalculada,
               dsTagTexto: rec.dsTagTexto,
             });
+            changed = true;
           }
         }
 
         // 2. Remove linhas que foram removidas manualmente ou não fazem mais parte do escopo
-        return next.filter(l => {
+        const filtered = next.filter(l => {
           // Se foi removida manualmente, deve sumir
           if (removidasManualmente.has(l.code)) return false;
           
@@ -1256,11 +1260,25 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           
           return true;
         });
+
+        if (filtered.length !== next.length) {
+          changed = true;
+        }
+
+        // Só atualiza se algo realmente mudou para evitar Maximum update depth exceeded
+        // Usamos stringify para comparação profunda final antes de disparar o set
+        if (changed) {
+          const finalStr = JSON.stringify(filtered);
+          const currentStr = JSON.stringify(prev);
+          if (finalStr !== currentStr) return filtered;
+        }
+        return prev;
       });
-    } else if (termoBusca.trim().length < 2) {
+    } else if (termoBusca.trim().length < 2 && linhas.length > 0) {
       setLinhas([]);
     }
-  }, [recomendadas, termoBusca, removidasManualmente]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recomendadas, termoBusca, removidasManualmente, setLinhas]);
 
   // ---------- Padrão obrigatório de TAGs ----------
   /**
@@ -1847,7 +1865,9 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
               }
             }}
             onSearchStateChange={(state) => {
-              if (JSON.stringify(state) !== JSON.stringify(cfgSearch)) {
+              const stateStr = JSON.stringify(state);
+              const currentStr = JSON.stringify(cfgSearch);
+              if (stateStr !== currentStr) {
                 setCfgSearch(state);
               }
             }}
