@@ -1,4 +1,5 @@
 import { useDeferredValue, useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { useTagCustomConfigurationSearch } from '@/hooks/useTagCustomConfigurationSearch';
@@ -1605,32 +1606,48 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
     setEnviando(true);
     try {
-      // 1. Grava no Auge
+      // 1. Antes de gravar, se houver uma configuração aberta, garantimos a sincronização de IDs
+      // para evitar duplicatas nominais no Auge (UPSERT vs INSERT).
+      let linhasComId = [...linhas];
+      if (customAberta?.cd) {
+        try {
+          const { data: syncData } = await supabase.functions.invoke('auge-sync?action=tag_custom_por_config', {
+            body: { cdConfiguracao: customAberta.cd, nmConfiguracao: customAberta.nm },
+          });
+          const augeRows = (syncData as any)?.rows || [];
+          linhasComId = linhas.map(l => {
+            const match = augeRows.find((r: any) => 
+              normalizeTagCode(r.dsTagCustomizada || r.nmTagCustomizada) === l.code
+            );
+            return match ? { 
+              ...l, 
+              cdTagCustomizada: String(match.cdTagCustomizada || match.cdTagCustom || match.id || '').trim(),
+              dsTagTexto: String(match.dsTextoLivre || match.dsTagTexto || '').trim()
+            } : l;
+          });
+        } catch (e) {
+          console.warn('[GerarTagTab] Falha na sincronização pré-gravação:', e);
+        }
+      }
+
+      // 2. Grava no Auge
       const { data, error } = await supabase.functions.invoke('auge-sync?action=criar_tag_custom', {
         body: {
-          // Lista de configurações detectadas no Resumo
           cdConfiguracoes: configuracoesAlvo,
           cdConfiguracao: customAberta?.cd || configuracoesAlvo[0] || '',
           descricao: descricaoFinal,
-          itens: linhas.map((l) => {
+          itens: linhasComId.map((l) => {
             const calculada = (l.calculada ?? '').trim();
-            // Em modo de edição/relançamento, se o campo estiver vazio, preservamos o valor original (dsTagTexto) se disponível.
-            // Isso impede a remoção acidental no Auge.
             const valorEfetivo = (modoEdicaoRelancamento && !calculada && l.dsTagTexto) 
               ? l.dsTagTexto 
               : calculada;
 
             return {
-              // TAG (Pente Fino) -> Tag (Auge)
               dsTagCustomizada: l.valor,
-              // TAG Calculada (Pente Fino) -> Tag Calculada (Auge)
               dsTagCalculada: valorEfetivo,
-              // Código já resolvido na busca — dispensa o lookup por nome.
               cdTagCalculada: l.cdTagCalculada ?? '',
               dsFormula: l.formula ?? '',
-              // Quando a linha já existe no Auge, sobrescreve em vez de duplicar.
               cdTagCustomizada: l.cdTagCustomizada ?? '',
-              // "Texto Livre" só é usado quando não há Tag Calculada (são mutuamente exclusivos no Auge)
               dsTagTexto: valorEfetivo ? '' : l.valor,
             };
           }),
@@ -1654,6 +1671,10 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       if (res?.ok) {
         toast.success(`TAG Custom gravada no Auge (${res.gravadas}/${res.total}).`);
         
+        // Invalida caches de busca para refletir a nova TAG Custom
+        queryClient.invalidateQueries({ queryKey: ['tag-custom-configuracao-busca'] });
+        queryClient.invalidateQueries({ queryKey: ['tag-custom-por-config'] });
+
         // 2. Re-leitura de segurança após gravar para confirmar persistência e ausência de duplicatas
         if (customAberta?.cd) {
           try {
@@ -1663,11 +1684,11 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
             const checkRows = (checkData as any)?.rows || [];
             console.log(`[AugeSync] Verificação pós-gravação: ${checkRows.length} TAGs encontradas para ${customAberta.cd}`);
             
-            // Se o número de TAGs for diferente do que enviamos, ou se houver duplicatas nominais, o backend falhou na deduplicação
-            const nomes = checkRows.map((r: any) => String(r.dsTagCustomizada || r.nmTagCustomizada || '').trim().toUpperCase());
+            const nomes = checkRows.map((r: any) => normalizeTagCode(r.dsTagCustomizada || r.nmTagCustomizada));
             const unicos = new Set(nomes);
             if (unicos.size !== nomes.length) {
               console.warn('[AugeSync] Detectadas duplicatas no Auge após gravação!');
+              toast.warning('Atenção: O Auge ainda reporta registros duplicados. Recomenda-se recarregar a configuração.');
             }
           } catch (e) {
             console.warn('[AugeSync] Falha na re-leitura de segurança:', e);
