@@ -714,6 +714,7 @@ export interface GerarTagTabProps {
 }
 
 export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
+  const queryClient = useQueryClient();
   // 1. Hooks da Store (Persistência)
   const {
     descricao, setDescricao,
