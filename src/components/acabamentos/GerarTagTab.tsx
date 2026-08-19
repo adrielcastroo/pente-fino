@@ -1861,7 +1861,9 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
               }
             }}
             onSearchStateChange={(state) => {
-              if (JSON.stringify(state) !== JSON.stringify(cfgSearch)) {
+              const stateStr = JSON.stringify(state);
+              const currentStr = JSON.stringify(cfgSearch);
+              if (stateStr !== currentStr) {
                 setCfgSearch(state);
               }
             }}
