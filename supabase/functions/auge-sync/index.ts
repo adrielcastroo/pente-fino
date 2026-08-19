@@ -5244,8 +5244,8 @@ Deno.serve(async (req) => {
               
               results.push({
                 tag: dsTagCustomizada,
-                calculada: dsTagCalculada || (it?.nmTagCalculada) || '',
-                formula: dsFormula || (it?.dsFormula) || '',
+                calculada: dsTagCalculada || (it?.nmTagCalculada) || registroExistente?.dsTagCalculada || '',
+                formula: dsFormula || (it?.dsFormula) || registroExistente?.dsFormula || '',
                 cdTagCustomizada: String(auge?.cdTagCustomizada ?? cdTagCustomizadaExistente ?? ''),
                 cdTagCalculada: cdCalculadaFinal,
                 ok: true,
