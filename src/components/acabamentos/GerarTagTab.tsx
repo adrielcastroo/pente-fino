@@ -2002,7 +2002,11 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                             className="h-7 w-7"
                             onClick={() => {
                               setLinhas((prev) => prev.filter((x) => x.id !== l.id));
-                              setRemovidasManualmente((prev) => new Set(prev).add(l.code));
+                              setRemovidasManualmente((prev) => {
+                                const next = new Set(prev instanceof Set ? prev : []);
+                                next.add(l.code);
+                                return next;
+                              });
                             }}
                             aria-label="Remover TAG"
                           >
