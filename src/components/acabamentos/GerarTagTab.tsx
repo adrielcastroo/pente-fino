@@ -1809,8 +1809,16 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           </div>
           <ConfiguracaoSelect
             valor={customAberta}
-            onChange={(v) => setCustomAberta(v)}
-            onSearchStateChange={setCfgSearch}
+            onChange={(v) => {
+              if (JSON.stringify(v) !== JSON.stringify(customAberta)) {
+                setCustomAberta(v);
+              }
+            }}
+            onSearchStateChange={(state) => {
+              if (JSON.stringify(state) !== JSON.stringify(cfgSearch)) {
+                setCfgSearch(state);
+              }
+            }}
             disabled={modoEdicaoRelancamento}
           />
           <p className="text-[10px] text-muted-foreground">
