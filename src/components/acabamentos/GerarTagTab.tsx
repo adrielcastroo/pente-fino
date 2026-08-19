@@ -2046,6 +2046,18 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                     size="sm"
                     variant="ghost"
                     className="h-7 px-2 text-[10px]"
+                    onClick={() => {
+                      reset();
+                      setCfgSearch({ termo: '', hasResults: false, isSearching: false, pesquisou: false });
+                      toast.success('Rascunho e resultados limpos.');
+                    }}
+                  >
+                    Novo Lançamento
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 px-2 text-[10px]"
                     onClick={() => { setResultado(null); setEditandoAuge(false); setEdicoesAuge({}); }}
                   >
                     Fechar
