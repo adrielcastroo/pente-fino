@@ -1594,7 +1594,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       setSnapshotLinhas([...linhas]);
       setCustomAberta(cfg);
       setLinhas(linhasReais);
-      if (removidasManualmente instanceof Set && removidasManualmente.size > 0) {
+      if (removidasManualmente instanceof Set ? removidasManualmente.size > 0 : false) {
         setRemovidasManualmente(new Set());
       }
       setModoEdicaoRelancamento(true);
