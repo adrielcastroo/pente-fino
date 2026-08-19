@@ -1646,6 +1646,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
             return {
               dsTagCustomizada: l.valor,
               dsTagCalculada: valorEfetivo,
+              nmTagCalculada: l.calculada ?? '', // Adicionado para persistir o nome
               cdTagCalculada: l.cdTagCalculada ?? '',
               dsFormula: l.formula ?? '',
               cdTagCustomizada: l.cdTagCustomizada ?? '',
