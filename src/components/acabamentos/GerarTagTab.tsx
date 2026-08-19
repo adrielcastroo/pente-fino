@@ -1249,7 +1249,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         // 2. Remove linhas que foram removidas manualmente ou não fazem mais parte do escopo
         const filtered = next.filter(l => {
           // Se foi removida manualmente, deve sumir
-          if (removidasManualmente.has(l.code)) return false;
+          if (removidasManualmente instanceof Set && removidasManualmente.has(l.code)) return false;
           
           // Se a TAG não está nas recomendações atuais...
           const estaNasRecs = recomendadas.some(r => r.code === l.code);
