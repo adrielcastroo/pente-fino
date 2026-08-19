@@ -1618,6 +1618,9 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       setSnapshotLinhas(null);
     }
     setModoEdicaoRelancamento(false);
+    if (removidasManualmente instanceof Set && removidasManualmente.size > 0) {
+      setRemovidasManualmente(new Set());
+    }
     toast.info('Edição cancelada.');
   };
 
