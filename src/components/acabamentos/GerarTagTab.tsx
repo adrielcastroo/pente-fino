@@ -562,6 +562,17 @@ function ConfiguracaoSelect({
     }
   }, [termo, opcoes.length, isFetching, isSuccess, onSearchStateChange]);
 
+  const lastValueRef = useRef<string>('');
+  useEffect(() => {
+    const valStr = JSON.stringify(valor);
+    if (valStr !== lastValueRef.current) {
+      lastValueRef.current = valStr;
+      if (valor && !aberto) {
+        setBusca(valor.nm || '');
+      }
+    }
+  }, [valor, aberto]);
+
   // A exibição de valor selecionado individualmente foi removida para priorizar o fluxo automatizado global
   // que atua sobre todas as configurações encontradas pelo termo de busca.
 
