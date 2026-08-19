@@ -1,45 +1,7 @@
+import { RegistroGerarTag, TagHistoricoLinha, TagHistoricoEvento } from '@/lib/tag-historico';
+import { LinhaTag, ResultadoAuge, TagCalculadaSel } from '@/components/acabamentos/GerarTagTab';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-
-interface LinhaTag {
-  id: string;
-  code: string;
-  valor: string;
-  cfgNome: string;
-  calculada: string;
-  formula: string;
-  cdTagCustomizada?: string;
-  snapshotValue?: string;
-  valorAntigo?: string;
-  cdTagCalculada?: string;
-  dsTagTexto?: string;
-}
-
-interface ResultadoAuge {
-  ok: boolean;
-  descricao?: string;
-  cdConfiguracao?: string;
-  total?: number;
-  gravadas?: number;
-  falhas?: number;
-  results?: Array<{
-    tag: string;
-    calculada: string;
-    formula?: string;
-    cdTagCustomizada?: string;
-    ok: boolean;
-    erro?: string;
-  }>;
-  augeRows?: any[];
-  error?: string;
-  lote?: Array<{
-    configuracao: string;
-    ok: boolean;
-    total: number;
-    gravadas: number;
-    detalhes: any[];
-  }>;
-}
 
 interface GerarTagState {
   descricao: string;
@@ -99,24 +61,34 @@ export const useGerarTagStore = create<GerarTagState>()(
         getItem: (name) => {
           const str = localStorage.getItem(name);
           if (!str) return null;
-          const { state, version } = JSON.parse(str);
-          // Re-hidratar o Set
-          if (state.removidasManualmente) {
-            state.removidasManualmente = new Set(state.removidasManualmente);
+          try {
+            const { state, version } = JSON.parse(str);
+            // Re-hidratar o Set
+            if (state.removidasManualmente && Array.isArray(state.removidasManualmente)) {
+              state.removidasManualmente = new Set(state.removidasManualmente);
+            } else if (!state.removidasManualmente) {
+              state.removidasManualmente = new Set();
+            }
+            return JSON.stringify({ state, version });
+          } catch (e) {
+            console.error('[useGerarTagStore] storage.getItem failed', e);
+            return null;
           }
-          return JSON.stringify({ state, version });
         },
         setItem: (name, value) => {
-          const { state, version } = JSON.parse(value);
-          // Serializar o Set
-          if (state.removidasManualmente instanceof Set) {
-            state.removidasManualmente = Array.from(state.removidasManualmente);
+          try {
+            const { state, version } = JSON.parse(value);
+            // Serializar o Set
+            if (state.removidasManualmente instanceof Set) {
+              state.removidasManualmente = Array.from(state.removidasManualmente);
+            }
+            localStorage.setItem(name, JSON.stringify({ state, version }));
+          } catch (e) {
+            console.error('[useGerarTagStore] storage.setItem failed', e);
           }
-          localStorage.setItem(name, JSON.stringify({ state, version }));
         },
         removeItem: (name) => localStorage.removeItem(name),
       })),
-      // Não persistir estados transitórios se houver algum no futuro
       partialize: (state) => ({
         descricao: state.descricao,
         linhas: state.linhas,
