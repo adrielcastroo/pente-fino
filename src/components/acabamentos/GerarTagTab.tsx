@@ -1158,7 +1158,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     
     // Usamos categorias que já consolidam TAGs de todas as configurações ranqueadas e encontradas.
     for (const cat of categorias) {
-      if (removidasManualmente.has(cat.code)) continue;
+      if (removidasManualmente instanceof Set && removidasManualmente.has(cat.code)) continue;
 
       // Para cada categoria (ex: &COR), identificamos a TAG calculada mais frequente
       const contagemCalculadas = new Map<string, { n: number; valor: string; cfgNome: string }>();
