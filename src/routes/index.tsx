@@ -12,7 +12,7 @@ export default function ErrorDisplay() {
     at GerarTagTab.tsx` }
       </pre>
       
-      <p className="mb-2">O erro ainda persiste em produção e precisa ser corrigido definitivamente, não apenas mascarado.</p>
+      <p className="mb-2">O erro ainda persiste em produção e precisa ser corrigido definitivamente, not apenas mascarado.</p>
       <p className="mb-4">Erro atual:</p>
       <pre className="bg-muted p-4 rounded">
 { `TypeError: removidasManualmente.has is not a function` }
