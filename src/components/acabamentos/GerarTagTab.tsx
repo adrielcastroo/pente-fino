@@ -803,7 +803,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       }
       termoAnteriorRef.current = termoBusca;
     }
-  }, [termoBusca, removidasManualmente.size, setRemovidasManualmente]);
+  }, [termoBusca, setRemovidasManualmente, removidasManualmente]);
 
   // ---------- Configurações (catálogo leve) ----------
   const { data: configuracoes = [], isLoading: loadingCfgs } = useQuery({
