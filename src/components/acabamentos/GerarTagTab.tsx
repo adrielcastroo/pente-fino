@@ -1940,6 +1940,9 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                   setLinhas([]); 
                   setResultado(null); 
                   setModoEdicaoRelancamento(false);
+                  if (removidasManualmente instanceof Set && removidasManualmente.size > 0) {
+                    setRemovidasManualmente(new Set());
+                  }
                 }}
               >
                 Limpar
