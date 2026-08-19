@@ -70,7 +70,7 @@ interface TagCategoria {
 }
 
 /** Linha da tabela: TAG configurada escolhida + TAG calculada vinculada. */
-interface LinhaTag {
+export interface LinhaTag {
   id: string;
   code: string;
   valor: string;
@@ -90,7 +90,7 @@ interface LinhaTag {
   dsTagTexto?: string;
 }
 
-interface ResultadoAuge {
+export interface ResultadoAuge {
   ok: boolean;
   descricao?: string;
   cdConfiguracao?: string;
@@ -183,7 +183,7 @@ function formatarData(iso: string): string {
 
 
 /** Valor completo de uma TAG calculada selecionada. */
-interface TagCalculadaSel {
+export interface TagCalculadaSel {
   valor: string;
   formula: string;
   /** Código no Auge — usado para completar a fórmula truncada da grade. */

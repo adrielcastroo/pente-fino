@@ -1,4 +1,3 @@
-import { RegistroGerarTag, TagHistoricoLinha, TagHistoricoEvento } from '@/lib/tag-historico';
 import { LinhaTag, ResultadoAuge, TagCalculadaSel } from '@/components/acabamentos/GerarTagTab';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
