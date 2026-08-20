@@ -798,12 +798,12 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   const termoAnteriorRef = useRef(termoBusca);
   useEffect(() => {
     if (termoAnteriorRef.current !== termoBusca) {
-      if (removidasManualmente.size > 0) {
+      if (removidasManualmente instanceof Set ? removidasManualmente.size > 0 : false) {
         setRemovidasManualmente(new Set());
       }
       termoAnteriorRef.current = termoBusca;
     }
-  }, [termoBusca, removidasManualmente.size, setRemovidasManualmente]);
+  }, [termoBusca, setRemovidasManualmente, removidasManualmente]);
 
   // ---------- Configurações (catálogo leve) ----------
   const { data: configuracoes = [], isLoading: loadingCfgs } = useQuery({
@@ -1158,7 +1158,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     
     // Usamos categorias que já consolidam TAGs de todas as configurações ranqueadas e encontradas.
     for (const cat of categorias) {
-      if (removidasManualmente.has(cat.code)) continue;
+      if (removidasManualmente instanceof Set ? removidasManualmente.has(cat.code) : false) continue;
 
       // Para cada categoria (ex: &COR), identificamos a TAG calculada mais frequente
       const contagemCalculadas = new Map<string, { n: number; valor: string; cfgNome: string }>();
@@ -1249,7 +1249,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         // 2. Remove linhas que foram removidas manualmente ou não fazem mais parte do escopo
         const filtered = next.filter(l => {
           // Se foi removida manualmente, deve sumir
-          if (removidasManualmente.has(l.code)) return false;
+          if (removidasManualmente instanceof Set ? removidasManualmente.has(l.code) : false) return false;
           
           // Se a TAG não está nas recomendações atuais...
           const estaNasRecs = recomendadas.some(r => r.code === l.code);
@@ -1276,6 +1276,9 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       });
     } else if (termoBusca.trim().length < 2 && linhas.length > 0) {
       setLinhas([]);
+      if (removidasManualmente instanceof Set ? removidasManualmente.size > 0 : false) {
+        setRemovidasManualmente(new Set());
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recomendadas, termoBusca, removidasManualmente, setLinhas]);
@@ -1380,7 +1383,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
   const codigosNaTabela = useMemo(() => new Set(linhas.map((l) => l.code)), [linhas]);
   const obrigatoriasFaltando = useMemo(
-    () => obrigatorias.filter((o) => !codigosNaTabela.has(o.code) && !removidasManualmente.has(o.code)),
+    () => obrigatorias.filter((o) => !codigosNaTabela.has(o.code) && !(removidasManualmente instanceof Set ? removidasManualmente.has(o.code) : false)),
     [obrigatorias, codigosNaTabela, removidasManualmente],
   );
 
@@ -1448,6 +1451,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       formula: '',
     }]);
     setRemovidasManualmente((prev) => {
+      if (!(prev instanceof Set)) return new Set();
       const next = new Set(prev);
       next.delete(code);
       return next;
@@ -1590,6 +1594,9 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       setSnapshotLinhas([...linhas]);
       setCustomAberta(cfg);
       setLinhas(linhasReais);
+      if (removidasManualmente instanceof Set ? removidasManualmente.size > 0 : false) {
+        setRemovidasManualmente(new Set());
+      }
       setModoEdicaoRelancamento(true);
       setAddManual(false);
       setResultado(null);
@@ -1611,6 +1618,9 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       setSnapshotLinhas(null);
     }
     setModoEdicaoRelancamento(false);
+    if (removidasManualmente instanceof Set ? removidasManualmente.size > 0 : false) {
+      setRemovidasManualmente(new Set());
+    }
     toast.info('Edição cancelada.');
   };
 
@@ -1937,6 +1947,9 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                   setLinhas([]); 
                   setResultado(null); 
                   setModoEdicaoRelancamento(false);
+                  if (removidasManualmente instanceof Set ? removidasManualmente.size > 0 : false) {
+                    setRemovidasManualmente(new Set());
+                  }
                 }}
               >
                 Limpar
@@ -1989,7 +2002,11 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                             className="h-7 w-7"
                             onClick={() => {
                               setLinhas((prev) => prev.filter((x) => x.id !== l.id));
-                              setRemovidasManualmente((prev) => new Set(prev).add(l.code));
+                              setRemovidasManualmente((prev) => {
+                                const next = new Set(prev instanceof Set ? prev : []);
+                                next.add(l.code);
+                                return next;
+                              });
                             }}
                             aria-label="Remover TAG"
                           >
