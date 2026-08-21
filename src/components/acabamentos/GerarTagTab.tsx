@@ -1121,12 +1121,17 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       if (removidasManualmente.has(cat.code)) continue;
 
       // Para cada categoria (ex: &COR), identificamos a TAG calculada mais frequente
-      const contagemCalculadas = new Map<string, { n: number; valor: string; cfgNome: string }>();
+      const contagemCalculadas = new Map<string, { n: number; valor: string; cfgNome: string; cdTagCustomizada?: string; cdTagCalculada?: string; dsTagTexto?: string }>();
       
       for (const item of cat.items) {
         const calc = normalizeTagFormatC(item.tag.ds_tag_calculada ?? '');
         if (!calc) continue;
-        const cur = contagemCalculadas.get(calc) ?? { 
+
+        // Chave única para evitar recomendações idênticas na mesma categoria:
+        // Combinamos o código da TAG, o valor da TAG configurada e a TAG calculada.
+        const key = `${cat.code}|${normalizeTagFormatC(item.tag.ds_tag_customizada ?? item.tag.nm_tag_customizada ?? '')}|${calc}`;
+
+        const cur = contagemCalculadas.get(key) ?? { 
           n: 0, 
           valor: normalizeTagFormatC(item.tag.ds_tag_customizada ?? item.tag.nm_tag_customizada ?? ''), 
           cfgNome: item.cfgNome,
@@ -1135,7 +1140,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           dsTagTexto: item.tag.ds_tag_texto ?? undefined
         };
         cur.n += 1;
-        contagemCalculadas.set(calc, cur);
+        contagemCalculadas.set(key, cur);
       }
 
       // Se não houver TAGs calculadas para essa TAG configurada, pegamos o melhor item
@@ -1159,20 +1164,21 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         continue;
       }
 
-      // Recomenda a TAG calculada que aparece com maior frequência
-      const [calculadaMaisFrequente, info] = Array.from(contagemCalculadas.entries()).sort((a, b) => b[1].n - a[1].n)[0];
+      // Recomenda a TAG calculada que aparece com maior frequência dentro desta categoria.
+      // A ordenação garante que se houver múltiplas variações, a mais comum seja a única sugerida.
+      const [keyGanhadora, info] = Array.from(contagemCalculadas.entries()).sort((a, b) => b[1].n - a[1].n)[0];
 
       out.push({
-        id: `${cat.code}|${info.valor}`,
+        id: keyGanhadora,
         code: cat.code,
         valor: info.valor,
         cfgNome: info.cfgNome,
-        calculada: calculadaMaisFrequente,
+        calculada: keyGanhadora.split('|')[2],
         formula: '',
-        cdTagCustomizada: (info as any).cdTagCustomizada,
-        valorAntigo: info.valor, // Armazenamos o valor original para o histórico
-        cdTagCalculada: (info as any).cdTagCalculada,
-        dsTagTexto: (info as any).dsTagTexto,
+        cdTagCustomizada: info.cdTagCustomizada,
+        valorAntigo: info.valor, 
+        cdTagCalculada: info.cdTagCalculada,
+        dsTagTexto: info.dsTagTexto,
       });
     }
     return out;
