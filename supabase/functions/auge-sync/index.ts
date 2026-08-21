@@ -5163,9 +5163,11 @@ Deno.serve(async (req) => {
 
           const normCode = dsTagCustomizada.toUpperCase().replace(/&/g, '').replace(/\s+/g, '');
           
-          // Lógica de "Somente uma por nome": se houver duplicatas no Auge com o mesmo nome, 
-          // limpamos as extras para manter apenas a que o usuário definiu.
-          // Em MODO DE EDIÇÃO (idLinhaReal presente), priorizamos a busca pelo ID real.
+          // Lógica de "Unicidade por Nome": garantimos que para cada NOME de TAG 
+          // exista apenas UM registro na configuração. 
+          // O Auge permite duplicatas de nome, mas o Pente Fino mitiga isso.
+          // Importante: Uma configuração PODE ter várias tags (ex: "Largura" e "Altura"), 
+          // desde que os nomes sejam diferentes.
           const registrosMesmoNome = idLinhaReal 
             ? tagsExistentes.filter(ext => String(ext.cdTagCustomizada || ext.cdTagCustom || ext.id || '').trim() === idLinhaReal)
             : tagsExistentes.filter(ext => {
@@ -5173,10 +5175,6 @@ Deno.serve(async (req) => {
                 return extValor === normCode;
               });
 
-          // Se houver mais de um registro com o mesmo nome (ou o mesmo ID que o usuário enviou),
-          // precisamos eleger UM como o principal e apagar os outros.
-          // O Auge permite duplicatas, mas o Pente Fino impõe unicidade por nome na configuração.
-          
           // 1. Elegemos o "sobrevivente" (mais recente ou o que o usuário está editando)
           let registroSobrevivente = idLinhaReal 
             ? tagsExistentes.find(ext => String(ext.cdTagCustomizada || ext.cdTagCustom || ext.id || '').trim() === idLinhaReal)
@@ -5184,27 +5182,26 @@ Deno.serve(async (req) => {
 
           const cdTagCustomizadaExistente = String(registroSobrevivente?.cdTagCustomizada || '').trim();
 
-          // 2. Identificamos as duplicatas para remoção (excedentes)
+          // 2. Identificamos e removemos duplicatas (mesmo nome, IDs diferentes do sobrevivente)
           const duplicatasParaRemover = registrosMesmoNome.filter(ext => {
             const extId = String(ext.cdTagCustomizada || ext.cdTagCustom || ext.id || '').trim();
-            return extId !== cdTagCustomizadaExistente;
+            return extId && extId !== cdTagCustomizadaExistente;
           });
 
           if (duplicatasParaRemover.length > 0) {
-            console.log(`[cdConfiguracao ${cdConfiguracao}] Pente Fino mitigando erros do passado: Detectadas ${duplicatasParaRemover.length} duplicatas para "${dsTagCustomizada}". Removendo excedentes...`);
+            console.log(`[cdConfiguracao ${cdConfiguracao}] Mitigando duplicatas para "${dsTagCustomizada}": removendo ${duplicatasParaRemover.length} registros excedentes.`);
             for (const dup of duplicatasParaRemover) {
               const dupId = String(dup.cdTagCustomizada || dup.cdTagCustom || dup.id || '').trim();
-              if (!dupId) continue;
               try {
-                // Ação idAcao=3 no Auge é Exclusão.
                 await deleteTagCustomizada(auth, cdConfiguracao, dupId);
+                // Remove da lista local para evitar processamento redundante no loop de itens
+                tagsExistentes = tagsExistentes.filter(e => String(e.cdTagCustomizada || e.cdTagCustom || e.id || '').trim() !== dupId);
               } catch (e) {
                 console.warn(`Erro ao mitigar duplicata ${dupId}:`, getErrorMessage(e));
               }
             }
           }
 
-          // Atualizamos a referência para o que restou (idLinhaReal ou o eleito)
           let registroExistente = registroSobrevivente;
 
           const doEspelho = dsTagCalculada ? (mapaCalculadas.get(dsTagCalculada.toLowerCase()) ?? []) : [];
