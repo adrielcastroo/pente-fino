@@ -1637,7 +1637,23 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           }),
         },
       });
-      if (error) throw error;
+      if (error) {
+        const errorMsg = error.message || 'Erro desconhecido';
+        setResultado({
+          ok: false,
+          error: errorMsg,
+          falhas: linhas.length,
+          results: linhas.map(l => ({
+            tag: l.valor,
+            calculada: l.calculada,
+            formula: l.formula,
+            ok: false,
+            erro: errorMsg
+          }))
+        });
+        toast.error(`Falha na gravação: ${errorMsg}`);
+        return;
+      }
       const res = data as ResultadoAuge;
       setResultado(res);
       setEditandoAuge(false);
@@ -1990,24 +2006,33 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
           {/* Retorno do Auge */}
           {resultado && !modoEdicaoRelancamento && (
-            <div className={`m-3 rounded border p-3 space-y-2 ${resultado.ok ? 'border-emerald-500/40 bg-emerald-500/5' : 'border-destructive/40 bg-destructive/5'}`}>
-              <div className="flex items-start justify-between gap-2 flex-wrap">
-                <div className="text-[10px] uppercase flex items-center gap-1 font-semibold">
-                  {resultado.ok
-                    ? <><CheckCircle2 className="h-3 w-3 text-emerald-600" /> Gravada no Auge</>
-                    : <><AlertTriangle className="h-3 w-3 text-destructive" /> Falha na gravação</>}
-                  {typeof resultado.gravadas === 'number' && (
-                    <Badge variant="outline" className="text-[9px]">
-                      {resultado.gravadas}/{resultado.total} ok
-                    </Badge>
-                  )}
+            <div className={`m-3 rounded-lg border p-4 space-y-4 shadow-sm ${resultado.ok ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-destructive/30 bg-destructive/5'}`}>
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <div className={cn(
+                    "p-1.5 rounded-full",
+                    resultado.ok ? "bg-emerald-100 text-emerald-600" : "bg-destructive/10 text-destructive"
+                  )}>
+                    {resultado.ok ? <CheckCircle2 className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
+                  </div>
+                  <div>
+                    <h4 className={cn("text-xs font-bold uppercase tracking-tight", resultado.ok ? "text-emerald-700" : "text-destructive")}>
+                      {resultado.ok ? "Gravação Concluída" : "Falha na Gravação"}
+                    </h4>
+                    {typeof resultado.gravadas === 'number' && (
+                      <p className="text-[10px] text-muted-foreground">
+                        {resultado.gravadas} de {resultado.total} itens processados com sucesso
+                      </p>
+                    )}
+                  </div>
                 </div>
+
                 <div className="flex items-center gap-1.5">
                   {!!resultado.augeRows?.length && !editandoAuge && !modoEdicaoRelancamento && (
                     <Button
                       size="sm"
                       variant="outline"
-                      className="h-7 px-2 text-[10px] gap-1"
+                      className="h-7 px-2 text-[10px] gap-1 border-emerald-500/20 hover:bg-emerald-500/5"
                       onClick={() => {
                         const cfg = { 
                           cd: customAberta?.cd || resultado?.cdConfiguracao || '', 
@@ -2020,17 +2045,15 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                     </Button>
                   )}
                   {editandoAuge && (
-                    <>
+                    <div className="flex items-center gap-1">
                       <Button
                         size="sm"
-                        className="h-7 px-2 text-[10px] gap-1"
+                        className="h-7 px-2 text-[10px] gap-1 bg-emerald-600 hover:bg-emerald-700"
                         disabled={regravando || Object.keys(edicoesAuge).length === 0}
                         onClick={confirmarEdicaoAuge}
                       >
-                        {regravando
-                          ? <Loader2 className="h-3 w-3 animate-spin" />
-                          : <CheckCircle2 className="h-3 w-3" />}
-                        {regravando ? 'Regravando…' : `Confirmar edição (${Object.keys(edicoesAuge).length})`}
+                        {regravando ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                        {regravando ? 'Regravando…' : 'Salvar'}
                       </Button>
                       <Button
                         size="sm"
@@ -2041,21 +2064,23 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                       >
                         Cancelar
                       </Button>
-                    </>
+                    </div>
                   )}
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="h-7 px-2 text-[10px]"
+                    className="h-7 w-7 p-0 hover:bg-black/5"
                     onClick={() => { setResultado(null); setEditandoAuge(false); setEdicoesAuge({}); }}
                   >
-                    Fechar
+                    <X className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
 
               {resultado.error && (
-                <div className="text-[11px] text-destructive break-words">{resultado.error}</div>
+                <div className="px-3 py-2 rounded bg-destructive/10 border border-destructive/20 text-[11px] text-destructive leading-relaxed font-medium">
+                  {resultado.error}
+                </div>
               )}
 
               {!modoEdicaoRelancamento && (() => {
