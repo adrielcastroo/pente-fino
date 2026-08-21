@@ -5166,7 +5166,7 @@ Deno.serve(async (req) => {
           const registrosMesmoNome = idLinhaReal 
             ? tagsExistentes.filter(ext => String(ext.cdTagCustomizada || ext.cdTagCustom || ext.id || '').trim() === idLinhaReal)
             : tagsExistentes.filter(ext => {
-                const extValor = String(ext.dsTagCustomizada || ext.nmTagCustomizada || '').trim().toUpperCase().replace(/&/g, '').replace(/\s+/g/);
+                const extValor = String(ext.dsTagCustomizada || ext.nmTagCustomizada || '').trim().toUpperCase().replace(/&/g, '').replace(/\s+/g, '');
                 const extCalculada = String(ext.cdTagCalculada || '').trim();
                 const novaCalculada = String(it?.cdTagCalculada || '').trim();
                 
