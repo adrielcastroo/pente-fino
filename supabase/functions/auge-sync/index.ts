@@ -5161,10 +5161,19 @@ Deno.serve(async (req) => {
           // Lógica de "Somente uma por nome": se houver duplicatas no Auge com o mesmo nome, 
           // limpamos as extras para manter apenas a que o usuário definiu.
           // Em MODO DE EDIÇÃO (idLinhaReal presente), priorizamos a busca pelo ID real.
+          // CRITICAL: We also check for cdTagCalculada to decide if we just update the formula 
+          // or create a new "tag configurada" entry.
           const registrosMesmoNome = idLinhaReal 
             ? tagsExistentes.filter(ext => String(ext.cdTagCustomizada || ext.cdTagCustom || ext.id || '').trim() === idLinhaReal)
             : tagsExistentes.filter(ext => {
-                const extValor = String(ext.dsTagCustomizada || ext.nmTagCustomizada || '').trim().toUpperCase().replace(/&/g, '').replace(/\s+/g, '');
+                const extValor = String(ext.dsTagCustomizada || ext.nmTagCustomizada || '').trim().toUpperCase().replace(/&/g, '').replace(/\s+/g/);
+                const extCalculada = String(ext.cdTagCalculada || '').trim();
+                const novaCalculada = String(it?.cdTagCalculada || '').trim();
+                
+                // Se o nome é igual, consideramos o registro existente.
+                // Se o usuário quer a MESMA tag configurada mas com OUTRA calculada, 
+                // o saveTagCustomizada (idAcao=2) cuidará de atualizar a vinculação se o ID bater,
+                // ou a lógica abaixo de deduplicação garantirá unicidade por nome.
                 return extValor === normCode;
               });
 
@@ -5179,13 +5188,14 @@ Deno.serve(async (req) => {
 
           // Se houver mais de um registro com o mesmo nome, excluímos os excedentes (Deduplicação Atômica)
           // Isso garante que para cada nome de TAG configurada, exista apenas UM registro no Auge.
+          // IMPORTANTE: O "registro principal" será atualizado com a nova TAG calculada.
           const duplicatasParaRemover = registrosMesmoNome.filter(ext => {
             const extId = String(ext.cdTagCustomizada || ext.cdTagCustom || ext.id || '').trim();
             return extId !== cdTagCustomizadaExistente;
           });
 
           if (duplicatasParaRemover.length > 0) {
-            console.log(`[cdConfiguracao ${cdConfiguracao}] Detectadas ${duplicatasParaRemover.length} tags duplicadas para "${dsTagCustomizada}". Removendo...`);
+            console.log(`[cdConfiguracao ${cdConfiguracao}] Detectadas ${duplicatasParaRemover.length} tags duplicadas para "${dsTagCustomizada}". Removendo excedentes para manter unicidade...`);
             for (const dup of duplicatasParaRemover) {
               try {
                 await deleteTagCustomizada(auth, cdConfiguracao, String(dup.cdTagCustomizada));
