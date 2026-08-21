@@ -5033,7 +5033,12 @@ Deno.serve(async (req) => {
       const alvos = cdConfiguracoes.length > 0 ? cdConfiguracoes : [cdConfiguracaoPrincipal];
       const alvosValidos = alvos.map(c => String(c).trim()).filter(Boolean);
       
-      if (alvosValidos.length === 0) throw new Error('Nenhuma configuração alvo informada.');
+      if (alvosValidos.length === 0) {
+        // Se cairmos aqui, o erro deve ser amigável e refletir a falta de configuração selecionada
+        const err: any = new Error('Nenhuma configuração alvo informada.');
+        err.cdConfiguracaoPrincipal = cdConfiguracaoPrincipal;
+        throw err;
+      }
 
       // Resolve o CÓDIGO da TAG Calculada a partir do nome/descrição informado.
       const nomesCalculadas = Array.from(
