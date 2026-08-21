@@ -1,34 +1,12 @@
 import { Registro } from "@/types";
+import { formatML as fmtML } from "./formatters";
 
-// Shared, memoized date formatters for consistent, efficient performance
-const dateFormatterBR = new Intl.DateTimeFormat('pt-BR', { 
-  day: '2-digit', month: '2-digit', year: 'numeric', 
-  hour: '2-digit', minute: '2-digit' 
-});
+/**
+ * Re-exporting centralized formatters for backward compatibility.
+ * @deprecated Use imports from '@/lib/formatters' directly.
+ */
+export { formatDateBR, formatTimeBR, formatML } from "./formatters";
 
-const timeFormatterBR = new Intl.DateTimeFormat('pt-BR', { 
-  hour: '2-digit', minute: '2-digit' 
-});
-
-export function formatDateBR(iso: string | null | undefined): string {
-  if (!iso) return '—';
-  try {
-    const d = new Date(iso);
-    return isNaN(d.getTime()) ? '—' : dateFormatterBR.format(d);
-  } catch {
-    return '—';
-  }
-}
-
-export function formatTimeBR(iso: string | null | undefined): string {
-  if (!iso) return '—';
-  try {
-    const d = new Date(iso);
-    return isNaN(d.getTime()) ? '—' : timeFormatterBR.format(d);
-  } catch {
-    return '—';
-  }
-}
 
 
 export const ENDERECO_REGEX = /^([A-Z0-9]{3,10}\.[A-Z0-9]\.[A-Z0-9]+|CHÃO)$/i;
@@ -49,16 +27,8 @@ export function parseEndereco(addr: string) {
   return { estrutura: est, coluna: col, nivel };
 }
 
-export function fmtML(v: number): string {
-  if (typeof v !== 'number' || v === 0) return '';
-  const rounded = Math.round(v * 10) / 10;
-  if (rounded === 0) return '';
-  return (rounded % 1 === 0 ? Math.round(rounded).toString() : rounded.toFixed(1).replace('.', ',')) + 'M';
-}
+// fmtML and formatML are now handled by re-exports above
 
-export function formatML(v: number): string {
-  return fmtML(v);
-}
 
 export function extractLarguraFromItem(item: string): number {
   const parts = item.split('-');
