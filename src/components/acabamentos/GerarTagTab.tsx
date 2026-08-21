@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { useTagCustomConfigurationSearch } from '@/hooks/useTagCustomConfigurationSearch';
 import { supabase } from '@/integrations/supabase/client';
-import { useGerarTagStore } from '@/store/useGerarTagStore';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -70,7 +69,7 @@ interface TagCategoria {
 }
 
 /** Linha da tabela: TAG configurada escolhida + TAG calculada vinculada. */
-export interface LinhaTag {
+interface LinhaTag {
   id: string;
   code: string;
   valor: string;
@@ -90,7 +89,7 @@ export interface LinhaTag {
   dsTagTexto?: string;
 }
 
-export interface ResultadoAuge {
+interface ResultadoAuge {
   ok: boolean;
   descricao?: string;
   cdConfiguracao?: string;
@@ -118,7 +117,9 @@ export interface ResultadoAuge {
 }
 
 /**
- * Rascunho em memória (legado): A store agora cuida da persistência.
+ * Rascunho em memória (escopo do módulo): mantém o progresso ao navegar entre
+ * abas/páginas do SPA e ao alternar de janela (alt+tab). Só é descartado
+ * quando a página é recarregada ou o navegador é fechado.
  */
 interface RascunhoGerarTag {
   descricao: string;
@@ -183,7 +184,7 @@ function formatarData(iso: string): string {
 
 
 /** Valor completo de uma TAG calculada selecionada. */
-export interface TagCalculadaSel {
+interface TagCalculadaSel {
   valor: string;
   formula: string;
   /** Código no Auge — usado para completar a fórmula truncada da grade. */
@@ -713,44 +714,38 @@ export interface GerarTagTabProps {
 }
 
 export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
-  // 1. Hooks da Store (Persistência)
-  const {
-    descricao, setDescricao,
-    linhas, setLinhas,
-    customAberta, setCustomAberta,
-    resultado, setResultado,
-    modoEdicaoRelancamento, setModoEdicaoRelancamento,
-    snapshotLinhas, setSnapshotLinhas,
-    removidasManualmente, setRemovidasManualmente,
-    termoBuscaCfg, setTermoBuscaCfg,
-    reset
-  } = useGerarTagStore();
-
-  // 2. Estados transitórios (não persistentes)
+  // 1. Hooks de estado no topo, sempre na mesma ordem
+  const [descricao, setDescricao] = useState(rascunho.descricao);
+  const [linhas, setLinhas] = useState<LinhaTag[]>(rascunho.linhas);
+  const [customAberta, setCustomAberta] = useState<{ cd: string; nm: string } | null>(rascunho.customAberta);
   const [enviando, setEnviando] = useState(false);
+  const [resultado, setResultado] = useState<ResultadoAuge | null>(rascunho.resultado);
   const [tentouEnviar, setTentouEnviar] = useState(false);
   const [editandoAuge, setEditandoAuge] = useState(false);
+  const [modoEdicaoRelancamento, setModoEdicaoRelancamento] = useState(false);
+  const [snapshotLinhas, setSnapshotLinhas] = useState<LinhaTag[] | null>(null);
   const [carregandoEdicao, setCarregandoEdicao] = useState(false);
   const [edicoesAuge, setEdicoesAuge] = useState<Record<string, TagCalculadaSel>>({});
   const [regravando, setRegravando] = useState(false);
   const [addManual, setAddManual] = useState(false);
   const [historico, setHistorico] = useState<RegistroGerarTag[]>([]);
+  const [removidasManualmente, setRemovidasManualmente] = useState<Set<string>>(new Set());
   const [cfgSearch, setCfgSearch] = useState<{ termo: string; hasResults: boolean; isSearching: boolean; pesquisou: boolean }>({
-    termo: termoBuscaCfg,
+    termo: '',
     hasResults: false,
     isSearching: false,
     pesquisou: false,
   });
 
-  // 3. Efeitos e Memos subsequentes
+  // 2. Efeitos e Memos subsequentes
   useEffect(() => {
     setHistorico(lerHistorico());
   }, []);
 
-  // Sincroniza o termo da busca local com a store para persistência
-  useEffect(() => {
-    setTermoBuscaCfg(cfgSearch.termo);
-  }, [cfgSearch.termo, setTermoBuscaCfg]);
+  useEffect(() => { rascunho.descricao = descricao; }, [descricao]);
+  useEffect(() => { rascunho.linhas = linhas; }, [linhas]);
+  useEffect(() => { rascunho.customAberta = customAberta; }, [customAberta]);
+  useEffect(() => { rascunho.resultado = resultado; }, [resultado]);
 
 
   // O texto da CONFIGURAÇÃO (não o nome da Tag) é o único driver das análises:
@@ -2042,18 +2037,6 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                       </Button>
                     </>
                   )}
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-7 px-2 text-[10px]"
-                    onClick={() => {
-                      reset();
-                      setCfgSearch({ termo: '', hasResults: false, isSearching: false, pesquisou: false });
-                      toast.success('Rascunho e resultados limpos.');
-                    }}
-                  >
-                    Novo Lançamento
-                  </Button>
                   <Button
                     size="sm"
                     variant="ghost"

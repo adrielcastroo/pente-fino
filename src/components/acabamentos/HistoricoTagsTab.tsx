@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useGerarTagStore } from '@/store/useGerarTagStore';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -37,7 +36,6 @@ export default function HistoricoTagsTab() {
   const [removendo, setRemovendo] = useState(false);
   const [revertendo, setRevertendo] = useState<string | null>(null);
   const [filtroAlteradas, setFiltroAlteradas] = useState<string | null>(null);
-  const { setSnapshotLinhas, setCustomAberta, setLinhas, setModoEdicaoRelancamento, setResultado } = useGerarTagStore();
   
 
 
