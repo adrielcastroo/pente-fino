@@ -5,7 +5,7 @@ import { formatML as fmtML } from "./formatters";
  * Re-exporting centralized formatters for backward compatibility.
  * @deprecated Use imports from '@/lib/formatters' directly.
  */
-export { formatDateBR, formatTimeBR, formatML } from "./formatters";
+export { formatDateBR, formatTimeBR, formatML, formatML as fmtML } from "./formatters";
 
 
 
