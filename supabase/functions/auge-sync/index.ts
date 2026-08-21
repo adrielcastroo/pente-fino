@@ -5166,49 +5166,46 @@ Deno.serve(async (req) => {
           // Lógica de "Somente uma por nome": se houver duplicatas no Auge com o mesmo nome, 
           // limpamos as extras para manter apenas a que o usuário definiu.
           // Em MODO DE EDIÇÃO (idLinhaReal presente), priorizamos a busca pelo ID real.
-          // CRITICAL: We also check for cdTagCalculada to decide if we just update the formula 
-          // or create a new "tag configurada" entry.
           const registrosMesmoNome = idLinhaReal 
             ? tagsExistentes.filter(ext => String(ext.cdTagCustomizada || ext.cdTagCustom || ext.id || '').trim() === idLinhaReal)
             : tagsExistentes.filter(ext => {
                 const extValor = String(ext.dsTagCustomizada || ext.nmTagCustomizada || '').trim().toUpperCase().replace(/&/g, '').replace(/\s+/g, '');
-                const extCalculada = String(ext.cdTagCalculada || '').trim();
-                const novaCalculada = String(it?.cdTagCalculada || '').trim();
-                
-                // Se o nome é igual, consideramos o registro existente.
-                // Se o usuário quer a MESMA tag configurada mas com OUTRA calculada, 
-                // o saveTagCustomizada (idAcao=2) cuidará de atualizar a vinculação se o ID bater,
-                // ou a lógica abaixo de deduplicação garantirá unicidade por nome.
                 return extValor === normCode;
               });
 
-          // O registro principal será o primeiro encontrado ou o que o usuário já tinha.
-          // Prioridade 1: ID real enviado pelo frontend (idLinhaReal)
-          // Prioridade 2: Primeiro registro encontrado com o mesmo nome no Auge
-          let registroExistente = idLinhaReal 
+          // Se houver mais de um registro com o mesmo nome (ou o mesmo ID que o usuário enviou),
+          // precisamos eleger UM como o principal e apagar os outros.
+          // O Auge permite duplicatas, mas o Pente Fino impõe unicidade por nome na configuração.
+          
+          // 1. Elegemos o "sobrevivente" (mais recente ou o que o usuário está editando)
+          let registroSobrevivente = idLinhaReal 
             ? tagsExistentes.find(ext => String(ext.cdTagCustomizada || ext.cdTagCustom || ext.id || '').trim() === idLinhaReal)
-            : registrosMesmoNome[0];
+            : [...registrosMesmoNome].sort((a, b) => Number(b.cdTagCustomizada || 0) - Number(a.cdTagCustomizada || 0))[0];
 
-          const cdTagCustomizadaExistente = String(idLinhaReal || registroExistente?.cdTagCustomizada || '').trim();
+          const cdTagCustomizadaExistente = String(registroSobrevivente?.cdTagCustomizada || '').trim();
 
-          // Se houver mais de um registro com o mesmo nome, excluímos os excedentes (Deduplicação Atômica)
-          // Isso garante que para cada nome de TAG configurada, exista apenas UM registro no Auge.
-          // IMPORTANTE: O "registro principal" será atualizado com a nova TAG calculada.
+          // 2. Identificamos as duplicatas para remoção (excedentes)
           const duplicatasParaRemover = registrosMesmoNome.filter(ext => {
             const extId = String(ext.cdTagCustomizada || ext.cdTagCustom || ext.id || '').trim();
             return extId !== cdTagCustomizadaExistente;
           });
 
           if (duplicatasParaRemover.length > 0) {
-            console.log(`[cdConfiguracao ${cdConfiguracao}] Detectadas ${duplicatasParaRemover.length} tags duplicadas para "${dsTagCustomizada}". Removendo excedentes para manter unicidade...`);
+            console.log(`[cdConfiguracao ${cdConfiguracao}] Pente Fino mitigando erros do passado: Detectadas ${duplicatasParaRemover.length} duplicatas para "${dsTagCustomizada}". Removendo excedentes...`);
             for (const dup of duplicatasParaRemover) {
+              const dupId = String(dup.cdTagCustomizada || dup.cdTagCustom || dup.id || '').trim();
+              if (!dupId) continue;
               try {
-                await deleteTagCustomizada(auth, cdConfiguracao, String(dup.cdTagCustomizada));
+                // Ação idAcao=3 no Auge é Exclusão.
+                await deleteTagCustomizada(auth, cdConfiguracao, dupId);
               } catch (e) {
-                console.warn(`Erro ao remover tag duplicada ${dup.cdTagCustomizada}:`, getErrorMessage(e));
+                console.warn(`Erro ao mitigar duplicata ${dupId}:`, getErrorMessage(e));
               }
             }
           }
+
+          // Atualizamos a referência para o que restou (idLinhaReal ou o eleito)
+          let registroExistente = registroSobrevivente;
 
           const doEspelho = dsTagCalculada ? (mapaCalculadas.get(dsTagCalculada.toLowerCase()) ?? []) : [];
           const informado = String(it?.cdTagCalculada ?? '').trim();
