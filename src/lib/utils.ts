@@ -6,15 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * Formata quantidade numérica eliminando erros de ponto flutuante
- * (ex.: 8887.999999999998 → "8.888"). Usa pt-BR.
+ * Re-exporting centralized formatters for backward compatibility.
+ * @deprecated Use imports from '@/lib/formatters' directly.
  */
-export function formatQty(n: number | null | undefined, maxDecimals = 2): string {
-  if (n === null || n === undefined || isNaN(Number(n))) return '0';
-  const rounded = Math.round(Number(n) * 100) / 100;
-  if (rounded === 1) return '1';
-  return rounded.toLocaleString('pt-BR', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: maxDecimals,
-  });
-}
+export { formatQty } from './formatters';
