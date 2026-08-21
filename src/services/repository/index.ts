@@ -31,7 +31,7 @@ export class RegistroRepository extends BaseRepository {
       .eq('conference_id', conferenceId);
     
     if (error) throw error;
-    return data as Registro[];
+    return (data as any) as Registro[];
   }
 
   async upsertMany(registros: Partial<Registro>[]) {
