@@ -1,5 +1,4 @@
 import { useDeferredValue, useEffect, useMemo, useRef, useState, useCallback } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { useTagCustomConfigurationSearch } from '@/hooks/useTagCustomConfigurationSearch';
@@ -247,12 +246,9 @@ function TagCalculadaCell({
   }, []);
 
   useEffect(() => {
-    const t = setTimeout(() => {
-      const b = busca.trim();
-      if (b !== termo) setTermo(b);
-    }, 300);
+    const t = setTimeout(() => setTermo(busca.trim()), 300);
     return () => clearTimeout(t);
-  }, [busca, termo]);
+  }, [busca]);
 
 
   const padrao = useMemo(() => toIlikePattern(termo), [termo]);
@@ -460,21 +456,16 @@ function ConfiguracaoSelect({
   const wrapRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const t = setTimeout(() => {
-      const b = busca.trim();
-      if (b !== termo) setTermo(b);
-    }, 300);
+    const t = setTimeout(() => setTermo(busca.trim()), 300);
     return () => clearTimeout(t);
-  }, [busca, termo]);
+  }, [busca]);
 
   // Clicar fora apenas fecha a lista suspensa: o termo e o resultado da busca
   // permanecem, então a configuração NÃO passa a ser tratada como nova.
   useEffect(() => {
     const onDocDown = (ev: MouseEvent) => {
       if (!wrapRef.current) return;
-      if (!wrapRef.current.contains(ev.target as Node)) {
-        setAberto(false);
-      }
+      if (!wrapRef.current.contains(ev.target as Node)) setAberto(false);
     };
     document.addEventListener('mousedown', onDocDown);
     return () => document.removeEventListener('mousedown', onDocDown);
@@ -547,31 +538,14 @@ function ConfiguracaoSelect({
     },
   });
 
-  const lastStateRef = useRef<string>('');
   useEffect(() => {
-    const newState = {
+    onSearchStateChange?.({
       termo,
       hasResults: opcoes.length > 0,
       isSearching: isFetching,
       pesquisou: isSuccess && !isFetching && termo.length >= 2,
-    };
-    const newStateStr = JSON.stringify(newState);
-    if (lastStateRef.current !== newStateStr) {
-      lastStateRef.current = newStateStr;
-      onSearchStateChange?.(newState);
-    }
-  }, [termo, opcoes.length, isFetching, isSuccess, onSearchStateChange]);
-
-  const lastValueRef = useRef<string>('');
-  useEffect(() => {
-    const valStr = JSON.stringify(valor);
-    if (valStr !== lastValueRef.current) {
-      lastValueRef.current = valStr;
-      if (valor && !aberto) {
-        setBusca(valor.nm || '');
-      }
-    }
-  }, [valor, aberto]);
+    });
+  }, [termo, opcoes.length, isFetching, isSuccess, padrao.length, onSearchStateChange]);
 
   // A exibição de valor selecionado individualmente foi removida para priorizar o fluxo automatizado global
   // que atua sobre todas as configurações encontradas pelo termo de busca.
@@ -614,12 +588,9 @@ function TagConfiguradaSearch({
   const [termo, setTermo] = useState('');
 
   useEffect(() => {
-    const t = setTimeout(() => {
-      const b = busca.trim();
-      if (b !== termo) setTermo(b);
-    }, 300);
+    const t = setTimeout(() => setTermo(busca.trim()), 300);
     return () => clearTimeout(t);
-  }, [busca, termo]);
+  }, [busca]);
 
   const padrao = useMemo(() => toIlikePattern(termo), [termo]);
   const tokens = useMemo(() => toIlikeTokens(termo), [termo]);
@@ -742,7 +713,6 @@ export interface GerarTagTabProps {
 }
 
 export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
-  const queryClient = useQueryClient();
   // 1. Hooks da Store (Persistência)
   const {
     descricao, setDescricao,
@@ -779,10 +749,8 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
   // Sincroniza o termo da busca local com a store para persistência
   useEffect(() => {
-    if (cfgSearch.termo !== termoBuscaCfg) {
-      setTermoBuscaCfg(cfgSearch.termo);
-    }
-  }, [cfgSearch.termo, termoBuscaCfg, setTermoBuscaCfg]);
+    setTermoBuscaCfg(cfgSearch.termo);
+  }, [cfgSearch.termo, setTermoBuscaCfg]);
 
 
   // O texto da CONFIGURAÇÃO (não o nome da Tag) é o único driver das análises:
@@ -797,12 +765,10 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   const termoAnteriorRef = useRef(termoBusca);
   useEffect(() => {
     if (termoAnteriorRef.current !== termoBusca) {
-      if (removidasManualmente.size > 0) {
-        setRemovidasManualmente(new Set());
-      }
+      setRemovidasManualmente(new Set());
       termoAnteriorRef.current = termoBusca;
     }
-  }, [termoBusca, removidasManualmente.size, setRemovidasManualmente]);
+  }, [termoBusca]);
 
   // ---------- Configurações (catálogo leve) ----------
   const { data: configuracoes = [], isLoading: loadingCfgs } = useQuery({
@@ -1139,7 +1105,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     for (const tag of tagsUnificadas) {
       const code = normalizeTagCode(tag.ds_tag_customizada ?? tag.nm_tag_customizada);
       if (!code) continue;
-      const score = (scoreByCfg.get(tag.cd_configuracao) as number) ?? 0;
+      const score = scoreByCfg.get(tag.cd_configuracao) ?? 0;
       const cfgNome = tag.nm_configuracao ?? tag.cd_configuracao;
       const cat = byCode.get(code) ?? { code, items: [] };
       cat.items.push({ tag, cfgNome, score });
@@ -1639,49 +1605,32 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
     setEnviando(true);
     try {
-      // 1. Antes de gravar, se houver uma configuração aberta, garantimos a sincronização de IDs
-      // para evitar duplicatas nominais no Auge (UPSERT vs INSERT).
-      let linhasComId = [...linhas];
-      if (customAberta?.cd) {
-        try {
-          const { data: syncData } = await supabase.functions.invoke('auge-sync?action=tag_custom_por_config', {
-            body: { cdConfiguracao: customAberta.cd, nmConfiguracao: customAberta.nm },
-          });
-          const augeRows = (syncData as any)?.rows || [];
-          linhasComId = linhas.map(l => {
-            const match = augeRows.find((r: any) => 
-              normalizeTagCode(r.dsTagCustomizada || r.nmTagCustomizada) === l.code
-            );
-            return match ? { 
-              ...l, 
-              cdTagCustomizada: String(match.cdTagCustomizada || match.cdTagCustom || match.id || '').trim(),
-              dsTagTexto: String(match.dsTextoLivre || match.dsTagTexto || '').trim()
-            } : l;
-          });
-        } catch (e) {
-          console.warn('[GerarTagTab] Falha na sincronização pré-gravação:', e);
-        }
-      }
-
-      // 2. Grava no Auge
+      // 1. Grava no Auge
       const { data, error } = await supabase.functions.invoke('auge-sync?action=criar_tag_custom', {
         body: {
+          // Lista de configurações detectadas no Resumo
           cdConfiguracoes: configuracoesAlvo,
           cdConfiguracao: customAberta?.cd || configuracoesAlvo[0] || '',
           descricao: descricaoFinal,
-          itens: linhasComId.map((l) => {
+          itens: linhas.map((l) => {
             const calculada = (l.calculada ?? '').trim();
+            // Em modo de edição/relançamento, se o campo estiver vazio, preservamos o valor original (dsTagTexto) se disponível.
+            // Isso impede a remoção acidental no Auge.
             const valorEfetivo = (modoEdicaoRelancamento && !calculada && l.dsTagTexto) 
               ? l.dsTagTexto 
               : calculada;
 
             return {
+              // TAG (Pente Fino) -> Tag (Auge)
               dsTagCustomizada: l.valor,
+              // TAG Calculada (Pente Fino) -> Tag Calculada (Auge)
               dsTagCalculada: valorEfetivo,
-              nmTagCalculada: l.calculada ?? '', // Adicionado para persistir o nome
+              // Código já resolvido na busca — dispensa o lookup por nome.
               cdTagCalculada: l.cdTagCalculada ?? '',
               dsFormula: l.formula ?? '',
+              // Quando a linha já existe no Auge, sobrescreve em vez de duplicar.
               cdTagCustomizada: l.cdTagCustomizada ?? '',
+              // "Texto Livre" só é usado quando não há Tag Calculada (são mutuamente exclusivos no Auge)
               dsTagTexto: valorEfetivo ? '' : l.valor,
             };
           }),
@@ -1705,10 +1654,6 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       if (res?.ok) {
         toast.success(`TAG Custom gravada no Auge (${res.gravadas}/${res.total}).`);
         
-        // Invalida caches de busca para refletir a nova TAG Custom
-        queryClient.invalidateQueries({ queryKey: ['tag-custom-configuracao-busca'] });
-        queryClient.invalidateQueries({ queryKey: ['tag-custom-por-config'] });
-
         // 2. Re-leitura de segurança após gravar para confirmar persistência e ausência de duplicatas
         if (customAberta?.cd) {
           try {
@@ -1718,11 +1663,11 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
             const checkRows = (checkData as any)?.rows || [];
             console.log(`[AugeSync] Verificação pós-gravação: ${checkRows.length} TAGs encontradas para ${customAberta.cd}`);
             
-            const nomes = checkRows.map((r: any) => normalizeTagCode(r.dsTagCustomizada || r.nmTagCustomizada));
+            // Se o número de TAGs for diferente do que enviamos, ou se houver duplicatas nominais, o backend falhou na deduplicação
+            const nomes = checkRows.map((r: any) => String(r.dsTagCustomizada || r.nmTagCustomizada || '').trim().toUpperCase());
             const unicos = new Set(nomes);
             if (unicos.size !== nomes.length) {
               console.warn('[AugeSync] Detectadas duplicatas no Auge após gravação!');
-              toast.warning('Atenção: O Auge ainda reporta registros duplicados. Recomenda-se recarregar a configuração.');
             }
           } catch (e) {
             console.warn('[AugeSync] Falha na re-leitura de segurança:', e);
@@ -1841,16 +1786,8 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           </div>
           <ConfiguracaoSelect
             valor={customAberta}
-            onChange={(v) => {
-              if (JSON.stringify(v) !== JSON.stringify(customAberta)) {
-                setCustomAberta(v);
-              }
-            }}
-            onSearchStateChange={(state) => {
-              if (JSON.stringify(state) !== JSON.stringify(cfgSearch)) {
-                setCfgSearch(state);
-              }
-            }}
+            onChange={(v) => setCustomAberta(v)}
+            onSearchStateChange={setCfgSearch}
             disabled={modoEdicaoRelancamento}
           />
           <p className="text-[10px] text-muted-foreground">

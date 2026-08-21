@@ -5161,14 +5161,16 @@ Deno.serve(async (req) => {
           // Lógica de "Somente uma por nome": se houver duplicatas no Auge com o mesmo nome, 
           // limpamos as extras para manter apenas a que o usuário definiu.
           // Em MODO DE EDIÇÃO (idLinhaReal presente), priorizamos a busca pelo ID real.
-          const registrosMesmoNome = tagsExistentes.filter(ext => {
-            const extValor = String(ext.dsTagCustomizada || ext.nmTagCustomizada || '').trim().toUpperCase().replace(/&/g, '').replace(/\s+/g, '');
-            return extValor === normCode;
-          });
+          const registrosMesmoNome = idLinhaReal 
+            ? tagsExistentes.filter(ext => String(ext.cdTagCustomizada || ext.cdTagCustom || ext.id || '').trim() === idLinhaReal)
+            : tagsExistentes.filter(ext => {
+                const extValor = String(ext.dsTagCustomizada || ext.nmTagCustomizada || '').trim().toUpperCase().replace(/&/g, '').replace(/\s+/g, '');
+                return extValor === normCode;
+              });
 
           // O registro principal será o primeiro encontrado ou o que o usuário já tinha.
           // Prioridade 1: ID real enviado pelo frontend (idLinhaReal)
-          // Prioridade 2: Registro encontrado com o mesmo nome no Auge
+          // Prioridade 2: Primeiro registro encontrado com o mesmo nome no Auge
           let registroExistente = idLinhaReal 
             ? tagsExistentes.find(ext => String(ext.cdTagCustomizada || ext.cdTagCustom || ext.id || '').trim() === idLinhaReal)
             : registrosMesmoNome[0];
@@ -5177,7 +5179,6 @@ Deno.serve(async (req) => {
 
           // Se houver mais de um registro com o mesmo nome, excluímos os excedentes (Deduplicação Atômica)
           // Isso garante que para cada nome de TAG configurada, exista apenas UM registro no Auge.
-          // Excluímos tudo que tiver o mesmo nome mas ID diferente do que decidimos manter.
           const duplicatasParaRemover = registrosMesmoNome.filter(ext => {
             const extId = String(ext.cdTagCustomizada || ext.cdTagCustom || ext.id || '').trim();
             return extId !== cdTagCustomizadaExistente;
@@ -5244,8 +5245,8 @@ Deno.serve(async (req) => {
               
               results.push({
                 tag: dsTagCustomizada,
-                calculada: dsTagCalculada || (it?.nmTagCalculada) || registroExistente?.dsTagCalculada || '',
-                formula: dsFormula || (it?.dsFormula) || registroExistente?.dsFormula || '',
+                calculada: dsTagCalculada || (it?.nmTagCalculada) || '',
+                formula: dsFormula || (it?.dsFormula) || '',
                 cdTagCustomizada: String(auge?.cdTagCustomizada ?? cdTagCustomizadaExistente ?? ''),
                 cdTagCalculada: cdCalculadaFinal,
                 ok: true,
