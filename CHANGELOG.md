@@ -2,6 +2,9 @@
 
 Todas as releases seguem SemVer (MAJOR.MINOR.PATCH). Fonte única: `src/lib/changelog.ts`.
 
+## 4.11.0 — 2026-08-27
+- 🔧 Redesign do Painel Admin: sidebar com nículos recolhíveis, consolidação de auditorias e remoção de lixo de UI
+
 ## 4.10.1 — 2026-08-27
 - 🔧 Pipeline de release: versiona package.json, gera CHANGELOG.md e cria git tag por release
 
