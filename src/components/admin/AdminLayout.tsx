@@ -350,8 +350,8 @@ function OverviewTab() {
           <p className="text-sm text-muted-foreground">Nenhuma release registrada.</p>
         ) : (
           <ul className="divide-y divide-border/40">
-            {stats.releases.map((r: any) => (
-              <li key={r.version} className="flex flex-col py-3 text-sm gap-1">
+            {stats.releases.map((r: any, index: number) => (
+              <li key={r.id ?? `release-${index}`} className="flex flex-col py-3 text-sm gap-1">
                 <div className="flex items-center gap-2">
                   <span className="font-mono font-bold">v{r.version}</span>
                   {r.is_current && <Badge className="bg-primary text-[10px] h-5">Atual</Badge>}
