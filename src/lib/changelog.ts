@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 // Newest first. Bump LATEST_VERSION when adding entries to trigger "novo" badge.
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '4.12.0',
+    date: '2026-08-27',
+    highlights: [
+      { type: 'improvement', text: "Painel Admin isolado: rota /admin fora do MainLayout com sidebar própria e botão Voltar ao app" },
+    ],
+  },
+  {
     version: '4.11.0',
     date: '2026-08-27',
     highlights: [

@@ -2,6 +2,9 @@
 
 Todas as releases seguem SemVer (MAJOR.MINOR.PATCH). Fonte única: `src/lib/changelog.ts`.
 
+## 4.12.0 — 2026-08-27
+- 🔧 Painel Admin isolado: rota /admin fora do MainLayout com sidebar própria e botão Voltar ao app
+
 ## 4.11.0 — 2026-08-27
 - 🔧 Redesign do Painel Admin: sidebar com nículos recolhíveis, consolidação de auditorias e remoção de lixo de UI
 
