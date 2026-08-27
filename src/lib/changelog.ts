@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 // Newest first. Bump LATEST_VERSION when adding entries to trigger "novo" badge.
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '4.10.1',
+    date: '2026-08-27',
+    highlights: [
+      { type: 'improvement', text: "Pipeline de release: versiona package.json, gera CHANGELOG.md e cria git tag por release" },
+    ],
+  },
+  {
     version: '4.10.0',
     date: '2026-08-02',
     highlights: [
