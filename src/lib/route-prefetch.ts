@@ -42,7 +42,7 @@ const registry: Record<string, Loader> = {
   '/compras/acompanhamentos': () => import('@/pages/compras/AcompanhamentosPage'),
   '/compras/analise-compra': () => import('@/pages/compras/AnaliseCompraPage'),
   // Admin
-  '/admin': () => import('@/pages/admin/AdminPanelPage'),
+  '/admin': () => import('@/components/admin/AdminLayout'),
 };
 
 const prefetched = new Set<string>();
