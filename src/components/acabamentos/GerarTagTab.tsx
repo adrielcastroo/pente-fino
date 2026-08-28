@@ -61,6 +61,37 @@ function normalizeTagCode(raw: string | null | undefined): string {
 }
 
 
+// ---------------------------------------------------------------------------
+// Deduplicacao por CODE da TAG Configurada.
+// Regra de negocio (solicitada pelo usuario):
+//  - Duplicata = mesmo `code` (ex: '&COR'), independente do valor.
+//  - Ao inserir uma tag com code ja existente, a NOVA sempre vence (substitui,
+//    mantendo apenas 1 linha por code).
+//  - Remove duplicadas identicas mantendo a mais recente/atualizada.
+// A Ordem e preservada: a primeira ocorrencia de cada code ganha, exceto quando
+// `preferFront` for true (usado nos pontos de insercao, onde a nova vai na frente).
+function dedupLinhasPorCode(linhas: LinhaTag[], preferFront = false): LinhaTag[] {
+  const map = new Map<string, LinhaTag>();
+  if (preferFront) {
+    // Itera do fim pro inicio: a ultima (mais recente) vence por code.
+    for (let i = linhas.length - 1; i >= 0; i--) {
+      const l = linhas[i];
+      if (!l.code) continue;
+      if (!map.has(l.code)) map.set(l.code, l);
+    }
+    // Reconstroi na ordem original, mantendo so as que sobreviveram.
+    const sobreviveram = new Set(map.values());
+    return linhas.filter((l) => sobreviveram.has(l));
+  }
+  for (const l of linhas) {
+    if (!l.code) continue;
+    if (!map.has(l.code)) map.set(l.code, l);
+  }
+  return linhas.filter((l) => map.has(l.code) && map.get(l.code) === l);
+}
+
+
+
 
 
 interface TagCategoria {
@@ -1166,11 +1197,10 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       setLinhas((prev) => {
         const next = [...prev];
         
-        // 1. Adiciona recomendações que ainda não estão na tabela e não foram removidas
+        // 1. Adiciona recomendações (mesmo code existente é sobrescrito pela nova)
         for (const rec of recomendadas) {
-          const jaExiste = next.some(l => l.code === rec.code);
-          if (!jaExiste) {
-            next.push({
+          const idx = next.findIndex(l => l.code === rec.code);
+          const linha = {
               id: rec.id,
               code: rec.code,
               valor: rec.valor,
@@ -1181,8 +1211,9 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
               valorAntigo: rec.valorAntigo,
               cdTagCalculada: rec.cdTagCalculada,
               dsTagTexto: rec.dsTagTexto,
-            });
-          }
+            };
+          if (idx >= 0) next[idx] = linha; // substitui a existente (nova vence)
+          else next.push(linha);
         }
 
         // 2. Remove linhas que foram removidas manualmente ou não fazem mais parte do escopo
@@ -1199,6 +1230,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           
           return true;
         });
+        return dedupLinhasPorCode(next);
       });
     } else if (termoBusca.trim().length < 2) {
       setLinhas([]);
@@ -1335,12 +1367,13 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
   const adicionarLinha = (r: { id: string; code: string; valor: string; cfgNome: string; calculada: string; formula?: string; cdTagCustomizada?: string; cdTagCalculada?: string; dsTagTexto?: string }) => {
     setLinhas((prev) => {
+      // Toggle: se ja existe o mesmo id, remove (toggle off).
       if (prev.some((l) => l.id === r.id)) {
         toast.info(`TAG ${r.code} removida da tabela.`);
         return prev.filter((l) => l.id !== r.id);
       }
-      toast.success(`TAG ${r.code} adicionada à coluna Tag Configurada.`);
-      return [...prev, {
+      // Regra: duplicata = mesmo `code`; a nova sempre vence (substitui a antiga).
+      const linha = {
         id: r.id,
         code: r.code,
         valor: r.valor,
@@ -1350,7 +1383,10 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         cdTagCustomizada: r.cdTagCustomizada,
         cdTagCalculada: r.cdTagCalculada,
         dsTagTexto: r.dsTagTexto,
-      }];
+      };
+      const semCode = prev.filter((l) => l.code !== r.code);
+      toast.success(`TAG ${r.code} adicionada à coluna Tag Configurada.`);
+      return [...semCode, linha];
     });
   };
 
@@ -1360,18 +1396,24 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     if (!valor) return;
     const code = normalizeTagCode(valor) || 'TAG';
     const id = `manual|${code}|${valor}`;
-    if (linhas.some((l) => l.id === id || l.code === code)) {
+    // Regra: duplicata = mesmo `code`; a nova sempre vence.
+    if (linhas.some((l) => l.id === id)) {
       toast.info(`A TAG ${code} já está na composição.`);
       return;
     }
-    setLinhas((prev) => [...prev, {
+    setLinhas((prev) => dedupLinhasPorCode([...prev, {
       id,
       code,
       valor,
       cfgNome: opt.cfgNome || customAberta?.nm || '',
       calculada: normalizeTagFormatC(opt.calculada ?? ''),
       formula: '',
-    }]);
+    }], true));
+    if (linhas.some((l) => l.code === code && l.id !== id)) {
+      toast.success(`TAG ${code} atualizada na composição (duplicata substituída).`);
+    } else {
+      toast.success(`TAG ${code} adicionada à composição.`);
+    }
     setRemovidasManualmente((prev) => {
       const next = new Set(prev);
       next.delete(code);
@@ -1405,7 +1447,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           formula: '',
           cdTagCalculada: (o as any).cdTagCalculada,
         }));
-      return [...prev, ...novas];
+      return dedupLinhasPorCode([...prev, ...novas], true);
     });
     toast.success(`${obrigatoriasFaltando.length} TAG(s) obrigatória(s) adicionada(s).`);
   };
@@ -1514,7 +1556,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
       setSnapshotLinhas([...linhas]);
       setCustomAberta(cfg);
-      setLinhas(linhasReais);
+      setLinhas(dedupLinhasPorCode(linhasReais));
       setModoEdicaoRelancamento(true);
       setAddManual(false);
       setResultado(null);
