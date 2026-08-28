@@ -748,8 +748,13 @@ export interface GerarTagTabProps {
 
 export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   // 1. Hooks de estado no topo, sempre na mesma ordem
+  // Dedup de defesa em profundidade: o rascunho (memoria de modulo) pode trazer
+  // duplicatas de sessoes anteriores. Garantimos que o estado inicial ja esteja
+  // sem TAGs configuradas repetidas (1 por code), independente do efeito de recomendacoes.
+  const linhasIniciais = dedupLinhasPorCode(rascunho.linhas);
+  rascunho.linhas = linhasIniciais;
   const [descricao, setDescricao] = useState(rascunho.descricao);
-  const [linhas, setLinhas] = useState<LinhaTag[]>(rascunho.linhas);
+  const [linhas, setLinhas] = useState<LinhaTag[]>(linhasIniciais);
   const [customAberta, setCustomAberta] = useState<{ cd: string; nm: string } | null>(rascunho.customAberta);
   const [enviando, setEnviando] = useState(false);
   const [resultado, setResultado] = useState<ResultadoAuge | null>(rascunho.resultado);
