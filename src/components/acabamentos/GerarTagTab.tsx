@@ -1217,7 +1217,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
               valor: rec.valor,
               cfgNome: rec.cfgNome,
               calculada: existente?.editadaManual ? existente.calculada : rec.calculada,
-              formula: existente?.editadaManual ? existente.formula : '',
+              formula: existente?.editadaManual ? existente.formula : (rec.formula || ''),
               cdTagCustomizada: rec.cdTagCustomizada,
               valorAntigo: rec.valorAntigo,
               cdTagCalculada: existente?.editadaManual ? existente.cdTagCalculada : rec.cdTagCalculada,
@@ -1242,10 +1242,23 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           
           return true;
         });
-        return dedupLinhasPorCode(next);
+        const resultado = dedupLinhasPorCode(next);
+        // Quebra o loop de re-render: se o conteúdo não mudou, mantém a
+        // MESMA referência de `prev` para que o React não dispare novo ciclo.
+        if (resultado.length === prev.length) {
+          const iguais = resultado.every((l, i) => {
+            const p = prev[i];
+            return p && l.id === p.id && l.code === p.code && l.valor === p.valor &&
+              l.calculada === p.calculada && l.formula === p.formula &&
+              l.editadaManual === p.editadaManual && l.cdTagCustomizada === p.cdTagCustomizada &&
+              l.cdTagCalculada === p.cdTagCalculada && l.dsTagTexto === p.dsTagTexto;
+          });
+          if (iguais) return prev;
+        }
+        return resultado;
       });
     } else if (termoBusca.trim().length < 2) {
-      setLinhas([]);
+      setLinhas((prev) => (prev.length === 0 ? prev : []));
     }
   }, [recomendadas, termoBusca, removidasManualmente]);
 
