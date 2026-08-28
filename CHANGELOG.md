@@ -2,6 +2,9 @@
 
 Todas as releases seguem SemVer (MAJOR.MINOR.PATCH). Fonte única: `src/lib/changelog.ts`.
 
+## 4.12.1 — 2026-08-28
+- 🐞 Corrige chave duplicada no overview e warn de presence CLOSED
+
 ## 4.12.0 — 2026-08-27
 - 🔧 Painel Admin isolado: rota /admin fora do MainLayout com sidebar própria e botão Voltar ao app
 
