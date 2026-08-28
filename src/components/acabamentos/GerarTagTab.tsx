@@ -795,11 +795,14 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   const termoDeferido = useDeferredValue(termoBusca);
 
   // Limpa remoções manuais ao mudar drasticamente o termo de busca (novo escopo)
+  // Protegido contra múltiplas atualizações: só dispara quando o termo realmente muda de valor
   const termoAnteriorRef = useRef(termoBusca);
   useEffect(() => {
-    if (termoAnteriorRef.current !== termoBusca) {
+    const anterior = termoAnteriorRef.current;
+    const atual = termoBusca;
+    if (anterior !== atual) {
+      termoAnteriorRef.current = atual;
       setRemovidasManualmente(new Set());
-      termoAnteriorRef.current = termoBusca;
     }
   }, [termoBusca]);
 
