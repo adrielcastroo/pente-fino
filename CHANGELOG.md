@@ -2,6 +2,9 @@
 
 Todas as releases seguem SemVer (MAJOR.MINOR.PATCH). Fonte única: `src/lib/changelog.ts`.
 
+## 4.12.2 — 2026-08-28
+- 🔧 Performance da aba Gerar TAG: elimina loop de 80k no bloco Resumo
+
 ## 4.12.1 — 2026-08-28
 - 🐞 Corrige chave duplicada no overview e warn de presence CLOSED
 
