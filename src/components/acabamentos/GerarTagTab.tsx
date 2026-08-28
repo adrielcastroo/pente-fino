@@ -1184,49 +1184,67 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     return out;
   }, [categorias, removidasManualmente]);
 
-  // Sincroniza automaticamente a tabela com as recomendações do sistema
-  useEffect(() => {
-    if (recomendadas.length > 0) {
-      setLinhas((prev) => {
-        const next = [...prev];
-        
-        // 1. Adiciona recomendações que ainda não estão na tabela e não foram removidas
-        for (const rec of recomendadas) {
-          const jaExiste = next.some(l => l.code === rec.code);
-          if (!jaExiste) {
-            next.push({
-              id: rec.id,
-              code: rec.code,
-              valor: rec.valor,
-              cfgNome: rec.cfgNome,
-              calculada: rec.calculada,
-              formula: '',
-              cdTagCustomizada: rec.cdTagCustomizada,
-              valorAntigo: rec.valorAntigo,
-              cdTagCalculada: rec.cdTagCalculada,
-              dsTagTexto: rec.dsTagTexto,
-            });
-          }
-        }
+  // Sincroniza automaticamente a tabela com as recomendações do sistema.
+  // ATENÇÃO: setLinhas NO deve ser chamado durante o render.
+  // Por isso usamos ref + requestAnimationFrame para garantir que a
+  // atualização ocorra APÓS o commit, evitando React error #185.
+  const recomendadasRef = useRef(recomendadas);
+  const termoBuscaRef = useRef(termoBusca);
+  const removidasManualmenteRef = useRef(removidasManualmente);
 
-        // 2. Remove linhas que foram removidas manualmente ou não fazem mais parte do escopo
-        return next.filter(l => {
-          // Se foi removida manualmente, deve sumir
-          if (removidasManualmente.has(l.code)) return false;
-          
-          // Se a TAG não está nas recomendações atuais...
-          const estaNasRecs = recomendadas.some(r => r.code === l.code);
-          if (!estaNasRecs) {
-            // ...só mantemos se foi adicionada manualmente pelo usuário
-            return l.id.startsWith('manual|');
+  useEffect(() => {
+    recomendadasRef.current = recomendadas;
+    termoBuscaRef.current = termoBusca;
+    removidasManualmenteRef.current = removidasManualmente;
+  });
+
+  useEffect(() => {
+    const recs = recomendadasRef.current;
+    const termo = termoBuscaRef.current;
+    const removidas = removidasManualmenteRef.current;
+
+    const atualizar = () => {
+      if (recs.length > 0) {
+        setLinhas((prev) => {
+          const next = [...prev];
+
+          // 1. Adiciona recomendações que ainda não estão na tabela e não foram removidas
+          for (const rec of recs) {
+            const jaExiste = next.some(l => l.code === rec.code);
+            if (!jaExiste) {
+              next.push({
+                id: rec.id,
+                code: rec.code,
+                valor: rec.valor,
+                cfgNome: rec.cfgNome,
+                calculada: rec.calculada,
+                formula: '',
+                cdTagCustomizada: rec.cdTagCustomizada,
+                valorAntigo: rec.valorAntigo,
+                cdTagCalculada: rec.cdTagCalculada,
+                dsTagTexto: rec.dsTagTexto,
+              });
+            }
           }
-          
-          return true;
+
+          // 2. Remove linhas que foram removidas manualmente ou não fazem mais parte do escopo
+          return next.filter(l => {
+            if (removidas.has(l.code)) return false;
+            const estaNasRecs = recs.some(r => r.code === l.code);
+            if (!estaNasRecs) return l.id.startsWith('manual|');
+            return true;
+          });
         });
-      });
-    } else if (termoBusca.trim().length < 2) {
-      setLinhas([]);
-    }
+      } else if (termo.trim().length < 2) {
+        setLinhas([]);
+      }
+    };
+
+    // requestAnimationFrame garante que setLinhas seja chamado APÓS o render cycle
+    // completar, eliminando o React error #185 que acontecia quando era chamado
+    // diretamente no useEffect durante a fase de render.
+    const raf = requestAnimationFrame(atualizar);
+    return () => cancelAnimationFrame(raf);
   }, [recomendadas, termoBusca, removidasManualmente]);
 
   // ---------- Padrão obrigatório de TAGs ----------
