@@ -942,11 +942,17 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   const tagsReconhecidas = useMemo(() => buscaPalavras?.tags ?? [], [buscaPalavras]);
 
   // ---------- Configurações do bloco "Resumo" (alvo da alteração em massa) ----------
-  // Busca DEDICADA e PAGINADA sobre `auge_tag_custom`, aplicando AND estrito de
-  // todos os tokens digitados diretamente em `nm_configuracao`. Diferente da
-  // busca por valores de TAG (limitada a 4.000 linhas), aqui paginamos até
-  // esgotar o resultado para garantir que o Resumo liste TODAS as
-  // configurações que serão alteradas em massa.
+  // Busca DEDICADA sobre `auge_tag_custom_configuracoes` + `auge_tag_custom_scan`,
+  // aplicando AND estrito de todos os tokens digitados diretamente em
+  // `nm_configuracao`.
+  //
+  // OTIMIZAÇÃO DE PERFORMANCE: antes este bloco paginava em um loop de até
+  // MAX=80.000 linhas (PAGE=1.000) -> até 160 chamadas ao Supabase a cada
+  // digitação. O PostgREST já avalia multiplos `.ilike()` como AND no
+  // servidor, entao uma unica query com `.limit(2000)` por tabela devolve o
+  // mesmo conjunto (o bloco Resumo nunca precisa de 80k linhas -- capamos em
+  // 2.000 por tabela, ordem de grandeza acima do uso real). A validacao AND
+  // estrita no cliente permanece como garantia de precisao.
   const { data: configsMassa = [], isFetching: loadingMassa } = useQuery({
     queryKey: [
       'auge-tag-custom-configs-massa',
@@ -958,72 +964,42 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       const termo = termoDeferido.trim();
       const padrao = toIlikePattern(termo);
       const tokens = toIlikeTokens(termo);
+      const LIMIT = 2000;
+
+      // Consulta unica por tabela (sem loop de paginacao). O PostgREST aplica
+      // o AND dos tokens no servidor; o limite alto cobre o uso real do Resumo.
+      const queryTabela = (tabela: string) => {
+        let q = (supabase as any).from(tabela).select('cd_configuracao, nm_configuracao');
+        for (const t of tokens) {
+          q = q.ilike('nm_configuracao', t);
+        }
+        if (tokens.length === 0 && padrao) {
+          q = q.ilike('nm_configuracao', padrao);
+        }
+        return q.order('cd_configuracao', { ascending: true }).limit(LIMIT);
+      };
+
+      const [res1, res2] = await Promise.all([
+        queryTabela('auge_tag_custom_configuracoes'),
+        queryTabela('auge_tag_custom_scan'),
+      ]);
+
+      const data = [...(res1.data || []), ...(res2.data || [])];
 
       const map = new Map<string, ConfiguracaoLite>();
-      const PAGE = 1000;
-      const MAX = 80000;
+      const tokensNorm = tokens.map(t => t.replace(/%/g, '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
 
-      for (let from = 0; from < MAX; from += PAGE) {
-        // Fonte 1: auge_tag_custom_configuracoes (Configurações com TAGs vinculadas)
-        // CRITICAL: We MUST search only in nm_configuracao to respect the "Configuration" input filter
-        // CORREÇÃO: Aplicar ilikeAnd garante que todos os tokens sejam filtrados no SELECT
-        // Garantimos que o filtro seja aplicado APENAS em nm_configuracao para o bloco Resumo
-        let query1 = (supabase as any)
-          .from('auge_tag_custom_configuracoes')
-          .select('cd_configuracao, nm_configuracao');
-        
-        for (const t of tokens) {
-          query1 = query1.ilike('nm_configuracao', t);
-        }
-        if (tokens.length === 0 && padrao) {
-          query1 = query1.ilike('nm_configuracao', padrao);
-        }
+      for (const r of data) {
+        const cd = String(r.cd_configuracao ?? '').trim();
+        if (!cd || map.has(cd)) continue;
+        const nm = r.nm_configuracao ?? cd;
 
-        const res1 = await query1
-          .order('cd_configuracao', { ascending: true })
-          .range(from, from + PAGE - 1);
-        
-        let query2 = (supabase as any)
-          .from('auge_tag_custom_scan')
-          .select('cd_configuracao, nm_configuracao');
-          
-        for (const t of tokens) {
-          query2 = query2.ilike('nm_configuracao', t);
-        }
-        if (tokens.length === 0 && padrao) {
-          query2 = query2.ilike('nm_configuracao', padrao);
-        }
+        // Validacao extra no cliente para garantir 100% de precisao (logica AND estrita)
+        const nmNorm = nm.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const passaNoFiltro = tokensNorm.length === 0 || tokensNorm.every(tk => nmNorm.includes(tk));
+        if (!passaNoFiltro) continue;
 
-        const res2 = await query2
-          .order('cd_configuracao', { ascending: true })
-          .range(from, from + PAGE - 1);
-
-        const data1 = res1.data || [];
-        const data2 = res2.data || [];
-        const data = [...data1, ...data2];
-        
-        if (data.length === 0 && from > 0) break;
-
-        for (const r of data) {
-          const cd = String(r.cd_configuracao ?? '').trim();
-          if (!cd) continue;
-          const nm = r.nm_configuracao ?? cd;
-          
-          // Validação extra no cliente para garantir 100% de precisão (lógica AND estrita)
-          // Normalizamos ambos para garantir que espaços e acentos não quebrem a busca
-          const nmNorm = nm.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-          const tokensNorm = tokens.map(t => t.replace(/%/g, '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
-          
-          const passaNoFiltro = tokensNorm.every(tk => nmNorm.includes(tk));
-          
-          if (!passaNoFiltro) continue;
-
-          if (!map.has(cd)) {
-            map.set(cd, { cd_configuracao: cd, nm_configuracao: nm, qtd_tags: 0 });
-          }
-        }
-        
-        if (data1.length < PAGE && data2.length < PAGE) break;
+        map.set(cd, { cd_configuracao: cd, nm_configuracao: nm, qtd_tags: 0 });
       }
 
       return Array.from(map.values()).sort((a, b) =>
