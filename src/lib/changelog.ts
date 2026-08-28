@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 // Newest first. Bump LATEST_VERSION when adding entries to trigger "novo" badge.
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '4.12.5',
+    date: '2026-08-28',
+    highlights: [
+      { type: 'fix', text: "Dedup no carregamento inicial (rascunho)" },
+    ],
+  },
+  {
     version: '4.12.4',
     date: '2026-08-28',
     highlights: [

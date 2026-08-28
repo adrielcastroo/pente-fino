@@ -2,6 +2,9 @@
 
 Todas as releases seguem SemVer (MAJOR.MINOR.PATCH). Fonte única: `src/lib/changelog.ts`.
 
+## 4.12.5 — 2026-08-28
+- 🐞 Dedup no carregamento inicial (rascunho)
+
 ## 4.12.4 — 2026-08-28
 - 🐞 Fix: TAG Calculada manual era apagada pelas recomendacoes
 
