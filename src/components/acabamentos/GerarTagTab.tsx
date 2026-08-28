@@ -118,6 +118,8 @@ interface LinhaTag {
   cdTagCalculada?: string;
   /** Valor original da TAG calculada (se era texto livre). */
   dsTagTexto?: string;
+  /** true quando o usuário editou a TAG Calculada manualmente (não deve ser sobrescrita pelas recomendações). */
+  editadaManual?: boolean;
 }
 
 interface ResultadoAuge {
@@ -1200,19 +1202,24 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         // 1. Adiciona recomendações (mesmo code existente é sobrescrito pela nova)
         for (const rec of recomendadas) {
           const idx = next.findIndex(l => l.code === rec.code);
+          // Respeita a edicao manual do usuario: se a linha ja existe e foi
+          // editada manualmente, mantemos a TAG Calculada/formula que ele escolheu
+          // em vez de sobrescrever com a recomendacao automatica (regression v4.12.3).
+          const existente = idx >= 0 ? next[idx] : null;
           const linha = {
-              id: rec.id,
+              id: existente?.id ?? rec.id,
               code: rec.code,
               valor: rec.valor,
               cfgNome: rec.cfgNome,
-              calculada: rec.calculada,
-              formula: '',
+              calculada: existente?.editadaManual ? existente.calculada : rec.calculada,
+              formula: existente?.editadaManual ? existente.formula : '',
               cdTagCustomizada: rec.cdTagCustomizada,
               valorAntigo: rec.valorAntigo,
-              cdTagCalculada: rec.cdTagCalculada,
-              dsTagTexto: rec.dsTagTexto,
+              cdTagCalculada: existente?.editadaManual ? existente.cdTagCalculada : rec.cdTagCalculada,
+              dsTagTexto: existente?.editadaManual ? existente.dsTagTexto : rec.dsTagTexto,
+              editadaManual: existente?.editadaManual ?? false,
             };
-          if (idx >= 0) next[idx] = linha; // substitui a existente (nova vence)
+          if (idx >= 0) next[idx] = linha;
           else next.push(linha);
         }
 
@@ -1426,7 +1433,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   const setCalculada = (id: string, sel: TagCalculadaSel) => {
     setLinhas((prev) => prev.map((l) => (
       l.id === id
-        ? { ...l, calculada: sel.valor, formula: sel.formula, cdTagCalculada: sel.cdTag ?? '', dsTagTexto: '' }
+        ? { ...l, calculada: sel.valor, formula: sel.formula, cdTagCalculada: sel.cdTag ?? '', dsTagTexto: '', editadaManual: true }
         : l
     )));
   };
@@ -1539,6 +1546,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           cdTagCalculada,
           dsTagTexto: dsTextoLivre,
           snapshotValue: dsTagCalculada || dsTextoLivre,
+          editadaManual: false,
         };
       }).filter((l: LinhaTag) => l.cdTagCustomizada);
 
