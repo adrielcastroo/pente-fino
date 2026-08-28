@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 // Newest first. Bump LATEST_VERSION when adding entries to trigger "novo" badge.
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '4.12.3',
+    date: '2026-08-28',
+    highlights: [
+      { type: 'fix', text: "Impede tags configuradas duplicadas na aba Gerar TAG" },
+    ],
+  },
+  {
     version: '4.12.2',
     date: '2026-08-28',
     highlights: [
