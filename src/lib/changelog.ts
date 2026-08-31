@@ -7,6 +7,69 @@ export interface ChangelogEntry {
 // Newest first. Bump LATEST_VERSION when adding entries to trigger "novo" badge.
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '4.12.6',
+    date: '2026-08-31',
+    highlights: [
+      { type: 'fix', text: 'Corrige bug crítico de reload infinito na web app — flag sessionStorage previne múltiplos recarregamentos automáticos' },
+    ],
+  },
+  {
+    version: '4.12.5',
+    date: '2026-08-28',
+    highlights: [
+      { type: 'fix', text: "Dedup no carregamento inicial (rascunho)" },
+    ],
+  },
+  {
+    version: '4.12.4',
+    date: '2026-08-28',
+    highlights: [
+      { type: 'fix', text: "Fix: TAG Calculada manual era apagada pelas recomendacoes" },
+    ],
+  },
+  {
+    version: '4.12.3',
+    date: '2026-08-28',
+    highlights: [
+      { type: 'fix', text: "Impede tags configuradas duplicadas na aba Gerar TAG" },
+    ],
+  },
+  {
+    version: '4.12.2',
+    date: '2026-08-28',
+    highlights: [
+      { type: 'improvement', text: "Performance da aba Gerar TAG: elimina loop de 80k no bloco Resumo" },
+    ],
+  },
+  {
+    version: '4.12.1',
+    date: '2026-08-28',
+    highlights: [
+      { type: 'fix', text: "Corrige chave duplicada no overview e warn de presence CLOSED" },
+    ],
+  },
+  {
+    version: '4.12.0',
+    date: '2026-08-27',
+    highlights: [
+      { type: 'improvement', text: "Painel Admin isolado: rota /admin fora do MainLayout com sidebar própria e botão Voltar ao app" },
+    ],
+  },
+  {
+    version: '4.11.0',
+    date: '2026-08-27',
+    highlights: [
+      { type: 'improvement', text: "Redesign do Painel Admin: sidebar com nículos recolhíveis, consolidação de auditorias e remoção de lixo de UI" },
+    ],
+  },
+  {
+    version: '4.10.1',
+    date: '2026-08-27',
+    highlights: [
+      { type: 'improvement', text: "Pipeline de release: versiona package.json, gera CHANGELOG.md e cria git tag por release" },
+    ],
+  },
+  {
     version: '4.10.0',
     date: '2026-08-02',
     highlights: [

@@ -12,14 +12,16 @@ declare const __APP_VERSION__: string;
 export function UpdateAvailableBanner() {
   const current = useCurrentRelease();
   const [dismissed, setDismissed] = useState(false);
+  const [reloading, setReloading] = useState(false);
   const bundleVersion = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0';
 
   useEffect(() => {
     // Se detectarmos uma versão nova (is_current no banco != build atual),
     // forçamos o recarregamento imediato sem perguntar, para garantir que
     // todos os usuários operem na mesma versão canônica.
-    if (current?.version && current.version !== bundleVersion && !dismissed) {
+    if (current?.version && current.version !== bundleVersion && !dismissed && !reloading) {
       console.info(`[update] Nova versão detectada: ${current.version}. Recarregando...`);
+      setReloading(true);
       // Pequeno delay para não interromper um render em progresso crítico,
       // mas curto o suficiente para ser "automático".
       const timer = setTimeout(() => {
@@ -28,7 +30,7 @@ export function UpdateAvailableBanner() {
       return () => clearTimeout(timer);
     }
     setDismissed(false);
-  }, [current?.version, bundleVersion, dismissed]);
+  }, [current?.version, bundleVersion, dismissed, reloading]);
 
   // Se for uma atualização crítica (detectada acima), o reload resolverá.
   // Mantemos o banner apenas como fallback visual rápido se o reload demorar.

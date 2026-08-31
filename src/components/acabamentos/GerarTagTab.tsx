@@ -61,6 +61,37 @@ function normalizeTagCode(raw: string | null | undefined): string {
 }
 
 
+// ---------------------------------------------------------------------------
+// Deduplicacao por CODE da TAG Configurada.
+// Regra de negocio (solicitada pelo usuario):
+//  - Duplicata = mesmo `code` (ex: '&COR'), independente do valor.
+//  - Ao inserir uma tag com code ja existente, a NOVA sempre vence (substitui,
+//    mantendo apenas 1 linha por code).
+//  - Remove duplicadas identicas mantendo a mais recente/atualizada.
+// A Ordem e preservada: a primeira ocorrencia de cada code ganha, exceto quando
+// `preferFront` for true (usado nos pontos de insercao, onde a nova vai na frente).
+function dedupLinhasPorCode(linhas: LinhaTag[], preferFront = false): LinhaTag[] {
+  const map = new Map<string, LinhaTag>();
+  if (preferFront) {
+    // Itera do fim pro inicio: a ultima (mais recente) vence por code.
+    for (let i = linhas.length - 1; i >= 0; i--) {
+      const l = linhas[i];
+      if (!l.code) continue;
+      if (!map.has(l.code)) map.set(l.code, l);
+    }
+    // Reconstroi na ordem original, mantendo so as que sobreviveram.
+    const sobreviveram = new Set(map.values());
+    return linhas.filter((l) => sobreviveram.has(l));
+  }
+  for (const l of linhas) {
+    if (!l.code) continue;
+    if (!map.has(l.code)) map.set(l.code, l);
+  }
+  return linhas.filter((l) => map.has(l.code) && map.get(l.code) === l);
+}
+
+
+
 
 
 interface TagCategoria {
@@ -87,6 +118,8 @@ interface LinhaTag {
   cdTagCalculada?: string;
   /** Valor original da TAG calculada (se era texto livre). */
   dsTagTexto?: string;
+  /** true quando o usuário editou a TAG Calculada manualmente (não deve ser sobrescrita pelas recomendações). */
+  editadaManual?: boolean;
 }
 
 interface ResultadoAuge {
@@ -715,8 +748,13 @@ export interface GerarTagTabProps {
 
 export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   // 1. Hooks de estado no topo, sempre na mesma ordem
+  // Dedup de defesa em profundidade: o rascunho (memoria de modulo) pode trazer
+  // duplicatas de sessoes anteriores. Garantimos que o estado inicial ja esteja
+  // sem TAGs configuradas repetidas (1 por code), independente do efeito de recomendacoes.
+  const linhasIniciais = dedupLinhasPorCode(rascunho.linhas);
+  rascunho.linhas = linhasIniciais;
   const [descricao, setDescricao] = useState(rascunho.descricao);
-  const [linhas, setLinhas] = useState<LinhaTag[]>(rascunho.linhas);
+  const [linhas, setLinhas] = useState<LinhaTag[]>(linhasIniciais);
   const [customAberta, setCustomAberta] = useState<{ cd: string; nm: string } | null>(rascunho.customAberta);
   const [enviando, setEnviando] = useState(false);
   const [resultado, setResultado] = useState<ResultadoAuge | null>(rascunho.resultado);
@@ -757,11 +795,14 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   const termoDeferido = useDeferredValue(termoBusca);
 
   // Limpa remoções manuais ao mudar drasticamente o termo de busca (novo escopo)
+  // Protegido contra múltiplas atualizações: só dispara quando o termo realmente muda de valor
   const termoAnteriorRef = useRef(termoBusca);
   useEffect(() => {
-    if (termoAnteriorRef.current !== termoBusca) {
+    const anterior = termoAnteriorRef.current;
+    const atual = termoBusca;
+    if (anterior !== atual) {
+      termoAnteriorRef.current = atual;
       setRemovidasManualmente(new Set());
-      termoAnteriorRef.current = termoBusca;
     }
   }, [termoBusca]);
 
@@ -942,11 +983,17 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   const tagsReconhecidas = useMemo(() => buscaPalavras?.tags ?? [], [buscaPalavras]);
 
   // ---------- Configurações do bloco "Resumo" (alvo da alteração em massa) ----------
-  // Busca DEDICADA e PAGINADA sobre `auge_tag_custom`, aplicando AND estrito de
-  // todos os tokens digitados diretamente em `nm_configuracao`. Diferente da
-  // busca por valores de TAG (limitada a 4.000 linhas), aqui paginamos até
-  // esgotar o resultado para garantir que o Resumo liste TODAS as
-  // configurações que serão alteradas em massa.
+  // Busca DEDICADA sobre `auge_tag_custom_configuracoes` + `auge_tag_custom_scan`,
+  // aplicando AND estrito de todos os tokens digitados diretamente em
+  // `nm_configuracao`.
+  //
+  // OTIMIZAÇÃO DE PERFORMANCE: antes este bloco paginava em um loop de até
+  // MAX=80.000 linhas (PAGE=1.000) -> até 160 chamadas ao Supabase a cada
+  // digitação. O PostgREST já avalia multiplos `.ilike()` como AND no
+  // servidor, entao uma unica query com `.limit(2000)` por tabela devolve o
+  // mesmo conjunto (o bloco Resumo nunca precisa de 80k linhas -- capamos em
+  // 2.000 por tabela, ordem de grandeza acima do uso real). A validacao AND
+  // estrita no cliente permanece como garantia de precisao.
   const { data: configsMassa = [], isFetching: loadingMassa } = useQuery({
     queryKey: [
       'auge-tag-custom-configs-massa',
@@ -958,72 +1005,42 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
       const termo = termoDeferido.trim();
       const padrao = toIlikePattern(termo);
       const tokens = toIlikeTokens(termo);
+      const LIMIT = 2000;
+
+      // Consulta unica por tabela (sem loop de paginacao). O PostgREST aplica
+      // o AND dos tokens no servidor; o limite alto cobre o uso real do Resumo.
+      const queryTabela = (tabela: string) => {
+        let q = (supabase as any).from(tabela).select('cd_configuracao, nm_configuracao');
+        for (const t of tokens) {
+          q = q.ilike('nm_configuracao', t);
+        }
+        if (tokens.length === 0 && padrao) {
+          q = q.ilike('nm_configuracao', padrao);
+        }
+        return q.order('cd_configuracao', { ascending: true }).limit(LIMIT);
+      };
+
+      const [res1, res2] = await Promise.all([
+        queryTabela('auge_tag_custom_configuracoes'),
+        queryTabela('auge_tag_custom_scan'),
+      ]);
+
+      const data = [...(res1.data || []), ...(res2.data || [])];
 
       const map = new Map<string, ConfiguracaoLite>();
-      const PAGE = 1000;
-      const MAX = 80000;
+      const tokensNorm = tokens.map(t => t.replace(/%/g, '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
 
-      for (let from = 0; from < MAX; from += PAGE) {
-        // Fonte 1: auge_tag_custom_configuracoes (Configurações com TAGs vinculadas)
-        // CRITICAL: We MUST search only in nm_configuracao to respect the "Configuration" input filter
-        // CORREÇÃO: Aplicar ilikeAnd garante que todos os tokens sejam filtrados no SELECT
-        // Garantimos que o filtro seja aplicado APENAS em nm_configuracao para o bloco Resumo
-        let query1 = (supabase as any)
-          .from('auge_tag_custom_configuracoes')
-          .select('cd_configuracao, nm_configuracao');
-        
-        for (const t of tokens) {
-          query1 = query1.ilike('nm_configuracao', t);
-        }
-        if (tokens.length === 0 && padrao) {
-          query1 = query1.ilike('nm_configuracao', padrao);
-        }
+      for (const r of data) {
+        const cd = String(r.cd_configuracao ?? '').trim();
+        if (!cd || map.has(cd)) continue;
+        const nm = r.nm_configuracao ?? cd;
 
-        const res1 = await query1
-          .order('cd_configuracao', { ascending: true })
-          .range(from, from + PAGE - 1);
-        
-        let query2 = (supabase as any)
-          .from('auge_tag_custom_scan')
-          .select('cd_configuracao, nm_configuracao');
-          
-        for (const t of tokens) {
-          query2 = query2.ilike('nm_configuracao', t);
-        }
-        if (tokens.length === 0 && padrao) {
-          query2 = query2.ilike('nm_configuracao', padrao);
-        }
+        // Validacao extra no cliente para garantir 100% de precisao (logica AND estrita)
+        const nmNorm = nm.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const passaNoFiltro = tokensNorm.length === 0 || tokensNorm.every(tk => nmNorm.includes(tk));
+        if (!passaNoFiltro) continue;
 
-        const res2 = await query2
-          .order('cd_configuracao', { ascending: true })
-          .range(from, from + PAGE - 1);
-
-        const data1 = res1.data || [];
-        const data2 = res2.data || [];
-        const data = [...data1, ...data2];
-        
-        if (data.length === 0 && from > 0) break;
-
-        for (const r of data) {
-          const cd = String(r.cd_configuracao ?? '').trim();
-          if (!cd) continue;
-          const nm = r.nm_configuracao ?? cd;
-          
-          // Validação extra no cliente para garantir 100% de precisão (lógica AND estrita)
-          // Normalizamos ambos para garantir que espaços e acentos não quebrem a busca
-          const nmNorm = nm.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-          const tokensNorm = tokens.map(t => t.replace(/%/g, '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
-          
-          const passaNoFiltro = tokensNorm.every(tk => nmNorm.includes(tk));
-          
-          if (!passaNoFiltro) continue;
-
-          if (!map.has(cd)) {
-            map.set(cd, { cd_configuracao: cd, nm_configuracao: nm, qtd_tags: 0 });
-          }
-        }
-        
-        if (data1.length < PAGE && data2.length < PAGE) break;
+        map.set(cd, { cd_configuracao: cd, nm_configuracao: nm, qtd_tags: 0 });
       }
 
       return Array.from(map.values()).sort((a, b) =>
@@ -1184,67 +1201,68 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     return out;
   }, [categorias, removidasManualmente]);
 
-  // Sincroniza automaticamente a tabela com as recomendações do sistema.
-  // ATENÇÃO: setLinhas NO deve ser chamado durante o render.
-  // Por isso usamos ref + requestAnimationFrame para garantir que a
-  // atualização ocorra APÓS o commit, evitando React error #185.
-  const recomendadasRef = useRef(recomendadas);
-  const termoBuscaRef = useRef(termoBusca);
-  const removidasManualmenteRef = useRef(removidasManualmente);
-
+  // Sincroniza automaticamente a tabela com as recomendações do sistema
   useEffect(() => {
-    recomendadasRef.current = recomendadas;
-    termoBuscaRef.current = termoBusca;
-    removidasManualmenteRef.current = removidasManualmente;
-  });
+    if (recomendadas.length > 0) {
+      setLinhas((prev) => {
+        const next = [...prev];
+        
+        // 1. Adiciona recomendações (mesmo code existente é sobrescrito pela nova)
+        for (const rec of recomendadas) {
+          const idx = next.findIndex(l => l.code === rec.code);
+          // Respeita a edicao manual do usuario: se a linha ja existe e foi
+          // editada manualmente, mantemos a TAG Calculada/formula que ele escolheu
+          // em vez de sobrescrever com a recomendacao automatica (regression v4.12.3).
+          const existente = idx >= 0 ? next[idx] : null;
+          const linha = {
+              id: existente?.id ?? rec.id,
+              code: rec.code,
+              valor: rec.valor,
+              cfgNome: rec.cfgNome,
+              calculada: existente?.editadaManual ? existente.calculada : rec.calculada,
+              formula: existente?.editadaManual ? existente.formula : (rec.formula || ''),
+              cdTagCustomizada: rec.cdTagCustomizada,
+              valorAntigo: rec.valorAntigo,
+              cdTagCalculada: existente?.editadaManual ? existente.cdTagCalculada : rec.cdTagCalculada,
+              dsTagTexto: existente?.editadaManual ? existente.dsTagTexto : rec.dsTagTexto,
+              editadaManual: existente?.editadaManual ?? false,
+            };
+          if (idx >= 0) next[idx] = linha;
+          else next.push(linha);
+        }
 
-  useEffect(() => {
-    const recs = recomendadasRef.current;
-    const termo = termoBuscaRef.current;
-    const removidas = removidasManualmenteRef.current;
-
-    const atualizar = () => {
-      if (recs.length > 0) {
-        setLinhas((prev) => {
-          const next = [...prev];
-
-          // 1. Adiciona recomendações que ainda não estão na tabela e não foram removidas
-          for (const rec of recs) {
-            const jaExiste = next.some(l => l.code === rec.code);
-            if (!jaExiste) {
-              next.push({
-                id: rec.id,
-                code: rec.code,
-                valor: rec.valor,
-                cfgNome: rec.cfgNome,
-                calculada: rec.calculada,
-                formula: '',
-                cdTagCustomizada: rec.cdTagCustomizada,
-                valorAntigo: rec.valorAntigo,
-                cdTagCalculada: rec.cdTagCalculada,
-                dsTagTexto: rec.dsTagTexto,
-              });
-            }
+        // 2. Remove linhas que foram removidas manualmente ou não fazem mais parte do escopo
+        return next.filter(l => {
+          // Se foi removida manualmente, deve sumir
+          if (removidasManualmente.has(l.code)) return false;
+          
+          // Se a TAG não está nas recomendações atuais...
+          const estaNasRecs = recomendadas.some(r => r.code === l.code);
+          if (!estaNasRecs) {
+            // ...só mantemos se foi adicionada manualmente pelo usuário
+            return l.id.startsWith('manual|');
           }
-
-          // 2. Remove linhas que foram removidas manualmente ou não fazem mais parte do escopo
-          return next.filter(l => {
-            if (removidas.has(l.code)) return false;
-            const estaNasRecs = recs.some(r => r.code === l.code);
-            if (!estaNasRecs) return l.id.startsWith('manual|');
-            return true;
-          });
+          
+          return true;
         });
-      } else if (termo.trim().length < 2) {
-        setLinhas([]);
-      }
-    };
-
-    // requestAnimationFrame garante que setLinhas seja chamado APÓS o render cycle
-    // completar, eliminando o React error #185 que acontecia quando era chamado
-    // diretamente no useEffect durante a fase de render.
-    const raf = requestAnimationFrame(atualizar);
-    return () => cancelAnimationFrame(raf);
+        const resultado = dedupLinhasPorCode(next);
+        // Quebra o loop de re-render: se o conteúdo não mudou, mantém a
+        // MESMA referência de `prev` para que o React não dispare novo ciclo.
+        if (resultado.length === prev.length) {
+          const iguais = resultado.every((l, i) => {
+            const p = prev[i];
+            return p && l.id === p.id && l.code === p.code && l.valor === p.valor &&
+              l.calculada === p.calculada && l.formula === p.formula &&
+              l.editadaManual === p.editadaManual && l.cdTagCustomizada === p.cdTagCustomizada &&
+              l.cdTagCalculada === p.cdTagCalculada && l.dsTagTexto === p.dsTagTexto;
+          });
+          if (iguais) return prev;
+        }
+        return resultado;
+      });
+    } else if (termoBusca.trim().length < 2) {
+      setLinhas([]);
+    }
   }, [recomendadas, termoBusca, removidasManualmente]);
 
   // ---------- Padrão obrigatório de TAGs ----------
@@ -1377,12 +1395,13 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
   const adicionarLinha = (r: { id: string; code: string; valor: string; cfgNome: string; calculada: string; formula?: string; cdTagCustomizada?: string; cdTagCalculada?: string; dsTagTexto?: string }) => {
     setLinhas((prev) => {
+      // Toggle: se ja existe o mesmo id, remove (toggle off).
       if (prev.some((l) => l.id === r.id)) {
         toast.info(`TAG ${r.code} removida da tabela.`);
         return prev.filter((l) => l.id !== r.id);
       }
-      toast.success(`TAG ${r.code} adicionada à coluna Tag Configurada.`);
-      return [...prev, {
+      // Regra: duplicata = mesmo `code`; a nova sempre vence (substitui a antiga).
+      const linha = {
         id: r.id,
         code: r.code,
         valor: r.valor,
@@ -1392,7 +1411,10 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         cdTagCustomizada: r.cdTagCustomizada,
         cdTagCalculada: r.cdTagCalculada,
         dsTagTexto: r.dsTagTexto,
-      }];
+      };
+      const semCode = prev.filter((l) => l.code !== r.code);
+      toast.success(`TAG ${r.code} adicionada à coluna Tag Configurada.`);
+      return [...semCode, linha];
     });
   };
 
@@ -1402,18 +1424,24 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     if (!valor) return;
     const code = normalizeTagCode(valor) || 'TAG';
     const id = `manual|${code}|${valor}`;
-    if (linhas.some((l) => l.id === id || l.code === code)) {
+    // Regra: duplicata = mesmo `code`; a nova sempre vence.
+    if (linhas.some((l) => l.id === id)) {
       toast.info(`A TAG ${code} já está na composição.`);
       return;
     }
-    setLinhas((prev) => [...prev, {
+    setLinhas((prev) => dedupLinhasPorCode([...prev, {
       id,
       code,
       valor,
       cfgNome: opt.cfgNome || customAberta?.nm || '',
       calculada: normalizeTagFormatC(opt.calculada ?? ''),
       formula: '',
-    }]);
+    }], true));
+    if (linhas.some((l) => l.code === code && l.id !== id)) {
+      toast.success(`TAG ${code} atualizada na composição (duplicata substituída).`);
+    } else {
+      toast.success(`TAG ${code} adicionada à composição.`);
+    }
     setRemovidasManualmente((prev) => {
       const next = new Set(prev);
       next.delete(code);
@@ -1426,7 +1454,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   const setCalculada = (id: string, sel: TagCalculadaSel) => {
     setLinhas((prev) => prev.map((l) => (
       l.id === id
-        ? { ...l, calculada: sel.valor, formula: sel.formula, cdTagCalculada: sel.cdTag ?? '', dsTagTexto: '' }
+        ? { ...l, calculada: sel.valor, formula: sel.formula, cdTagCalculada: sel.cdTag ?? '', dsTagTexto: '', editadaManual: true }
         : l
     )));
   };
@@ -1447,7 +1475,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           formula: '',
           cdTagCalculada: (o as any).cdTagCalculada,
         }));
-      return [...prev, ...novas];
+      return dedupLinhasPorCode([...prev, ...novas], true);
     });
     toast.success(`${obrigatoriasFaltando.length} TAG(s) obrigatória(s) adicionada(s).`);
   };
@@ -1539,6 +1567,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
           cdTagCalculada,
           dsTagTexto: dsTextoLivre,
           snapshotValue: dsTagCalculada || dsTextoLivre,
+          editadaManual: false,
         };
       }).filter((l: LinhaTag) => l.cdTagCustomizada);
 
@@ -1556,7 +1585,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
       setSnapshotLinhas([...linhas]);
       setCustomAberta(cfg);
-      setLinhas(linhasReais);
+      setLinhas(dedupLinhasPorCode(linhasReais));
       setModoEdicaoRelancamento(true);
       setAddManual(false);
       setResultado(null);

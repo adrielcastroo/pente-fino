@@ -1,7 +1,7 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
-import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate, Outlet } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Suspense, lazy } from "react";
@@ -66,8 +66,8 @@ import { UpdateAvailableBanner } from "@/components/admin/UpdateAvailableBanner"
 import { ReleaseRegistrar } from "@/components/admin/ReleaseRegistrar";
 import { AgentChatWidget } from "@/components/agent/AgentChatWidget";
 
-const AdminPanelPage = lazy(() => import("@/pages/admin/AdminPanelPage"));
-const N8nMonitorPage = lazy(() => import("@/pages/N8nMonitorPage"));
+const AdminLayout = lazy(() => import('@/components/admin/AdminLayout'));
+const N8nMonitorPage = lazy(() => import('@/pages/N8nMonitorPage'));
 const HarTransferenciasPage = lazy(() => import("@/pages/admin/HarTransferenciasPage"));
 const DepositosAdminPage = lazy(() => import("@/pages/admin/DepositosAdminPage"));
 const AutomacoesPage = lazy(() => import("@/pages/admin/AutomacoesPage"));
@@ -304,9 +304,9 @@ const App = () => (
                 </Route>
 
 
-                {/* ===== ADMIN (dentro do MainLayout — sidebar principal preservada) ===== */}
-                <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
-                  <Route path="/admin" element={<AdminPanelPage />} />
+                {/* ===== ADMIN (isolado — sidebar própria, fora do MainLayout) ===== */}
+                <Route element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
+                  <Route path="/admin" element={<Outlet />} />
                   <Route path="/admin/n8n" element={<N8nMonitorPage />} />
                   <Route path="/admin/har-transferencias" element={<HarTransferenciasPage />} />
                   <Route path="/admin/depositos" element={<RequireRole role="admin" fallback={<Navigate to="/admin" replace />}><DepositosAdminPage /></RequireRole>} />

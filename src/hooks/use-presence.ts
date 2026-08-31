@@ -109,9 +109,14 @@ function ensureShared(presenceKey: string): SharedPresence {
         local.isSubscribed = true;
         // Emit initial snapshot to any already-mounted listeners.
         notify();
-      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
         // eslint-disable-next-line no-console
         console.warn('[presence] channel status:', status);
+        local.isSubscribed = false;
+      } else if (status === 'CLOSED') {
+        // CLOSED é o estado normal após untrack/removeChannel (ex.: sair do app
+        // principal para o painel admin, que não monta o MainLayout). Não é um
+        // erro — apenas marca o canal como não-subscrito em silêncio.
         local.isSubscribed = false;
       }
     });

@@ -459,7 +459,7 @@ export default function LoginPage() {
           </div>
 
           <p className="text-center text-[10px] text-muted-foreground mt-8">
-            © {new Date().getFullYear()} Sistema Pente Fino. Todos os direitos reservados.
+            © {new Date().getFullYear()} Unilux · Pente Fino
           </p>
       </div>
 
