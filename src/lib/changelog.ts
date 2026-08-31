@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 // Newest first. Bump LATEST_VERSION when adding entries to trigger "novo" badge.
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '4.12.6',
+    date: '2026-08-31',
+    highlights: [
+      { type: 'fix', text: 'Corrige bug crítico de reload infinito na web app — flag sessionStorage previne múltiplos recarregamentos automáticos' },
+    ],
+  },
+  {
     version: '4.12.5',
     date: '2026-08-28',
     highlights: [
