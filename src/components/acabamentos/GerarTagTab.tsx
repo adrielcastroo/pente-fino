@@ -1261,7 +1261,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
         return resultado;
       });
     } else if (termoBusca.trim().length < 2) {
-      setLinhas((prev) => (prev.length === 0 ? prev : []));
+      setLinhas([]);
     }
   }, [recomendadas, termoBusca, removidasManualmente]);
 
