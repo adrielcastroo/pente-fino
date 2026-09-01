@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { AlertCircle, RefreshCw, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCurrentRelease } from '@/hooks/useAppReleases';
@@ -8,32 +8,17 @@ declare const __APP_VERSION__: string;
 /**
  * Mostra banner quando a versão publicada no Cloud (app_releases.is_current)
  * é diferente da versão embutida no bundle carregado no navegador.
+ * 
+ * CORREÇÃO CRÍTICA: O reload automático via useEffect foi removido para evitar
+ * qualquer possibilidade de loop infinito de recarregamento. Agora o usuário
+ * atualiza manualmente clicando no botão.
  */
 export function UpdateAvailableBanner() {
   const current = useCurrentRelease();
   const [dismissed, setDismissed] = useState(false);
-  const [reloading, setReloading] = useState(false);
   const bundleVersion = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0';
 
-  useEffect(() => {
-    // Se detectarmos uma versão nova (is_current no banco != build atual),
-    // forçamos o recarregamento imediato sem perguntar, para garantir que
-    // todos os usuários operem na mesma versão canônica.
-    if (current?.version && current.version !== bundleVersion && !dismissed && !reloading) {
-      console.info(`[update] Nova versão detectada: ${current.version}. Recarregando...`);
-      setReloading(true);
-      // Pequeno delay para não interromper um render em progresso crítico,
-      // mas curto o suficiente para ser "automático".
-      const timer = setTimeout(() => {
-        window.location.reload();
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-    setDismissed(false);
-  }, [current?.version, bundleVersion, dismissed, reloading]);
-
-  // Se for uma atualização crítica (detectada acima), o reload resolverá.
-  // Mantemos o banner apenas como fallback visual rápido se o reload demorar.
+  // Se não houver versão nova ou o usuário fechou o banner, não exibe
   if (!current || dismissed) return null;
   if (current.version === bundleVersion) return null;
 
