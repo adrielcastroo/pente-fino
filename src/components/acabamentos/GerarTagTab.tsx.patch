@@ -1,0 +1,82 @@
+  // Sincroniza automaticamente a tabela com as recomendações do sistema.
+  // ATENÇÃO: setLinhas NO deve ser chamado durante o render.
+  // Por isso usamos ref + requestAnimationFrame para garantir que a
+  // atualização ocorra APÓS o commit, evitando React error #185.
+  const recomendadasRef = useRef(recomendadas);
+  const termoBuscaRef = useRef(termoBusca);
+  const removidasManualmenteRef = useRef(removidasManualmente);
+
+  useEffect(() => {
+    recomendadasRef.current = recomendadas;
+    termoBuscaRef.current = termoBusca;
+    removidasManualmenteRef.current = removidasManualmente;
+  });
+
+  useEffect(() => {
+    const recs = recomendadasRef.current;
+    const termo = termoBuscaRef.current;
+    const removidas = removidasManualmenteRef.current;
+
+    const atualizar = () => {
+      if (recs.length > 0) {
+        setLinhas((prev) => {
+          const next = [...prev];
+
+          // 1. Adiciona recomendações (mesmo code existente é sobrescrito pela nova)
+          for (const rec of recs) {
+            const idx = next.findIndex(l => l.code === rec.code);
+            // Respeita a edicao manual do usuario: se a linha ja existe e foi
+            // editada manualmente, mantemos a TAG Calculada/formula que ele escolheu
+            // em vez de sobrescrever com a recomendacao automatica.
+            const existente = idx >= 0 ? next[idx] : null;
+            const linha = {
+                id: existente?.id ?? rec.id,
+                code: rec.code,
+                valor: rec.valor,
+                cfgNome: rec.cfgNome,
+                calculada: existente?.editadaManual ? existente.calculada : rec.calculada,
+                formula: existente?.editadaManual ? existente.formula : (rec.formula || ''),
+                cdTagCustomizada: rec.cdTagCustomizada,
+                valorAntigo: rec.valorAntigo,
+                cdTagCalculada: existente?.editadaManual ? existente.cdTagCalculada : rec.cdTagCalculada,
+                dsTagTexto: existente?.editadaManual ? existente.dsTagTexto : rec.dsTagTexto,
+                editadaManual: existente?.editadaManual ?? false,
+              };
+            if (idx >= 0) next[idx] = linha;
+            else next.push(linha);
+          }
+
+          // 2. Remove linhas que foram removidas manualmente ou não fazem mais parte do escopo
+          const resultado = next.filter(l => {
+            if (removidas.has(l.code)) return false;
+            const estaNasRecs = recs.some(r => r.code === l.code);
+            if (!estaNasRecs) return l.id.startsWith('manual|');
+            return true;
+          });
+
+          const dedupado = dedupLinhasPorCode(resultado);
+          // Quebra o loop de re-render: se o conteúdo não mudou, mantém a
+          // MESMA referência de `prev` para que o React não dispare novo ciclo.
+          if (dedupado.length === prev.length) {
+            const iguais = dedupado.every((l, i) => {
+              const p = prev[i];
+              return p && l.id === p.id && l.code === p.code && l.valor === p.valor &&
+                l.calculada === p.calculada && l.formula === p.formula &&
+                l.editadaManual === p.editadaManual && l.cdTagCustomizada === p.cdTagCustomizada &&
+                l.cdTagCalculada === p.cdTagCalculada && l.dsTagTexto === p.dsTagTexto;
+            });
+            if (iguais) return prev;
+          }
+          return dedupado;
+        });
+      } else if (termo.trim().length < 2) {
+        setLinhas([]);
+      }
+    };
+
+    // requestAnimationFrame garante que setLinhas seja chamado APÓS o render cycle
+    // completar, eliminando o React error #185 que acontecia quando era chamado
+    // diretamente no useEffect durante a fase de render.
+    const raf = requestAnimationFrame(atualizar);
+    return () => cancelAnimationFrame(raf);
+  }, [recomendadas, termoBusca, removidasManualmente]);
