@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
-import { FileText, Truck, Plus, Loader2, Upload, RefreshCw, Calendar, ChevronDown, ChevronUp, Package } from 'lucide-react';
+import { FileText, Truck, Plus, Loader2, Upload, RefreshCw, Calendar, ChevronDown, ChevronUp, Package, Search } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -39,6 +39,7 @@ import * as XLSX from 'xlsx';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import RomaneioImportDialog from '@/components/expedicao/RomaneioImportDialog';
+import ConsultaPedidos from '@/components/faturamento/ConsultaPedidos';
 
 // ============================================================
 // Types
@@ -371,6 +372,14 @@ export default function RomaneioPage() {
           Romaneio
         </Button>
         <Button
+          variant={activeTab === 'consultar' ? 'default' : 'outline'}
+          onClick={() => setActiveTab('consultar')}
+          className="gap-2"
+        >
+          <Search className="w-4 h-4" />
+          Consultar Auge
+        </Button>
+        <Button
           variant={activeTab === 'regras' ? 'default' : 'outline'}
           onClick={() => setActiveTab('regras')}
           className="gap-2"
@@ -542,6 +551,15 @@ export default function RomaneioPage() {
             </CardContent>
           </Card>
         </div>
+      )}
+
+      {/* ============================================================ */}
+      {/* TAB: CONSULTAR PEDIDOS AUGE                                   */}
+      {/* ============================================================ */}
+      {activeTab === 'consultar' && (
+        <ConsultaPedidos onPedidosSelecionados={(pedidos) => {
+          toast.success(`${pedidos.length} pedidos selecionados`);
+        }} />
       )}
 
       {/* ============================================================ */}
