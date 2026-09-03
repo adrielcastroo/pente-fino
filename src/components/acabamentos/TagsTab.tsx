@@ -59,7 +59,7 @@ export default function TagsTab() {
   const { data: scanRows = [], isLoading, refetch, isFetching } = useQuery({
     queryKey: ['auge-tag-custom-scan'],
     queryFn: async () => {
-      const PAGE = 1000;
+      const PAGE = 5000;
       const all: ScanRow[] = [];
       for (let from = 0; ; from += PAGE) {
         const { data, error } = await (supabase as any)
@@ -82,7 +82,7 @@ export default function TagsTab() {
   const { data: tagsByCfg = {}, refetch: refetchTags } = useQuery({
     queryKey: ['auge-tag-custom-map'],
     queryFn: async () => {
-      const PAGE = 1000;
+      const PAGE = 5000;
       const map: Record<string, TagRow[]> = {};
       for (let from = 0; ; from += PAGE) {
         const { data, error } = await (supabase as any)
