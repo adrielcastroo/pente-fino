@@ -128,20 +128,27 @@ export default function RomaneioPage() {
   const { data: regrasData, isLoading: isLoadingRegras, refetch: refetchRegras } = useQuery({
     queryKey: ['faturamento_regras'],
     queryFn: async () => {
-      const PAGE = 5000;
+      // Supabase JS client limits to 1000 by default, so we fetch in batches
+      const BATCH_SIZE = 500;
       const all: any[] = [];
-      for (let from = 0; ; from += PAGE) {
+      let offset = 0;
+      let hasMore = true;
+
+      while (hasMore && all.length < 2000) {
         const { data, error } = await supabase
           .from('faturamento_regras')
           .select('*')
           .order('nome_cliente')
-          .range(from, from + PAGE - 1);
+          .range(offset, offset + BATCH_SIZE - 1);
+
         if (error) throw error;
-        const chunk = (data ?? []) as any[];
-        all.push(...chunk);
-        if (chunk.length < PAGE) break;
-        if (all.length >= 2000) break;
+        if (!data || data.length === 0) break;
+
+        all.push(...data);
+        offset += BATCH_SIZE;
+        hasMore = data.length === BATCH_SIZE;
       }
+
       return all;
     },
   });
