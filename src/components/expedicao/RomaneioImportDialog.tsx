@@ -24,10 +24,10 @@ interface RomaneioImportDialogProps {
 interface PreviewRow {
   codigo_cliente: string;
   nome_cliente: string;
-  quantidade?: number;
-  modalidade?: string;
-  transportadora?: string;
-  observacoes?: string;
+  nf?: string;
+  data?: string;
+  transportador: string;
+  volume?: number;
 }
 
 export default function RomaneioImportDialog({ open, onOpenChange, onImported }: RomaneioImportDialogProps) {
@@ -53,23 +53,80 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
       const data = await file.arrayBuffer();
       const workbook = XLSX.read(data);
       const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-      const jsonData = XLSX.utils.sheet_to_json<any>(firstSheet);
+      
+      // Read all rows as array
+      const jsonData = XLSX.utils.sheet_to_json<any>(firstSheet, { header: 1 });
+      
+      // Find header row (contains "Cód. Cliente")
+      let headerRowIndex = -1;
+      for (let i = 0; i < Math.min(10, jsonData.length); i++) {
+        const row = jsonData[i];
+        if (row && row[0] && String(row[0]).includes('Cód.')) {
+          headerRowIndex = i;
+          break;
+        }
+      }
 
-      // Map columns - adjust based on your actual column names
-      const mapped: PreviewRow[] = jsonData.map((row: any) => ({
-        codigo_cliente: row['Código'] || row['codigo_cliente'] || row['CODIGO'] || '',
-        nome_cliente: row['Nome'] || row['nome_cliente'] || row['NOME'] || row['Razão Social'] || '',
-        quantidade: row['Quantidade'] || row['qtd'] || row['QTD'] || 1,
-        modalidade: row['Modalidade'] || row['modalidade_frete'] || 'CIF',
-        transportadora: row['Transportadora'] || row['transportadora'] || '',
-        observacoes: row['Observações'] || row['observacoes'] || '',
-      })).filter(r => r.codigo_cliente);
+      if (headerRowIndex === -1) {
+        toast.error('Formato não reconhecido: não foi possível encontrar o cabeçalho');
+        return;
+      }
+
+      // Parse data rows (starting from header row + 1)
+      const mapped: PreviewRow[] = [];
+      for (let i = headerRowIndex + 1; i < jsonData.length; i++) {
+        const row = jsonData[i];
+        if (!row || !row[0]) continue;
+        
+        // Skip footer rows (SUBTOTAL, Assinatura, etc.)
+        const firstCell = String(row[0]);
+        if (firstCell.includes('SUBTOTAL') || firstCell.includes('Assinatura') || firstCell.includes('CPF')) {
+          continue;
+        }
+
+        // Parse date (format: DD.MM.YY or DD/MM/YY)
+        let date = '';
+        if (row[3]) {
+          const dateStr = String(row[3]);
+          // Convert DD.MM.YY to YYYY-MM-DD
+          if (dateStr.includes('.')) {
+            const parts = dateStr.split('.');
+            if (parts.length === 3) {
+              const day = parts[0].padStart(2, '0');
+              const month = parts[1].padStart(2, '0');
+              const year = parts[2].length === 2 ? '20' + parts[2] : parts[2];
+              date = `${year}-${month}-${day}`;
+            }
+          } else if (dateStr.includes('/')) {
+            const parts = dateStr.split('/');
+            if (parts.length === 3) {
+              const day = parts[0].padStart(2, '0');
+              const month = parts[1].padStart(2, '0');
+              const year = parts[2].length === 2 ? '20' + parts[2] : parts[2];
+              date = `${year}-${month}-${day}`;
+            }
+          }
+        }
+
+        mapped.push({
+          codigo_cliente: String(row[0] || '').trim(),
+          nome_cliente: String(row[1] || '').trim(),
+          nf: row[2] ? String(row[2]) : undefined,
+          data: date,
+          transportador: String(row[4] || '').trim(),
+          volume: row[5] ? parseInt(row[5]) || 1 : 1,
+        });
+      }
 
       setPreview(mapped.slice(0, 10));
       setPreviewCount(mapped.length);
+      
+      if (mapped.length === 0) {
+        toast.error('Nenhuma linha de dados encontrada na planilha');
+      }
     } catch (error) {
-      toast.error('Erro ao ler arquivo Excel');
       console.error(error);
+      toast.error('Erro ao ler arquivo Excel');
     } finally {
       setIsLoading(false);
     }
@@ -110,14 +167,14 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
       if (!o) handleClose();
       onOpenChange(o);
     }}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileSpreadsheet className="w-5 h-5" />
-            Importar Romaneio Diário
+            Importar Romaneio de Carga
           </DialogTitle>
           <DialogDescription>
-            Importe uma planilha Excel com os clientes do romaneio de hoje.
+            Importe uma planilha Excel com os clientes do romaneio.
           </DialogDescription>
         </DialogHeader>
 
@@ -187,21 +244,25 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
                     <tr>
                       <th className="px-3 py-2 text-left">Código</th>
                       <th className="px-3 py-2 text-left">Nome</th>
-                      <th className="px-3 py-2 text-left">Modalidade</th>
-                      <th className="px-3 py-2 text-right">Qtd</th>
+                      <th className="px-3 py-2 text-left">NF</th>
+                      <th className="px-3 py-2 text-left">Data</th>
+                      <th className="px-3 py-2 text-left">Transportador</th>
+                      <th className="px-3 py-2 text-right">Vol.</th>
                     </tr>
                   </thead>
                   <tbody>
                     {preview.map((row, idx) => (
                       <tr key={idx} className="border-t">
                         <td className="px-3 py-2 font-mono">{row.codigo_cliente}</td>
-                        <td className="px-3 py-2">{row.nome_cliente}</td>
+                        <td className="px-3 py-2 max-w-[200px] truncate" title={row.nome_cliente}>{row.nome_cliente}</td>
+                        <td className="px-3 py-2">{row.nf || '-'}</td>
+                        <td className="px-3 py-2">{row.data || '-'}</td>
                         <td className="px-3 py-2">
                           <Badge variant="outline" className="text-xs">
-                            {row.modalidade || '-'}
+                            {row.transportador || '-'}
                           </Badge>
                         </td>
-                        <td className="px-3 py-2 text-right">{row.quantidade}</td>
+                        <td className="px-3 py-2 text-right">{row.volume}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -212,12 +273,14 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
 
           {/* Info box */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
-            <p className="font-medium mb-1">📋 Formato esperado da planilha:</p>
+            <p className="font-medium mb-1">📋 Formato aceito:</p>
             <ul className="list-disc list-inside space-y-1 ml-2">
-              <li><strong>Código</strong> ou <strong>código_cliente</strong> - Código do cliente (ex: C1739)</li>
-              <li><strong>Nome</strong> ou <strong>nome_cliente</strong> - Nome do cliente</li>
-              <li><strong>Quantidade</strong> ou <strong>qtd</strong> - Quantidade (opcional, padrão 1)</li>
-              <li><strong>Modalidade</strong> - CIF, FOB ou CIF_FOB</li>
+              <li><strong>Coluna A:</strong> Código do Cliente (ex: C1739)</li>
+              <li><strong>Coluna B:</strong> Nome do Cliente</li>
+              <li><strong>Coluna C:</strong> NF (Nota Fiscal - opcional)</li>
+              <li><strong>Coluna D:</strong> Data (DD.MM.YY ou DD/MM/YY)</li>
+              <li><strong>Coluna E:</strong> Transportador</li>
+              <li><strong>Coluna F:</strong> Volume/Quantidade</li>
             </ul>
           </div>
         </div>
