@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { FileText, Truck, Plus, Loader2, Upload, RefreshCw, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
+import { useMemo, useState, useEffect } from 'react';
+import { FileText, Truck, Plus, Loader2, Upload, RefreshCw, Calendar, ChevronDown, ChevronUp, Package } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -38,6 +38,7 @@ import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import RomaneioImportDialog from '@/components/expedicao/RomaneioImportDialog';
 
 // ============================================================
 // Types
@@ -60,6 +61,26 @@ interface FaturamentoRegra {
   dados_extra: Record<string, any>;
   created_at: string;
   updated_at: string;
+}
+
+interface RomaneioDia {
+  id: string;
+  data_romaneio: string;
+  titulo: string;
+  status: string;
+  criado_em: string;
+  linhas?: RomaneioLinha[];
+}
+
+interface RomaneioLinha {
+  id: string;
+  romaneio_id: string;
+  codigo_cliente: string;
+  nome_cliente: string;
+  quantidade: number;
+  modalidade_frete: string;
+  transportadora: string;
+  observacoes: string | null;
 }
 
 interface RomaneioPreview {
@@ -108,7 +129,7 @@ function getTransportadoraCor(modalidade: string): string {
 // ============================================================
 
 export default function RomaneioPage() {
-  const [activeTab, setActiveTab] = useState<'romaneio' | 'regras'>('romaneio');
+  const [activeTab, setActiveTab] = useState<'romaneio' | 'regras' | 'historico'>('romaneio');
   const [daysAhead, setDaysAhead] = useState(3);
   const [isGenerating, setIsGenerating] = useState(false);
   const [preview, setPreview] = useState<RomaneioPreview[]>([]);
@@ -120,6 +141,8 @@ export default function RomaneioPage() {
   const [editingRule, setEditingRule] = useState<FaturamentoRegra | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('todos');
+  const [romaneios, setRomaneios] = useState<RomaneioDia[]>([]);
+  const [selectedRomaneio, setSelectedRomaneio] = useState<RomaneioDia | null>(null);
 
   // ============================================================
   // Queries
@@ -128,9 +151,8 @@ export default function RomaneioPage() {
   const { data: regrasData, isLoading: isLoadingRegras, refetch: refetchRegras } = useQuery({
     queryKey: ['faturamento_regras'],
     queryFn: async () => {
-      // Supabase JS client limits to 1000 by default, so we fetch in batches
       const BATCH_SIZE = 500;
-      const all: any[] = [];
+      const all: FaturamentoRegra[] = [];
       let offset = 0;
       let hasMore = true;
 
@@ -166,13 +188,29 @@ export default function RomaneioPage() {
     },
   });
 
-  useMemo(() => {
+  const { data: romaneiosData, isLoading: isLoadingRomaneios, refetch: refetchRomaneios } = useQuery({
+    queryKey: ['romaneio_dias'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('romaneio_dias')
+        .select('*, linhas(*)')
+        .order('data_romaneio', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  useEffect(() => {
     if (regrasData) setRegras(regrasData);
   }, [regrasData]);
 
-  useMemo(() => {
+  useEffect(() => {
     if (logsData) setLogs(logsData);
   }, [logsData]);
+
+  useEffect(() => {
+    if (romaneiosData) setRomaneios(romaneiosData);
+  }, [romaneiosData]);
 
   // ============================================================
   // Handlers
@@ -193,6 +231,67 @@ export default function RomaneioPage() {
       toast.error(error.message || 'Erro ao gerar romaneio');
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleImportRomaneio = async (romaneioId: string, linhas: any[]) => {
+    try {
+      // Save romaneio
+      const { data: romaneioData, error: romaneioError } = await supabase
+        .from('romaneio_dias')
+        .insert({
+          data_romaneio: new Date().toISOString().split('T')[0],
+          titulo: `Romaneio ${format(new Date(), 'dd/MM/yyyy', { locale: ptBR })}`,
+          status: 'ativo',
+        })
+        .select()
+        .single();
+
+      if (romaneioError) throw romaneioError;
+
+      // Save lines
+      const linhasParaInserir = linhas.map((l: any) => ({
+        romaneio_id: romaneioData.id,
+        codigo_cliente: l.codigo_cliente,
+        nome_cliente: l.nome_cliente,
+        quantidade: l.quantidade || 1,
+        modalidade_frete: l.modalidade || 'CIF',
+        transportadora: l.transportadora || '',
+        observacoes: l.observacoes || null,
+      }));
+
+      const { error: linhasError } = await supabase
+        .from('romaneio_linhas')
+        .insert(linhasParaInserir);
+
+      if (linhasError) throw linhasError;
+
+      toast.success(`Romaneio importado com ${linhas.length} clientes!`);
+      refetchRomaneios();
+    } catch (error: any) {
+      toast.error(error.message || 'Erro ao importar romaneio');
+    }
+  };
+
+  const handleViewRomaneio = (romaneio: RomaneioDia) => {
+    setSelectedRomaneio(romaneio);
+  };
+
+  const handleDeleteRomaneio = async (id: string) => {
+    if (!confirm('Tem certeza que deseja excluir este romaneio?')) return;
+    
+    try {
+      const { error } = await supabase
+        .from('romaneio_dias')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      toast.success('Romaneio excluído');
+      refetchRomaneios();
+    } catch (error: any) {
+      toast.error(error.message || 'Erro ao excluir romaneio');
     }
   };
 
@@ -223,48 +322,6 @@ export default function RomaneioPage() {
     } catch (error: any) {
       toast.error(error.message || 'Erro ao excluir regra');
     }
-  };
-
-  const handleImportExcel = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const data = new Uint8Array(e.target?.result as Uint8Array);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-        const jsonData = XLSX.utils.sheet_to_json<any>(firstSheet);
-
-        // Mapeia colunas do Excel para o formato da regra
-        const rulesToImport = jsonData.map((row: any) => ({
-          codigo_cliente: row['Código Cliente'] || row['codigo_cliente'] || '',
-          nome_cliente: row['Nome Cliente'] || row['nome_cliente'] || '',
-          modalidade_frete: row['Modalidade'] || row['modalidade_frete'] || 'CIF',
-          valor_minimo_frete: row['Valor Minimo'] || row['valor_minimo_frete'] || null,
-          transportadora_cif: row['Transportadora CIF'] || row['transportadora_cif'] || null,
-          transportadora_fob: row['Transportadora FOB'] || row['transportadora_fob'] || null,
-          status: row['Status'] || row['status'] || 'ativo',
-        })).filter(r => r.codigo_cliente);
-
-        supabase.functions.invoke('expedicao-auto-romaneio', {
-          body: { action: 'import_rules', rules: rulesToImport },
-        }).then(() => {
-          toast.success(`${rulesToImport.length} regras importadas`);
-          setShowImportModal(false);
-          refetchRegras();
-        });
-      } catch (error: any) {
-        toast.error(error.message || 'Erro ao importar arquivo');
-      }
-    };
-    reader.readAsArrayBuffer(file);
-  };
-
-  const handleViewLogDetail = (log: LogRomaneio) => {
-    setSelectedLog(log);
-    setShowLogDetail(true);
   };
 
   // ============================================================
@@ -321,6 +378,14 @@ export default function RomaneioPage() {
           <Truck className="w-4 h-4" />
           Regras de Frete
         </Button>
+        <Button
+          variant={activeTab === 'historico' ? 'default' : 'outline'}
+          onClick={() => setActiveTab('historico')}
+          className="gap-2"
+        >
+          <Package className="w-4 h-4" />
+          Romaneios Importados
+        </Button>
       </div>
 
       {/* ============================================================ */}
@@ -363,6 +428,25 @@ export default function RomaneioPage() {
             </CardContent>
           </Card>
 
+          {/* Import Button */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Importar Romaneio Manual</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Button 
+                onClick={() => setShowImportModal(true)} 
+                className="gap-2"
+              >
+                <Upload className="w-4 h-4" />
+                Importar Planilha Excel
+              </Button>
+              <p className="text-sm text-muted-foreground mt-2">
+                Importe uma planilha com os clientes do romaneio de hoje
+              </p>
+            </CardContent>
+          </Card>
+
           {/* Preview */}
           {preview.length > 0 && (
             <Card>
@@ -387,7 +471,7 @@ export default function RomaneioPage() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {dayData.linhas.map((linha, lineIdx) => (
+                          {dayData.linhas?.map((linha, lineIdx) => (
                             <TableRow key={lineIdx}>
                               <TableCell className="font-medium">{linha.cliente_nome}</TableCell>
                               <TableCell>{linha.cliente_codigo}</TableCell>
@@ -603,6 +687,135 @@ export default function RomaneioPage() {
       )}
 
       {/* ============================================================ */}
+      {/* TAB: HISTÓRICO DE ROMANEIOS IMPORTADOS                       */}
+      {/* ============================================================ */}
+      {activeTab === 'historico' && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Romaneios Importados</h2>
+            <Button onClick={() => refetchRomaneios()} variant="outline" size="sm" className="gap-2">
+              <RefreshCw className="w-4 h-4" />
+              Atualizar
+            </Button>
+          </div>
+
+          {isLoadingRomaneios ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="w-8 h-8 animate-spin" />
+            </div>
+          ) : romaneios.length === 0 ? (
+            <Card>
+              <CardContent className="py-10">
+                <EmptyState
+                  icon={Package}
+                  title="Nenhum romaneio importado"
+                  description="Vá para a aba 'Romaneio' e importe uma planilha"
+                />
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {romaneios.map((romaneio) => (
+                <Card key={romaneio.id}>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <Package className="w-5 h-5 text-primary" />
+                          <h3 className="font-semibold text-lg">{romaneio.titulo}</h3>
+                          <Badge variant={romaneio.status === 'ativo' ? 'default' : 'secondary'}>
+                            {romaneio.status}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {format(new Date(romaneio.data_romaneio), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                          {romaneio.linhas && (
+                            <span className="ml-4">• {romaneio.linhas.length} clientes</span>
+                          )}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleViewRomaneio(romaneio)}
+                        >
+                          Ver Detalhes
+                        </Button>
+                        <Button 
+                          variant="destructive" 
+                          size="sm"
+                          onClick={() => handleDeleteRomaneio(romaneio.id)}
+                        >
+                          Excluir
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Import Dialog */}
+      <RomaneioImportDialog
+        open={showImportModal}
+        onOpenChange={setShowImportModal}
+        onImported={handleImportRomaneio}
+      />
+
+      {/* Log Detail Dialog */}
+      <Dialog open={showLogDetail} onOpenChange={(open) => !open && setShowLogDetail(false)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Detalhes do Romaneio</DialogTitle>
+            <DialogDescription>
+              {selectedLog && new Date(selectedLog.criado_em).toLocaleString('pt-BR')}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedLog && (
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Data Faturamento</Label>
+                  <p className="font-medium">
+                    {new Date(selectedLog.data_faturamento).toLocaleDateString('pt-BR')}
+                  </p>
+                </div>
+                <div>
+                  <Label>Total de Linhas</Label>
+                  <p className="font-medium">{selectedLog.total_linhas}</p>
+                </div>
+                <div>
+                  <Label>Status</Label>
+                  <Badge variant={selectedLog.status === 'gerado' ? 'default' : 'secondary'}>
+                    {selectedLog.status}
+                  </Badge>
+                </div>
+                <div>
+                  <Label>Transportadora</Label>
+                  <p className="font-medium">{selectedLog.transportadora_nome || '-'}</p>
+                </div>
+              </div>
+              {selectedLog.observacao && (
+                <div>
+                  <Label>Observações</Label>
+                  <p className="text-sm mt-1">{selectedLog.observacao}</p>
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowLogDetail(false)}>
+              Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ============================================================ */}
       {/* MODALS                                                       */}
       {/* ============================================================ */}
 
@@ -659,9 +872,9 @@ export default function RomaneioPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="valor_minimo_frete">Valor Mínimo (R$)</Label>
+                <Label htmlFor="valor_minimo">Valor Mínimo (R$)</Label>
                 <Input
-                  id="valor_minimo_frete"
+                  id="valor_minimo"
                   type="number"
                   value={editingRule?.valor_minimo_frete || ''}
                   onChange={(e) => setEditingRule(prev => prev ? { ...prev, valor_minimo_frete: e.target.value ? parseFloat(e.target.value) : null } : null)}
@@ -691,31 +904,14 @@ export default function RomaneioPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="frequencia_envio">Frequência de Envio</Label>
-                <Input
-                  id="frequencia_envio"
-                  value={editingRule?.frequencia_envio || ''}
-                  onChange={(e) => setEditingRule(prev => prev ? { ...prev, frequencia_envio: e.target.value } : null)}
-                  placeholder="1x por semana"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
-                <Select 
-                  value={editingRule?.status || 'ativo'}
-                  onValueChange={(val) => setEditingRule(prev => prev ? { ...prev, status: val } : null)}
-                >
-                  <SelectTrigger id="status">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ativo">Ativo</SelectItem>
-                    <SelectItem value="inativado">Inativado</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="frequencia">Frequência de Envio</Label>
+              <Input
+                id="frequencia"
+                value={editingRule?.frequencia_envio || ''}
+                onChange={(e) => setEditingRule(prev => prev ? { ...prev, frequencia_envio: e.target.value } : null)}
+                placeholder="1x por semana"
+              />
             </div>
 
             <div className="space-y-2">
@@ -724,136 +920,37 @@ export default function RomaneioPage() {
                 id="observacoes"
                 value={editingRule?.observacoes || ''}
                 onChange={(e) => setEditingRule(prev => prev ? { ...prev, observacoes: e.target.value } : null)}
-                placeholder="Observações adicionais sobre o frete..."
-                rows={3}
+                rows={4}
               />
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="status">Status</Label>
+              <Select 
+                value={editingRule?.status || 'ativo'}
+                onValueChange={(val) => setEditingRule(prev => prev ? { ...prev, status: val } : null)}
+              >
+                <SelectTrigger id="status">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ativo">Ativo</SelectItem>
+                  <SelectItem value="inativo">Inativo</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditingRule(null)}>
               Cancelar
             </Button>
-            <Button onClick={() => handleSaveRule(editingRule || {})}>
+            <Button onClick={() => {
+              if (editingRule) {
+                handleSaveRule(editingRule);
+              }
+            }}>
               Salvar Regra
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Import Modal */}
-      <Dialog open={showImportModal} onOpenChange={setShowImportModal}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Importar Regras de Frete</DialogTitle>
-            <DialogDescription>
-              Faça upload de um arquivo Excel (.xlsx) com as regras de faturamento.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4 space-y-4">
-            <div className="border-2 border-dashed rounded-lg p-8 text-center">
-              <Upload className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-sm text-muted-foreground mb-4">
-                Arraste um arquivo Excel ou clique para selecionar
-              </p>
-              <input
-                type="file"
-                accept=".xlsx,.xls"
-                onChange={handleImportExcel}
-                className="hidden"
-                id="import-file"
-              />
-              <label htmlFor="import-file">
-                <Button asChild variant="outline" className="cursor-pointer">
-                  <span>Selecionar Arquivo</span>
-                </Button>
-              </label>
-            </div>
-            <div className="text-xs text-muted-foreground">
-              <p><strong>Colunas esperadas:</strong></p>
-              <ul className="list-disc list-inside mt-1">
-                <li>Código Cliente (obrigatório)</li>
-                <li>Nome Cliente</li>
-                <li>Modalidade (CIF/FOB/CIF_FOB)</li>
-                <li>Transportadora CIF</li>
-                <li>Transportadora FOB</li>
-                <li>Valor Mínimo (opcional)</li>
-              </ul>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowImportModal(false)}>
-              Cancelar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Log Detail Modal */}
-      <Dialog open={showLogDetail} onOpenChange={setShowLogDetail}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Detalhes do Romaneio</DialogTitle>
-            <DialogDescription>
-              {selectedLog && `Gerado em ${new Date(selectedLog.criado_em).toLocaleString('pt-BR')}`}
-            </DialogDescription>
-          </DialogHeader>
-          {selectedLog && (
-            <div className="space-y-4 py-4">
-              <div className="grid grid-cols-3 gap-4">
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="text-2xl font-bold">{selectedLog.data_faturamento}</div>
-                    <div className="text-sm text-muted-foreground">Data Faturamento</div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="text-2xl font-bold">{selectedLog.total_linhas}</div>
-                    <div className="text-sm text-muted-foreground">Total de Clientes</div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-6">
-                    <Badge variant={selectedLog.status === 'gerado' ? 'default' : 'secondary'}>
-                      {selectedLog.status}
-                    </Badge>
-                    <div className="text-sm text-muted-foreground mt-2">Status</div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <div>
-                <h4 className="font-semibold mb-3">Clientes Inclusos</h4>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Cliente</TableHead>
-                      <TableHead>Modalidade</TableHead>
-                      <TableHead>Transportadora</TableHead>
-                      <TableHead className="text-right">Peças</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {Array.isArray(selectedLog.json_detalhes) && selectedLog.json_detalhes.map((linha: any, idx: number) => (
-                      <TableRow key={idx}>
-                        <TableCell className="font-medium">{linha.cliente_nome}</TableCell>
-                        <TableCell>
-                          <Badge className={getTransportadoraCor(linha.modalidade)}>
-                            {linha.modalidade}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{linha.transportadora}</TableCell>
-                        <TableCell className="text-right">{linha.total_peças}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowLogDetail(false)}>
-              Fechar
             </Button>
           </DialogFooter>
         </DialogContent>
