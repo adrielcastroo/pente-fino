@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Search, RefreshCw, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Search, Loader2, Database, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,130 +7,158 @@ import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
-interface Pedido {
-  id?: string;
-  cdCliente: string;
-  cardName: string;
-  nrPedido: string;
-  dtPedido: string;
-  situacao: number;
-  dtEntrega: string;
-  vlTotal: number;
-  vlProdutos: number;
-  vlImpostos: number;
-  transportadora: string;
-  nmClienteFinal: string;
-  observacoes: string;
-}
+// ============================================================
+// Types — espelham a tabela auge_pedidos (dados reais do Auge)
+// ============================================================
 
-interface FiltrosPedidos {
-  dataInicio: string;
-  dataFim: string;
-  cdCliente: string;
-  situacoes: number[];
+export interface PedidoAuge {
+  id: string;
+  cd_pedido: string;
+  nr_pedido: string | null;
+  nome_cliente: string | null;
+  cliente_final: string | null;
+  supervisor: string | null;
+  dt_documento: string | null;
+  dt_efetivacao: string | null;
+  dt_entrega_prevista: string | null;
+  vl_produtos: number;
+  vl_impostos: number;
+  vl_total: number;
+  situacao_id: string | null;
+  situacao: string | null;
+  status_tms: string | null;
+  nf_numero: string | null;
+  nf_serie: string | null;
+  sincronizado_em: string;
 }
 
 interface ConsultaPedidosProps {
-  onPedidosSelecionados: (pedidos: Pedido[]) => void;
+  onPedidosSelecionados: (pedidos: PedidoAuge[]) => void;
 }
 
-interface PedidoFormData {
-  cdCliente?: string;
-  dtPedidoDe?: string;
-  dtPedidoAte?: string;
-  situacoes?: number[];
+// Cores por situação (baseado nos dados reais do Auge)
+function getCorSituacao(situacao: string | null): string {
+  const s = (situacao || '').toLowerCase();
+  if (s.includes('digita')) return 'bg-blue-100 text-blue-800';
+  if (s.includes('produ')) return 'bg-purple-100 text-purple-800';
+  if (s.includes('efetivado')) return 'bg-green-100 text-green-800';
+  if (s.includes('faturado')) return 'bg-emerald-100 text-emerald-800';
+  if (s.includes('pronto')) return 'bg-orange-100 text-orange-800';
+  if (s.includes('an')) return 'bg-yellow-100 text-yellow-800';
+  if (s.includes('aprov')) return 'bg-cyan-100 text-cyan-800';
+  if (s.includes('pendente')) return 'bg-red-100 text-red-800';
+  return 'bg-gray-100 text-gray-800';
+}
+
+function formatarMoeda(valor: number | null): string {
+  if (valor == null) return '-';
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor);
 }
 
 export default function ConsultaPedidos({ onPedidosSelecionados }: ConsultaPedidosProps) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [pedidos, setPedidos] = useState<Pedido[]>([]);
-  const [dataInicio, setDataInicio] = useState('');
-  const [dataFim, setDataFim] = useState('');
-  const [cliente, setCliente] = useState('');
-  const [situacoes, setSituacoes] = useState<number[]>([10, 12, 20, 30, 40, 50, 55, 60]);
-  const [suporteCarregando, setSuporteCarregando] = useState(false);
+  const [busca, setBusca] = useState('');
+  const [filtroSituacao, setFiltroSituacao] = useState('todos');
+  const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
 
-  const handleConsultar = async () => {
-    if (!dataInicio) {
-      toast.error('Informe a data início');
+  // Busca TODOS os pedidos reais do Auge (tabela auge_pedidos, sincronizada)
+  // com paginação em lotes (Supabase limita a 1000 por request)
+  const { data: pedidos = [], isLoading, refetch, isFetching } = useQuery({
+    queryKey: ['auge_pedidos'],
+    queryFn: async () => {
+      const BATCH = 500;
+      const all: PedidoAuge[] = [];
+      let offset = 0;
+      let hasMore = true;
+      while (hasMore && all.length < 5000) {
+        const { data, error } = await supabase
+          .from('auge_pedidos')
+          .select('*')
+          .order('cd_pedido', { ascending: false })
+          .range(offset, offset + BATCH - 1);
+        if (error) throw error;
+        if (!data || data.length === 0) break;
+        all.push(...(data as PedidoAuge[]));
+        offset += BATCH;
+        hasMore = data.length === BATCH;
+      }
+      return all;
+    },
+  });
+
+  const situacoes = useMemo(() => {
+    const set = new Map<string, number>();
+    pedidos.forEach((p) => {
+      const s = p.situacao || 'Sem situação';
+      set.set(s, (set.get(s) || 0) + 1);
+    });
+    return Array.from(set.entries()).sort((a, b) => b[1] - a[1]);
+  }, [pedidos]);
+
+  const filtrados = useMemo(() => {
+    const q = busca.toLowerCase().trim();
+    return pedidos.filter((p) => {
+      const matchesBusca =
+        !q ||
+        (p.nome_cliente || '').toLowerCase().includes(q) ||
+        (p.cd_pedido || '').includes(q) ||
+        (p.nr_pedido || '').includes(q) ||
+        (p.supervisor || '').toLowerCase().includes(q);
+      const matchesSit = filtroSituacao === 'todos' || (p.situacao || 'Sem situação') === filtroSituacao;
+      return matchesBusca && matchesSit;
+    });
+  }, [pedidos, busca, filtroSituacao]);
+
+  const stats = useMemo(
+    () => ({
+      total: pedidos.length,
+      valor: pedidos.reduce((acc, p) => acc + (p.vl_total || 0), 0),
+      selecionados: selecionados.size,
+    }),
+    [pedidos, selecionados],
+  );
+
+  const toggleSelecao = (id: string) => {
+    setSelecionados((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const selecionarTodos = () => {
+    if (selecionados.size === filtrados.length) {
+      setSelecionados(new Set());
+    } else {
+      setSelecionados(new Set(filtrados.map((p) => p.id)));
+    }
+  };
+
+  const confirmarSelecao = () => {
+    const sel = pedidos.filter((p) => selecionados.has(p.id));
+    if (sel.length === 0) {
+      toast.error('Selecione pelo menos um pedido');
       return;
     }
-
-    setIsLoading(true);
-    setSuporteCarregando(true);
-
-    try {
-      // TODO: Implementar chamada real ao Auge
-      // Por enquanto, simular com dados de exemplo
-      
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Dados de exemplo baseados no que extraímos do HAR
-      const mockPedidos: Pedido[] = [
-        {
-          cdCliente: 'C0593',
-          cardName: 'A & N Decorações e Paisagismo LTDA',
-          nrPedido: '176906',
-          dtPedido: '01/08/2026',
-          situacao: 40,
-          dtEntrega: '2026-09-03',
-          vlTotal: 1580.50,
-          vlProdutos: 1400.00,
-          vlImpostos: 180.50,
-          transportadora: 'JAMEF',
-          nmClienteFinal: 'A & N Decorações e Paisagismo LTDA',
-          observacoes: 'Entregar antes das 14h'
-        },
-        {
-          cdCliente: 'C1739',
-          cardName: 'Monter Automação e Decoração Ltda',
-          nrPedido: '176910',
-          dtPedido: '01/08/2026',
-          situacao: 50,
-          dtEntrega: '2026-09-03',
-          vlTotal: 2340.00,
-          vlProdutos: 2100.00,
-          vlImpostos: 240.00,
-          transportadora: 'RODONAVES',
-          nmClienteFinal: 'Monter Automação e Decoração Ltda'
-        },
-        {
-          cdCliente: 'C1420',
-          cardName: 'Alameda Decor Artigos De Decoração LTDA',
-          nrPedido: '176912',
-          dtPedido: '01/08/2026',
-          situacao: 20,
-          dtEntrega: '2026-09-04',
-          vlTotal: 890.75,
-          vlProdutos: 800.00,
-          vlImpostos: 90.75,
-          transportadora: ''
-        }
-      ];
-      
-      setPedidos(mockPedidos);
-      toast.success(`${mockPedidos.length} pedidos carregados`);
-    } catch (error) {
-      toast.error('Erro ao consultar pedidos');
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-      setSuporteCarregando(false);
-    }
-  };
-
-  const formatMoeda = (valor: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(valor);
-  };
-
-  const formatData = (data: string) => {
-    if (!data) return '-';
-    const d = new Date(data);
-    return d.toLocaleDateString('pt-BR');
+    onPedidosSelecionados(sel);
+    toast.success(`${sel.length} pedidos enviados para o romaneio`);
   };
 
   return (
@@ -139,155 +167,136 @@ export default function ConsultaPedidos({ onPedidosSelecionados }: ConsultaPedid
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Search className="w-5 h-4" />
-            Consultar Pedidos no Auge
+            <Database className="w-5 h-5" />
+            Pedidos do Auge (sincronizados em tempo real)
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="dataInicio">Data Início</Label>
+          <div className="flex flex-wrap gap-3 items-end">
+            <div className="space-y-2 flex-1 min-w-[220px]">
+              <Label htmlFor="busca">Buscar (cliente, pedido ou supervisor)</Label>
               <Input
-                id="dataInicio"
-                type="date"
-                value={dataInicio}
-                onChange={(e) => setDataInicio(e.target.value)}
+                id="busca"
+                placeholder="Ex: Monter, C1739, 176906..."
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="dataFim">Data Fim</Label>
-              <Input
-                id="dataFim"
-                type="date"
-                value={dataFim}
-                onChange={(e) => setDataFim(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="cliente">Código Cliente</Label>
-              <Input
-                id="cliente"
-                placeholder="Ex: C0593"
-                value={cliente}
-                onChange={(e) => setCliente(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Situações</Label>
-              <Select
-                value={situacoes.length > 0 ? situacoes[0] : ''}
-                onValueChange={(val) => {
-                  const nums = val ? [Number(val)] : [];
-                  setSituacoes(nums.length > 0 ? nums : [10, 12, 20, 30, 40, 50, 55, 60]);
-                }}
-              >
-                <SelectTrigger className="w-[150px]">
+              <Label>Situação</Label>
+              <Select value={filtroSituacao} onValueChange={setFiltroSituacao}>
+                <SelectTrigger className="w-[200px]">
                   <SelectValue />
-                  <SelectContent>
-                    <SelectItem value="10">Aberto</SelectItem>
-                    <SelectItem value="12">Aguardando Autorização</SelectItem>
-                    <SelectItem value="20">Autorizado</SelectItem>
-                    <SelectItem value="30">Em Separação</SelectItem>
-                    <SelectItem value="40">Aguardando Frete</SelectItem>
-                    <SelectItem value="50">Facturado</SelectItem>
-                    <SelectItem value="55">Enviado</SelectItem>
-                    <SelectItem value="60">Entregue</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todas</SelectItem>
+                  {situacoes.map(([sit, qtd]) => (
+                    <SelectItem key={sit} value={sit}>
+                      {sit} ({qtd})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+            <Button onClick={() => refetch()} variant="outline" className="gap-2">
+              {isFetching ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <RefreshCw className="w-4 h-4" />
+              )}
+              Atualizar
+            </Button>
+          </div>
+
+          {/* Stats */}
+          <div className="flex gap-6 mt-4 text-sm">
+            <span>
+              Total: <strong>{stats.total}</strong> pedidos
+            </span>
+            <span>
+              Valor: <strong>{formatarMoeda(stats.valor)}</strong>
+            </span>
+            <span>
+              Selecionados: <strong>{stats.selecionados}</strong>
+            </span>
           </div>
         </CardContent>
       </Card>
 
-      {/* Resultados */}
-      {isLoading ? (
-        <div className="flex items-center justify-center py-10">
-          <Loader2 className="w-8 h-8 animate-spin" />
-        </div>
-      ) : pedidos.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>Pedidos Encontrados ({pedidos.length})</span>
-              <Button variant="outline" size="sm" onClick={() => onPedidosSelecionados(pedidos)}>
-                Selecionar Todos
-              </Button>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Código</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Nº Pedido</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Data Entrega</TableHead>
-                    <TableHead>Transportadora</TableHead>
-                    <TableHead className="text-right">Valor Total</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {pedidos.map((pedido, idx) => (
-                    <TableRow key={idx}>
-                      <TableCell className="font-mico">{pedido.cdCliente}</TableCell>
-                      <TableCell className="font-medium max-w-[200px] truncate">
-                        {pedido.cardName}
-                      </TableCell>
-                      <TableCell>{pedido.numPedido}</TableCell>
-                      <TableCell>
-                        <Badge className={STATUS_COLORS[pedido.situacao] || 'bg-gray-100'}>
-                          {STATUS_NAMES[pedido.situacao] || `Status ${pedido.situacao}`}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{formatData(pedido.dtEntrega)}</TableCell>
-                      <TableCell>{pedido.transportadora || '-'}</TableCell>
-                      <TableCell className="text-right font-mico">
-                        {formatMoeda(pedido.vlTotal)}
-                      </TableCell>
+      {/* Tabela de pedidos */}
+      <Card>
+        <CardContent className="pt-6">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-10">
+              <Loader2 className="w-6 h-6 animate-spin" />
+            </div>
+          ) : filtrados.length === 0 ? (
+            <p className="text-center text-muted-foreground py-10">
+              Nenhum pedido encontrado. Clique em "Atualizar" para sincronizar com o Auge.
+            </p>
+          ) : (
+            <>
+              <div className="flex gap-2 mb-3">
+                <Button variant="outline" size="sm" onClick={selecionarTodos}>
+                  {selecionados.size === filtrados.length ? 'Desmarcar todos' : 'Selecionar todos'}
+                </Button>
+                <Button size="sm" onClick={confirmarSelecao} disabled={selecionados.size === 0}>
+                  Usar {selecionados.size} pedido(s) no romaneio
+                </Button>
+              </div>
+              <div className="rounded-md border max-h-[600px] overflow-y-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-10"></TableHead>
+                      <TableHead>Pedido</TableHead>
+                      <TableHead>Cliente</TableHead>
+                      <TableHead>Situação</TableHead>
+                      <TableHead>Data Doc.</TableHead>
+                      <TableHead>Entrega</TableHead>
+                      <TableHead>NF</TableHead>
+                      <TableHead>Supervisor</TableHead>
+                      <TableHead className="text-right">Valor Total</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-            
-            <div className="mt-4 text-sm text-muted-foreground">
-              <p>💡 Dica: Selecione os pedidos que deseja incluir no romaneio e clique em "Selecionar Todos"</p>
-            </div>
-          </Card>
-        </Card>
-      )}
-
-      {!isLoading && !pedidos.length && (
-        <div className="text-center py-10 text-muted-foreground">
-          <Search className="w-12 h-12 mx-auto mb-4 opacity-50" />
-          <p>Consulte pedidos pelo Auge para adicionar ao romaneio</p>
-        </div>
-      )}
+                  </TableHeader>
+                  <TableBody>
+                    {filtrados.map((p) => (
+                      <TableRow key={p.id}>
+                        <TableCell>
+                          <input
+                            type="checkbox"
+                            checked={selecionados.has(p.id)}
+                            onChange={() => toggleSelecao(p.id)}
+                            className="w-4 h-4"
+                          />
+                        </TableCell>
+                        <TableCell className="font-mono">
+                          {p.nr_pedido || p.cd_pedido}
+                        </TableCell>
+                        <TableCell className="max-w-[220px] truncate" title={p.nome_cliente || ''}>
+                          {p.nome_cliente}
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={getCorSituacao(p.situacao)}>
+                            {p.situacao || '-'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{p.dt_documento || '-'}</TableCell>
+                        <TableCell>{p.dt_entrega_prevista || '-'}</TableCell>
+                        <TableCell>{p.nf_numero ? `${p.nf_numero}` : '-'}</TableCell>
+                        <TableCell className="max-w-[140px] truncate">{p.supervisor || '-'}</TableCell>
+                        <TableCell className="text-right font-mono">
+                          {formatarMoeda(p.vl_total)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
-
-const STATUS_COLORS: Record<number, string> = {
-  10: 'bg-blue-100 text-blue-800',
-  12: 'bg-yellow-100 text-yellow-800',
-  20: 'bg-green-100 text-green-800',
-  30: 'bg-purple-100 text-purple-800',
-  40: 'bg-orange-100 text-orange-800',
-  50: 'bg-red-100 text-red-800',
-  55: 'bg-cyan-100 text-cyan-800',
-  60: 'bg-green-200 text-green-900',
-};
-
-const STATUS_NAMES: Record<number, string> = {
-  10: 'Aberto',
-  12: 'Aguardando Aut.',
-  20: 'Autorizado',
-  30: 'Em Separação',
-  40: 'Aguardando Frete',
-  50: 'Facturado',
-  55: 'Enviado',
-  60: 'Entregue',
-};
