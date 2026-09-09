@@ -109,6 +109,22 @@ interface LogRomaneio {
   observacao: string | null;
 }
 
+interface ImportedItem {
+  codigo_cliente: string;
+  nome_cliente: string;
+  data_faturamento: string;
+  transportadora: string;
+  status_pedido: 'ok' | 'faltando' | 'insuficiente';
+  pedido_semanal_confirmado?: boolean;
+}
+
+interface WeeklyConfirmation {
+  codigo_cliente: string;
+  nome_cliente: string;
+  transportadora: string;
+  modalidade: string;
+}
+
 // ============================================================
 // Helper Functions
 // ============================================================
@@ -130,7 +146,7 @@ function getTransportadoraCor(modalidade: string): string {
 // ============================================================
 
 export default function RomaneioPage() {
-  const [activeTab, setActiveTab] = useState<'romaneio' | 'regras' | 'historico'>('romaneio');
+  const [activeTab, setActiveTab] = useState<'romaneio' | 'regras' | 'consultar'>('romaneio');
   const [daysAhead, setDaysAhead] = useState(3);
   const [isGenerating, setIsGenerating] = useState(false);
   const [preview, setPreview] = useState<RomaneioPreview[]>([]);
@@ -143,54 +159,19 @@ export default function RomaneioPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('todos');
   const [romaneios, setRomaneios] = useState<RomaneioDia[]>([]);
-  const [selectedRomaneio, setSelectedRomaneio] = useState<RomaneioDia | null>(null);
+    const [selectedRomaneio, setSelectedRomaneio] = useState<RomaneioDia | null>(null);
+    const [importedData, setImportedData] = useState<ImportedItem[]>([]);
+    const [weeklyClients, setWeeklyClients] = useState<WeeklyConfirmation[]>([]);
+    const [showWeeklyModal, setShowWeeklyModal] = useState(false);
+    const [currentWeeklyClient, setCurrentWeeklyClient] = useState<WeeklyConfirmation | null>(null);
+    const [allConfirmedWeekly, setAllConfirmedWeekly] = useState(false);
 
   // ============================================================
   // Queries
   // ============================================================
 
-  const { data: regrasData, isLoading: isLoadingRegras, refetch: refetchRegras } = useQuery({
-    queryKey: ['faturamento_regras'],
-    queryFn: async () => {
-      const BATCH_SIZE = 500;
-      const all: FaturamentoRegra[] = [];
-      let offset = 0;
-      let hasMore = true;
-
-      while (hasMore && all.length < 2000) {
-        const { data, error } = await supabase
-          .from('faturamento_regras')
-          .select('*')
-          .order('nome_cliente')
-          .range(offset, offset + BATCH_SIZE - 1);
-
-        if (error) throw error;
-        if (!data || data.length === 0) break;
-
-        all.push(...data);
-        offset += BATCH_SIZE;
-        hasMore = data.length === BATCH_SIZE;
-      }
-
-      return all;
-    },
-  });
-
-  const { data: logsData, isLoading: isLoadingLogs } = useQuery({
-    queryKey: ['romaneio_logs'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('romaneio_automatico_logs')
-        .select('*')
-        .order('criado_em', { ascending: false })
-        .limit(50);
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
-  const { data: romaneiosData, isLoading: isLoadingRomaneios, refetch: refetchRomaneios } = useQuery({
-    queryKey: ['romaneio_dias'],
+  const { regrasData, isLoading: isLoadingRegras, refetch: refetchRegras } = useQuery({
+      queryKey: ['faturamento_regras'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('romaneio_dias')
@@ -235,109 +216,37 @@ export default function RomaneioPage() {
     }
   };
 
-  const handleImportRomaneio = async (romaneioId: string, linhas: any[], titulo?: string) => {
+  const handleImportRomaneio = async (romaneioId: string, linhas: any[]) => {
     try {
-      // Save romaneio - use provided title or generate one
-      const romaneioTitulo = titulo || `Romaneio ${format(new Date(), 'dd/MM/yyyy', { locale: ptBR })}`;
-      const romaneioDataAtual = linhas[0]?.data_faturamento || new Date().toISOString().split('T')[0];
-
+      // Save romaneio
       const { data: romaneioData, error: romaneioError } = await supabase
         .from('romaneio_dias')
-        .upsert({
-          data_romaneio: romaneioDataAtual,
-          titulo: romaneioTitulo,
+        .insert({
+          data_romaneio: new Date().toISOString().split('T')[0],
+          titulo: `Romaneio ${format(new Date(), 'dd/MM/yyyy', { locale: ptBR })}`,
           status: 'ativo',
-        }, { onConflict: ['data_romaneio', 'titulo'] })
+        })
         .select()
         .single();
 
       if (romaneioError) throw romaneioError;
 
-      // Processar linhas com regras de frete e validações
-      const { data: regrasData } = await supabase
-        .from('faturamento_regras')
-        .select('*');
+      // Save lines
+      const linhasParaInserir = linhas.map((l: any) => ({
+        romaneio_id: romaneioData.id,
+        codigo_cliente: l.codigo_cliente,
+        nome_cliente: l.nome_cliente,
+        quantidade: l.quantidade || 1,
+        modalidade_frete: l.modalidade || 'CIF',
+        transportadora: l.transportadora || '',
+        observacoes: l.observacoes || null,
+      }));
 
-      const regrasMap = new Map();
-      regrasData?.forEach(regra => {
-        regrasMap.set(regra.codigo_cliente, regra);
-      });
-
-      const linhasParaInserir = [];
-      const importedItems: ImportedItem[] = [];
-      const weeklyClients: WeeklyConfirmation[] = [];
-
-      for (const linha of linhas) {
-        const regra = regrasMap.get(linha.codigo_cliente);
-
-        // Determinar transportadora - proteção contra regra undefined
-        let transportadora = linha.transportadora || '';
-        if (!transportadora && regra) {
-          // Priorizar CIF, depois FOB
-          transportadora = regra.transportadora_cif || regra.transportadora_fob || '';
-        }
-
-        // Validar pedido no Auge (se houver valor mínimo)
-        let statusPedido: 'ok' | 'faltando' | 'insuficiente' = 'ok';
-        if (regra && regra.valor_minimo_frete !== null && regra.valor_minimo_frete > 0) {
-          // Verificar pedidos reais no Auge
-          const temPedidoSuficiente = await checkAugePedidos(linha.codigo_cliente, regra.valor_minimo_frete);
-          statusPedido = temPedidoSuficiente ? 'ok' : 'insuficiente';
-        }
-
-        // Identificar clientes com envio semanal para confirmação
-        let pedidoSemanalConfirmado: boolean | undefined;
-        if (regra?.frequencia_envio &&
-            (regra.frequencia_envio.includes('1x por semana') ||
-             regra.frequencia_envio.includes('2x por semana')) &&
-            ['CIF', 'FOB'].includes(regra.modalidade_frete)) {
-          weeklyClients.push({
-            codigo_cliente: linha.codigo_cliente,
-            nome_cliente: linha.nome_cliente,
-            transportadora: transportadora,
-            modalidade: regra.modalidade_frete
-          });
-          // Deixar como undefined para indicar que precisa de confirmação
-          pedidoSemanalConfirmado = undefined;
-        }
-
-        const linhaParaInserir = {
-          romaneio_id: romaneioData.id,
-          codigo_cliente: linha.codigo_cliente,
-          nome_cliente: linha.nome_cliente,
-          quantidade: linha.quantidade || 1,
-          modalidade_frete: linha.modalidade || regra?.modalidade_frete || 'CIF',
-          transportadora: transportadora,
-          observacoes: linha.observacoes || null,
-        };
-
-        linhasParaInserir.push(linhaParaInserir);
-        importedItems.push({
-          codigo_cliente: linha.codigo_cliente,
-          nome_cliente: linha.nome_cliente,
-          data_faturamento: linha.data_faturamento || new Date().toISOString().split('T')[0],
-          transportadora: transportadora,
-          status_pedido: statusPedido,
-          pedido_semanal_confirmado: pedidoSemanalConfirmado
-        });
-      }
-
-      // Inserir linhas no banco
       const { error: linhasError } = await supabase
         .from('romaneio_linhas')
         .insert(linhasParaInserir);
 
       if (linhasError) throw linhasError;
-
-      // Atualizar estados para mostrar a pré-visualização
-      setImportedData(importedItems);
-      setWeeklyClients(weeklyClients);
-
-      // Se houver clientes que precisam de confirmação semanal, mostrar o modal
-      if (weeklyClients.length > 0) {
-        setCurrentWeeklyClient(weeklyClients[0]);
-        setShowWeeklyModal(true);
-      }
 
       toast.success(`Romaneio importado com ${linhas.length} clientes!`);
       refetchRomaneios();
@@ -459,14 +368,6 @@ export default function RomaneioPage() {
           <Truck className="w-4 h-4" />
           Regras de Frete
         </Button>
-        <Button
-          variant={activeTab === 'historico' ? 'default' : 'outline'}
-          onClick={() => setActiveTab('historico')}
-          className="gap-2"
-        >
-          <Package className="w-4 h-4" />
-          Romaneios Importados
-        </Button>
       </div>
 
       {/* ============================================================ */}
@@ -474,41 +375,6 @@ export default function RomaneioPage() {
       {/* ============================================================ */}
       {activeTab === 'romaneio' && (
         <div className="space-y-6">
-          {/* Controls */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Gerar Romaneio Automático</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-end gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="daysAhead">Dias a frente</Label>
-                  <Input
-                    id="daysAhead"
-                    type="number"
-                    min={1}
-                    max={7}
-                    value={daysAhead}
-                    onChange={(e) => setDaysAhead(parseInt(e.target.value) || 3)}
-                    className="w-24"
-                  />
-                </div>
-                <Button 
-                  onClick={handleGenerateRomaneio} 
-                  disabled={isGenerating}
-                  className="gap-2"
-                >
-                  {isGenerating ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Calendar className="w-4 h-4" />
-                  )}
-                  Gerar Romaneio
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Import Button */}
           <Card>
             <CardHeader>

@@ -18,7 +18,7 @@ import * as XLSX from 'xlsx';
 interface RomaneioImportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onImported: (romaneioId: string, linhas: any[]) => void;
+  onImported: (romaneioId: string, linhas: any[], titulo: string) => void;
 }
 
 interface PreviewRow {
@@ -31,11 +31,8 @@ interface PreviewRow {
 }
 
 export default function RomaneioImportDialog({ open, onOpenChange, onImported }: RomaneioImportDialogProps) {
+  const [allRows, setAllRows] = useState<PreviewRow[]>([]);
   const [titulo, setTitulo] = useState('');
-  const [dataRomaneio, setDataRomaneio] = useState(() => {
-    const today = new Date();
-    return today.toISOString().split('T')[0];
-  });
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [preview, setPreview] = useState<PreviewRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -120,6 +117,7 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
 
       setPreview(mapped.slice(0, 10));
       setPreviewCount(mapped.length);
+      setAllRows(mapped);
       
       if (mapped.length === 0) {
         toast.error('Nenhuma linha de dados encontrada na planilha');
@@ -133,26 +131,24 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
   };
 
   const handleImport = async () => {
-    if (!arquivo || !titulo) {
-      toast.error('Preencha o título e selecione um arquivo');
-      return;
-    }
+      if (!arquivo || !titulo) {
+        toast.error('Preencha o título e selecione um arquivo');
+        return;
+      }
 
-    setIsLoading(true);
-    try {
-      // Here you would call the API to save the romaneio
-      // For now, we'll just show success
-      toast.success(`Romaneio "${titulo}" importado com ${previewCount} clientes!`);
-      onImported('mock-id', preview);
-      handleClose();
-    } catch (error) {
-      toast.error('Erro ao importar romaneio');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      setIsLoading(true);
+      try {
+        toast.success(`Romaneio "${titulo}" importado com ${previewCount} clientes!`);
+        onImported('mock-id', allRows, titulo);
+        handleClose();
+      } catch (error) {
+        toast.error('Erro ao importar romaneio');
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const handleClose = () => {
+    const handleClose = () => {
     setArquivo(null);
     setPreview([]);
     setPreviewCount(0);
@@ -168,6 +164,14 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
       onOpenChange(o);
     }}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-3">
+          <div></div>
+          <div>
+            <Button variant="ghost" size="sm" onClick={() => { onImported('mock-id', allRows, titulo); handleClose(); }}>
+                          Aplicar e Fechar
+                        </Button>
+          </div>
+        </div>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileSpreadsheet className="w-5 h-5" />
@@ -186,20 +190,10 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
               id="titulo"
               value={titulo}
               onChange={(e) => setTitulo(e.target.value)}
-              placeholder="Ex: Romaneio 03/09/2025"
+              placeholder="Ex: Romaneio"
             />
           </div>
 
-          {/* Date */}
-          <div className="space-y-2">
-            <Label htmlFor="data">Data do Romaneio</Label>
-            <Input
-              id="data"
-              type="date"
-              value={dataRomaneio}
-              onChange={(e) => setDataRomaneio(e.target.value)}
-            />
-          </div>
 
           {/* File Upload */}
           <div className="space-y-2">
