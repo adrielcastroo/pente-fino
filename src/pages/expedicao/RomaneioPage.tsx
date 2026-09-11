@@ -197,43 +197,9 @@ export default function RomaneioPage() {
   // Handlers
   // ============================================================
 
-  const handleImportRomaneio = async (romaneioId: string, linhas: any[]) => {
-    try {
-      // Save romaneio
-      const { data: romaneioData, error: romaneioError } = await supabase
-        .from('romaneio_dias')
-        .insert({
-          data_romaneio: new Date().toISOString().split('T')[0],
-          titulo: `Romaneio ${format(new Date(), 'dd/MM/yyyy', { locale: ptBR })}`,
-          status: 'ativo',
-        })
-        .select()
-        .single();
-
-      if (romaneioError) throw romaneioError;
-
-      // Save lines
-      const linhasParaInserir = linhas.map((l: any) => ({
-        romaneio_id: romaneioData.id,
-        codigo_cliente: l.codigo_cliente,
-        nome_cliente: l.nome_cliente,
-        quantidade: l.quantidade || 1,
-        modalidade_frete: l.modalidade || 'CIF',
-        transportadora: l.transportadora || '',
-        observacoes: l.observacoes || null,
-      }));
-
-      const { error: linhasError } = await supabase
-        .from('romaneio_linhas')
-        .insert(linhasParaInserir);
-
-      if (linhasError) throw linhasError;
-
-      toast.success(`Romaneio importado com ${linhas.length} clientes!`);
-      refetchRomaneios();
-    } catch (error: any) {
-      toast.error(error.message || 'Erro ao importar romaneio');
-    }
+  const handleImportRomaneio = async () => {
+    toast.success('Romaneio importado com sucesso!');
+    refetchRomaneios();
   };
 
   const handleViewRomaneio = (romaneio: RomaneioDia) => {
