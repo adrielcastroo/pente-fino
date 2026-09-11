@@ -1,6 +1,6 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Upload, X, FileSpreadsheet, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Upload, X, FileSpreadsheet, CheckCircle2, AlertCircle, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -31,6 +31,20 @@ interface PreviewRow {
   volume?: number;
   regra_frete_aplicada?: string | null;
   precisa_escolha_cif_fob?: boolean;
+  regra_encontrada?: boolean;
+  transportadora_sugerida?: string;
+  valor_total_pedido?: number;
+  valor_minimo?: number;
+  observacao?: string;
+}
+
+interface FaturamentoRegra {
+  codigo_cliente: string;
+  nome_cliente: string;
+  modalidade_frete: string;
+  valor_minimo_frete: number | null;
+  transportadora_cif: string | null;
+  transportadora_fob: string | null;
 }
 
 export default function RomaneioImportDialog({ open, onOpenChange, onImported }: RomaneioImportDialogProps) {
@@ -39,7 +53,63 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
   const [allRows, setAllRows] = useState<PreviewRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [previewCount, setPreviewCount] = useState(0);
+  const [isProcessingRules, setIsProcessingRules] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Buscar regras de frete
+  const fetchRegras = async (): Promise<FaturamentoRegra[]> => {
+    const BATCH_SIZE = 500;
+    const all: FaturamentoRegra[] = [];
+    let offset = 0;
+    let hasMore = true;
+
+    while (hasMore && all.length < 2000) {
+      const { data, error } = await supabase
+        .from('faturamento_regras')
+        .select('*')
+        .order('nome_cliente')
+        .range(offset, offset + BATCH_SIZE - 1);
+
+      if (error) throw error;
+      if (!data || data.length === 0) break;
+
+      all.push(...data as FaturamentoRegra[]);
+      offset += BATCH_SIZE;
+      hasMore = data.length === BATCH_SIZE;
+    }
+
+    return all;
+  };
+
+  // Buscar pedidos do Auge por nome do cliente
+  const fetchPedidosPorCliente = async (nomeCliente: string): Promise<{ total: number; count: number }> => {
+    const BATCH_SIZE = 500;
+    let offset = 0;
+    let hasMore = true;
+    let totalValor = 0;
+    let totalCount = 0;
+
+    while (hasMore && totalCount < 5000) {
+      const { data, error } = await supabase
+        .from('auge_pedidos')
+        .select('vl_total')
+        .ilike('nome_cliente', `%${nomeCliente}%`)
+        .range(offset, offset + BATCH_SIZE - 1);
+
+      if (error) throw error;
+      if (!data || data.length === 0) break;
+
+      data.forEach(p => {
+        totalValor += p.vl_total || 0;
+        totalCount++;
+      });
+
+      offset += BATCH_SIZE;
+      hasMore = data.length === BATCH_SIZE;
+    }
+
+    return { total: totalValor, count: totalCount };
+  };
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -52,11 +122,9 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
       const data = await file.arrayBuffer();
       const workbook = XLSX.read(data);
       const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-      
-      // Read all rows as array
+
       const jsonData = XLSX.utils.sheet_to_json<any>(firstSheet, { header: 1 });
-      
-      // Find header row (contains "Cód. Cliente")
+
       let headerRowIndex = -1;
       for (let i = 0; i < Math.min(10, jsonData.length); i++) {
         const row = jsonData[i];
@@ -71,23 +139,19 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
         return;
       }
 
-      // Parse data rows (starting from header row + 1)
       const mapped: PreviewRow[] = [];
       for (let i = headerRowIndex + 1; i < jsonData.length; i++) {
         const row = jsonData[i];
         if (!row || !row[0]) continue;
-        
-        // Skip footer rows (SUBTOTAL, Assinatura, etc.)
+
         const firstCell = String(row[0]);
         if (firstCell.includes('SUBTOTAL') || firstCell.includes('Assinatura') || firstCell.includes('CPF')) {
           continue;
         }
 
-        // Parse date (format: DD.MM.YY or DD/MM/YY)
         let date = '';
         if (row[3]) {
           const dateStr = String(row[3]);
-          // Convert DD.MM.YY to YYYY-MM-DD
           if (dateStr.includes('.')) {
             const parts = dateStr.split('.');
             if (parts.length === 3) {
@@ -114,24 +178,104 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
           data: date,
           transportador: String(row[4] || '').trim(),
           volume: row[5] ? parseInt(row[5]) || 1 : 1,
-          // regra aplicada ao import (preenchido pelo dialog de regras)
           regra_frete_aplicada: null as any,
           precisa_escolha_cif_fob: false,
+          regra_encontrada: false,
+          transportadora_sugerida: '',
+          valor_total_pedido: 0,
+          valor_minimo: 0,
+          observacao: '',
         });
       }
 
       setPreview(mapped.slice(0, 10));
       setAllRows(mapped);
       setPreviewCount(mapped.length);
-      
+
       if (mapped.length === 0) {
         toast.error('Nenhuma linha de dados encontrada na planilha');
+      } else {
+        toast.info(`Encontrados ${mapped.length} clientes. Buscando regras de frete...`);
+        await processarRegras(mapped);
       }
     } catch (error) {
       console.error(error);
       toast.error('Erro ao ler arquivo Excel');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const processarRegras = async (rows: PreviewRow[]) => {
+    setIsProcessingRules(true);
+    try {
+      const regras = await fetchRegras();
+      const regrasMap = new Map<string, FaturamentoRegra>();
+      for (const regra of regras) {
+        regrasMap.set(regra.codigo_cliente, regra);
+        regrasMap.set(regra.nome_cliente, regra);
+      }
+
+      const updatedRows = rows.map(async (row) => {
+        const regra = regrasMap.get(row.codigo_cliente) || regrasMap.get(row.nome_cliente);
+
+        if (!regra) {
+          return { ...row, observacao: 'Regra não encontrada' };
+        }
+
+        const updatedRow = {
+          ...row,
+          regra_frete_aplicada: regra.modalidade_frete,
+          regra_encontrada: true,
+          valor_minimo: regra.valor_minimo_frete,
+          transportadora_cif: regra.transportadora_cif,
+          transportadora_fob: regra.transportadora_fob,
+        };
+
+        if (regra.modalidade_frete === 'CIF_FOB' && regra.valor_minimo_frete) {
+          const pedidosInfo = await fetchPedidosPorCliente(row.nome_cliente);
+          const valorTotal = pedidosInfo.total;
+
+          updatedRow.valor_total_pedido = valorTotal;
+
+          if (valorTotal >= regra.valor_minimo_frete) {
+            updatedRow.transportadora_sugerida = regra.transportadora_cif || '';
+            updatedRow.regra_frete_aplicada = 'CIF';
+            updatedRow.observacao = `Valor total: ${valorTotal.toFixed(2)} >= Mínimo: ${regra.valor_minimo_frete.toFixed(2)}`;
+          } else {
+            updatedRow.transportadora_sugerida = regra.transportadora_fob || '';
+            updatedRow.regra_frete_aplicada = 'FOB';
+            updatedRow.observacao = `Valor total: ${valorTotal.toFixed(2)} < Mínimo: ${regra.valor_minimo_frete.toFixed(2)}`;
+          }
+        } else if (regra.modalidade_frete === 'CIF') {
+          updatedRow.transportadora_sugerida = regra.transportadora_cif || '';
+          updatedRow.regra_frete_aplicada = 'CIF';
+        } else if (regra.modalidade_frete === 'FOB') {
+          updatedRow.transportadora_sugerida = regra.transportadora_fob || '';
+          updatedRow.regra_frete_aplicada = 'FOB';
+        } else if (regra.modalidade_frete === 'FOB_SEMPRE') {
+          updatedRow.transportadora_sugerida = regra.transportadora_fob || '';
+          updatedRow.regra_frete_aplicada = 'FOB';
+        }
+
+        return updatedRow;
+      });
+
+      const results = await Promise.all(updatedRows);
+      const finalRows = results as PreviewRow[];
+
+      setPreview(finalRows.slice(0, 10));
+      setAllRows(finalRows);
+
+      const semRegra = finalRows.filter(r => !r.regra_encontrada).length;
+      if (semRegra > 0) {
+        toast.warning(`${semRegra} cliente(s) sem regra de frete definida`);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('Erro ao processar regras de frete');
+    } finally {
+      setIsProcessingRules(false);
     }
   };
 
@@ -143,7 +287,6 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
 
     setIsLoading(true);
     try {
-      // 1. Criar o cabeçalho do romaneio
       const today = new Date().toISOString().split('T')[0];
       const { data: romaneioData, error: romaneioError } = await (supabase as any)
         .from('romaneio_dias')
@@ -157,15 +300,14 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
 
       if (romaneioError) throw romaneioError;
 
-      // 2. Inserir as linhas do romaneio
       const linhasParaInserir = allRows.map((row) => ({
         romaneio_id: romaneioData.id,
         codigo_cliente: row.codigo_cliente,
         nome_cliente: row.nome_cliente,
         quantidade: row.volume || 1,
         modalidade_frete: row.regra_frete_aplicada || 'CIF',
-        transportadora: row.transportador,
-        observacoes: null,
+        transportadora: row.transportadora_sugerida || row.transportador,
+        observacoes: row.observacao || null,
       }));
 
       const { error: linhasError } = await (supabase as any)
@@ -199,14 +341,14 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
       if (!o) handleClose();
       onOpenChange(o);
     }}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileSpreadsheet className="w-5 h-5" />
             Importar Romaneio de Carga
           </DialogTitle>
           <DialogDescription>
-            Importe uma planilha Excel com os clientes do romaneio.
+            Importe uma planilha Excel com os clientes do romaneio. O sistema buscará automaticamente as regras de frete.
           </DialogDescription>
         </DialogHeader>
 
@@ -214,7 +356,7 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
           {/* File Upload */}
           <div className="space-y-2">
             <Label>Planilha Excel</Label>
-            <div 
+            <div
               className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-primary transition-colors"
               onClick={() => fileInputRef.current?.click()}
             >
@@ -241,11 +383,19 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
             </div>
           </div>
 
+          {/* Processing indicator */}
+          {isProcessingRules && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span className="animate-spin">⟳</span>
+              Processando regras de frete...
+            </div>
+          )}
+
           {/* Preview */}
           {preview.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label>Pré-visualização (primeiros 10)</Label>
+                <Label>Pré-visualização</Label>
                 <Badge variant="secondary">{previewCount} total</Badge>
               </div>
               <div className="border rounded-lg overflow-hidden">
@@ -256,34 +406,69 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
                       <th className="px-3 py-2 text-left">Nome</th>
                       <th className="px-3 py-2 text-left">NF</th>
                       <th className="px-3 py-2 text-left">Data</th>
-                      <th className="px-3 py-2 text-left">Transportador</th>
+                      <th className="px-3 py-2 text-left">Transportadora</th>
+                      <th className="px-3 py-2 text-left">Modalidade</th>
                       <th className="px-3 py-2 text-right">Vol.</th>
+                      <th className="px-3 py-2 text-left">Observação</th>
                     </tr>
                   </thead>
                   <tbody>
                     {preview.map((row, idx) => (
-                      <tr key={idx} className="border-t">
+                      <tr key={idx} className="border-t hover:bg-muted/50">
                         <td className="px-3 py-2 font-mono">{row.codigo_cliente}</td>
-                        <td className="px-3 py-2 max-w-[200px] truncate" title={row.nome_cliente}>{row.nome_cliente}</td>
+                        <td className="px-3 py-2 max-w-[150px] truncate" title={row.nome_cliente}>{row.nome_cliente}</td>
                         <td className="px-3 py-2">{row.nf || '-'}</td>
                         <td className="px-3 py-2">{row.data || '-'}</td>
                         <td className="px-3 py-2">
-                          <Badge variant="outline" className="text-xs">
-                            {row.transportador || '-'}
-                          </Badge>
+                          {row.transportadora_sugerida ? (
+                            <Badge variant="default" className="text-xs">{row.transportadora_sugerida}</Badge>
+                          ) : row.transportador ? (
+                            <Badge variant="outline" className="text-xs">{row.transportador}</Badge>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2">
+                          {row.regra_frete_aplicada ? (
+                            <Badge variant={row.regra_frete_aplicada === 'CIF_FOB' ? 'secondary' : 'default'} className="text-xs">
+                              {row.regra_frete_aplicada}
+                            </Badge>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
                         </td>
                         <td className="px-3 py-2 text-right">{row.volume}</td>
+                        <td className="px-3 py-2 text-xs text-muted-foreground max-w-[200px] truncate" title={row.observacao}>
+                          {row.observacao || (row.regra_encontrada ? 'Regra aplicada' : 'Sem regra')}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+              </div>
+              {preview.length < allRows.length && (
+                <p className="text-xs text-muted-foreground text-center">
+                  Mostrando {preview.length} de {allRows.length} registros
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Info box */}
+          {preview.length > 0 && (
+            <div className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg text-sm">
+              <Info className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
+              <div className="text-muted-foreground">
+                <p>• Regras de frete são buscadas automaticamente pela tabela <code>faturamento_regras</code></p>
+                <p>• Para clientes CIF_FOB com valor mínimo, o sistema consulta pedidos do Auge para decidir entre CIF/FOB</p>
+                <p>• Se não houver regra, a transportadora original da planilha é mantida</p>
               </div>
             </div>
           )}
 
           <Button
             onClick={handleImport}
-            disabled={isLoading || !arquivo}
+            disabled={isLoading || !arquivo || isProcessingRules}
           >
             {isLoading ? (
               <>
@@ -293,7 +478,7 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
             ) : (
               <>
                 <CheckCircle2 className="w-4 h-4 mr-2" />
-                Importar Romaneio
+                Importar Romaneio ({previewCount} clientes)
               </>
             )}
           </Button>
