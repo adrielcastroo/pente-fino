@@ -485,7 +485,6 @@ export default function AcabamentosPage() {
                 return next;
               });
             }}
-            novaDescricao={novaDescricao}
             onNovaDescricaoChange={setNovaDescricao}
             onAtualizar={async () => {
               if (!novaDescricao.trim()) {
