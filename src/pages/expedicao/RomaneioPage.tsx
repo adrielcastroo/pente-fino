@@ -349,14 +349,6 @@ export default function RomaneioPage() {
           <Truck className="w-4 h-4" />
           Regras de Frete
         </Button>
-        <Button
-          variant={activeTab === 'historico' ? 'default' : 'outline'}
-          onClick={() => setActiveTab('historico')}
-          className="gap-2"
-        >
-          <Package className="w-4 h-4" />
-          Romaneios Importados
-        </Button>
       </div>
 
       {/* ============================================================ */}
@@ -585,75 +577,6 @@ export default function RomaneioPage() {
       {/* ============================================================ */}
       {/* TAB: HISTÓRICO DE ROMANEIOS IMPORTADOS                       */}
       {/* ============================================================ */}
-      {activeTab === 'historico' && (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Romaneios Importados</h2>
-            <Button onClick={() => refetchRomaneios()} variant="outline" size="sm" className="gap-2">
-              <RefreshCw className="w-4 h-4" />
-              Atualizar
-            </Button>
-          </div>
-
-          {isLoadingRomaneios ? (
-            <div className="flex items-center justify-center py-20">
-              <Loader2 className="w-8 h-8 animate-spin" />
-            </div>
-          ) : romaneios.length === 0 ? (
-            <Card>
-              <CardContent className="py-10">
-                <EmptyState
-                  icon={Package}
-                  title="Nenhum romaneio importado"
-                  description="Vá para a aba 'Romaneio' e importe uma planilha"
-                />
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-4">
-              {romaneios.map((romaneio) => (
-                <Card key={romaneio.id}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <Package className="w-5 h-5 text-primary" />
-                          <h3 className="font-semibold text-lg">{romaneio.titulo}</h3>
-                          <Badge variant={romaneio.status === 'ativo' ? 'default' : 'secondary'}>
-                            {romaneio.status}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          {format(new Date(romaneio.data_romaneio), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-                          {romaneio.linhas && (
-                            <span className="ml-4">• {romaneio.linhas.length} clientes</span>
-                          )}
-                        </p>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleViewRomaneio(romaneio)}
-                        >
-                          Ver Detalhes
-                        </Button>
-                        <Button 
-                          variant="destructive" 
-                          size="sm"
-                          onClick={() => handleDeleteRomaneio(romaneio.id)}
-                        >
-                          Excluir
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Import Dialog */}
       <RomaneioImportDialog
