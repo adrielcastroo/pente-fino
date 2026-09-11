@@ -142,6 +142,9 @@ export default function RomaneioPage() {
   const [romaneios, setRomaneios] = useState<RomaneioDia[]>([]);
   const [selectedRomaneio, setSelectedRomaneio] = useState<RomaneioDia | null>(null);
   const [showRomaneioDetail, setShowRomaneioDetail] = useState(false);
+  const [importedLines, setImportedLines] = useState<any[]>([]);
+  const [isEditingImported, setIsEditingImported] = useState(false);
+  const [lastImportedRomaneioId, setLastImportedRomaneioId] = useState<string | null>(null);
 
   // ============================================================
   // Queries
@@ -210,9 +213,62 @@ export default function RomaneioPage() {
   // Handlers
   // ============================================================
 
-  const handleImportRomaneio = async () => {
+  const handleImportRomaneio = async (romaneioId: string, linhas: any[]) => {
     toast.success('Romaneio importado com sucesso!');
+    setLastImportedRomaneioId(romaneioId);
+    setImportedLines(linhas);
+    setIsEditingImported(true);
     refetchRomaneios();
+  };
+
+  const handleUpdateImportedLine = async (index: number, field: string, value: string) => {
+    setImportedLines(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+  };
+
+  const handleSaveImportedChanges = async () => {
+    if (!lastImportedRomaneioId) return;
+
+    try {
+      const updates = importedLines.map((linha, idx) => ({
+        id: (importedLines[idx] as any).id,
+        romaneio_id: lastImportedRomaneioId,
+        codigo_cliente: linha.codigo_cliente,
+        nome_cliente: linha.nome_cliente,
+        quantidade: linha.volume || 1,
+        modalidade_frete: linha.regra_frete_aplicada || 'CIF',
+        transportadora: linha.transportadora_sugerida || linha.transportador,
+        observacoes: linha.observacao || null,
+      }));
+
+      for (const update of updates) {
+        await supabase
+          .from('romaneio_linhas')
+          .update({
+            codigo_cliente: update.codigo_cliente,
+            nome_cliente: update.nome_cliente,
+            quantidade: update.quantidade,
+            modalidade_frete: update.modalidade_frete,
+            transportadora: update.transportadora,
+            observacoes: update.observacoes,
+          })
+          .eq('romaneio_id', lastImportedRomaneioId)
+          .eq('codigo_cliente', update.codigo_cliente);
+      }
+
+      toast.success('Alterações salvas!');
+      setIsEditingImported(false);
+      refetchRomaneios();
+    } catch (error) {
+      toast.error('Erro ao salvar alterações');
+    }
+  };
+
+  const handleCancelImportedEdit = () => {
+    setIsEditingImported(false);
   };
 
   const handleViewRomaneio = (romaneio: RomaneioDia) => {
@@ -450,6 +506,119 @@ export default function RomaneioPage() {
                       </CardContent>
                     </Card>
                   ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Tabela Editável de Importação Recente */}
+          {isEditingImported && importedLines.length > 0 && (
+            <Card className="border-primary/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileSpreadsheet className="w-5 h-5 text-primary" />
+                  Dados Importados — Editar
+                </CardTitle>
+                <CardDescription>
+                  Clique nos campos para editar. As alterações serão salvas ao clicar em "Salvar Alterações".
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-lg border overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Código</TableHead>
+                        <TableHead>Nome do Cliente</TableHead>
+                        <TableHead>NF</TableHead>
+                        <TableHead>Data</TableHead>
+                        <TableHead>Transportadora</TableHead>
+                        <TableHead>Modalidade</TableHead>
+                        <TableHead className="text-right">Vol.</TableHead>
+                        <TableHead>Observação</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {importedLines.map((row, idx) => (
+                        <TableRow key={idx}>
+                          <TableCell>
+                            <Input
+                              value={row.codigo_cliente || ''}
+                              onChange={(e) => handleUpdateImportedLine(idx, 'codigo_cliente', e.target.value)}
+                              className="h-8 text-sm"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              value={row.nome_cliente || ''}
+                              onChange={(e) => handleUpdateImportedLine(idx, 'nome_cliente', e.target.value)}
+                              className="h-8 text-sm"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              value={row.nf || ''}
+                              onChange={(e) => handleUpdateImportedLine(idx, 'nf', e.target.value)}
+                              className="h-8 text-sm"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              value={row.data || ''}
+                              onChange={(e) => handleUpdateImportedLine(idx, 'data', e.target.value)}
+                              className="h-8 text-sm"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              value={row.transportadora_sugerida || row.transportador || ''}
+                              onChange={(e) => handleUpdateImportedLine(idx, 'transportadora_sugerida', e.target.value)}
+                              className="h-8 text-sm"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Select
+                              value={row.regra_frete_aplicada || 'CIF'}
+                              onValueChange={(val) => handleUpdateImportedLine(idx, 'regra_frete_aplicada', val)}
+                            >
+                              <SelectTrigger className="h-8 w-[100px] text-sm">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="CIF">CIF</SelectItem>
+                                <SelectItem value="FOB">FOB</SelectItem>
+                                <SelectItem value="CIF_FOB">CIF_FOB</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Input
+                              type="number"
+                              value={row.volume || 1}
+                              onChange={(e) => handleUpdateImportedLine(idx, 'volume', e.target.value)}
+                              className="h-8 text-sm w-[60px] text-right"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              value={row.observacao || ''}
+                              onChange={(e) => handleUpdateImportedLine(idx, 'observacao', e.target.value)}
+                              className="h-8 text-sm"
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+                <div className="flex gap-2 mt-4 justify-end">
+                  <Button variant="outline" size="sm" onClick={handleCancelImportedEdit}>
+                    Cancelar
+                  </Button>
+                  <Button size="sm" onClick={handleSaveImportedChanges}>
+                    <CheckCircle2 className="w-4 h-4 mr-2" />
+                    Salvar Alterações
+                  </Button>
                 </div>
               </CardContent>
             </Card>
