@@ -36,6 +36,7 @@ interface PreviewRow {
 export default function RomaneioImportDialog({ open, onOpenChange, onImported }: RomaneioImportDialogProps) {
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [preview, setPreview] = useState<PreviewRow[]>([]);
+  const [allRows, setAllRows] = useState<PreviewRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [previewCount, setPreviewCount] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -120,6 +121,7 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
       }
 
       setPreview(mapped.slice(0, 10));
+      setAllRows(mapped);
       setPreviewCount(mapped.length);
       
       if (mapped.length === 0) {
@@ -156,7 +158,7 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
       if (romaneioError) throw romaneioError;
 
       // 2. Inserir as linhas do romaneio
-      const linhasParaInserir = preview.map((row) => ({
+      const linhasParaInserir = allRows.map((row) => ({
         romaneio_id: romaneioData.id,
         codigo_cliente: row.codigo_cliente,
         nome_cliente: row.nome_cliente,
@@ -173,7 +175,7 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
       if (linhasError) throw linhasError;
 
       toast.success(`Importado ${previewCount} clientes com sucesso!`);
-      onImported('imported-batch', preview);
+      onImported(romaneioData.id, allRows);
       handleClose();
     } catch (error) {
       toast.error('Erro ao importar romaneio');
@@ -185,6 +187,7 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
   const handleClose = () => {
     setArquivo(null);
     setPreview([]);
+    setAllRows([]);
     setPreviewCount(0);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';

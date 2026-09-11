@@ -141,6 +141,7 @@ export default function RomaneioPage() {
   const [filterStatus, setFilterStatus] = useState('todos');
   const [romaneios, setRomaneios] = useState<RomaneioDia[]>([]);
   const [selectedRomaneio, setSelectedRomaneio] = useState<RomaneioDia | null>(null);
+  const [showRomaneioDetail, setShowRomaneioDetail] = useState(false);
 
   // ============================================================
   // Queries
@@ -216,6 +217,7 @@ export default function RomaneioPage() {
 
   const handleViewRomaneio = (romaneio: RomaneioDia) => {
     setSelectedRomaneio(romaneio);
+    setShowRomaneioDetail(true);
   };
 
   const handleDeleteRomaneio = async (id: string) => {
@@ -615,11 +617,76 @@ export default function RomaneioPage() {
         onImported={handleImportRomaneio}
       />
 
+      {/* Romaneio Detail Dialog */}
+      <Dialog open={showRomaneioDetail} onOpenChange={(open) => {
+        if (!open) setShowRomaneioDetail(false);
+      }}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Package className="w-5 h-5" />
+              Detalhes do Romaneio
+            </DialogTitle>
+            <DialogDescription>
+              {selectedRomaneio && (
+                <>
+                  {format(new Date(selectedRomaneio.data_romaneio), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                  {' • '}
+                  {selectedRomaneio.linhas?.length || 0} clientes
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedRomaneio && selectedRomaneio.linhas && selectedRomaneio.linhas.length > 0 ? (
+            <div className="space-y-4 py-4">
+              <div className="rounded-lg border overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted">
+                    <tr>
+                      <th className="px-4 py-3 text-left font-medium">Código</th>
+                      <th className="px-4 py-3 text-left font-medium">Nome do Cliente</th>
+                      <th className="px-4 py-3 text-left font-medium">Qtd</th>
+                      <th className="px-4 py-3 text-left font-medium">Frete</th>
+                      <th className="px-4 py-3 text-left font-medium">Transportadora</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedRomaneio.linhas.map((linha, idx) => (
+                      <tr key={idx} className="border-t hover:bg-muted/50">
+                        <td className="px-4 py-3 font-mono text-xs">{linha.codigo_cliente}</td>
+                        <td className="px-4 py-3 max-w-[250px] truncate" title={linha.nome_cliente}>{linha.nome_cliente}</td>
+                        <td className="px-4 py-3 text-center">{linha.quantidade}</td>
+                        <td className="px-4 py-3">
+                          <Badge variant="outline" className="text-xs">
+                            {linha.modalidade_frete || '-'}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-muted-foreground">{linha.transportadora || '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : (
+            <div className="py-8 text-center text-muted-foreground">
+              <Package className="w-12 h-12 mx-auto mb-3 opacity-20" />
+              <p>Nenhuma linha encontrada para este romaneio</p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowRomaneioDetail(false)}>
+              Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Log Detail Dialog */}
       <Dialog open={showLogDetail} onOpenChange={(open) => !open && setShowLogDetail(false)}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Detalhes do Romaneio</DialogTitle>
+            <DialogTitle>Detalhes do Log</DialogTitle>
             <DialogDescription>
               {selectedLog && new Date(selectedLog.criado_em).toLocaleString('pt-BR')}
             </DialogDescription>
