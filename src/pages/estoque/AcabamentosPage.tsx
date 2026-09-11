@@ -51,12 +51,41 @@ export default function AcabamentosPage() {
   const channelRef = useRef<any>(null);
 
   // Estados para aba "Atualizar descrição"
-  const [itemBusca, setItemBusca] = useState('');
+  const [itemBusca, setItemBusca] = useState(() => {
+    const saved = localStorage.getItem('acabamentos:atualizar_desc:busca');
+    return saved || '';
+  });
   const [itemBuscaResult, setItemBuscaResult] = useState<any[]>([]);
   const [itemBuscaLoading, setItemBuscaLoading] = useState(false);
-  const [selectedAcabamentos, setSelectedAcabamentos] = useState<Set<string>>(new Set());
-  const [novaDescricao, setNovaDescricao] = useState('');
+  const [selectedAcabamentos, setSelectedAcabamentos] = useState<Set<string>>(() => {
+    const saved = localStorage.getItem('acabamentos:atualizar_desc:selecionados');
+    if (saved) return new Set(JSON.parse(saved));
+    return new Set();
+  });
+  const [novaDescricao, setNovaDescricao] = useState(() => {
+    const saved = localStorage.getItem('acabamentos:atualizar_desc:descricao');
+    return saved || '';
+  });
   const [atualizando, setAtualizando] = useState(false);
+
+  // Persistência da aba "Atualizar descrição"
+  useEffect(() => {
+    try {
+      localStorage.setItem('acabamentos:atualizar_desc:busca', itemBusca);
+    } catch (e) { /* ignore */ }
+  }, [itemBusca]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('acabamentos:atualizar_desc:selecionados', JSON.stringify(Array.from(selectedAcabamentos)));
+    } catch (e) { /* ignore */ }
+  }, [selectedAcabamentos]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('acabamentos:atualizar_desc:descricao', novaDescricao);
+    } catch (e) { /* ignore */ }
+  }, [novaDescricao]);
 
   // 1. Carregamento de aba inicial (uma única vez)
   useEffect(() => {
