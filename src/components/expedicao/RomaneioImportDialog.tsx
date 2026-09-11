@@ -160,7 +160,6 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
         romaneio_id: romaneioData.id,
         codigo_cliente: row.codigo_cliente,
         nome_cliente: row.nome_cliente,
-        nf: row.nf || null,
         quantidade: row.volume || 1,
         modalidade_frete: row.regra_frete_aplicada || 'CIF',
         transportadora: row.transportador,
