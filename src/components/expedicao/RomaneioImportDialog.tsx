@@ -141,33 +141,39 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
 
     setIsLoading(true);
     try {
-      // Grava cada linha do preview como romaneio no banco,
-      // permitindo que apareça na aba Romaneio após import.
-      const inserts = preview.map((row) => ({
-        titulo: 'Romaneio Automático',
-        data_romaneio: row.data || new Date().toISOString().split('T')[0],
+      // 1. Criar o cabeçalho do romaneio
+      const today = new Date().toISOString().split('T')[0];
+      const { data: romaneioData, error: romaneioError } = await supabase
+        .from('romaneio_dias')
+        .insert({
+          titulo: `Importação ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`,
+          data_romaneio: today,
+          status: 'ativo',
+        })
+        .select()
+        .single();
+
+      if (romaneioError) throw romaneioError;
+
+      // 2. Inserir as linhas do romaneio
+      const linhasParaInserir = preview.map((row) => ({
+        romaneio_id: romaneioData.id,
         codigo_cliente: row.codigo_cliente,
         nome_cliente: row.nome_cliente,
         nf: row.nf || null,
-        transportadora_id: null,
-        transportador_digitado: row.transportador,
-        volume: row.volume || 0,
-        status: 'importado',
-        created_at: new Date().toISOString(),
+        quantidade: row.volume || 1,
+        modalidade_frete: row.regra_frete_aplicada || 'CIF',
+        transportadora: row.transportador,
+        observacoes: null,
       }));
 
-      // Inserir na tabela de romaneios/dias para visualização
-      const { error: insError } = await (supabase as any)
-        .from('romaneio_dias')
-        .insert(inserts);
+      const { error: linhasError } = await supabase
+        .from('romaneio_linhas')
+        .insert(linhasParaInserir);
 
-      if (insError) {
-        toast.error(`Erro ao salvar importação: ${insError.message}`);
-      } else {
-        toast.success(`Importado ${previewCount} clientes com sucesso!`);
-      }
+      if (linhasError) throw linhasError;
 
-      // Notifica o pai (romaneio listagem) para atualizar
+      toast.success(`Importado ${previewCount} clientes com sucesso!`);
       onImported('imported-batch', preview);
       handleClose();
     } catch (error) {
