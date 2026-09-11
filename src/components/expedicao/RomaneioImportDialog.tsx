@@ -143,7 +143,7 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
     try {
       // 1. Criar o cabeçalho do romaneio
       const today = new Date().toISOString().split('T')[0];
-      const { data: romaneioData, error: romaneioError } = await supabase
+      const { data: romaneioData, error: romaneioError } = await (supabase as any)
         .from('romaneio_dias')
         .insert({
           titulo: `Importação ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`,
@@ -167,7 +167,7 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
         observacoes: null,
       }));
 
-      const { error: linhasError } = await supabase
+      const { error: linhasError } = await (supabase as any)
         .from('romaneio_linhas')
         .insert(linhasParaInserir);
 
