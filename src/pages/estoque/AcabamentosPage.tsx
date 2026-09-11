@@ -564,6 +564,7 @@ function AtualizarDescricaoTab({
   onSelectAll,
   onDeselectAll,
   onToggleAcabamento,
+  onNovaDescricaoChange,
   onAtualizar,
   atualizando
 }: any) {
