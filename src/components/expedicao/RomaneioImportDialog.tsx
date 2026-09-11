@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { Upload, X, FileSpreadsheet, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -33,11 +34,6 @@ interface PreviewRow {
 }
 
 export default function RomaneioImportDialog({ open, onOpenChange, onImported }: RomaneioImportDialogProps) {
-  const [titulo, setTitulo] = useState('');
-  const [dataRomaneio, setDataRomaneio] = useState(() => {
-    const today = new Date();
-    return today.toISOString().split('T')[0];
-  });
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [preview, setPreview] = useState<PreviewRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -138,18 +134,18 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
   };
 
   const handleImport = async () => {
-    if (!arquivo || !titulo) {
-      toast.error('Preencha o título e selecione um arquivo');
+    if (!arquivo) {
+      toast.error('Selecione um arquivo');
       return;
     }
 
     setIsLoading(true);
     try {
-      // Grava cada linha do preview como regra/registro no banco,
+      // Grava cada linha do preview como romaneio no banco,
       // permitindo que apareça na aba Romaneio após import.
       const inserts = preview.map((row) => ({
-        titulo,
-        data_romaneio: dataRomaneio || row.data,
+        titulo: 'Romaneio Automático',
+        data_romaneio: row.data || new Date().toISOString().split('T')[0],
         codigo_cliente: row.codigo_cliente,
         nome_cliente: row.nome_cliente,
         nf: row.nf || null,
@@ -168,7 +164,7 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
       if (insError) {
         toast.error(`Erro ao salvar importação: ${insError.message}`);
       } else {
-        toast.success(`Romaneio "${titulo}" importado com ${previewCount} clientes!`);
+        toast.success(`Importado ${previewCount} clientes com sucesso!`);
       }
 
       // Notifica o pai (romaneio listagem) para atualizar
@@ -185,7 +181,6 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
     setArquivo(null);
     setPreview([]);
     setPreviewCount(0);
-    setTitulo('');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -208,28 +203,6 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {/* Title */}
-          <div className="space-y-2">
-            <Label htmlFor="titulo">Título do Romaneio</Label>
-            <Input
-              id="titulo"
-              value={titulo}
-              onChange={(e) => setTitulo(e.target.value)}
-              placeholder="Ex: Romaneio 03/09/2025"
-            />
-          </div>
-
-          {/* Date */}
-          <div className="space-y-2">
-            <Label htmlFor="data">Data do Romaneio</Label>
-            <Input
-              id="data"
-              type="date"
-              value={dataRomaneio}
-              onChange={(e) => setDataRomaneio(e.target.value)}
-            />
-          </div>
-
           {/* File Upload */}
           <div className="space-y-2">
             <Label>Planilha Excel</Label>
@@ -300,27 +273,9 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
             </div>
           )}
 
-          {/* Info box */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
-            <p className="font-medium mb-1">📋 Formato aceito:</p>
-            <ul className="list-disc list-inside space-y-1 ml-2">
-              <li><strong>Coluna A:</strong> Código do Cliente (ex: C1739)</li>
-              <li><strong>Coluna B:</strong> Nome do Cliente</li>
-              <li><strong>Coluna C:</strong> NF (Nota Fiscal - opcional)</li>
-              <li><strong>Coluna D:</strong> Data (DD.MM.YY ou DD/MM/YY)</li>
-              <li><strong>Coluna E:</strong> Transportador</li>
-              <li><strong>Coluna F:</strong> Volume/Quantidade</li>
-            </ul>
-          </div>
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={handleClose} disabled={isLoading}>
-            Cancelar
-          </Button>
-          <Button 
-            onClick={handleImport} 
-            disabled={isLoading || !arquivo || !titulo}
+          <Button
+            onClick={handleImport}
+            disabled={isLoading || !arquivo}
           >
             {isLoading ? (
               <>
@@ -334,7 +289,7 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
               </>
             )}
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );

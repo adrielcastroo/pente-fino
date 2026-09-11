@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
-import { FileText, Truck, Plus, Loader2, Upload, RefreshCw, Calendar, ChevronDown, ChevronUp, Package, Search } from 'lucide-react';
+import { FileText, Truck, Plus, Loader2, Upload, RefreshCw, ChevronDown, ChevronUp, Package, Search } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -131,10 +131,7 @@ function getTransportadoraCor(modalidade: string): string {
 
 export default function RomaneioPage() {
   const [activeTab, setActiveTab] = useState<'romaneio' | 'regras' | 'historico'>('romaneio');
-  const [daysAhead, setDaysAhead] = useState(3);
-  const [isGenerating, setIsGenerating] = useState(false);
   const [preview, setPreview] = useState<RomaneioPreview[]>([]);
-  const [logs, setLogs] = useState<LogRomaneio[]>([]);
   const [showLogDetail, setShowLogDetail] = useState(false);
   const [selectedLog, setSelectedLog] = useState<LogRomaneio | null>(null);
   const [showImportModal, setShowImportModal] = useState(false);
@@ -176,19 +173,6 @@ export default function RomaneioPage() {
     },
   });
 
-  const { data: logsData, isLoading: isLoadingLogs } = useQuery({
-    queryKey: ['romaneio_logs'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('romaneio_automatico_logs')
-        .select('*')
-        .order('criado_em', { ascending: false })
-        .limit(50);
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
   const { data: romaneiosData, isLoading: isLoadingRomaneios, refetch: refetchRomaneios } = useQuery({
     queryKey: ['romaneio_dias'],
     queryFn: async () => {
@@ -206,34 +190,12 @@ export default function RomaneioPage() {
   }, [regrasData]);
 
   useEffect(() => {
-    if (logsData) setLogs(logsData);
-  }, [logsData]);
-
-  useEffect(() => {
     if (romaneiosData) setRomaneios(romaneiosData);
   }, [romaneiosData]);
 
   // ============================================================
   // Handlers
   // ============================================================
-
-  const handleGenerateRomaneio = async () => {
-    setIsGenerating(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('expedicao-auto-romaneio', {
-        body: { action: 'generate', daysAhead },
-      });
-
-      if (error) throw error;
-      
-      setPreview(data.results || []);
-      toast.success(`Romaneios gerados para ${daysAhead} dia(s)`);
-    } catch (error: any) {
-      toast.error(error.message || 'Erro ao gerar romaneio');
-    } finally {
-      setIsGenerating(false);
-    }
-  };
 
   const handleImportRomaneio = async (romaneioId: string, linhas: any[]) => {
     try {
@@ -402,41 +364,6 @@ export default function RomaneioPage() {
       {/* ============================================================ */}
       {activeTab === 'romaneio' && (
         <div className="space-y-6">
-          {/* Controls */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Gerar Romaneio Automático</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-end gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="daysAhead">Dias a frente</Label>
-                  <Input
-                    id="daysAhead"
-                    type="number"
-                    min={1}
-                    max={7}
-                    value={daysAhead}
-                    onChange={(e) => setDaysAhead(parseInt(e.target.value) || 3)}
-                    className="w-24"
-                  />
-                </div>
-                <Button 
-                  onClick={handleGenerateRomaneio} 
-                  disabled={isGenerating}
-                  className="gap-2"
-                >
-                  {isGenerating ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Calendar className="w-4 h-4" />
-                  )}
-                  Gerar Romaneio
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Import Button */}
           <Card>
             <CardHeader>
@@ -501,55 +428,6 @@ export default function RomaneioPage() {
               </CardContent>
             </Card>
           )}
-
-          {/* Logs */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Histórico de Gerações</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isLoadingLogs ? (
-                <div className="flex items-center justify-center py-10">
-                  <Loader2 className="w-6 h-6 animate-spin" />
-                </div>
-              ) : logs.length === 0 ? (
-                <EmptyState
-                  icon={FileText}
-                  title="Nenhum romaneio gerado ainda"
-                  description="Clique em 'Gerar Romaneio' para criar um"
-                />
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Data Geração</TableHead>
-                      <TableHead>Data Faturamento</TableHead>
-                      <TableHead>Linhas</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {logs.map((log) => (
-                      <TableRow key={log.id} className="cursor-pointer" onClick={() => handleViewLogDetail(log)}>
-                        <TableCell>{new Date(log.criado_em).toLocaleString('pt-BR')}</TableCell>
-                        <TableCell>{new Date(log.data_faturamento).toLocaleDateString('pt-BR')}</TableCell>
-                        <TableCell>{log.total_linhas}</TableCell>
-                        <TableCell>
-                          <Badge variant={log.status === 'gerado' ? 'default' : 'secondary'}>
-                            {log.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Button variant="ghost" size="sm">Ver Detalhes</Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
         </div>
       )}
 
