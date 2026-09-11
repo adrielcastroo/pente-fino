@@ -542,6 +542,7 @@ export default function AcabamentosPage() {
 
 
 
+      {/* debug */}
       <AcabamentoItemEditDialog
         item={editing}
         open={!!editing}
