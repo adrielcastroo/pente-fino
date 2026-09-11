@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
-import { FileText, Truck, Plus, Loader2, Upload, RefreshCw, ChevronDown, ChevronUp, Package, Search } from 'lucide-react';
+import { FileText, Truck, Plus, Loader2, Upload, RefreshCw, ChevronDown, ChevronUp, Package, Search, FileSpreadsheet, CheckCircle2 } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
