@@ -55,7 +55,10 @@ export default function AcabamentosPage() {
     const saved = localStorage.getItem('acabamentos:atualizar_desc:busca');
     return saved || '';
   });
-  const [itemBuscaResult, setItemBuscaResult] = useState<any[]>([]);
+  const [itemBuscaResult, setItemBuscaResult] = useState<any[]>(() => {
+    const saved = localStorage.getItem('acabamentos:atualizar_desc:resultados');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [itemBuscaLoading, setItemBuscaLoading] = useState(false);
   const [selectedAcabamentos, setSelectedAcabamentos] = useState<Set<string>>(() => {
     const saved = localStorage.getItem('acabamentos:atualizar_desc:selecionados');
@@ -86,6 +89,12 @@ export default function AcabamentosPage() {
       localStorage.setItem('acabamentos:atualizar_desc:descricao', novaDescricao);
     } catch (e) { /* ignore */ }
   }, [novaDescricao]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('acabamentos:atualizar_desc:resultados', JSON.stringify(itemBuscaResult));
+    } catch (e) { /* ignore */ }
+  }, [itemBuscaResult]);
 
   // 1. Carregamento de aba inicial (uma única vez)
   useEffect(() => {
