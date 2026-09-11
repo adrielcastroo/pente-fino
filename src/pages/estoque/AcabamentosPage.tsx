@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Palette, RefreshCw, Search, Pencil, Loader2, AlertTriangle, CheckCircle2, X, ArrowDownAZ, ArrowUpAZ, ArrowUp01, ArrowDown01 } from 'lucide-react';
+import { Palette, RefreshCw, Search, Pencil, Loader2, AlertTriangle, CheckCircle2, X, ArrowDownAZ, ArrowUpAZ, ArrowUp01, ArrowDown01, Edit3 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -48,6 +48,14 @@ export default function AcabamentosPage() {
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [tab, setTab] = useState<string>('consulta');
   const channelRef = useRef<any>(null);
+
+  // Estados para aba "Atualizar descrição"
+  const [itemBusca, setItemBusca] = useState('');
+  const [itemBuscaResult, setItemBuscaResult] = useState<any[]>([]);
+  const [itemBuscaLoading, setItemBuscaLoading] = useState(false);
+  const [selectedAcabamentos, setSelectedAcabamentos] = useState<Set<string>>(new Set());
+  const [novaDescricao, setNovaDescricao] = useState('');
+  const [atualizando, setAtualizando] = useState(false);
 
   // 1. Carregamento de aba inicial (uma única vez)
   useEffect(() => {
@@ -243,9 +251,10 @@ export default function AcabamentosPage() {
       />
 
       <Tabs value={tab} onValueChange={setTab} className="space-y-4">
-        <TabsList className="grid grid-cols-2 md:grid-cols-5 w-full md:w-auto">
+        <TabsList className="grid grid-cols-2 md:grid-cols-6 w-full md:w-auto">
           <TabsTrigger value="consulta" className="text-xs">Consulta</TabsTrigger>
           <TabsTrigger value="massa" className="text-xs">Incluir em massa</TabsTrigger>
+          <TabsTrigger value="atualizar_desc" className="text-xs">Atualizar descrição</TabsTrigger>
           <TabsTrigger value="tags" className="text-xs">TAGs</TabsTrigger>
           <TabsTrigger value="gerar" className="text-xs">Gerar TAG</TabsTrigger>
           <TabsTrigger value="historico" className="text-xs">Histórico</TabsTrigger>
@@ -441,6 +450,88 @@ export default function AcabamentosPage() {
         </TabsContent>
 
         <TabsContent value="massa" className="mt-0"><IncluirItemMassaTab /></TabsContent>
+        <TabsContent value="atualizar_desc" className="mt-0">
+          <AtualizarDescricaoTab
+            acabamentos={acabamentos}
+            itemBusca={itemBusca}
+            itemBuscaResult={itemBuscaResult}
+            itemBuscaLoading={itemBuscaLoading}
+            selectedAcabamentos={selectedAcabamentos}
+            novaDescricao={novaDescricao}
+            onItemBuscaChange={setItemBusca}
+            onSearchItem={async (term) => {
+              setItemBuscaLoading(true);
+              try {
+                const { data } = await supabase
+                  .from('auge_acabamento_itens')
+                  .select('cd_acabamento_item, cd_acabamento, cd_item_acabamento, ds_item_acabamento, ds_item_acabamento_original')
+                  .ilike('cd_item_acabamento', `%${term}%`)
+                  .limit(2000);
+                setItemBuscaResult(data || []);
+              } catch {
+                toast.error('Erro ao buscar item');
+              } finally {
+                setItemBuscaLoading(false);
+              }
+            }}
+            onSelectAll={() => setSelectedAcabamentos(new Set(itemBuscaResult.map((r: any) => r.cd_acabamento)))}
+            onDeselectAll={() => setSelectedAcabamentos(new Set())}
+            onToggleAcabamento={(cd) => {
+              setSelectedAcabamentos(prev => {
+                const next = new Set(prev);
+                if (next.has(cd)) next.delete(cd);
+                else next.add(cd);
+                return next;
+              });
+            }}
+            novaDescricao={novaDescricao}
+            onNovaDescricaoChange={setNovaDescricao}
+            onAtualizar={async () => {
+              if (!novaDescricao.trim()) {
+                toast.error('Digite uma descrição');
+                return;
+              }
+              if (selectedAcabamentos.size === 0) {
+                toast.error('Selecione pelo menos um acabamento');
+                return;
+              }
+              setAtualizando(true);
+              try {
+                const updates: any[] = [];
+                for (const cdAcabamento of selectedAcabamentos) {
+                  const itens = itemBuscaResult.filter((r: any) => r.cd_acabamento === cdAcabamento);
+                  for (const item of itens) {
+                    updates.push({
+                      cdAcabamentoItem: item.cd_acabamento_item,
+                      cdAcabamento,
+                      cdItemAcabamento: item.cd_item_acabamento,
+                      dsItemAcabamento: novaDescricao,
+                      dsItemAcabamentoReduzida: '',
+                      dsItemAcabamentoOriginal: item.ds_item_acabamento_original || '',
+                      cdKitComplementar1: '',
+                      cdKitComplementar2: '',
+                      cdKitComplementar3: '',
+                      cdKitComplementar4: '',
+                      cdKitComplementar5: '',
+                    });
+                  }
+                }
+                for (const update of updates) {
+                  await supabase.functions.invoke('auge-sync?action=update_acabamento_item', { body: update });
+                }
+                toast.success(`Descrição atualizada para ${selectedAcabamentos.size} acabamento(s)`);
+                setSelectedAcabamentos(new Set());
+                setNovaDescricao('');
+                qc.invalidateQueries({ queryKey: ['acabamentos-list'] });
+              } catch (e: any) {
+                toast.error(e?.message || 'Erro ao atualizar descrição');
+              } finally {
+                setAtualizando(false);
+              }
+            }}
+            atualizando={atualizando}
+          />
+        </TabsContent>
         <TabsContent value="tags" className="mt-0"><TagsTab /></TabsContent>
         <TabsContent value="gerar" className="mt-0">
           <GerarTagTab onVerHistorico={() => setTab('historico')} />
@@ -456,6 +547,155 @@ export default function AcabamentosPage() {
         onOpenChange={(o) => { if (!o) setEditing(null); }}
         onSaved={() => refetchItens()}
       />
+    </div>
+  );
+}
+
+function AtualizarDescricaoTab({
+  acabamentos,
+  itemBusca,
+  itemBuscaResult,
+  itemBuscaLoading,
+  selectedAcabamentos,
+  novaDescricao,
+  onItemBuscaChange,
+  onSearchItem,
+  onSelectAll,
+  onDeselectAll,
+  onToggleAcabamento,
+  onAtualizar,
+  atualizando
+}: any) {
+  const acabByCd = useMemo(() => {
+    const m = new Map<string, any>();
+    acabamentos.forEach((a: any) => m.set(a.cd_acabamento, a));
+    return m;
+  }, [acabamentos]);
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Edit3 className="w-5 h-5 text-primary" />
+            Buscar Item
+          </CardTitle>
+          <CardDescription>
+            Digite o código do item para buscar em todos os acabamentos
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-2">
+            <Input
+              value={itemBusca}
+              onChange={(e) => onItemBuscaChange(e.target.value)}
+              placeholder="Digite o código do item..."
+              className="flex-1"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && itemBusca.trim()) {
+                  onSearchItem(itemBusca.trim());
+                }
+              }}
+            />
+            <Button onClick={() => onSearchItem(itemBusca.trim())} disabled={itemBuscaLoading || !itemBusca.trim()}>
+              {itemBuscaLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+              Buscar
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {itemBuscaResult.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <Palette className="w-5 h-5 text-primary" />
+                Resultados ({itemBuscaResult.length})
+              </span>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={onSelectAll}>
+                  Selecionar Todos
+                </Button>
+                <Button size="sm" variant="outline" onClick={onDeselectAll}>
+                  Desmarcar Todos
+                </Button>
+              </div>
+            </CardTitle>
+            <CardDescription>
+              Selecione quais acabamentos deseja atualizar a descrição
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2 max-h-96 overflow-y-auto">
+              {Object.entries(
+                itemBuscaResult.reduce((acc: any, item: any) => {
+                  if (!acc[item.cd_acabamento]) {
+                    acc[item.cd_acabamento] = {
+                      acab: acabByCd.get(item.cd_acabamento),
+                      itens: []
+                    };
+                  }
+                  acc[item.cd_acabamento].itens.push(item);
+                  return acc;
+                }, {})
+              ).map(([cdAcabamento, data]: any) => (
+                <div key={cdAcabamento} className="border rounded-lg p-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <input
+                      type="checkbox"
+                      checked={selectedAcabamentos.has(cdAcabamento)}
+                      onChange={() => onToggleAcabamento(cdAcabamento)}
+                      className="w-4 h-4"
+                    />
+                    <span className="font-medium">{data.acab?.nm_acabamento || cdAcabamento}</span>
+                    <Badge variant="secondary" className="text-xs">
+                      {data.itens.length} itens
+                    </Badge>
+                  </div>
+                  <div className="ml-6 space-y-1 text-xs text-muted-foreground">
+                    {data.itens.map((item: any, idx: number) => (
+                      <div key={idx} className="flex gap-2">
+                        <span className="font-mono">{item.cd_item_acabamento}</span>
+                        <span className="truncate">{item.ds_item_acabamento || item.ds_item_acabamento_original || '—'}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {selectedAcabamentos.size > 0 && (
+        <Card className="border-primary/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Edit3 className="w-5 h-5 text-primary" />
+              Nova Descrição
+            </CardTitle>
+            <CardDescription>
+              {selectedAcabamentos.size} acabamento(s) selecionado(s)
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Textarea
+              value={novaDescricao}
+              onChange={(e) => onNovaDescricaoChange(e.target.value)}
+              placeholder="Digite a nova descrição..."
+              rows={3}
+              className="resize-none"
+            />
+            <div className="mt-4 flex justify-end">
+              <Button onClick={onAtualizar} disabled={atualizando || !novaDescricao.trim()}>
+                {atualizando ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                Atualizar no Auge
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
