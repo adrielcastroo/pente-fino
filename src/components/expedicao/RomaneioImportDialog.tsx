@@ -28,6 +28,8 @@ interface PreviewRow {
   data?: string;
   transportador: string;
   volume?: number;
+  regra_frete_aplicada?: string | null;
+  precisa_escolha_cif_fob?: boolean;
 }
 
 export default function RomaneioImportDialog({ open, onOpenChange, onImported }: RomaneioImportDialogProps) {
@@ -115,6 +117,9 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
           data: date,
           transportador: String(row[4] || '').trim(),
           volume: row[5] ? parseInt(row[5]) || 1 : 1,
+          // regra aplicada ao import (preenchido pelo dialog de regras)
+          regra_frete_aplicada: null as any,
+          precisa_escolha_cif_fob: false,
         });
       }
 
