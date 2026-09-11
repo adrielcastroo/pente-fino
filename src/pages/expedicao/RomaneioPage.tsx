@@ -176,12 +176,24 @@ export default function RomaneioPage() {
   const { data: romaneiosData, isLoading: isLoadingRomaneios, refetch: refetchRomaneios } = useQuery({
     queryKey: ['romaneio_dias'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('romaneio_dias')
-        .select('*, linhas(*)')
-        .order('data_romaneio', { ascending: false });
-      if (error) throw error;
-      return data || [];
+      const [diasRes, linhasRes] = await Promise.all([
+        supabase.from('romaneio_dias').select('*').order('data_romaneio', { ascending: false }),
+        supabase.from('romaneio_linhas').select('*, romaneio_id'),
+      ]);
+      if (diasRes.error) throw diasRes.error;
+      if (linhasRes.error) throw linhasRes.error;
+
+      const linhasMap = new Map<string, RomaneioLinha[]>();
+      for (const linha of linhasRes.data || []) {
+        const arr = linhasMap.get(linha.romaneio_id as string) || [];
+        arr.push(linha as unknown as RomaneioLinha);
+        linhasMap.set(linha.romaneio_id as string, arr);
+      }
+
+      return (diasRes.data || []).map((d) => ({
+        ...d,
+        linhas: linhasMap.get(d.id) || [],
+      })) as unknown as RomaneioDia[];
     },
   });
 
