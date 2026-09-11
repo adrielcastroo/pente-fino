@@ -67,6 +67,8 @@ export default function AcabamentosPage() {
     return saved || '';
   });
   const [atualizando, setAtualizando] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [sucessCount, setSucessCount] = useState(0);
 
   // Persistência da aba "Atualizar descrição"
   useEffect(() => {
@@ -548,9 +550,12 @@ export default function AcabamentosPage() {
                 for (const update of updates) {
                   await supabase.functions.invoke('auge-sync?action=update_acabamento_item', { body: update });
                 }
-                toast.success(`Descrição atualizada para ${selectedAcabamentos.size} acabamento(s)`);
+                const count = selectedAcabamentos.size;
                 setSelectedAcabamentos(new Set());
                 setNovaDescricao('');
+                setSucessCount(count);
+                setShowSuccess(true);
+                setTimeout(() => setShowSuccess(false), 1500);
                 qc.invalidateQueries({ queryKey: ['acabamentos-list'] });
               } catch (e: any) {
                 toast.error(e?.message || 'Erro ao atualizar descrição');
@@ -736,6 +741,25 @@ function AtualizarDescricaoTab({
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Modal de sucesso */}
+      {showSuccess && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-background border rounded-lg p-8 shadow-lg animate-in fade-in zoom-in duration-200">
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
+                <CheckCircle2 className="w-10 h-10 text-green-600 animate-success" />
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-semibold text-foreground">Sucesso!</div>
+                <div className="text-sm text-muted-foreground mt-1">
+                  Descrição atualizada em {sucessCount} acabamento{sucessCount > 1 ? 's' : ''}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

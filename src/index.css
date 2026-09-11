@@ -658,3 +658,11 @@ html.compact main .space-y-6 > * + * { margin-top: 1rem; }
 }
 
 
+
+@keyframes success-pop {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+.animate-success {
+  animation: success-pop 0.4s ease-in-out;
+}
