@@ -640,30 +640,34 @@ function AtualizarDescricaoTab({
                   acc[item.cd_acabamento].itens.push(item);
                   return acc;
                 }, {})
-              ).map(([cdAcabamento, data]: any) => (
-                <div key={cdAcabamento} className="border rounded-lg p-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <input
-                      type="checkbox"
-                      checked={selectedAcabamentos.has(cdAcabamento)}
-                      onChange={() => onToggleAcabamento(cdAcabamento)}
-                      className="w-4 h-4"
-                    />
-                    <span className="font-medium">{data.acab?.nm_acabamento || cdAcabamento}</span>
-                    <Badge variant="secondary" className="text-xs">
-                      {data.itens.length} itens
-                    </Badge>
-                  </div>
-                  <div className="ml-6 space-y-1 text-xs text-muted-foreground">
-                    {data.itens.map((item: any, idx: number) => (
-                      <div key={idx} className="flex gap-2">
-                        <span className="font-mono">{item.cd_item_acabamento}</span>
-                        <span className="truncate">{item.ds_item_acabamento || item.ds_item_acabamento_original || '—'}</span>
+              ).map(([cdAcabamento, data]: any) => {
+                const primeiraDescricao = data.itens[0]?.ds_item_acabamento || data.itens[0]?.ds_item_acabamento_original || '—';
+                return (
+                  <div key={cdAcabamento} className="border rounded-lg p-4">
+                    <div className="flex items-start gap-3 mb-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedAcabamentos.has(cdAcabamento)}
+                        onChange={() => onToggleAcabamento(cdAcabamento)}
+                        className="w-5 h-5 mt-0.5"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-semibold text-sm">{data.acab?.nm_acabamento || cdAcabamento}</span>
+                          <Badge variant="secondary" className="text-xs">{data.itens.length} itens</Badge>
+                        </div>
+                        <div className="text-xs text-muted-foreground font-mono">
+                          {data.itens.map((item: any) => item.cd_item_acabamento).join(', ')}
+                        </div>
                       </div>
-                    ))}
+                    </div>
+                    <div className="ml-8 bg-muted/50 rounded p-2">
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Descrição atual</div>
+                      <div className="text-sm font-medium">{primeiraDescricao}</div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </CardContent>
         </Card>
@@ -680,18 +684,24 @@ function AtualizarDescricaoTab({
               {selectedAcabamentos.size} acabamento(s) selecionado(s)
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <Textarea
-              value={novaDescricao}
-              onChange={(e) => onNovaDescricaoChange(e.target.value)}
-              placeholder="Digite a nova descrição..."
-              rows={3}
-              className="resize-none"
-            />
-            <div className="mt-4 flex justify-end">
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Nova Descrição</label>
+              <Textarea
+                value={novaDescricao}
+                onChange={(e) => onNovaDescricaoChange(e.target.value)}
+                placeholder="Digite a nova descrição para todos os itens selecionados..."
+                rows={4}
+                className="resize-none text-base"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setSelectedAcabamentos(new Set())} disabled={atualizando}>
+                Cancelar
+              </Button>
               <Button onClick={onAtualizar} disabled={atualizando || !novaDescricao.trim()}>
                 {atualizando ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                Atualizar no Auge
+                Atualizar no Auge ({selectedAcabamentos.size})
               </Button>
             </div>
           </CardContent>
