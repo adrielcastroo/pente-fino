@@ -67,8 +67,6 @@ export default function AcabamentosPage() {
     return saved || '';
   });
   const [atualizando, setAtualizando] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [sucessCount, setSucessCount] = useState(0);
 
   // Persistência da aba "Atualizar descrição"
   useEffect(() => {
@@ -602,6 +600,8 @@ function AtualizarDescricaoTab({
   onAtualizar,
   atualizando
 }: any) {
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [sucessCount, setSucessCount] = useState(0);
   const acabByCd = useMemo(() => {
     const m = new Map<string, any>();
     acabamentos.forEach((a: any) => m.set(a.cd_acabamento, a));
