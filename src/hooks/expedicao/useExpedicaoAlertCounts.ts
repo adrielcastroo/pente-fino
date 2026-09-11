@@ -29,37 +29,39 @@ export function useExpedicaoAlertCounts() {
       const [pickSep, pickConf, cargas, romaneios, nfe] = await Promise.all([
         supabase
           .from('expedicao_pickings')
-          .select('id', { count: 'exact', head: true })
+          .select('*', { count: 'exact', head: true })
           .eq('status', 'em_separacao'),
         supabase
           .from('expedicao_pickings')
-          .select('id', { count: 'exact', head: true })
+          .select('*', { count: 'exact', head: true })
           .eq('status', 'em_conferencia'),
         (supabase as any)
           .from('expedicao_cargas')
-          .select('id', { count: 'exact', head: true })
+          .select('*', { count: 'exact', head: true })
           .in('status', ['em_rota', 'saiu_entrega']),
         (supabase as any)
           .from('expedicao_romaneios')
-          .select('id', { count: 'exact', head: true })
+          .select('*', { count: 'exact', head: true })
           .eq('status', 'aberto'),
         (supabase as any)
           .from('nfe_entrada')
-          .select('id', { count: 'exact', head: true })
+          .select('*', { count: 'exact', head: true })
           .eq('situacao_manifestacao', 'pendente'),
       ]);
 
       const pickings = pickSep.count ?? 0;
       const conferencia = pickConf.count ?? 0;
       const cargasCount = cargas.count ?? 0;
+      const romaneioCount = romaneios.count ?? 0;
+      const nfeCount = nfe.count ?? 0;
 
       return {
         painel: pickings + conferencia + cargasCount,
         pickings,
         conferencia,
         cargas: cargasCount,
-        romaneio: romaneios.count ?? 0,
-        nfeEntrada: nfe.count ?? 0,
+        romaneio: romaneioCount,
+        nfeEntrada: nfeCount,
       };
     },
   });
