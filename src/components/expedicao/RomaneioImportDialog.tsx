@@ -145,10 +145,34 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
 
     setIsLoading(true);
     try {
-      // Here you would call the API to save the romaneio
-      // For now, we'll just show success
-      toast.success(`Romaneio "${titulo}" importado com ${previewCount} clientes!`);
-      onImported('mock-id', preview);
+      // Grava cada linha do preview como regra/registro no banco,
+      // permitindo que apareça na aba Romaneio após import.
+      const inserts = preview.map((row) => ({
+        titulo,
+        data_romaneio: dataRomaneio || row.data,
+        codigo_cliente: row.codigo_cliente,
+        nome_cliente: row.nome_cliente,
+        nf: row.nf || null,
+        transportadora_id: null,
+        transportador_digitado: row.transportador,
+        volume: row.volume || 0,
+        status: 'importado',
+        created_at: new Date().toISOString(),
+      }));
+
+      // Inserir na tabela de romaneios/dias para visualização
+      const { error: insError } = await (supabase as any)
+        .from('romaneio_dias')
+        .insert(inserts);
+
+      if (insError) {
+        toast.error(`Erro ao salvar importação: ${insError.message}`);
+      } else {
+        toast.success(`Romaneio "${titulo}" importado com ${previewCount} clientes!`);
+      }
+
+      // Notifica o pai (romaneio listagem) para atualizar
+      onImported('imported-batch', preview);
       handleClose();
     } catch (error) {
       toast.error('Erro ao importar romaneio');
