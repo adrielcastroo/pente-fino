@@ -146,6 +146,94 @@ export default function RomaneioPage() {
   const [isEditingImported, setIsEditingImported] = useState(false);
   const [lastImportedRomaneioId, setLastImportedRomaneioId] = useState<string | null>(null);
 
+  // Estados para tabela integrada de romaneios
+  const [romaneioSortColumn, setRomaneioSortColumn] = useState<string | null>(null);
+  const [romaneioSortDir, setRomaneioSortDir] = useState<'asc' | 'desc'>('asc');
+  const [romaneioFilterCliente, setRomaneioFilterCliente] = useState('');
+  const [romaneioFilterTransportadora, setRomaneioFilterTransportadora] = useState('');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successCount, setSuccessCount] = useState(0);
+  const [historicoRomaneios, setHistoricoRomaneios] = useState<RomaneioDia[]>([]);
+
+  // Função para lidar com ordenação por coluna
+  const handleSort = (column: string) => {
+    if (romaneioSortColumn === column) {
+      setRomaneioSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setRomaneioSortColumn(column);
+      setRomaneioSortDir('asc');
+    }
+  };
+
+  // Dados filtrados e ordenados
+  const filteredRomaneios = useMemo(() => {
+    let result = romaneios;
+
+    // Filtro por cliente
+    if (romaneioFilterCliente.trim()) {
+      const filter = romaneioFilterCliente.toLowerCase();
+      result = result.filter(r =>
+        r.linhas?.some(l =>
+          l.codigo_cliente.toLowerCase().includes(filter) ||
+          l.nome_cliente.toLowerCase().includes(filter)
+        )
+      );
+    }
+
+    // Filtro por transportadora
+    if (romaneioFilterTransportadora.trim()) {
+      const filter = romaneioFilterTransportadora.toLowerCase();
+      result = result.filter(r =>
+        r.linhas?.some(l =>
+          l.transportadora?.toLowerCase().includes(filter)
+        )
+      );
+    }
+
+    // Ordenação
+    if (romaneioSortColumn) {
+      result = [...result].sort((a, b) => {
+        let aVal = '';
+        let bVal = '';
+
+        switch (romaneioSortColumn) {
+          case 'data':
+            aVal = a.data_romaneio;
+            bVal = b.data_romaneio;
+            break;
+          case 'titulo':
+            aVal = a.titulo;
+            bVal = b.titulo;
+            break;
+          case 'clientes':
+            aVal = String(a.linhas?.length || 0);
+            bVal = String(b.linhas?.length || 0);
+            break;
+          default:
+            return 0;
+        }
+
+        if (romaneioSortDir === 'asc') {
+          return aVal.localeCompare(bVal);
+        }
+        return bVal.localeCompare(aVal);
+      });
+    }
+
+    return result;
+  }, [romaneios, romaneioSortColumn, romaneioSortDir, romaneioFilterCliente, romaneioFilterTransportadora]);
+
+  // Buscar transportadoras únicas para filtro
+  const transportadorasUnicas = useMemo(() => {
+    const set = new Set<string>();
+    romaneios.forEach(r => {
+      r.linhas?.forEach(l => {
+        if (l.transportadora) set.add(l.transportadora);
+      });
+    });
+    return Array.from(set).sort();
+  }, [romaneios]);
+
   // ============================================================
   // Queries
   // ============================================================
@@ -209,6 +297,29 @@ export default function RomaneioPage() {
     if (romaneiosData) setRomaneios(romaneiosData);
   }, [romaneiosData]);
 
+  // Persistência do estado da aba Romaneio
+  useEffect(() => {
+    try {
+      localStorage.setItem('romaneio:sortColumn', romaneioSortColumn || '');
+      localStorage.setItem('romaneio:sortDir', romaneioSortDir);
+      localStorage.setItem('romaneio:filterCliente', romaneioFilterCliente);
+      localStorage.setItem('romaneio:filterTransportadora', romaneioFilterTransportadora);
+    } catch (e) { /* ignore */ }
+  }, [romaneioSortColumn, romaneioSortDir, romaneioFilterCliente, romaneioFilterTransportadora]);
+
+  useEffect(() => {
+    try {
+      const savedColumn = localStorage.getItem('romaneio:sortColumn');
+      const savedDir = localStorage.getItem('romaneio:sortDir');
+      const savedFilterCliente = localStorage.getItem('romaneio:filterCliente');
+      const savedFilterTransportadora = localStorage.getItem('romaneio:filterTransportadora');
+      if (savedColumn) setRomaneioSortColumn(savedColumn);
+      if (savedDir) setRomaneioSortDir(savedDir as 'asc' | 'desc');
+      if (savedFilterCliente) setRomaneioFilterCliente(savedFilterCliente);
+      if (savedFilterTransportadora) setRomaneioFilterTransportadora(savedFilterTransportadora);
+    } catch (e) { /* ignore */ }
+  }, []);
+
   // ============================================================
   // Handlers
   // ============================================================
@@ -261,6 +372,9 @@ export default function RomaneioPage() {
 
       toast.success('Alterações salvas!');
       setIsEditingImported(false);
+      setSuccessCount(importedLines.length);
+      setShowSuccessModal(true);
+      setTimeout(() => setShowSuccessModal(false), 1500);
       refetchRomaneios();
     } catch (error) {
       toast.error('Erro ao salvar alterações');
@@ -278,19 +392,83 @@ export default function RomaneioPage() {
 
   const handleDeleteRomaneio = async (id: string) => {
     if (!confirm('Tem certeza que deseja excluir este romaneio?')) return;
-    
+
     try {
       const { error } = await supabase
         .from('romaneio_dias')
         .delete()
         .eq('id', id);
-      
+
       if (error) throw error;
-      
+
       toast.success('Romaneio excluído');
       refetchRomaneios();
     } catch (error: any) {
       toast.error(error.message || 'Erro ao excluir romaneio');
+    }
+  };
+
+  const handleDeleteFromHistorico = async (id: string) => {
+    if (!confirm('Tem certeza que deseja excluir este romaneio do histórico?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('romaneio_historico')
+        .delete()
+        .eq('romaneio_id', id);
+
+      if (error) throw error;
+
+      toast.success('Romaneio excluído do histórico');
+      refetchRomaneios();
+    } catch (error: any) {
+      toast.error(error.message || 'Erro ao excluir do histórico');
+    }
+  };
+
+  const handleSendToHistory = async (id: string) => {
+    try {
+      const { data: romaneioData, error: fetchError } = await supabase
+        .from('romaneio_dias')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      const { error: updateError } = await supabase
+        .from('romaneio_dias')
+        .update({ status: 'finalizado' })
+        .eq('id', id);
+
+      if (updateError) throw updateError;
+
+      const { data: linhasData, error: linhasError } = await supabase
+        .from('romaneio_linhas')
+        .select('*')
+        .eq('romaneio_id', id);
+
+      if (linhasError) throw linhasError;
+
+      const historicoRecord = {
+        romaneio_id: id,
+        data_romaneio: romaneioData.data_romaneio,
+        titulo: romaneioData.titulo,
+        status: 'finalizado',
+        total_linhas: linhasData?.length || 0,
+        criado_em: new Date().toISOString(),
+      };
+
+      const { error: historicoError } = await supabase
+        .from('romaneio_historico')
+        .insert(historicoRecord);
+
+      if (historicoError) throw historicoError;
+
+      toast.success('Romaneio enviado para histórico');
+      refetchRomaneios();
+    } catch (error: any) {
+      toast.error(error.message || 'Erro ao enviar para histórico');
     }
   };
 
@@ -385,6 +563,14 @@ export default function RomaneioPage() {
           <Truck className="w-4 h-4" />
           Regras de Frete
         </Button>
+        <Button
+          variant={activeTab === 'historico' ? 'default' : 'outline'}
+          onClick={() => setActiveTab('historico')}
+          className="gap-2"
+        >
+          <FileText className="w-4 h-4" />
+          Histórico
+        </Button>
       </div>
 
       {/* ============================================================ */}
@@ -459,53 +645,149 @@ export default function RomaneioPage() {
         </div>
       )}
 
-          {/* Romaneios Importados */}
+          {/* Tabela Integrada de Romaneios Importados */}
           {romaneios.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Romaneios Importados</CardTitle>
+                <CardTitle className="flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <Package className="w-5 h-5 text-primary" />
+                    Romaneios Importados
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setRomaneioFilterCliente('');
+                      setRomaneioFilterTransportadora('');
+                      setRomaneioSortColumn(null);
+                      setRomaneioSortDir('asc');
+                    }}
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Limpar Filtros
+                  </Button>
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {romaneios.map((romaneio) => (
-                    <Card key={romaneio.id}>
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="space-y-1">
+                {/* Filtros */}
+                <div className="flex flex-wrap gap-4 mb-4">
+                  <div className="flex-1 min-w-[200px]">
+                    <Label className="text-xs mb-1 block">Filtrar por Cliente</Label>
+                    <Input
+                      value={romaneioFilterCliente}
+                      onChange={(e) => setRomaneioFilterCliente(e.target.value)}
+                      placeholder="Código ou nome do cliente..."
+                      className="h-8 text-sm"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-[200px]">
+                    <Label className="text-xs mb-1 block">Filtrar por Transportadora</Label>
+                    <Select
+                      value={romaneioFilterTransportadora || 'todos'}
+                      onValueChange={(value) =>
+                        setRomaneioFilterTransportadora(value === 'todos' ? '' : value)
+                      }
+                    >
+                      <SelectTrigger className="h-8 text-sm">
+                        <SelectValue placeholder="Todas" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="todos">Todas</SelectItem>
+                        {transportadorasUnicas.map((t) => (
+                          <SelectItem key={t} value={t}>{t}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Tabela */}
+                <div className="rounded-lg border overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead
+                          className="cursor-pointer hover:bg-muted/50 select-none"
+                          onClick={() => handleSort('data')}
+                        >
+                          <div className="flex items-center gap-1">
+                            Data
+                            {romaneioSortColumn === 'data' && (
+                              romaneioSortDir === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
+                            )}
+                          </div>
+                        </TableHead>
+                        <TableHead
+                          className="cursor-pointer hover:bg-muted/50 select-none"
+                          onClick={() => handleSort('titulo')}
+                        >
+                          <div className="flex items-center gap-1">
+                            Romaneio
+                            {romaneioSortColumn === 'titulo' && (
+                              romaneioSortDir === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
+                            )}
+                          </div>
+                        </TableHead>
+                        <TableHead>Clientes</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredRomaneios.map((romaneio) => (
+                        <TableRow key={romaneio.id} className="hover:bg-muted/50">
+                          <TableCell className="font-medium">
+                            {format(new Date(romaneio.data_romaneio), "dd/MM/yyyy", { locale: ptBR })}
+                          </TableCell>
+                          <TableCell>
                             <div className="flex items-center gap-2">
-                              <Package className="w-5 h-5 text-primary" />
-                              <h3 className="font-semibold text-lg">{romaneio.titulo}</h3>
-                              <Badge variant={romaneio.status === 'ativo' ? 'default' : 'secondary'}>
+                              <h3 className="font-semibold">{romaneio.titulo}</h3>
+                              <Badge variant={romaneio.status === 'ativo' ? 'default' : 'secondary'} className="text-xs">
                                 {romaneio.status}
                               </Badge>
                             </div>
-                            <p className="text-sm text-muted-foreground">
-                              {format(new Date(romaneio.data_romaneio), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-                              {romaneio.linhas && (
-                                <span className="ml-4">• {romaneio.linhas.length} clientes</span>
-                              )}
-                            </p>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleViewRomaneio(romaneio)}
-                            >
-                              Ver Detalhes
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => handleDeleteRomaneio(romaneio.id)}
-                            >
-                              Excluir
-                            </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                          </TableCell>
+                          <TableCell>{romaneio.linhas?.length || 0}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="text-xs">
+                              {romaneio.linhas?.length || 0} clientes
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex gap-2 justify-end">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleViewRomaneio(romaneio)}
+                              >
+                                Ver Detalhes
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleSendToHistory(romaneio.id)}
+                              >
+                                <CheckCircle2 className="w-4 h-4 mr-1" />
+                                Concluir
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleDeleteRomaneio(romaneio.id)}
+                              >
+                                Excluir
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                <div className="mt-4 text-sm text-muted-foreground">
+                  Mostrando {filteredRomaneios.length} de {romaneios.length} romaneios
                 </div>
               </CardContent>
             </Card>
@@ -786,11 +1068,22 @@ export default function RomaneioPage() {
         onImported={handleImportRomaneio}
       />
 
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-lg p-8 shadow-xl text-center animate-success">
+            <CheckCircle2 className="w-16 h-16 mx-auto text-green-500 mb-4" />
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Sucesso!</h2>
+            <p className="text-gray-600">{successCount} romaneio(s) importado(s) com sucesso</p>
+          </div>
+        </div>
+      )}
+
       {/* Romaneio Detail Dialog */}
       <Dialog open={showRomaneioDetail} onOpenChange={(open) => {
         if (!open) setShowRomaneioDetail(false);
       }}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Package className="w-5 h-5" />
@@ -1040,6 +1333,69 @@ export default function RomaneioPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* ============================================================ */}
+      {/* TAB: HISTÓRICO                                               */}
+      {/* ============================================================ */}
+      {activeTab === 'historico' && (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="w-5 h-5 text-primary" />
+                Romaneios Finalizados
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {historicoRomaneios.length === 0 ? (
+                <div className="py-8 text-center text-muted-foreground">
+                  <FileText className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                  <p>Nenhum romaneio no histórico</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {historicoRomaneios.map((romaneio) => (
+                    <Card key={romaneio.id}>
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-semibold">{romaneio.titulo}</h3>
+                              <Badge variant="secondary">{romaneio.status}</Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              {format(new Date(romaneio.data_romaneio), "dd/MM/yyyy", { locale: ptBR })}
+                              {romaneio.linhas && (
+                                <span className="ml-4">• {romaneio.linhas.length} clientes</span>
+                              )}
+                            </p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleViewRomaneio(romaneio)}
+                            >
+                              Ver Detalhes
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleDeleteFromHistorico(romaneio.id)}
+                            >
+                              Excluir
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </PageShell>
   );
 }
