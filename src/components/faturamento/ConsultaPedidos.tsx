@@ -77,31 +77,42 @@ export default function ConsultaPedidos({ onPedidosSelecionados }: ConsultaPedid
   const [filtroSituacao, setFiltroSituacao] = useState('todos');
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
 
-  // Busca TODOS os pedidos reais do Auge (tabela auge_pedidos, sincronizada)
-  // com paginação em lotes (Supabase limita a 1000 por request)
+  // Busca pedidos do Auge através do sync process (para manter dados atualizados)
   // Refetch a cada 1 minuto para manter dados atualizados
   const { data: pedidos = [], isLoading, refetch, isFetching } = useQuery({
-    queryKey: ['auge_pedidos'],
+    queryKey: ['auge_pedidos_sync'],
     queryFn: async () => {
-      const BATCH = 500;
-      const all: PedidoAuge[] = [];
-      let offset = 0;
-      let hasMore = true;
-      while (hasMore && all.length < 5000) {
-        const { data, error } = await supabase
-          .from('auge_pedidos')
-          .select('*')
-          .order('cd_pedido', { ascending: false })
-          .range(offset, offset + BATCH - 1);
+      try {
+        const { data, error } = await supabase.functions.invoke('auge-sync', {
+          body: { action: 'sync_pedidos' }
+        });
         if (error) throw error;
-        if (!data || data.length === 0) break;
-        all.push(...(data as PedidoAuge[]));
-        offset += BATCH;
-        hasMore = data.length === BATCH;
+        // O sync retorna a entidade 'pedidos' com seus dados mapeados
+        return data?.pedidos ?? [];
+      } catch (e) {
+        console.error('[ConsultaPedidos] Erro ao sincronizar pedidos do Auge:', e);
+        // Fallback para dados locais se o sync falhar (mantém a funcionalidade)
+        const BATCH = 500;
+        const all: PedidoAuge[] = [];
+        let offset = 0;
+        let hasMore = true;
+        while (hasMore && all.length < 5000) {
+          const { data, error } = await supabase
+            .from('auge_pedidos')
+            .select('*')
+            .order('cd_pedido', { ascending: false })
+            .range(offset, offset + BATCH - 1);
+          if (error) throw error;
+          if (!data || data.length === 0) break;
+          all.push(...(data as PedidoAuge[]));
+          offset += BATCH;
+          hasMore = data.length === BATCH;
+        }
+        return all;
       }
-      return all;
     },
     refetchInterval: 60000, // 1 minuto
+    staleTime: 30000, // Considera dados antigos após 30 segundos
   });
 
   const situacoes = useMemo(() => {
