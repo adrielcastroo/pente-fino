@@ -91,7 +91,7 @@ const TRANSFERENCIA_BACKFILL_BATCH = 8;
 const TRANSFERENCIAS_CHUNK_DAYS = 30; // Blocos de 30 dias para evitar timeouts no sync completo
 
 type Entity = 'saldo' | 'produtos' | 'depositos' | 'movimentacoes' | 'entradas' | 'lotes' | 'transferencias' | 'clientes' | 'expedicao_sync_prontos' | 'expedicao_validar_peca' | 'expedicao_alocar';
-const ALL_ENTITIES: Entity[] = ['produtos', 'saldo', 'movimentacoes', 'entradas', 'depositos', 'lotes', 'transferencias', 'clientes', 'expedicao_sync_prontos'];
+const ALL_ENTITIES: Entity[] = ['produtos', 'saldo', 'movimentacoes', 'entradas', 'depositos', 'lotes', 'transferencias', 'clientes', 'expedicao_sync_prontos', 'pedidos'];
 const UNMAPPED: Entity[] = []; // todos tentam endpoints; erros são registrados no run
 
 // ---------- Cookie jar ----------
