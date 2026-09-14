@@ -81,8 +81,8 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
     return all;
   };
 
-  // Buscar pedidos do Auge por nome do cliente
-  const fetchPedidosPorCliente = async (nomeCliente: string): Promise<{ total: number; count: number }> => {
+  // Buscar pedidos do Auge por nome do cliente e data de expedição
+  const fetchPedidosPorCliente = async (nomeCliente: string, dataRomaneio: string): Promise<{ total: number; count: number }> => {
     const BATCH_SIZE = 500;
     let offset = 0;
     let hasMore = true;
@@ -92,7 +92,7 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
     while (hasMore && totalCount < 5000) {
       const { data, error } = await supabase
         .from('auge_pedidos')
-        .select('vl_total')
+        .select('vl_total, dt_entrega_prevista')
         .ilike('nome_cliente', `%${nomeCliente}%`)
         .range(offset, offset + BATCH_SIZE - 1);
 
@@ -100,8 +100,15 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
       if (!data || data.length === 0) break;
 
       data.forEach(p => {
-        totalValor += p.vl_total || 0;
-        totalCount++;
+        // Verificar se a data de expedição (dt_entrega_prevista) corresponde à data do romaneio
+        if (p.dt_entrega_prevista && dataRomaneio) {
+          const dataPedido = String(p.dt_entrega_prevista).slice(0, 10);
+          const dataRomaneioFormatada = String(dataRomaneio).slice(0, 10);
+          if (dataPedido === dataRomaneioFormatada) {
+            totalValor += p.vl_total || 0;
+            totalCount++;
+          }
+        }
       });
 
       offset += BATCH_SIZE;
@@ -209,6 +216,9 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
   const processarRegras = async (rows: PreviewRow[]) => {
     setIsProcessingRules(true);
     try {
+      // Determinar a data do romaneio a partir da primeira linha com data válida
+      const dataRomaneio = rows.find(r => r.data)?.data || new Date().toISOString().split('T')[0];
+
       const regras = await fetchRegras();
       const regrasMap = new Map<string, FaturamentoRegra>();
       for (const regra of regras) {
@@ -233,7 +243,7 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
         };
 
         if (regra.modalidade_frete === 'CIF_FOB' && regra.valor_minimo_frete) {
-          const pedidosInfo = await fetchPedidosPorCliente(row.nome_cliente);
+          const pedidosInfo = await fetchPedidosPorCliente(row.nome_cliente, dataRomaneio);
           const valorTotal = pedidosInfo.total;
 
           updatedRow.valor_total_pedido = valorTotal;

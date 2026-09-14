@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -130,7 +130,22 @@ function getTransportadoraCor(modalidade: string): string {
 // ============================================================
 
 export default function RomaneioPage() {
-  const [activeTab, setActiveTab] = useState<'romaneio' | 'regras' | 'historico'>('romaneio');
+  const [activeTab, setActiveTab] = useState<'romaneio' | 'regras' | 'historico' | 'consultar'>('romaneio');
+
+  useEffect(() => {
+    try {
+      const savedTab = localStorage.getItem('romaneio:activeTab');
+      if (savedTab === 'romaneio' || savedTab === 'regras' || savedTab === 'historico' || savedTab === 'consultar') {
+        setActiveTab(savedTab);
+      }
+    } catch (e) { /* ignore */ }
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('romaneio:activeTab', activeTab);
+    } catch (e) { /* ignore */ }
+  }, [activeTab]);
   const [preview, setPreview] = useState<RomaneioPreview[]>([]);
   const [showLogDetail, setShowLogDetail] = useState(false);
   const [selectedLog, setSelectedLog] = useState<LogRomaneio | null>(null);
@@ -154,6 +169,32 @@ export default function RomaneioPage() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successCount, setSuccessCount] = useState(0);
   const [historicoRomaneios, setHistoricoRomaneios] = useState<RomaneioDia[]>([]);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('romaneio:importedState');
+      if (saved) {
+        const state = JSON.parse(saved);
+        setLastImportedRomaneioId(state.romaneioId || null);
+        setImportedLines(state.lines || []);
+        setIsEditingImported(state.isEditing || false);
+      }
+    } catch (e) { /* ignore */ }
+  }, []);
+
+  useEffect(() => {
+    try {
+      if (isEditingImported && importedLines.length > 0 && lastImportedRomaneioId) {
+        localStorage.setItem('romaneio:importedState', JSON.stringify({
+          romaneioId: lastImportedRomaneioId,
+          lines: importedLines,
+          isEditing: true,
+        }));
+      } else {
+        localStorage.removeItem('romaneio:importedState');
+      }
+    } catch (e) { /* ignore */ }
+  }, [isEditingImported, importedLines, lastImportedRomaneioId]);
 
   // Função para lidar com ordenação por coluna
   const handleSort = (column: string) => {
@@ -294,7 +335,12 @@ export default function RomaneioPage() {
   }, [regrasData]);
 
   useEffect(() => {
-    if (romaneiosData) setRomaneios(romaneiosData);
+    if (romaneiosData) {
+      const ativos = romaneiosData.filter(r => r.status !== 'finalizado');
+      const finalizados = romaneiosData.filter(r => r.status === 'finalizado');
+      setRomaneios(ativos);
+      setHistoricoRomaneios(finalizados);
+    }
   }, [romaneiosData]);
 
   // Persistência do estado da aba Romaneio
@@ -324,12 +370,31 @@ export default function RomaneioPage() {
   // Handlers
   // ============================================================
 
-  const handleImportRomaneio = async (romaneioId: string, linhas: any[]) => {
+  const handleImportRomaneio = async (romaneioId: string, _linhas: any[]) => {
     toast.success('Romaneio importado com sucesso!');
     setLastImportedRomaneioId(romaneioId);
-    setImportedLines(linhas);
+
+    await refetchRomaneios();
+
+    const { data: dbLinhas, error: linhasError } = await supabase
+      .from('romaneio_linhas')
+      .select('*')
+      .eq('romaneio_id', romaneioId);
+
+    if (linhasError) {
+      toast.error('Erro ao carregar linhas importadas');
+      return;
+    }
+
+    const mapped = (dbLinhas || []).map(l => ({
+      ...l,
+      volume: l.quantidade,
+      regra_frete_aplicada: l.modalidade_frete,
+      transportadora_sugerida: l.transportadora,
+    }));
+
+    setImportedLines(mapped);
     setIsEditingImported(true);
-    refetchRomaneios();
   };
 
   const handleUpdateImportedLine = async (index: number, field: string, value: string) => {
@@ -344,9 +409,8 @@ export default function RomaneioPage() {
     if (!lastImportedRomaneioId) return;
 
     try {
-      const updates = importedLines.map((linha, idx) => ({
-        id: (importedLines[idx] as any).id,
-        romaneio_id: lastImportedRomaneioId,
+      const updates = importedLines.map((linha) => ({
+        id: linha.id,
         codigo_cliente: linha.codigo_cliente,
         nome_cliente: linha.nome_cliente,
         quantidade: linha.volume || 1,
@@ -355,7 +419,9 @@ export default function RomaneioPage() {
         observacoes: linha.observacao || null,
       }));
 
-      for (const update of updates) {
+      const validUpdates = updates.filter(u => u.id);
+
+      for (const update of validUpdates) {
         await supabase
           .from('romaneio_linhas')
           .update({
@@ -366,12 +432,14 @@ export default function RomaneioPage() {
             transportadora: update.transportadora,
             observacoes: update.observacoes,
           })
-          .eq('romaneio_id', lastImportedRomaneioId)
-          .eq('codigo_cliente', update.codigo_cliente);
+          .eq('id', update.id);
       }
 
       toast.success('Alterações salvas!');
       setIsEditingImported(false);
+      setImportedLines([]);
+      setLastImportedRomaneioId(null);
+      try { localStorage.removeItem('romaneio:importedState'); } catch (e) { /* ignore */ }
       setSuccessCount(importedLines.length);
       setShowSuccessModal(true);
       setTimeout(() => setShowSuccessModal(false), 1500);
@@ -383,11 +451,37 @@ export default function RomaneioPage() {
 
   const handleCancelImportedEdit = () => {
     setIsEditingImported(false);
+    setImportedLines([]);
+    setLastImportedRomaneioId(null);
+    try { localStorage.removeItem('romaneio:importedState'); } catch (e) { /* ignore */ }
   };
 
   const handleViewRomaneio = (romaneio: RomaneioDia) => {
     setSelectedRomaneio(romaneio);
     setShowRomaneioDetail(true);
+  };
+
+  const handleEditRomaneioLinhas = async (romaneio: RomaneioDia) => {
+    setLastImportedRomaneioId(romaneio.id);
+    const { data: dbLinhas, error: linhasError } = await supabase
+      .from('romaneio_linhas')
+      .select('*')
+      .eq('romaneio_id', romaneio.id);
+
+    if (linhasError) {
+      toast.error('Erro ao carregar linhas');
+      return;
+    }
+
+    const mapped = (dbLinhas || []).map(l => ({
+      ...l,
+      volume: l.quantidade,
+      regra_frete_aplicada: l.modalidade_frete,
+      transportadora_sugerida: l.transportadora,
+    }));
+
+    setImportedLines(mapped);
+    setIsEditingImported(true);
   };
 
   const handleDeleteRomaneio = async (id: string) => {
@@ -412,10 +506,17 @@ export default function RomaneioPage() {
     if (!confirm('Tem certeza que deseja excluir este romaneio do histórico?')) return;
 
     try {
-      const { error } = await supabase
-        .from('romaneio_historico')
+      const { data: linhas, error: linhasError } = await supabase
+        .from('romaneio_linhas')
         .delete()
         .eq('romaneio_id', id);
+
+      if (linhasError) throw linhasError;
+
+      const { error } = await supabase
+        .from('romaneio_dias')
+        .delete()
+        .eq('id', id);
 
       if (error) throw error;
 
@@ -428,42 +529,12 @@ export default function RomaneioPage() {
 
   const handleSendToHistory = async (id: string) => {
     try {
-      const { data: romaneioData, error: fetchError } = await supabase
-        .from('romaneio_dias')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (fetchError) throw fetchError;
-
       const { error: updateError } = await supabase
         .from('romaneio_dias')
         .update({ status: 'finalizado' })
         .eq('id', id);
 
       if (updateError) throw updateError;
-
-      const { data: linhasData, error: linhasError } = await supabase
-        .from('romaneio_linhas')
-        .select('*')
-        .eq('romaneio_id', id);
-
-      if (linhasError) throw linhasError;
-
-      const historicoRecord = {
-        romaneio_id: id,
-        data_romaneio: romaneioData.data_romaneio,
-        titulo: romaneioData.titulo,
-        status: 'finalizado',
-        total_linhas: linhasData?.length || 0,
-        criado_em: new Date().toISOString(),
-      };
-
-      const { error: historicoError } = await supabase
-        .from('romaneio_historico')
-        .insert(historicoRecord);
-
-      if (historicoError) throw historicoError;
 
       toast.success('Romaneio enviado para histórico');
       refetchRomaneios();
@@ -766,6 +837,13 @@ export default function RomaneioPage() {
                               <Button
                                 variant="outline"
                                 size="sm"
+                                onClick={() => handleEditRomaneioLinhas(romaneio)}
+                              >
+                                Editar
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
                                 onClick={() => handleSendToHistory(romaneio.id)}
                               >
                                 <CheckCircle2 className="w-4 h-4 mr-1" />
@@ -812,8 +890,6 @@ export default function RomaneioPage() {
                       <TableRow>
                         <TableHead>Código</TableHead>
                         <TableHead>Nome do Cliente</TableHead>
-                        <TableHead>NF</TableHead>
-                        <TableHead>Data</TableHead>
                         <TableHead>Transportadora</TableHead>
                         <TableHead>Modalidade</TableHead>
                         <TableHead className="text-right">Vol.</TableHead>
@@ -834,20 +910,6 @@ export default function RomaneioPage() {
                             <Input
                               value={row.nome_cliente || ''}
                               onChange={(e) => handleUpdateImportedLine(idx, 'nome_cliente', e.target.value)}
-                              className="h-8 text-sm"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              value={row.nf || ''}
-                              onChange={(e) => handleUpdateImportedLine(idx, 'nf', e.target.value)}
-                              className="h-8 text-sm"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              value={row.data || ''}
-                              onChange={(e) => handleUpdateImportedLine(idx, 'data', e.target.value)}
                               className="h-8 text-sm"
                             />
                           </TableCell>
