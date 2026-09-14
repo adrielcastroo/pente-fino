@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Search, Loader2, Database, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -126,6 +126,15 @@ export default function ConsultaPedidos({ onPedidosSelecionados }: ConsultaPedid
       return matchesBusca && matchesSit;
     });
   }, [pedidos, busca, filtroSituacao]);
+
+  const [lastFetchTime, setLastFetchTime] = useState<Date | null>(null);
+
+  // Update last fetch time when data changes
+  useEffect(() => {
+    if (pedidos) {
+      setLastFetchTime(new Date());
+    }
+  }, [pedidos]);
 
   const stats = useMemo(
     () => ({
