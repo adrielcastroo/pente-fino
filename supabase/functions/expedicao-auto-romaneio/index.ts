@@ -34,7 +34,8 @@ serve(async (req) => {
     );
 
     const url = new URL(req.url);
-    const action = url.searchParams.get("action") || (await req.json().catch(() => ({}))).action || "generate";
+    const body = await req.json().catch(() => ({}));
+    const action = url.searchParams.get("action") || body.action || "generate";
     const daysAhead = parseInt(url.searchParams.get("daysAhead") || "3");
     const transportadoraId = url.searchParams.get("transportadora_id") || null;
 
@@ -226,14 +227,7 @@ serve(async (req) => {
     // ACTION: save_rule - Salva/Atualiza regra de um cliente
     // ============================================================
     if (action === "save_rule") {
-      const body = await req.json().catch(() => ({}));
-
-      if (!body.codigo_cliente) {
-        return new Response(JSON.stringify({ error: "codigo_cliente obrigatorio" }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+      const codigo_cliente = body.codigo_cliente;
 
       const { error } = await supabaseClient
         .from("faturamento_regras")

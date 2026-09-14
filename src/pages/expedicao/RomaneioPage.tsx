@@ -1132,11 +1132,11 @@ export default function RomaneioPage() {
 
       {/* Success Modal */}
       {showSuccessModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-lg p-8 shadow-xl text-center animate-success">
-            <CheckCircle2 className="w-16 h-16 mx-auto text-green-500 mb-4" />
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">Sucesso!</h2>
-            <p className="text-gray-600">{successCount} romaneio(s) importado(s) com sucesso</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-lg p-6 sm:p-8 shadow-xl text-center animate-success max-w-sm w-full">
+            <CheckCircle2 className="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-green-500 mb-3 sm:mb-4" />
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">Sucesso!</h2>
+            <p className="text-sm sm:text-base text-gray-600">{successCount} romaneio(s) importado(s) com sucesso</p>
           </div>
         </div>
       )}
@@ -1145,7 +1145,7 @@ export default function RomaneioPage() {
       <Dialog open={showRomaneioDetail} onOpenChange={(open) => {
         if (!open) setShowRomaneioDetail(false);
       }}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-[90vw] md:w-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Package className="w-5 h-5" />
@@ -1164,32 +1164,34 @@ export default function RomaneioPage() {
           {selectedRomaneio && selectedRomaneio.linhas && selectedRomaneio.linhas.length > 0 ? (
             <div className="space-y-4 py-4">
               <div className="rounded-lg border overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead className="bg-muted">
-                    <tr>
-                      <th className="px-4 py-3 text-left font-medium">Código</th>
-                      <th className="px-4 py-3 text-left font-medium">Nome do Cliente</th>
-                      <th className="px-4 py-3 text-left font-medium">Qtd</th>
-                      <th className="px-4 py-3 text-left font-medium">Frete</th>
-                      <th className="px-4 py-3 text-left font-medium">Transportadora</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {selectedRomaneio.linhas.map((linha, idx) => (
-                      <tr key={idx} className="border-t hover:bg-muted/50">
-                        <td className="px-4 py-3 font-mono text-xs">{linha.codigo_cliente}</td>
-                        <td className="px-4 py-3 max-w-[250px] truncate" title={linha.nome_cliente}>{linha.nome_cliente}</td>
-                        <td className="px-4 py-3 text-center">{linha.quantidade}</td>
-                        <td className="px-4 py-3">
-                          <Badge variant="outline" className="text-xs">
-                            {linha.modalidade_frete || '-'}
-                          </Badge>
-                        </td>
-                        <td className="px-4 py-3 text-sm text-muted-foreground">{linha.transportadora || '-'}</td>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted">
+                      <tr>
+                        <th className="px-3 py-2 sm:px-4 sm:py-3 text-left font-medium text-xs">Código</th>
+                        <th className="px-3 py-2 sm:px-4 sm:py-3 text-left font-medium text-xs">Nome do Cliente</th>
+                        <th className="px-3 py-2 sm:px-4 sm:py-3 text-left font-medium text-xs">Qtd</th>
+                        <th className="px-3 py-2 sm:px-4 sm:py-3 text-left font-medium text-xs hidden sm:table-cell">Frete</th>
+                        <th className="px-3 py-2 sm:px-4 sm:py-3 text-left font-medium text-xs hidden md:table-cell">Transportadora</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {selectedRomaneio.linhas.map((linha, idx) => (
+                        <tr key={idx} className="border-t hover:bg-muted/50">
+                          <td className="px-3 py-2 sm:px-4 sm:py-3 font-mono text-xs">{linha.codigo_cliente}</td>
+                          <td className="px-3 py-2 sm:px-4 sm:py-3 max-w-[150px] sm:max-w-[250px] truncate text-xs sm:text-sm" title={linha.nome_cliente}>{linha.nome_cliente}</td>
+                          <td className="px-3 py-2 sm:px-4 sm:py-3 text-center text-xs sm:text-sm">{linha.quantidade}</td>
+                          <td className="px-3 py-2 sm:px-4 sm:py-3 hidden sm:table-cell">
+                            <Badge variant="outline" className="text-xs">
+                              {linha.modalidade_frete || '-'}
+                            </Badge>
+                          </td>
+                          <td className="px-3 py-2 sm:px-4 sm:py-3 text-xs sm:text-sm hidden md:table-cell">{linha.transportadora || '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           ) : (
@@ -1208,7 +1210,7 @@ export default function RomaneioPage() {
 
       {/* Log Detail Dialog */}
       <Dialog open={showLogDetail} onOpenChange={(open) => !open && setShowLogDetail(false)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-[90vw] md:w-auto">
           <DialogHeader>
             <DialogTitle>Detalhes do Log</DialogTitle>
             <DialogDescription>
@@ -1217,26 +1219,26 @@ export default function RomaneioPage() {
           </DialogHeader>
           {selectedLog && (
             <div className="space-y-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <Label>Data Faturamento</Label>
-                  <p className="font-medium">
+                  <Label className="text-xs">Data Faturamento</Label>
+                  <p className="font-medium text-xs sm:text-sm">
                     {new Date(selectedLog.data_faturamento).toLocaleDateString('pt-BR')}
                   </p>
                 </div>
                 <div>
-                  <Label>Total de Linhas</Label>
-                  <p className="font-medium">{selectedLog.total_linhas}</p>
+                  <Label className="text-xs">Total de Linhas</Label>
+                  <p className="font-medium text-xs sm:text-sm">{selectedLog.total_linhas}</p>
                 </div>
                 <div>
-                  <Label>Status</Label>
-                  <Badge variant={selectedLog.status === 'gerado' ? 'default' : 'secondary'}>
+                  <Label className="text-xs">Status</Label>
+                  <Badge variant={selectedLog.status === 'gerado' ? 'default' : 'secondary'} className="text-xs">
                     {selectedLog.status}
                   </Badge>
                 </div>
                 <div>
-                  <Label>Transportadora</Label>
-                  <p className="font-medium">{selectedLog.transportadora_nome || '-'}</p>
+                  <Label className="text-xs">Transportadora</Label>
+                  <p className="font-medium text-xs sm:text-sm">{selectedLog.transportadora_nome || '-'}</p>
                 </div>
               </div>
               {selectedLog.observacao && (
@@ -1261,7 +1263,7 @@ export default function RomaneioPage() {
 
       {/* Edit/Create Rule Modal */}
       <Dialog open={!!editingRule} onOpenChange={(open) => !open && setEditingRule(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-[90vw] md:w-auto">
           <DialogHeader>
             <DialogTitle>
               {editingRule ? 'Editar Regra de Frete' : 'Nova Regra de Frete'}
@@ -1271,7 +1273,7 @@ export default function RomaneioPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="codigo_cliente">Código do Cliente</Label>
                 <Input
@@ -1292,10 +1294,10 @@ export default function RomaneioPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="modalidade_frete">Modalidade de Frete</Label>
-                <Select 
+                <Select
                   value={editingRule?.modalidade_frete || 'CIF'}
                   onValueChange={(val) => setEditingRule(prev => prev ? { ...prev, modalidade_frete: val } : null)}
                 >
@@ -1323,7 +1325,7 @@ export default function RomaneioPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="transportadora_cif">Transportadora CIF</Label>
                 <Input
@@ -1360,13 +1362,13 @@ export default function RomaneioPage() {
                 id="observacoes"
                 value={editingRule?.observacoes || ''}
                 onChange={(e) => setEditingRule(prev => prev ? { ...prev, observacoes: e.target.value } : null)}
-                rows={4}
+                rows={3}
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
-              <Select 
+              <Select
                 value={editingRule?.status || 'ativo'}
                 onValueChange={(val) => setEditingRule(prev => prev ? { ...prev, status: val } : null)}
               >

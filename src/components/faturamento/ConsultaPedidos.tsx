@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Search, Loader2, Database, RefreshCw } from 'lucide-react';
+import { Search, Loader2, Database, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -76,6 +76,8 @@ export default function ConsultaPedidos({ onPedidosSelecionados }: ConsultaPedid
   const [busca, setBusca] = useState('');
   const [filtroSituacao, setFiltroSituacao] = useState('todos');
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
 
   // Busca pedidos do Auge através do sync process (para manter dados atualizados)
   // Refetch a cada 1 minuto para manter dados atualizados
@@ -146,6 +148,17 @@ export default function ConsultaPedidos({ onPedidosSelecionados }: ConsultaPedid
       setLastFetchTime(new Date());
     }
   }, [pedidos]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [busca, filtroSituacao]);
+
+  const totalPages = Math.ceil(filtrados.length / ITEMS_PER_PAGE);
+  const paginatedPedidos = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filtrados.slice(start, start + ITEMS_PER_PAGE);
+  }, [filtrados, currentPage]);
 
   const stats = useMemo(
     () => ({
@@ -266,23 +279,23 @@ export default function ConsultaPedidos({ onPedidosSelecionados }: ConsultaPedid
                   Usar {selecionados.size} pedido(s) no romaneio
                 </Button>
               </div>
-              <div className="rounded-md border max-h-[600px] overflow-y-auto">
+              <div className="rounded-md border overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-10"></TableHead>
                       <TableHead>Pedido</TableHead>
-                      <TableHead>Cliente</TableHead>
+                      <TableHead className="min-w-[140px]">Cliente</TableHead>
                       <TableHead>Situação</TableHead>
-                      <TableHead>Data Doc.</TableHead>
-                      <TableHead>Entrega</TableHead>
-                      <TableHead>NF</TableHead>
-                      <TableHead>Supervisor</TableHead>
+                      <TableHead className="hidden sm:table-cell">Data Doc.</TableHead>
+                      <TableHead className="hidden sm:table-cell">Entrega</TableHead>
+                      <TableHead className="hidden md:table-cell">NF</TableHead>
+                      <TableHead className="hidden lg:table-cell">Supervisor</TableHead>
                       <TableHead className="text-right">Valor Total</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filtrados.map((p) => (
+                    {paginatedPedidos.map((p) => (
                       <TableRow key={p.id}>
                         <TableCell>
                           <input
@@ -292,22 +305,22 @@ export default function ConsultaPedidos({ onPedidosSelecionados }: ConsultaPedid
                             className="w-4 h-4"
                           />
                         </TableCell>
-                        <TableCell className="font-mono">
+                        <TableCell className="font-mono text-xs sm:text-sm">
                           {p.nr_pedido || p.cd_pedido}
                         </TableCell>
-                        <TableCell className="max-w-[220px] truncate" title={p.nome_cliente || ''}>
+                        <TableCell className="max-w-[120px] sm:max-w-[220px] truncate text-xs sm:text-sm" title={p.nome_cliente || ''}>
                           {p.nome_cliente}
                         </TableCell>
                         <TableCell>
-                          <Badge className={getCorSituacao(p.situacao)}>
-                            {p.situacao || '-'}
+                          <Badge className={getCorSituacao(p.situacao)} variant="secondary">
+                            <span className="text-xs">{p.situacao || '-'}</span>
                           </Badge>
                         </TableCell>
-                        <TableCell>{p.dt_documento || '-'}</TableCell>
-                        <TableCell>{p.dt_entrega_prevista || '-'}</TableCell>
-                        <TableCell>{p.nf_numero ? `${p.nf_numero}` : '-'}</TableCell>
-                        <TableCell className="max-w-[140px] truncate">{p.supervisor || '-'}</TableCell>
-                        <TableCell className="text-right font-mono">
+                        <TableCell className="hidden sm:table-cell text-xs">{p.dt_documento || '-'}</TableCell>
+                        <TableCell className="hidden sm:table-cell text-xs">{p.dt_entrega_prevista || '-'}</TableCell>
+                        <TableCell className="hidden md:table-cell text-xs">{p.nf_numero ? `${p.nf_numero}` : '-'}</TableCell>
+                        <TableCell className="hidden lg:table-cell text-xs truncate">{p.supervisor || '-'}</TableCell>
+                        <TableCell className="text-right font-mono text-xs sm:text-sm">
                           {formatarMoeda(p.vl_total)}
                         </TableCell>
                       </TableRow>
@@ -315,6 +328,36 @@ export default function ConsultaPedidos({ onPedidosSelecionados }: ConsultaPedid
                   </TableBody>
                 </Table>
               </div>
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between mt-3 flex-wrap gap-2">
+                  <p className="text-sm text-muted-foreground">
+                    Mostrando {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filtrados.length)} de {filtrados.length}
+                  </p>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                      Anterior
+                    </Button>
+                    <span className="text-sm px-2 text-muted-foreground">
+                      {currentPage} / {totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                    >
+                      Próximo
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </>
           )}
         </CardContent>

@@ -351,7 +351,7 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
       if (!o) handleClose();
       onOpenChange(o);
     }}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-[90vw] md:w-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileSpreadsheet className="w-5 h-5" />
@@ -408,28 +408,28 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
                 <Label>Pré-visualização</Label>
                 <Badge variant="secondary">{previewCount} total</Badge>
               </div>
-              <div className="border rounded-lg overflow-hidden">
+              <div className="border rounded-lg overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-muted">
                     <tr>
-                      <th className="px-3 py-2 text-left">Código</th>
-                      <th className="px-3 py-2 text-left">Nome</th>
-                      <th className="px-3 py-2 text-left">NF</th>
-                      <th className="px-3 py-2 text-left">Data</th>
-                      <th className="px-3 py-2 text-left">Transportadora</th>
-                      <th className="px-3 py-2 text-left">Modalidade</th>
-                      <th className="px-3 py-2 text-right">Vol.</th>
-                      <th className="px-3 py-2 text-left">Observação</th>
+                      <th className="px-2 py-2 text-left text-xs">Código</th>
+                      <th className="px-2 py-2 text-left text-xs hidden sm:table-cell">Nome</th>
+                      <th className="px-2 py-2 text-left text-xs hidden md:table-cell">NF</th>
+                      <th className="px-2 py-2 text-left text-xs hidden md:table-cell">Data</th>
+                      <th className="px-2 py-2 text-left text-xs hidden lg:table-cell">Transportadora</th>
+                      <th className="px-2 py-2 text-left text-xs hidden lg:table-cell">Modalidade</th>
+                      <th className="px-2 py-2 text-right text-xs">Vol.</th>
+                      <th className="px-2 py-2 text-left text-xs hidden xl:table-cell">Observação</th>
                     </tr>
                   </thead>
                   <tbody>
                     {preview.map((row, idx) => (
                       <tr key={idx} className="border-t hover:bg-muted/50">
-                        <td className="px-3 py-2 font-mono">{row.codigo_cliente}</td>
-                        <td className="px-3 py-2 max-w-[150px] truncate" title={row.nome_cliente}>{row.nome_cliente}</td>
-                        <td className="px-3 py-2">{row.nf || '-'}</td>
-                        <td className="px-3 py-2">{row.data || '-'}</td>
-                        <td className="px-3 py-2">
+                        <td className="px-2 py-2 font-mono text-xs">{row.codigo_cliente}</td>
+                        <td className="px-2 py-2 max-w-[150px] truncate hidden sm:table-cell" title={row.nome_cliente}>{row.nome_cliente}</td>
+                        <td className="px-2 py-2 text-xs hidden md:table-cell">{row.nf || '-'}</td>
+                        <td className="px-2 py-2 text-xs hidden md:table-cell">{row.data || '-'}</td>
+                        <td className="px-2 py-2 hidden lg:table-cell">
                           {row.transportadora_sugerida ? (
                             <Badge variant="default" className="text-xs">{row.transportadora_sugerida}</Badge>
                           ) : row.transportador ? (
@@ -438,7 +438,7 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
                             <span className="text-muted-foreground">-</span>
                           )}
                         </td>
-                        <td className="px-3 py-2">
+                        <td className="px-2 py-2 hidden lg:table-cell">
                           {row.regra_frete_aplicada ? (
                             <Badge variant={row.regra_frete_aplicada === 'CIF_FOB' ? 'secondary' : 'default'} className="text-xs">
                               {row.regra_frete_aplicada}
@@ -447,8 +447,8 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported }:
                             <span className="text-muted-foreground">-</span>
                           )}
                         </td>
-                        <td className="px-3 py-2 text-right">{row.volume}</td>
-                        <td className="px-3 py-2 text-xs text-muted-foreground max-w-[200px] truncate" title={row.observacao}>
+                        <td className="px-2 py-2 text-right text-xs">{row.volume}</td>
+                        <td className="px-2 py-2 text-xs text-muted-foreground max-w-[200px] truncate hidden xl:table-cell" title={row.observacao}>
                           {row.observacao || (row.regra_encontrada ? 'Regra aplicada' : 'Sem regra')}
                         </td>
                       </tr>
