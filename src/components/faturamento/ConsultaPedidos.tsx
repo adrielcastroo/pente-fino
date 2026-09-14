@@ -79,6 +79,7 @@ export default function ConsultaPedidos({ onPedidosSelecionados }: ConsultaPedid
 
   // Busca TODOS os pedidos reais do Auge (tabela auge_pedidos, sincronizada)
   // com paginação em lotes (Supabase limita a 1000 por request)
+  // Refetch a cada 1 minuto para manter dados atualizados
   const { data: pedidos = [], isLoading, refetch, isFetching } = useQuery({
     queryKey: ['auge_pedidos'],
     queryFn: async () => {
@@ -100,6 +101,7 @@ export default function ConsultaPedidos({ onPedidosSelecionados }: ConsultaPedid
       }
       return all;
     },
+    refetchInterval: 60000, // 1 minuto
   });
 
   const situacoes = useMemo(() => {
