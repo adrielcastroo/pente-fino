@@ -261,7 +261,6 @@ serve(async (req) => {
     // ACTION: delete_rule - Remove regra de cliente
     // ============================================================
     if (action === "delete_rule") {
-      const body = await req.json().catch(() => ({}));
       const { error } = await supabaseClient
         .from("faturamento_regras")
         .delete()
