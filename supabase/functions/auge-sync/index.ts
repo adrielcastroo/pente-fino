@@ -4460,11 +4460,10 @@ Deno.serve(async (req) => {
 
     try {
       if (action === 'ping') {
-        return new Response(JSON.stringify({
-          ok: true, connected: true, latency_ms: Date.now() - t0,
-          has_api_token: !!apiToken, csrf_prefix: csrf.slice(0, 8),
-        }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-      }
+        ok: true, connected: true, latency_ms: Date.now() - t0,
+        has_api_token: !!apiToken, csrf_prefix: csrf.slice(0, 8),
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
 
     // Sonda de descoberta: inspeciona a página de peças prontas do Auge
     // (https://unilux.auge.app/record-manufactured-documents) para mapear o
