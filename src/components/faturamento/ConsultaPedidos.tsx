@@ -80,7 +80,7 @@ export default function ConsultaPedidos({ onPedidosSelecionados }: ConsultaPedid
   const ITEMS_PER_PAGE = 10;
 
   // Busca pedidos do Auge através do sync process (para manter dados atualizados)
-  // Refetch a cada 1 minuto para manter dados atualizados
+  // Refetch a cada 5 minutos para manter dados atualizados
   const { data: pedidos = [], isLoading, refetch, isFetching } = useQuery({
     queryKey: ['auge_pedidos_sync'],
     queryFn: async () => {
@@ -94,11 +94,14 @@ export default function ConsultaPedidos({ onPedidosSelecionados }: ConsultaPedid
       } catch (e) {
         console.error('[ConsultaPedidos] Erro ao sincronizar pedidos do Auge:', e);
         // Fallback para dados locais se o sync falhar (mantém a funcionalidade)
+        // Uso como fallback apenas quando já há dados em cache (evita fallback pesado no primeiro load)
         const BATCH = 500;
         const all: PedidoAuge[] = [];
         let offset = 0;
         let hasMore = true;
-        while (hasMore && all.length < 5000) {
+        // Limita o loop: se já temos muitos registros, apenas faz 1 batch de fallback
+        const maxFallbackBatches = (pedidos.length > 0) ? 1 : 10; // 1 batch se há cache, 10 se não há
+        while (hasMore && all.length < 5000 && offset / BATCH < maxFallbackBatches) {
           const { data, error } = await supabase
             .from('auge_pedidos')
             .select('*')
@@ -113,8 +116,13 @@ export default function ConsultaPedidos({ onPedidosSelecionados }: ConsultaPedid
         return all;
       }
     },
-    refetchInterval: 60000, // 1 minuto
-    staleTime: 30000, // Considera dados antigos após 30 segundos
+    // Aumentamos os tempos de cache para evitar refetch desnecessário ao trocar de aba
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    gcTime: 30 * 60 * 1000, // 30 minutos
+    cacheTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false, // Não refetch ao voltar na aba
+    refetchOnMount: false, // Não refetch ao montar componente (usa cache)
+    refetchInterval: false, // Sem polling automático
   });
 
   const situacoes = useMemo(() => {

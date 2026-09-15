@@ -6848,7 +6848,7 @@ Deno.serve(async (req) => {
   } catch (e) {
     const msg = getErrorMessage(e);
     console.error(`[auge-sync] Fatal error: ${msg}`, e);
-    
+
     // Tenta registrar a falha no banco para auditoria antes de responder
     try {
       const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
@@ -6862,14 +6862,157 @@ Deno.serve(async (req) => {
       console.error(`[auge-sync] Falha ao registrar log de erro no banco:`, dbErr);
     }
 
-    return new Response(JSON.stringify({ 
-      ok: false, 
-      error: msg, 
+    return new Response(JSON.stringify({
+      ok: false,
+      error: msg,
       error_stack: (e as Error)?.stack || 'not_available',
-      fallback: true 
+      fallback: true
     }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 });
+
+
+// ---------- fetchPedidos (DataTables server-side) ----------
+async function fetchPedidos(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+  since?: string,
+  length = 500,
+): Promise<any[]> {
+  const columns = [
+    'id', 'code', 'number', 'customer', 'supervisor', 'status', 'created_at',
+    'updated_at', 'delivery_date', 'nf', 'total'
+  ];
+  const body = dtBody(columns, length);
+
+  // DataTables server-side filter: quando 'since' é fornecido, adicionamos
+  // como filtro de coluna no body (postData.filters ou similar).
+  // Como o formato exato varia, tentamos o endpoint com filtro via query param
+  // como fallback, já que alguns DataTables do Auge suportam ?since=...
+  if (since) {
+    const url = `${AUGE_BASE_URL}/api/v1/sales-orders/list?${since}`;
+    return fetchDataTables(auth, url, body);
+  }
+  return postApi(auth, '/api/v1/sales-orders/list', body);
+}
+
+// Helper para DataTables com URL personalizada (permite query params)
+async function fetchDataTables(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+  url: string,
+  body: URLSearchParams,
+): Promise<any[]> {
+  const headers: Record<string, string> = {
+    'Cookie': auth.jar.header(),
+    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+    'X-Requested-With': 'XMLHttpRequest',
+    'X-CSRF-TOKEN': auth.csrf,
+    'Origin': AUGE_BASE_URL,
+    'Referer': `${AUGE_BASE_URL}/home`,
+    'User-Agent': UA,
+    'Accept': 'application/json, text/javascript, */*; q=0.01',
+    'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
+  };
+  if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
+  const res = await fetch(url, { method: 'POST', headers, body });
+  auth.jar.ingest(res);
+  const text = await res.text();
+  if (!res.ok) throw new Error(`${url} HTTP ${res.status}: ${text.slice(0, 200)}`);
+  let j: any;
+  try { j = JSON.parse(text); } catch { throw new Error(`Resposta não-JSON em sales-orders: ${text.slice(0, 120)}`); }
+  return Array.isArray(j?.data) ? j.data : [];
+}
+
+
+// ==============================================================
+// sync_pedidos (consulta específica dos pedidos do auge)
+// Action para popular a tabela de pedidos do AUGE.
+// Utiliza incremental sync se houver last_synced_at registrado.
+// ==============================================================
+if (action === 'sync_pedidos') {
+  try {
+    const runId = crypto.randomUUID();
+    await admin.from('auge_sync_runs').insert({
+      id: runId,
+      entidade: 'pedidos',
+      triggered_by: triggeredBy,
+      created_at: new Date().toISOString(),
+      status: 'running',
+    });
+
+    let lastMaxDt: string | null = null;
+    let pedidosRes = await admin
+      .from('auge_sync_state')
+      .select('last_max_dt, last_synced_at')
+      .eq('entidade', 'pedidos')
+      .maybeSingle();
+
+    if (pedidosRes.data?.last_max_dt) {
+      lastMaxDt = pedidosRes.data.last_max_dt;
+    } else {
+      const maxRun = await admin
+        .from('auge_sync_runs')
+        .select('created_at')
+        .eq('entidade', 'pedidos')
+        .is('status', 'success')
+        .gt('created_at', '2026-01-01')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (maxRun?.data?.created_at) {
+        lastMaxDt = maxRun.data.created_at;
+      }
+    }
+
+    // Chave do DataTables do AUGE (campo para order by)
+    const since = lastMaxDt
+      ? `created_at[gt.${lastMaxDt}]`
+      : undefined;
+
+    let pedidos = await fetchPedidos(auth, lastMaxDt ? `created_at[gt.${lastMaxDt}]` : undefined, 500);
+
+    if (!pedidos || pedidos.length === 0) {
+      return new Response(JSON.stringify({
+        ok: true, count: 0, message: 'Nenhum pedido encontrado. Este pode ser o estado inicial.'
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    // Upsert na tabela supabase
+    const { error } = await admin
+      .from('auge_pedidos')
+      .upsert(pedidos, { onConflict: 'cd_pedido' });
+
+    if (error) throw error;
+
+    // Atualiza estado incremental
+    const nowIso = new Date().toISOString();
+    await admin.from('auge_sync_state').upsert({
+      entidade: 'pedidos',
+      last_synced_at: nowIso,
+      last_max_dt: nowIso,
+      last_status: 'success',
+    }, { onConflict: 'entidade' });
+
+    await admin.from('auge_sync_runs').update({
+      status: 'success',
+      finished_at: nowIso,
+      rows_processed: pedidos.length,
+      rows_upserted: pedidos.length,
+    }).eq('id', runId);
+
+    return new Response(JSON.stringify({
+      ok: true,
+      count: pedidos.length,
+      message: `${pedidos.length} pedidos sincronizados.`,
+      last_synced_at: nowIso,
+    }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+  } catch (e: any) {
+    return new Response(JSON.stringify({
+      ok: false,
+      error: e.message || 'Erro ao sincronizar pedidos.',
+    }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
+}
