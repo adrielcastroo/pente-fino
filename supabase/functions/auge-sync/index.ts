@@ -4458,6 +4458,7 @@ Deno.serve(async (req) => {
     const { csrf, apiToken } = await login(jar);
     const auth = { jar, csrf, apiToken };
 
+    try {
 
     if (action === 'ping') {
       return new Response(JSON.stringify({
