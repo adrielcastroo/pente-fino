@@ -6875,54 +6875,88 @@ Deno.serve(async (req) => {
 });
 
 
-// ---------- fetchPedidos (DataTables server-side) ----------
+// ---------- fetchPedidos (getListaGestaoPedidos.php) ----------
 async function fetchPedidos(
   auth: { jar: Jar; csrf: string; apiToken: string | null },
-  since?: string,
+  dateFrom?: string,
+  dateTo?: string,
   length = 500,
 ): Promise<any[]> {
-  const columns = [
-    'id', 'code', 'number', 'customer', 'supervisor', 'status', 'created_at',
-    'updated_at', 'delivery_date', 'nf', 'total'
-  ];
-  const body = dtBody(columns, length);
+  const path = '/l.unilux/modComercial/ajax/getListaGestaoPedidos.php';
+  const body = new URLSearchParams();
+  body.set('pesquisa[idAcao]', '1');
+  // Status IDs: 10,12,20,30,40,50,55,60 (Aberto a Entregue)
+  body.set('pesquisa[Situacao][0]', '10');
+  body.set('pesquisa[Situacao][1]', '12');
+  body.set('pesquisa[Situacao][2]', '20');
+  body.set('pesquisa[Situacao][3]', '30');
+  body.set('pesquisa[Situacao][4]', '40');
+  body.set('pesquisa[Situacao][5]', '50');
+  body.set('pesquisa[Situacao][6]', '55');
+  body.set('pesquisa[Situacao][7]', '60');
+  body.set('pesquisa[valueAnaliseTecnica]', 'N');
+  if (dateFrom) body.set('pesquisa[dtPedidoDe]', dateFrom);
+  if (dateTo) body.set('pesquisa[dtPedidoAte]', dateTo);
 
-  // DataTables server-side filter: quando 'since' é fornecido, adicionamos
-  // como filtro de coluna no body (postData.filters ou similar).
-  // Como o formato exato varia, tentamos o endpoint com filtro via query param
-  // como fallback, já que alguns DataTables do Auge suportam ?since=...
-  if (since) {
-    const url = `${AUGE_BASE_URL}/api/v1/sales-orders/list?${since}`;
-    return fetchDataTables(auth, url, body);
-  }
-  return postApi(auth, '/api/v1/sales-orders/list', body);
-}
-
-// Helper para DataTables com URL personalizada (permite query params)
-async function fetchDataTables(
-  auth: { jar: Jar; csrf: string; apiToken: string | null },
-  url: string,
-  body: URLSearchParams,
-): Promise<any[]> {
   const headers: Record<string, string> = {
     'Cookie': auth.jar.header(),
     'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
     'X-Requested-With': 'XMLHttpRequest',
     'X-CSRF-TOKEN': auth.csrf,
     'Origin': AUGE_BASE_URL,
-    'Referer': `${AUGE_BASE_URL}/home`,
+    'Referer': `${AUGE_BASE_URL}/l.unilux/modComercial/pedidos/gestaoPedidos.php`,
     'User-Agent': UA,
     'Accept': 'application/json, text/javascript, */*; q=0.01',
     'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
   };
   if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
-  const res = await fetch(url, { method: 'POST', headers, body });
+  const res = await fetch(`${AUGE_BASE_URL}${path}`, { method: 'POST', headers, body });
   auth.jar.ingest(res);
   const text = await res.text();
-  if (!res.ok) throw new Error(`${url} HTTP ${res.status}: ${text.slice(0, 200)}`);
+  if (!res.ok) throw new Error(`${path} HTTP ${res.status}: ${text.slice(0, 200)}`);
   let j: any;
-  try { j = JSON.parse(text); } catch { throw new Error(`Resposta não-JSON em sales-orders: ${text.slice(0, 120)}`); }
+  try { j = JSON.parse(text); } catch { throw new Error(`Resposta não-JSON em getListaGestaoPedidos: ${text.slice(0, 120)}`); }
   return Array.isArray(j?.data) ? j.data : [];
+}
+
+// ---------- mapearPedidoAuge ----------
+function mapPedidoAuge(row: any): any {
+  const parseDate = (v: any): string | null => {
+    if (!v) return null;
+    const s = String(v).trim();
+    if (!s) return null;
+    // Formatos possíveis: DD/MM/YYYY, YYYY-MM-DD, timestamp
+    if (s.includes('/')) {
+      const parts = s.split('/');
+      if (parts.length === 3) return `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+    }
+    return s.length >= 10 ? s.slice(0, 10) : s;
+  };
+  const parseNum = (v: any): number => {
+    if (v == null) return 0;
+    const n = Number(String(v).replace(/[^\d.,-]/g, '').replace(',', '.'));
+    return Number.isFinite(n) ? n : 0;
+  };
+
+  return {
+    cd_pedido: String(row['NumAtCard'] ?? row['id'] ?? row['code'] ?? '').trim(),
+    nr_pedido: String(row['NumAtCard'] ?? '').trim() || String(row['id'] ?? ''),
+    nome_cliente: String(row['CardName'] ?? '').trim(),
+    cliente_final: String(row['U_dsCliFim'] ?? '').trim() || null,
+    supervisor: String(row['SlpName'] ?? '').trim() || null,
+    dt_documento: parseDate(row['DocDate']),
+    dt_efetivacao: parseDate(row['dtEfetivacao']),
+    dt_entrega_prevista: parseDate(row['DocDueDate']),
+    situacao_id: row['idSituacao'] ?? null,
+    situacao: String(row['idSituacao'] ?? '').trim() || null,
+    status_tms: String(row['dsStatusTMS'] ?? '').trim() || null,
+    nf_numero: String(row['invoice_number'] ?? '').trim() || null,
+    nf_serie: String(row['invoice_serie'] ?? '').trim() || null,
+    vl_produtos: parseNum(row['vlProdutos']),
+    vl_impostos: parseNum(row['vlImpostos']),
+    vl_total: parseNum(row['vlTotalPedido']),
+    sincronizado_em: new Date().toISOString(),
+  };
 }
 
 
@@ -6966,14 +7000,36 @@ if (action === 'sync_pedidos') {
       }
     }
 
-    // Chave do DataTables do AUGE (campo para order by)
-    const since = lastMaxDt
-      ? `created_at[gt.${lastMaxDt}]`
-      : undefined;
+    // Buscar todos os pedidos (com paginação se necessário)
+    let allPedidos: any[] = [];
+    let offset = 0;
+    const batchSize = 500;
 
-    let pedidos = await fetchPedidos(auth, lastMaxDt ? `created_at[gt.${lastMaxDt}]` : undefined, 500);
+    while (true) {
+      // Para sync incremental, usa a data como filtro
+      const dateFrom = lastMaxDt
+        ? (() => {
+            const d = new Date(lastMaxDt);
+            return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+          })()
+        : undefined;
 
-    if (!pedidos || pedidos.length === 0) {
+      const batch = await fetchPedidos(auth, dateFrom, undefined, batchSize);
+      if (!batch || batch.length === 0) break;
+
+      // Mapear campos do Auge para o formato do Supabase
+      const mapped = batch.map(mapPedidoAuge);
+      allPedidos.push(...mapped);
+
+      // Se pegou menos que o tamanho do batch, acabou
+      if (batch.length < batchSize) break;
+
+      offset += batchSize;
+      // Limite de segurança para evitar loop infinito
+      if (allPedidos.length >= 5000) break;
+    }
+
+    if (allPedidos.length === 0) {
       return new Response(JSON.stringify({
         ok: true, count: 0, message: 'Nenhum pedido encontrado. Este pode ser o estado inicial.'
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -6982,7 +7038,7 @@ if (action === 'sync_pedidos') {
     // Upsert na tabela supabase
     const { error } = await admin
       .from('auge_pedidos')
-      .upsert(pedidos, { onConflict: 'cd_pedido' });
+      .upsert(allPedidos, { onConflict: 'cd_pedido' });
 
     if (error) throw error;
 
