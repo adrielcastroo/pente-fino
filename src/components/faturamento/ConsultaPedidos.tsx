@@ -109,7 +109,7 @@ export default function ConsultaPedidos({ onPedidosSelecionados }: ConsultaPedid
             .range(offset, offset + BATCH - 1);
           if (error) throw error;
           if (!data || data.length === 0) break;
-          all.push(...(data as PedidoAuge[]));
+          all.push(...(data as unknown as PedidoAuge[]));
           offset += BATCH;
           hasMore = data.length === BATCH;
         }
@@ -119,7 +119,6 @@ export default function ConsultaPedidos({ onPedidosSelecionados }: ConsultaPedid
     // Aumentamos os tempos de cache para evitar refetch desnecessário ao trocar de aba
     staleTime: 5 * 60 * 1000, // 5 minutos
     gcTime: 30 * 60 * 1000, // 30 minutos
-    cacheTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false, // Não refetch ao voltar na aba
     refetchOnMount: false, // Não refetch ao montar componente (usa cache)
     refetchInterval: false, // Sem polling automático

@@ -808,6 +808,75 @@ export type Database = {
         }
         Relationships: []
       }
+      auge_pedidos: {
+        Row: {
+          id: string
+          cd_pedido: string
+          nr_pedido: string | null
+          nome_cliente: string | null
+          cliente_final: string | null
+          supervisor: string | null
+          dt_documento: string | null
+          dt_efetivacao: string | null
+          dt_entrega_prevista: string | null
+          situacao_id: number | null
+          situacao: string | null
+          status_tms: string | null
+          nf_numero: string | null
+          nf_serie: string | null
+          vl_produtos: number | null
+          vl_impostos: number | null
+          vl_total: number | null
+          sincronizado_em: string
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          cd_pedido: string
+          nr_pedido?: string | null
+          nome_cliente?: string | null
+          cliente_final?: string | null
+          supervisor?: string | null
+          dt_documento?: string | null
+          dt_efetivacao?: string | null
+          dt_entrega_prevista?: string | null
+          situacao_id?: number | null
+          situacao?: string | null
+          status_tms?: string | null
+          nf_numero?: string | null
+          nf_serie?: string | null
+          vl_produtos?: number | null
+          vl_impostos?: number | null
+          vl_total?: number | null
+          sincronizado_em?: string
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          cd_pedido?: string
+          nr_pedido?: string | null
+          nome_cliente?: string | null
+          cliente_final?: string | null
+          supervisor?: string | null
+          dt_documento?: string | null
+          dt_efetivacao?: string | null
+          dt_entrega_prevista?: string | null
+          situacao_id?: number | null
+          situacao?: string | null
+          status_tms?: string | null
+          nf_numero?: string | null
+          nf_serie?: string | null
+          vl_produtos?: number | null
+          vl_impostos?: number | null
+          vl_total?: number | null
+          sincronizado_em?: string
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       auge_sync_runs: {
         Row: {
           created_at: string | null

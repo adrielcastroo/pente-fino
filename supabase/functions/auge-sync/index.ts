@@ -7054,14 +7054,14 @@ if (action === 'sync_pedidos') {
     await admin.from('auge_sync_runs').update({
       status: 'success',
       finished_at: nowIso,
-      rows_processed: pedidos.length,
-      rows_upserted: pedidos.length,
+      rows_processed: allPedidos.length,
+      rows_upserted: allPedidos.length,
     }).eq('id', runId);
 
     return new Response(JSON.stringify({
       ok: true,
-      count: pedidos.length,
-      message: `${pedidos.length} pedidos sincronizados.`,
+      count: allPedidos.length,
+      message: `${allPedidos.length} pedidos sincronizados.`,
       last_synced_at: nowIso,
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
