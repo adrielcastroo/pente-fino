@@ -6829,6 +6829,120 @@ Deno.serve(async (req) => {
       });
     }
 
+
+// ==============================================================
+// sync_pedidos (consulta específica dos pedidos do auge)
+// Action para popular a tabela de pedidos do AUGE.
+// Utiliza incremental sync se houver last_synced_at registrado.
+// ==============================================================
+if (action === 'sync_pedidos') {
+  try {
+    const runId = crypto.randomUUID();
+    await admin.from('auge_sync_runs').insert({
+      id: runId,
+      entidade: 'pedidos',
+      triggered_by: triggeredBy,
+      created_at: new Date().toISOString(),
+      status: 'running',
+    });
+
+    let lastMaxDt: string | null = null;
+    let pedidosRes = await admin
+      .from('auge_sync_state')
+      .select('last_max_dt, last_synced_at')
+      .eq('entidade', 'pedidos')
+      .maybeSingle();
+
+    if (pedidosRes.data?.last_max_dt) {
+      lastMaxDt = pedidosRes.data.last_max_dt;
+    } else {
+      const maxRun = await admin
+        .from('auge_sync_runs')
+        .select('created_at')
+        .eq('entidade', 'pedidos')
+        .is('status', 'success')
+        .gt('created_at', '2026-01-01')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (maxRun?.data?.created_at) {
+        lastMaxDt = maxRun.data.created_at;
+      }
+    }
+
+    // Buscar todos os pedidos (com paginação se necessário)
+    let allPedidos: any[] = [];
+    let offset = 0;
+    const batchSize = 500;
+
+    while (true) {
+      // Para sync incremental, usa a data como filtro
+      const dateFrom = lastMaxDt
+        ? (() => {
+            const d = new Date(lastMaxDt);
+            return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+          })()
+        : undefined;
+
+      const batch = await fetchPedidos(auth, dateFrom, undefined, batchSize);
+      if (!batch || batch.length === 0) break;
+
+      // Mapear campos do Auge para o formato do Supabase
+      const mapped = batch.map(mapPedidoAuge);
+      allPedidos.push(...mapped);
+
+      // Se pegou menos que o tamanho do batch, acabou
+      if (batch.length < batchSize) break;
+
+      offset += batchSize;
+      // Limite de segurança para evitar loop infinito
+      if (allPedidos.length >= 5000) break;
+    }
+
+    if (allPedidos.length === 0) {
+      return new Response(JSON.stringify({
+        ok: true, count: 0, message: 'Nenhum pedido encontrado. Este pode ser o estado inicial.'
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    // Upsert na tabela supabase
+    const { error } = await admin
+      .from('auge_pedidos')
+      .upsert(allPedidos, { onConflict: 'cd_pedido' });
+
+    if (error) throw error;
+
+    // Atualiza estado incremental
+    const nowIso = new Date().toISOString();
+    await admin.from('auge_sync_state').upsert({
+      entidade: 'pedidos',
+      last_synced_at: nowIso,
+      last_max_dt: nowIso,
+      last_status: 'success',
+    }, { onConflict: 'entidade' });
+
+    await admin.from('auge_sync_runs').update({
+      status: 'success',
+      finished_at: nowIso,
+      rows_processed: allPedidos.length,
+      rows_upserted: allPedidos.length,
+    }).eq('id', runId);
+
+    return new Response(JSON.stringify({
+      ok: true,
+      count: allPedidos.length,
+      message: `${allPedidos.length} pedidos sincronizados.`,
+      last_synced_at: nowIso,
+    }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+  } catch (e: any) {
+    return new Response(JSON.stringify({
+      ok: false,
+      error: e.message || 'Erro ao sincronizar pedidos.',
+    }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
+}
+
     let syncPayload: any = {};
     try { syncPayload = await req.clone().json(); } catch (err) { /* GET ou body ausente */ }
     const syncOptions = {
@@ -6960,115 +7074,3 @@ function mapPedidoAuge(row: any): any {
 }
 
 
-// ==============================================================
-// sync_pedidos (consulta específica dos pedidos do auge)
-// Action para popular a tabela de pedidos do AUGE.
-// Utiliza incremental sync se houver last_synced_at registrado.
-// ==============================================================
-if (action === 'sync_pedidos') {
-  try {
-    const runId = crypto.randomUUID();
-    await admin.from('auge_sync_runs').insert({
-      id: runId,
-      entidade: 'pedidos',
-      triggered_by: triggeredBy,
-      created_at: new Date().toISOString(),
-      status: 'running',
-    });
-
-    let lastMaxDt: string | null = null;
-    let pedidosRes = await admin
-      .from('auge_sync_state')
-      .select('last_max_dt, last_synced_at')
-      .eq('entidade', 'pedidos')
-      .maybeSingle();
-
-    if (pedidosRes.data?.last_max_dt) {
-      lastMaxDt = pedidosRes.data.last_max_dt;
-    } else {
-      const maxRun = await admin
-        .from('auge_sync_runs')
-        .select('created_at')
-        .eq('entidade', 'pedidos')
-        .is('status', 'success')
-        .gt('created_at', '2026-01-01')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (maxRun?.data?.created_at) {
-        lastMaxDt = maxRun.data.created_at;
-      }
-    }
-
-    // Buscar todos os pedidos (com paginação se necessário)
-    let allPedidos: any[] = [];
-    let offset = 0;
-    const batchSize = 500;
-
-    while (true) {
-      // Para sync incremental, usa a data como filtro
-      const dateFrom = lastMaxDt
-        ? (() => {
-            const d = new Date(lastMaxDt);
-            return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
-          })()
-        : undefined;
-
-      const batch = await fetchPedidos(auth, dateFrom, undefined, batchSize);
-      if (!batch || batch.length === 0) break;
-
-      // Mapear campos do Auge para o formato do Supabase
-      const mapped = batch.map(mapPedidoAuge);
-      allPedidos.push(...mapped);
-
-      // Se pegou menos que o tamanho do batch, acabou
-      if (batch.length < batchSize) break;
-
-      offset += batchSize;
-      // Limite de segurança para evitar loop infinito
-      if (allPedidos.length >= 5000) break;
-    }
-
-    if (allPedidos.length === 0) {
-      return new Response(JSON.stringify({
-        ok: true, count: 0, message: 'Nenhum pedido encontrado. Este pode ser o estado inicial.'
-      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
-
-    // Upsert na tabela supabase
-    const { error } = await admin
-      .from('auge_pedidos')
-      .upsert(allPedidos, { onConflict: 'cd_pedido' });
-
-    if (error) throw error;
-
-    // Atualiza estado incremental
-    const nowIso = new Date().toISOString();
-    await admin.from('auge_sync_state').upsert({
-      entidade: 'pedidos',
-      last_synced_at: nowIso,
-      last_max_dt: nowIso,
-      last_status: 'success',
-    }, { onConflict: 'entidade' });
-
-    await admin.from('auge_sync_runs').update({
-      status: 'success',
-      finished_at: nowIso,
-      rows_processed: allPedidos.length,
-      rows_upserted: allPedidos.length,
-    }).eq('id', runId);
-
-    return new Response(JSON.stringify({
-      ok: true,
-      count: allPedidos.length,
-      message: `${allPedidos.length} pedidos sincronizados.`,
-      last_synced_at: nowIso,
-    }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-
-  } catch (e: any) {
-    return new Response(JSON.stringify({
-      ok: false,
-      error: e.message || 'Erro ao sincronizar pedidos.',
-    }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-  }
-}
