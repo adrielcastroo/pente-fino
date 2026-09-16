@@ -33,7 +33,7 @@
 //   - POST /api/v1/inventory/invty-available-by-categories   -> saldo (DataTables server-side)
 //   - POST /api/v1/inventory/outgoing-items                  -> saídas agregadas por item (DataTables)
 
-import { createClient } from 'npm:@supabase/supabase-js@2';
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
