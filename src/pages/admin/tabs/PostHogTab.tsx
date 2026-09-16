@@ -4,9 +4,8 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { StatCard, CardShell, SectionToolbar } from '@/components/design-system';
 import { AlertTriangle, Activity, RefreshCw, TrendingUp, BarChart3, ExternalLink } from 'lucide-react';
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid,
@@ -115,38 +114,42 @@ export default function PostHogTab() {
   return (
     <div className="space-y-4">
       {/* Controles */}
-      <Card className="p-4 flex flex-wrap gap-3 items-end">
-        <div className="flex-1 min-w-[220px]">
-          <label className="text-xs text-muted-foreground">Evento / feature</label>
-          <Select value={eventFilter} onValueChange={setEventFilter}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent className="max-h-80">
-              <SelectItem value="all">Todos os eventos</SelectItem>
-              {topEvents.map((d) => (
-                <SelectItem key={d.id} value={d.name}>
-                  {d.name} {d.volume_30_day ? `(${d.volume_30_day.toLocaleString('pt-BR')})` : ''}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      <CardShell title="Controles de filtro" icon={<Activity className="h-4 w-4 text-primary" />}
+        action={
+          <Button variant="ghost" size="sm" onClick={load} disabled={loading}>
+            <RefreshCw className={`h-3.5 w-3.5 mr-1 ${loading ? 'animate-spin' : ''}`} /> Atualizar
+          </Button>
+        }>
+        <div className="flex flex-wrap gap-3 items-end">
+          <div className="flex-1 min-w-[220px]">
+            <label className="text-xs text-muted-foreground">Evento / feature</label>
+            <Select value={eventFilter} onValueChange={setEventFilter}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent className="max-h-80">
+                <SelectItem value="all">Todos os eventos</SelectItem>
+                {topEvents.map((d) => (
+                  <SelectItem key={d.id} value={d.name}>
+                    {d.name} {d.volume_30_day ? `(${d.volume_30_day.toLocaleString('pt-BR')})` : ''}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="w-40">
+            <label className="text-xs text-muted-foreground">Período</label>
+            <Select value={period} onValueChange={setPeriod}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="-1h">Última 1h</SelectItem>
+                <SelectItem value="-6h">Últimas 6h</SelectItem>
+                <SelectItem value="-24h">Últimas 24h</SelectItem>
+                <SelectItem value="-7d">7 dias</SelectItem>
+                <SelectItem value="-30d">30 dias</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-        <div className="w-40">
-          <label className="text-xs text-muted-foreground">Período</label>
-          <Select value={period} onValueChange={setPeriod}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="-1h">Última 1h</SelectItem>
-              <SelectItem value="-6h">Últimas 6h</SelectItem>
-              <SelectItem value="-24h">Últimas 24h</SelectItem>
-              <SelectItem value="-7d">7 dias</SelectItem>
-              <SelectItem value="-30d">30 dias</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <Button variant="ghost" size="sm" onClick={load} disabled={loading}>
-          <RefreshCw className={`h-3.5 w-3.5 mr-1 ${loading ? 'animate-spin' : ''}`} /> Atualizar
-        </Button>
-      </Card>
+      </CardShell>
 
       {err && (
         <Card className="p-3 border-destructive/40 bg-destructive/5 text-sm text-destructive">{err}</Card>
@@ -154,29 +157,15 @@ export default function PostHogTab() {
 
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Card className="p-4">
-          <div className="text-xs text-muted-foreground flex items-center gap-1"><Activity className="h-3.5 w-3.5" /> Eventos no período</div>
-          <div className="text-2xl font-bold tabular-nums mt-1">{trend.reduce((s, p) => s + p.value, 0).toLocaleString('pt-BR')}</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-xs text-muted-foreground flex items-center gap-1"><TrendingUp className="h-3.5 w-3.5" /> Eventos distintos</div>
-          <div className="text-2xl font-bold tabular-nums mt-1">{eventDefs.length.toLocaleString('pt-BR')}</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-xs text-muted-foreground flex items-center gap-1"><BarChart3 className="h-3.5 w-3.5" /> Insights salvos</div>
-          <div className="text-2xl font-bold tabular-nums mt-1">{insights.length.toLocaleString('pt-BR')}</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-xs text-muted-foreground">Última amostra</div>
-          <div className="text-2xl font-bold tabular-nums mt-1">{events.length}</div>
-        </Card>
+        <StatCard icon={<Activity className="h-3.5 w-3.5" />} label="Eventos no período" value={trend.reduce((s, p) => s + p.value, 0).toLocaleString('pt-BR')} variant="primary" />
+        <StatCard icon={<TrendingUp className="h-3.5 w-3.5" />} label="Eventos distintos" value={eventDefs.length.toLocaleString('pt-BR')} variant="primary" />
+        <StatCard icon={<BarChart3 className="h-3.5 w-3.5" />} label="Insights salvos" value={insights.length.toLocaleString('pt-BR')} />
+        <StatCard icon={<Activity className="h-3.5 w-3.5" />} label="Última amostra" value={events.length} />
       </div>
 
       {/* Trend */}
-      <Card className="p-4">
-        <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
-          <TrendingUp className="h-4 w-4 text-primary" /> Tendência {eventFilter !== 'all' ? `— ${eventFilter}` : ''}
-        </h3>
+      <CardShell title="Tendência" icon={<TrendingUp className="h-4 w-4 text-primary" />}
+        subtitle={eventFilter !== 'all' ? `Evento: ${eventFilter}` : 'Todos os eventos'}>
         {trend.length === 0 ? (
           <div className="h-48 flex items-center justify-center text-sm text-muted-foreground">Sem dados no período.</div>
         ) : (
@@ -192,14 +181,12 @@ export default function PostHogTab() {
             </ResponsiveContainer>
           </div>
         )}
-      </Card>
+      </CardShell>
 
       {/* Insights salvos */}
       {insights.length > 0 && (
-        <Card className="p-4">
-          <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
-            <BarChart3 className="h-4 w-4 text-primary" /> Insights do projeto
-          </h3>
+        <CardShell title="Insights do projeto" icon={<BarChart3 className="h-4 w-4 text-primary" />}
+          variant="elevated">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {insights.slice(0, 10).map((i) => (
               <a key={i.id} href={`https://us.posthog.com/insights/${i.short_id}`}
@@ -210,11 +197,12 @@ export default function PostHogTab() {
               </a>
             ))}
           </div>
-        </Card>
+        </CardShell>
       )}
 
       {/* Eventos recentes */}
-      <Card className="p-0 overflow-hidden">
+      <CardShell title="Eventos recentes" icon={<Activity className="h-4 w-4 text-primary" />}
+        action={<Badge variant="outline">{events.length}</Badge>}>
         <div className="p-3 border-b border-border/40 flex items-center gap-2">
           <Activity className="h-4 w-4 text-primary" />
           <h3 className="font-semibold text-sm">Eventos recentes</h3>
@@ -250,7 +238,7 @@ export default function PostHogTab() {
             </table>
           </div>
         )}
-      </Card>
+      </CardShell>
     </div>
   );
 }

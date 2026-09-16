@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { StatCard, CardShell, SectionToolbar } from '@/components/design-system';
 import { Activity, AlertTriangle, Sparkles, RefreshCw, TrendingUp, Zap } from 'lucide-react';
 
 export default function ObservabilityTab() {
@@ -43,23 +44,17 @@ export default function ObservabilityTab() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
-        <Button size="sm" variant="ghost" onClick={load}><RefreshCw className="h-3.5 w-3.5" /> Atualizar</Button>
-      </div>
+      <SectionToolbar onRefresh={load} />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <MetricCard icon={Sparkles} label="Chamadas IA (24h)" value={stats.aiUsage24h} />
-        <MetricCard icon={TrendingUp} label="Chamadas IA (7d)" value={stats.aiUsage7d} />
-        <MetricCard icon={AlertTriangle} label="Deletes (24h)" value={stats.deletes24h}
-          highlight={stats.deletes24h > 20 ? 'warn' : undefined} />
-        <MetricCard icon={AlertTriangle} label="Falhas de login (24h)" value={stats.authFails24h}
-          highlight={stats.authFails24h > 5 ? 'error' : undefined} />
+        <StatCard icon={Sparkles} label="Chamadas IA (24h)" value={stats.aiUsage24h} variant="primary" />
+        <StatCard icon={TrendingUp} label="Chamadas IA (7d)" value={stats.aiUsage7d} variant="primary" />
+        <StatCard icon={AlertTriangle} label="Deletes (24h)" value={stats.deletes24h} />
+        <StatCard icon={AlertTriangle} label="Falhas de login (24h)" value={stats.authFails24h} />
       </div>
 
-      <Card className="p-5">
-        <h3 className="font-semibold text-sm flex items-center gap-2 mb-3">
-          <Activity className="h-4 w-4" /> Entidades mais alteradas (24h)
-        </h3>
+      <CardShell title="Entidades mais alteradas (24h)" icon={<Activity className="h-4 w-4 text-primary" />}
+        subtitle="Top 8 entidades com mais alterações">
         {stats.topEntities.length === 0 ? (
           <p className="text-sm text-muted-foreground">Sem alterações nas últimas 24h.</p>
         ) : (
@@ -78,56 +73,31 @@ export default function ObservabilityTab() {
             })}
           </div>
         )}
-      </Card>
+      </CardShell>
 
-      <Card className="p-5">
-        <h3 className="font-semibold text-sm flex items-center gap-2 mb-2">
-          <Zap className="h-4 w-4" /> Ferramentas externas
-        </h3>
+      <CardShell title="Ferramentas externas" icon={<Zap className="h-4 w-4 text-primary" />}
+        variant="elevated">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
-          <ExternalToolCard
-            name="Sentry"
-            desc="Captura erros de runtime em produção com stack traces e reprodução."
+          <a
             href="/admin?tab=sentry"
-            cta="Abrir aba Sentry →"
-          />
-          <ExternalToolCard
-            name="PostHog"
-            desc="Analytics de produto: funil, retenção, session replay, A/B tests."
+            className="block p-3 rounded border border-border/40 bg-card/60 hover:bg-primary/5 hover:border-primary/30 transition-colors"
+          >
+            <p className="font-semibold text-sm">Sentry</p>
+            <p className="text-xs text-muted-foreground mt-1">Captura erros de runtime em produção com stack traces e reprodução.</p>
+          </a>
+          <a
             href="/admin?tab=posthog"
-            cta="Abrir aba PostHog →"
-          />
+            className="block p-3 rounded border border-border/40 bg-card/60 hover:bg-primary/5 hover:border-primary/30 transition-colors"
+          >
+            <p className="font-semibold text-sm">PostHog</p>
+            <p className="text-xs text-muted-foreground mt-1">Analytics de produto: funil, retenção, session replay, A/B tests.</p>
+          </a>
         </div>
         <p className="text-xs text-muted-foreground mt-4">
           <Badge variant="outline" className="text-[10px] mr-1.5">Logs Edge Functions</Badge>
           disponíveis via ferramentas de admin do backend (Cloud → Functions → Logs).
         </p>
-      </Card>
+      </CardShell>
     </div>
-  );
-}
-
-function MetricCard({ icon: Icon, label, value, highlight }: { icon: any; label: string; value: any; highlight?: 'warn' | 'error' }) {
-  const color = highlight === 'error' ? 'text-destructive' : highlight === 'warn' ? 'text-warning' : 'text-foreground';
-  return (
-    <Card className="p-4">
-      <div className="flex items-center gap-2 text-muted-foreground text-xs">
-        <Icon className="h-3.5 w-3.5" /> {label}
-      </div>
-      <div className={`text-2xl font-bold mt-1 tabular-nums ${color}`}>{value.toLocaleString('pt-BR')}</div>
-    </Card>
-  );
-}
-
-function ExternalToolCard({ name, desc, href, cta }: { name: string; desc: string; href: string; cta: string }) {
-  return (
-    <a
-      href={href}
-      className="block p-3 rounded border border-border/40 bg-muted/20 hover:bg-muted/40 hover:border-primary/40 transition-colors"
-    >
-      <p className="font-semibold text-sm">{name}</p>
-      <p className="text-xs text-muted-foreground mt-1">{desc}</p>
-      <p className="text-[11px] text-primary mt-2 font-medium">{cta}</p>
-    </a>
   );
 }

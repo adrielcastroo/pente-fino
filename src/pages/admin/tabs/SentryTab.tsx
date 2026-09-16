@@ -5,9 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { StatCard, CardShell, SectionToolbar } from '@/components/design-system';
 import { AlertTriangle, Bug, RefreshCw, ExternalLink, Search, Activity } from 'lucide-react';
 
 type SentryProject = { id: string; slug: string; name: string; platform?: string };
@@ -126,57 +125,64 @@ export default function SentryTab() {
   return (
     <div className="space-y-4">
       {/* Controles */}
-      <Card className="p-4 flex flex-wrap gap-3 items-end">
-        <div className="flex-1 min-w-[200px]">
-          <label className="text-xs text-muted-foreground">Projeto</label>
-          <Select value={project} onValueChange={setProject}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os projetos</SelectItem>
-              {projects.map((p) => (
-                <SelectItem key={p.id} value={p.id}>{p.name} ({p.slug})</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="w-32">
-          <label className="text-xs text-muted-foreground">Período</label>
-          <Select value={period} onValueChange={setPeriod}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1h">1 hora</SelectItem>
-              <SelectItem value="24h">24 horas</SelectItem>
-              <SelectItem value="7d">7 dias</SelectItem>
-              <SelectItem value="14d">14 dias</SelectItem>
-              <SelectItem value="30d">30 dias</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex-1 min-w-[240px]">
-          <label className="text-xs text-muted-foreground">Query (Sentry syntax)</label>
-          <div className="flex gap-2">
-            <Input value={query} onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && load()}
-              placeholder="is:unresolved level:error" />
-            <Button size="icon" variant="secondary" onClick={load}><Search className="h-4 w-4" /></Button>
+      <CardShell title="Controles de filtro" icon={<Bug className="h-4 w-4 text-primary" />}
+        action={
+          <Button variant="ghost" size="sm" onClick={load} disabled={loading}>
+            <RefreshCw className={`h-3.5 w-3.5 mr-1 ${loading ? 'animate-spin' : ''}`} /> Atualizar
+          </Button>
+        }>
+        <div className="flex flex-wrap gap-3 items-end">
+          <div className="flex-1 min-w-[200px]">
+            <label className="text-xs text-muted-foreground">Projeto</label>
+            <Select value={project} onValueChange={setProject}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os projetos</SelectItem>
+                {projects.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>{p.name} ({p.slug})</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="w-32">
+            <label className="text-xs text-muted-foreground">Período</label>
+            <Select value={period} onValueChange={setPeriod}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1h">1 hora</SelectItem>
+                <SelectItem value="24h">24 horas</SelectItem>
+                <SelectItem value="7d">7 dias</SelectItem>
+                <SelectItem value="14d">14 dias</SelectItem>
+                <SelectItem value="30d">30 dias</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex-1 min-w-[240px]">
+            <label className="text-xs text-muted-foreground">Query (Sentry syntax)</label>
+            <div className="flex gap-2">
+              <Input value={query} onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && load()}
+                placeholder="is:unresolved level:error" />
+              <Button size="icon" variant="secondary" onClick={load}><Search className="h-4 w-4" /></Button>
+            </div>
           </div>
         </div>
-        <Button variant="ghost" size="sm" onClick={load} disabled={loading}>
-          <RefreshCw className={`h-3.5 w-3.5 mr-1 ${loading ? 'animate-spin' : ''}`} /> Atualizar
-        </Button>
-      </Card>
+      </CardShell>
 
       {/* Severidade */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-        {(['fatal', 'error', 'warning', 'info', 'debug'] as const).map((lvl) => (
-          <Card key={lvl} className="p-3">
-            <div className="flex items-center justify-between">
-              <Badge className={LEVEL_COLOR[lvl]}>{lvl}</Badge>
-              <span className="text-2xl font-bold tabular-nums">{bySeverity[lvl] ?? 0}</span>
-            </div>
-          </Card>
-        ))}
-      </div>
+      <CardShell title="Severidade das issues" icon={<Activity className="h-4 w-4 text-primary" />}
+        subtitle="Distribuição por nível de gravidade">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+          {(['fatal', 'error', 'warning', 'info', 'debug'] as const).map((lvl) => (
+            <StatCard key={lvl}
+              icon={<Badge className={LEVEL_COLOR[lvl]}>{lvl}</Badge>}
+              label={lvl}
+              value={bySeverity[lvl] ?? 0}
+              variant="default"
+            />
+          ))}
+        </div>
+      </CardShell>
 
       {err && (
         <Card className="p-3 border-destructive/40 bg-destructive/5 text-sm text-destructive">
@@ -185,12 +191,10 @@ export default function SentryTab() {
       )}
 
       {/* Lista de issues */}
-      <Card className="p-0 overflow-hidden">
-        <div className="p-3 border-b border-border/40 flex items-center gap-2">
-          <Bug className="h-4 w-4 text-primary" />
-          <h3 className="font-semibold text-sm">Issues abertas</h3>
-          <Badge variant="outline" className="ml-auto">{issues.length}</Badge>
-        </div>
+      <CardShell title="Issues abertas" icon={<Bug className="h-4 w-4 text-primary" />}
+        action={
+          <Badge variant="outline">{issues.length}</Badge>
+        }>
         {loading ? (
           <div className="p-4 space-y-2">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12" />)}</div>
         ) : issues.length === 0 ? (
@@ -235,7 +239,7 @@ export default function SentryTab() {
             </table>
           </div>
         )}
-      </Card>
+      </CardShell>
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { StatCard, CardShell, SectionToolbar } from '@/components/design-system';
 import {
   ShieldCheck,
   LayoutDashboard,
@@ -291,17 +292,6 @@ export default function AdminLayout() {
 }
 
 // ============ TABS CONTENT (movido para cá) ============
-function SectionToolbar({ hint, onRefresh, loading }: { hint?: string; onRefresh: () => void; loading?: boolean }) {
-  return (
-    <div className="flex items-center justify-between gap-3 flex-wrap">
-      {hint ? <p className="text-xs sm:text-sm text-muted-foreground">{hint}</p> : <span />}
-      <Button size="sm" variant="outline" onClick={onRefresh} disabled={loading} className="h-8 gap-1.5">
-        <RefreshCw className={cn('h-3.5 w-3.5', loading && 'animate-spin')} />
-        Atualizar
-      </Button>
-    </div>
-  );
-}
 
 function OverviewTab() {
   const [stats, setStats] = useState<any>(null);
@@ -377,24 +367,6 @@ function OverviewTab() {
   );
 }
 
-function CardShell({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
-  return (
-    <div className="rounded-md border border-border/40 shadow-sm bg-card/60 p-5">
-      <h3 className="font-semibold mb-3 flex items-center gap-2 text-sm">{icon}{title}</h3>
-      {children}
-    </div>
-  );
-}
-
-function StatCard({ icon: Icon, label, value, variant }: { icon: LucideIcon; label: string; value: any; variant?: string }) {
-  return (
-    <div className={cn('rounded-md border border-border/40 shadow-sm bg-card/60 p-3', variant === 'primary' && 'border-primary/30', variant === 'success' && 'border-emerald-500/30')}>
-      <div className="flex items-center gap-1.5 text-xs text-muted-foreground"><Icon className="h-3.5 w-3.5" />{label}</div>
-      <div className="text-xl font-semibold tabular-nums mt-1">{value}</div>
-    </div>
-  );
-}
-
 const MONITORED_TABLES = [
   'profiles', 'user_roles', 'registros', 'conferences', 'estoque_posicoes', 'estoque_saidas',
   'reservas', 'itens_cadastro', 'expedicao_pecas', 'expedicao_romaneios', 'expedicao_pickings',
@@ -422,14 +394,16 @@ function DatabaseTab() {
   return (
     <div className="space-y-4">
       <SectionToolbar hint="Volumetria em tempo real (respeita RLS — admin enxerga tudo)." onRefresh={load} loading={loading} />
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
-        {rows.map((r) => (
-          <div key={r.table} className="p-3 rounded-md border border-border/40 shadow-sm bg-card/60 hover:border-primary/40 hover:shadow-md transition-colors">
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground truncate"><HardDrive className="h-3 w-3 shrink-0" /><span className="truncate font-mono">{r.table}</span></div>
-            <div className="text-xl font-semibold tabular-nums mt-1">{r.error ? <span className="text-xs text-destructive">erro</span> : (r.count ?? 0).toLocaleString('pt-BR')}</div>
-          </div>
-        ))}
-      </div>
+      <CardShell title="Tabelas monitoradas" icon={<HardDrive className="h-4 w-4 text-primary" />}>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
+          {rows.map((r) => (
+            <div key={r.table} className="p-3 rounded-md border border-border/40 shadow-sm bg-card/60 hover:border-primary/40 hover:shadow-md transition-colors">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground truncate"><HardDrive className="h-3 w-3 shrink-0" /><span className="truncate font-mono">{r.table}</span></div>
+              <div className="text-xl font-semibold tabular-nums mt-1">{r.error ? <span className="text-xs text-destructive">erro</span> : (r.count ?? 0).toLocaleString('pt-BR')}</div>
+            </div>
+          ))}
+        </div>
+      </CardShell>
     </div>
   );
 }
@@ -447,32 +421,34 @@ function AuditTab() {
   return (
     <div className="space-y-3">
       <SectionToolbar hint="Últimas 100 alterações no sistema." onRefresh={load} loading={loading} />
-      {loading ? <Skeleton className="h-64 rounded-md" /> : (
-        <div className="rounded-md border border-border/40 shadow-sm bg-card/60 overflow-hidden">
-          <div className="max-h-[600px] overflow-auto">
-            <table className="w-full text-xs">
-              <thead className="bg-muted/40 sticky top-0 backdrop-blur">
-                <tr className="text-left text-[10px] uppercase tracking-wider text-muted-foreground">
-                  <th className="p-2.5 font-semibold">Quando</th><th className="p-2.5 font-semibold">Quem</th>
-                  <th className="p-2.5 font-semibold">Ação</th><th className="p-2.5 font-semibold">Entidade</th><th className="p-2.5 font-semibold">Campos</th>
-                </tr>
-              </thead>
-              <tbody>
-                {logs.map((l) => (
-                  <tr key={l.id} className="border-t border-border/40 hover:bg-muted/30 transition-colors">
-                    <td className="p-2.5 whitespace-nowrap font-mono text-[10px] text-muted-foreground">{new Date(l.created_at).toLocaleString('pt-BR')}</td>
-                    <td className="p-2.5 truncate max-w-[160px]">{l.user_email || l.user_id?.slice(0, 8) || '—'}</td>
-                    <td className="p-2.5"><Badge variant="outline" className="text-[10px] h-5">{l.action}</Badge></td>
-                    <td className="p-2.5 font-mono">{l.entity}</td>
-                    <td className="p-2.5 text-muted-foreground truncate max-w-[240px]">{(l.changed_keys || []).join(', ')}</td>
+      <CardShell title="Log de auditoria" icon={<ScrollText className="h-4 w-4 text-primary" />} subtitle="Últimas 100 alterações rastreadas no sistema">
+        {loading ? <Skeleton className="h-64 rounded-md" /> : (
+          <div className="rounded-md border border-border/40 bg-card/60 overflow-hidden">
+            <div className="max-h-[600px] overflow-auto">
+              <table className="w-full text-xs">
+                <thead className="bg-muted/40 sticky top-0 backdrop-blur">
+                  <tr className="text-left text-[10px] uppercase tracking-wider text-muted-foreground">
+                    <th className="p-2.5 font-semibold">Quando</th><th className="p-2.5 font-semibold">Quem</th>
+                    <th className="p-2.5 font-semibold">Ação</th><th className="p-2.5 font-semibold">Entidade</th><th className="p-2.5 font-semibold">Campos</th>
                   </tr>
-                ))}
-                {logs.length === 0 && <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">Sem registros.</td></tr>}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {logs.map((l) => (
+                    <tr key={l.id} className="border-t border-border/40 hover:bg-muted/30 transition-colors">
+                      <td className="p-2.5 whitespace-nowrap font-mono text-[10px] text-muted-foreground">{new Date(l.created_at).toLocaleString('pt-BR')}</td>
+                      <td className="p-2.5 truncate max-w-[160px]">{l.user_email || l.user_id?.slice(0, 8) || '—'}</td>
+                      <td className="p-2.5"><Badge variant="outline" className="text-[10px] h-5">{l.action}</Badge></td>
+                      <td className="p-2.5 font-mono">{l.entity}</td>
+                      <td className="p-2.5 text-muted-foreground truncate max-w-[240px]">{(l.changed_keys || []).join(', ')}</td>
+                    </tr>
+                  ))}
+                  {logs.length === 0 && <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">Sem registros.</td></tr>}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </CardShell>
     </div>
   );
 }
@@ -489,14 +465,18 @@ function SecurityTab() {
   useEffect(() => { load(); }, []);
   return (
     <div className="space-y-4">
-      <div className="rounded-md border-primary/30 bg-primary/5 shadow-sm p-4">
-        <h3 className="font-semibold text-sm flex items-center gap-2 mb-2"><ShieldCheck className="h-4 w-4 text-primary" /> Modelo de acesso</h3>
+      <CardShell
+        title="Modelo de acesso"
+        icon={<ShieldCheck className="h-4 w-4 text-primary" />}
+        subtitle="Hierarquia de perfis e regras de acesso baseadas em RLS"
+        variant="elevated"
+      >
         <div className="text-xs text-muted-foreground space-y-1 leading-relaxed">
           <p>• Perfis: <strong className="text-foreground">admin</strong> → <strong className="text-foreground">gerente</strong> → <strong className="text-foreground">supervisor</strong> → <strong className="text-foreground">operador</strong>.</p>
           <p>• Alteração de perfis via aba <strong className="text-foreground">Usuários &amp; Acessos</strong>.</p>
           <p>• Todas as tabelas usam RLS. Admin enxerga tudo via <code className="text-[10px] bg-muted/60 px-1 py-0.5 rounded">has_role()</code>.</p>
         </div>
-      </div>
+      </CardShell>
       <SectionToolbar hint="Eventos de autenticação (login, reset, etc.)." onRefresh={load} loading={loading} />
       {loading ? <Skeleton className="h-64 rounded-md" /> : (
         <div className="rounded-md border border-border/40 shadow-sm bg-card/60 overflow-hidden">

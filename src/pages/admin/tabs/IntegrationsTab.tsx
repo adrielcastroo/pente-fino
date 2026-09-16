@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { CardShell, SectionToolbar } from '@/components/design-system';
 import {
   Sparkles, FileText, Truck, Webhook, Mail, Database, Building2,
   ShieldAlert, LineChart, Zap, Clock, CheckCircle2, XCircle, AlertCircle, ChevronRight,
@@ -69,32 +70,24 @@ export default function IntegrationsTab() {
 
   return (
     <div className="space-y-6">
-      <Card className="p-4 border-primary/30 bg-primary/5">
-        <div className="flex items-start gap-3 text-xs">
-          <ShieldAlert className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-          <div className="flex-1 space-y-1">
-            <div className="flex items-center justify-between">
-              <p className="font-semibold text-foreground">Kill switch global de integrações</p>
-              <Button variant="link" size="sm" className="h-auto p-0 text-primary text-[10px]" asChild>
-                <a href="/admin/auge-sync-status" className="flex items-center gap-1">
-                  Ver status de sincronização <ChevronRight className="h-3 w-3" />
-                </a>
-              </Button>
-            </div>
-            <p className="text-muted-foreground">
-              Ao desativar uma integração aqui, ela para de responder em todo o app imediatamente.
-              Use nossos <code className="text-[10px]">useFeatureFlag()</code> ou consulte
-              <code className="text-[10px]"> integrations.enabled</code> antes de fazer chamadas.
-            </p>
-          </div>
-        </div>
-      </Card>
+      <CardShell title="Kill switch global de integrações" icon={<ShieldAlert className="h-4 w-4 text-primary" />}
+        subtitle="Ao desativar uma integração aqui, ela para de responder em todo o app imediatamente."
+        action={
+          <Button variant="link" size="sm" className="h-auto p-0 text-primary text-[10px]" asChild>
+            <a href="/admin/auge-sync-status" className="flex items-center gap-1">
+              Ver status de sincronização <ChevronRight className="h-3 w-3" />
+            </a>
+          </Button>
+        }
+        variant="elevated">
+        <p className="text-xs text-muted-foreground">
+          Use nossos <code className="text-[10px]">useFeatureFlag()</code> ou consulte
+          <code className="text-[10px]"> integrations.enabled</code> antes de fazer chamadas.
+        </p>
+      </CardShell>
 
       {Object.entries(grouped).map(([cat, list]) => (
-        <div key={cat} className="space-y-3">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            {CATEGORY_LABEL[cat] ?? cat}
-          </h3>
+        <CardShell key={cat} title={CATEGORY_LABEL[cat] ?? cat} icon={<Zap className="h-4 w-4 text-primary" />}>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {list.map((it) => {
               const Icon = ICON[it.key] ?? Zap;
@@ -142,7 +135,7 @@ export default function IntegrationsTab() {
               );
             })}
           </div>
-        </div>
+        </CardShell>
       ))}
     </div>
   );
