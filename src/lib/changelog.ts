@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 // Newest first. Bump LATEST_VERSION when adding entries to trigger "novo" badge.
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '4.13.0',
+    date: '2026-09-16',
+    highlights: [
+      { type: 'feature', text: "Corrige testes de colunas de registro, busca de TAGs e robustez do agente IA — ajusta layouts de colunas (adiciona posicao), toIlikeTokens aceita tokens de 1 char, ilikeOr/ilikeAnd corrigidos, testes de Edge Function pulados sem credenciais" },
+    ],
+  },
+  {
     version: '4.12.6',
     date: '2026-08-31',
     highlights: [
