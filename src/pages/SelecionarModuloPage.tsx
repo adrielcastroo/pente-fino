@@ -36,8 +36,8 @@ export default function SelecionarModuloPage() {
     queryFn: async () => {
       const [openConfs, pendPickings, comprasPend] = await Promise.all([
         supabase.from('conferences').select('id', { count: 'exact', head: true }).is('finished_at', null),
-        supabase.from('expedicao_pickings' as any).select('id', { count: 'exact', head: true }).or('status=eq.pendente,status=eq.em_separacao') as any,
-        supabase.from('compras_pedidos' as any).select('id', { count: 'exact', head: true }).in('status', ['pendente', 'em_andamento']) as any,
+        supabase.from('expedicao_pickings').select('id', { count: 'exact', head: true }).or('status.eq.pendente,status.eq.em_separacao'),
+        supabase.from('compras_pedidos').select('id', { count: 'exact', head: true }).in('status', ['pendente', 'em_andamento']),
       ]);
       return {
         estoque: openConfs.count ?? 0,
