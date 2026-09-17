@@ -615,16 +615,7 @@ html.compact main .space-y-6 > * + * { margin-top: 1rem; }
   min-width: 44px;
 }
 
-/* Container responsivo padrão para páginas internas */
-.page-container {
-  width: 100%;
-  max-width: 100%;
-  margin-inline: auto;
-  padding-inline: 0.5rem;
-}
-@media (min-width: 640px) { .page-container { padding-inline: 1rem; } }
-@media (min-width: 1024px) { .page-container { padding-inline: 1.5rem; } }
-@media (min-width: 1280px) { .page-container { padding-inline: 2rem; } }
+/* Container responsivo padrão para páginas internas — merged with @layer utilities definition above */
 
 /* Garante que flex children não estourem o pai (já está em *, reforça em flex utilitários comuns) */
 .flex > *, .inline-flex > *, .grid > * {

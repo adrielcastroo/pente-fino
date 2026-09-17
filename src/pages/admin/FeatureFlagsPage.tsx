@@ -65,11 +65,11 @@ export default function FeatureFlagsPage() {
   if (!isAdmin) return <Navigate to="/" replace />;
 
   return (
-    <div className="container mx-auto p-6 max-w-4xl space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="page-container space-y-6">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Flag className="h-6 w-6" /> Feature Flags
+          <h1 className="text-xl md:text-2xl font-bold flex items-center gap-2">
+            <Flag className="h-5 w-5 md:h-6 md:w-6" /> Feature Flags
           </h1>
           <p className="text-sm text-muted-foreground">
             Ligue ou desligue funcionalidades em tempo real sem redeploy.
@@ -77,9 +77,9 @@ export default function FeatureFlagsPage() {
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button><Plus className="h-4 w-4" /> Nova flag</Button>
+            <Button className="gap-2"><Plus className="h-4 w-4" /> Nova flag</Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-md">
             <DialogHeader><DialogTitle>Nova feature flag</DialogTitle></DialogHeader>
             <div className="space-y-3">
               <div>

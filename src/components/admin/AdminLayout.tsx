@@ -177,7 +177,7 @@ function AdminSidebar({ activeKey, onSelect }: { activeKey: string; onSelect: (k
   const activeSection = NAV.find((s) => s.items.some((i) => i.key === activeKey));
 
   return (
-    <aside className="sticky top-4 bg-card/60 rounded-md border border-border/40 shadow-sm p-2.5 max-h-[calc(100vh-7rem)] overflow-y-auto">
+    <aside className="sticky top-4 bg-card/60 rounded-md border border-border/40 shadow-sm p-2.5 max-h-[calc(100vh-7rem)] overflow-y-auto lg:w-64 flex-shrink-0">
       <div className="flex items-center justify-between mb-2 px-1">
         <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground/70">
           Painel Admin
@@ -196,17 +196,17 @@ function AdminSidebar({ activeKey, onSelect }: { activeKey: string; onSelect: (k
                 type="button"
                 onClick={() => setCollapsed((c) => ({ ...c, [section.key]: !isOpen }))}
                 className={cn(
-                  'w-full flex items-center gap-2 px-2.5 py-2 rounded-md text-xs font-semibold transition-colors',
+                  'w-full flex items-center gap-2 px-2.5 py-2 rounded-md text-xs font-semibold transition-colors touch-target',
                   isSectionActive ? 'text-foreground bg-muted/50' : 'text-muted-foreground hover:text-foreground hover:bg-muted/30',
                 )}
               >
                 <SecIcon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-                <span className="flex-1 text-left">{section.label}</span>
-                <ChevronDown className={cn('h-3.5 w-3.5 transition-transform', !isOpen && '-rotate-90')} />
+                <span className="flex-1 text-left truncate">{section.label}</span>
+                <ChevronDown className={cn('h-3.5 w-3.5 transition-transform shrink-0 touch-target', !isOpen && '-rotate-90')} />
               </button>
 
               {isOpen && (
-                <div className="ml-3 pl-2 border-l border-border/40 mt-0.5 space-y-0.5">
+                <div className="ml-3 pl-2 border-l border-border/40 mt-0.5 space-y-0.5 min-w-0">
                   {section.items.map((item) => {
                     const ItemIcon = item.icon;
                     const isActive = activeKey === item.key;
@@ -218,7 +218,7 @@ function AdminSidebar({ activeKey, onSelect }: { activeKey: string; onSelect: (k
                         aria-selected={isActive}
                         onClick={() => onSelect(item.key)}
                         className={cn(
-                          'w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors',
+                          'w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors touch-target',
                           isActive
                             ? 'bg-primary text-primary-foreground shadow-sm'
                             : 'text-muted-foreground hover:text-foreground hover:bg-muted/40',
@@ -260,8 +260,8 @@ export default function AdminLayout() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-border/40 bg-background/95 backdrop-blur px-4 py-2.5">
-        <div className="flex items-center gap-3">
+      <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-border/40 bg-background/95 backdrop-blur px-4 py-2.5 flex-wrap">
+        <div className="flex items-center gap-3 flex-wrap">
           <Button
             variant="outline"
             size="sm"
@@ -276,12 +276,12 @@ export default function AdminLayout() {
             <Badge variant="outline" className="font-mono h-6 px-2 text-[10px]">v{version}</Badge>
           </div>
         </div>
-        <Badge variant="secondary" className="gap-1 h-7 px-2.5 text-xs">
+        <Badge variant="secondary" className="gap-1 h-7 px-2.5 text-xs shrink-0">
           <ShieldCheck className="h-3 w-3" /> {user?.email}
         </Badge>
       </header>
 
-      <div className="grid grid-cols-[260px_1fr] gap-4 items-start p-4">
+      <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-4 items-start p-4">
         <AdminSidebar activeKey={activeKey} onSelect={setTab} />
         <main className="min-w-0">
           {isSubRoute ? (
@@ -350,7 +350,7 @@ function OverviewTab() {
           <ul className="divide-y divide-border/40">
             {stats.releases.map((r: any, index: number) => (
               <li key={r.id ?? `release-${index}`} className="flex flex-col py-3 text-sm gap-1">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-mono font-bold">v{r.version}</span>
                   {r.is_current && <Badge className="bg-primary text-[10px] h-5">Atual</Badge>}
                   {r.is_stable && <Badge variant="secondary" className="text-[10px] h-5">Estável</Badge>}
@@ -364,7 +364,7 @@ function OverviewTab() {
       </CardShell>
       <CardShell title="Automações" icon={<Workflow className="h-4 w-4 text-primary" />}>
         <a href="/automacoes" className="group flex items-start gap-3 rounded-md border border-border/40 bg-card/50 p-3 transition-colors hover:border-primary/40 hover:bg-card">
-          <div className="rounded-md bg-primary/10 p-2 text-primary"><Workflow className="h-4 w-4" /></div>
+          <div className="rounded-md bg-primary/10 p-2 text-primary shrink-0"><Workflow className="h-4 w-4" /></div>
           <div className="min-w-0">
             <div className="text-sm font-medium">Rotinas do Auge</div>
             <div className="text-xs text-muted-foreground">Entrega Após, abreviações e outras automações administrativas.</div>
@@ -405,7 +405,7 @@ function DatabaseTab() {
       <CardShell title="Tabelas monitoradas" icon={<HardDrive className="h-4 w-4 text-primary" />}>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
           {rows.map((r) => (
-            <div key={r.table} className="p-3 rounded-md border border-border/40 shadow-sm bg-card/60 hover:border-primary/40 hover:shadow-md transition-colors">
+            <div key={r.table} className="p-3 rounded-md border border-border/40 bg-card/60 hover:border-primary/40 transition-colors">
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground truncate"><HardDrive className="h-3 w-3 shrink-0" /><span className="truncate font-mono">{r.table}</span></div>
               <div className="text-xl font-semibold tabular-nums mt-1">{r.error ? <span className="text-xs text-destructive">erro</span> : (r.count ?? 0).toLocaleString('pt-BR')}</div>
             </div>

@@ -251,9 +251,9 @@ export default function AugeAdminPanel() {
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
             <div className={`w-10 h-10 rounded-full flex items-center justify-center ${syncEnabled ? 'bg-emerald-500/10' : 'bg-amber-500/10'}`}>
-              <Power className={`w-5 h-5 ${syncEnabled ? 'text-success' : 'text-warning'}`} />
+              <Power className={`w-5 h-5 ${syncEnabled ? 'text-emerald-500' : 'text-amber-500'}`} />
             </div>
-            <div>
+            <div className="min-w-0">
               <Label htmlFor="auge-sync-toggle" className="font-semibold text-sm cursor-pointer">
                 Sincronização com o Auge {syncEnabled ? 'ativa' : 'desligada'}
               </Label>
@@ -290,14 +290,14 @@ export default function AugeAdminPanel() {
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
             ) : ping?.ok ? (
               <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                <Wifi className="w-5 h-5 text-success" />
+                <Wifi className="w-5 h-5 text-emerald-500" />
               </div>
             ) : (
-              <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
                 <WifiOff className="w-5 h-5 text-destructive" />
               </div>
             )}
-            <div>
+            <div className="min-w-0">
               <h3 className="font-semibold text-sm">
                 {pinging ? 'Verificando...' : ping?.ok ? 'Conectado ao Auge ERP' : 'Sem conexão'}
               </h3>
