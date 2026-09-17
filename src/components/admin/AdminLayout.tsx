@@ -284,7 +284,15 @@ export default function AdminLayout() {
       <div className="grid grid-cols-[260px_1fr] gap-4 items-start p-4">
         <AdminSidebar activeKey={activeKey} onSelect={setTab} />
         <main className="min-w-0">
-          {isSubRoute ? <Outlet /> : <AdminTabs />}
+          {isSubRoute ? (
+            // Sub-rotas admin usam componentes lazy (N8nMonitorPage, HarTransferenciasPage,
+            // DepositosAdminPage, AutomacoesPage, AugeSyncStatusPage) — precisam de Suspense.
+            <Suspense fallback={tabFallback}>
+              <Outlet />
+            </Suspense>
+          ) : (
+            <AdminTabs />
+          )}
         </main>
       </div>
     </div>

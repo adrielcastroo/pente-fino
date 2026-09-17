@@ -2,6 +2,12 @@
 
 Todas as releases seguem SemVer (MAJOR.MINOR.PATCH). Fonte única: `src/lib/changelog.ts`.
 
+## 4.13.0 — 2026-09-16
+- ✨ Corrige testes de colunas de registro, busca de TAGs e robustez do agente IA — ajusta layouts de colunas (adiciona posicao), toIlikeTokens aceita tokens de 1 char, ilikeOr/ilikeAnd corrigidos, testes de Edge Function pulados sem credenciais
+
+## 4.12.6 — 2026-08-31
+- 🐞 Corrige bug crítico de reload infinito na web app — flag sessionStorage previne múltiplos recarregamentos automáticos
+
 ## 4.12.5 — 2026-08-28
 - 🐞 Dedup no carregamento inicial (rascunho)
 
