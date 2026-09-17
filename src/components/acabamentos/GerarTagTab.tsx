@@ -381,9 +381,8 @@ function TagCalculadaCell({
       <div className="flex items-center gap-1.5">
         <span className="font-mono text-[11px] break-all flex-1">{valor}</span>
         <Button
-          size="sm"
           variant="ghost"
-          className="h-6 px-2 text-[10px] shrink-0"
+          className="h-10 px-3 text-[10px] shrink-0"
           onClick={() => { setAberto(true); setBusca(valor); }}
         >
           Trocar
@@ -403,7 +402,7 @@ function TagCalculadaCell({
           onFocus={() => !disabled && setAberto(true)}
           onChange={(e) => { setBusca(e.target.value); setAberto(true); }}
           placeholder={compacto ? 'Nome, descrição ou fórmula' : 'Buscar por nome, descrição ou fórmula (use * como curinga)'}
-          className="h-8 pl-7 text-[11px] font-mono"
+          className="h-10 pl-7 text-[11px] font-mono"
         />
       </div>
       {aberto && termo.length >= 2 && (
@@ -461,7 +460,7 @@ function TagCalculadaCell({
         </div>
       )}
       {aberto && valor && (
-        <Button size="sm" variant="ghost" className="h-6 px-2 text-[10px]" onClick={() => setAberto(false)}>
+        <Button variant="ghost" className="h-10 px-3 text-[10px]" onClick={() => setAberto(false)}>
           Cancelar
         </Button>
       )}
@@ -681,7 +680,7 @@ function TagConfiguradaSearch({
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
           placeholder="Pesquisar TAG Configurada (use * como curinga)"
-          className="h-9 pl-7 text-[11px] font-mono"
+          className="h-10 pl-7 text-[11px] font-mono"
         />
       </div>
       {termo.length >= 2 && (
@@ -719,7 +718,7 @@ function TagConfiguradaSearch({
         </div>
       )}
       {inline && onCancel && (
-        <Button size="sm" variant="ghost" className="h-7 px-2 text-[10px]" onClick={onCancel}>
+        <Button variant="ghost" className="h-10 px-3 text-[10px]" onClick={onCancel}>
           Cancelar
         </Button>
       )}
@@ -1930,12 +1929,11 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
             </div>
             {linhas.length > 0 && (
               <Button
-                size="sm"
                 variant="ghost"
-                className="h-7 px-2 text-[10px]"
-                onClick={() => { 
-                  setLinhas([]); 
-                  setResultado(null); 
+                className="h-10 px-3 text-[10px]"
+                onClick={() => {
+                  setLinhas([]);
+                  setResultado(null);
                   setModoEdicaoRelancamento(false);
                 }}
               >
@@ -1984,16 +1982,15 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                       <td className="p-2 text-right">
                         {!modoEdicaoRelancamento && (
                           <Button
-                            size="icon"
                             variant="ghost"
-                            className="h-7 w-7"
+                            className="h-10 w-10"
                             onClick={() => {
                               setLinhas((prev) => prev.filter((x) => x.id !== l.id));
                               setRemovidasManualmente((prev) => new Set(prev).add(l.code));
                             }}
                             aria-label="Remover TAG"
                           >
-                            <X className="h-3.5 w-3.5" />
+                            <X className="h-4 w-4" />
                           </Button>
                         )}
                       </td>
@@ -2022,9 +2019,8 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                     <tr className="border-t">
                       <td colSpan={4} className="p-2">
                         <Button
-                          size="sm"
                           variant="outline"
-                          className="h-8 px-2 text-[10px] gap-1"
+                          className="h-10 px-3 text-[10px] gap-1"
                           disabled={modoEdicaoRelancamento}
                           onClick={() => setAddManual(true)}
                         >
@@ -2054,7 +2050,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
             {modoEdicaoRelancamento && (
               <Button
                 variant="outline"
-                className="w-full h-9 text-xs border-emerald-500/30 text-emerald-700 hover:bg-emerald-50"
+                className="w-full h-10 text-xs border-emerald-500/30 text-emerald-700 hover:bg-emerald-50"
                 onClick={cancelarEdicao}
                 disabled={enviando}
               >
@@ -2096,13 +2092,12 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                 <div className="flex items-center gap-1.5">
                   {!!resultado.augeRows?.length && !editandoAuge && !modoEdicaoRelancamento && (
                     <Button
-                      size="sm"
                       variant="outline"
-                      className="h-7 px-2 text-[10px] gap-1 border-emerald-500/20 hover:bg-emerald-500/5"
+                      className="h-10 px-3 text-[10px] gap-1 border-emerald-500/20 hover:bg-emerald-500/5"
                       onClick={() => {
-                        const cfg = { 
-                          cd: customAberta?.cd || resultado?.cdConfiguracao || '', 
-                          nm: customAberta?.nm || resultado?.descricao || '' 
+                        const cfg = {
+                          cd: customAberta?.cd || resultado?.cdConfiguracao || '',
+                          nm: customAberta?.nm || resultado?.descricao || ''
                         };
                         iniciarEdicaoSegura(cfg);
                       }}
@@ -2113,18 +2108,16 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                   {editandoAuge && (
                     <div className="flex items-center gap-1">
                       <Button
-                        size="sm"
-                        className="h-7 px-2 text-[10px] gap-1 bg-emerald-600 hover:bg-emerald-700"
+                        className="h-10 px-3 text-[10px] gap-1 bg-emerald-600 hover:bg-emerald-700"
                         disabled={regravando || Object.keys(edicoesAuge).length === 0}
                         onClick={confirmarEdicaoAuge}
                       >
-                        {regravando ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                        {regravando ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
                         {regravando ? 'Regravando…' : 'Salvar'}
                       </Button>
                       <Button
-                        size="sm"
                         variant="ghost"
-                        className="h-7 px-2 text-[10px]"
+                        className="h-10 px-3 text-[10px]"
                         disabled={regravando}
                         onClick={() => { setEditandoAuge(false); setEdicoesAuge({}); }}
                       >
@@ -2133,9 +2126,8 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                     </div>
                   )}
                   <Button
-                    size="sm"
                     variant="ghost"
-                    className="h-7 w-7 p-0 hover:bg-black/5"
+                    className="h-10 w-10 p-0 hover:bg-black/5"
                     onClick={() => { setResultado(null); setEditandoAuge(false); setEdicoesAuge({}); }}
                   >
                     <X className="h-4 w-4" />
@@ -2311,9 +2303,8 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                     </div>
                   </div>
                   <Button
-                    size="sm"
                     variant="outline"
-                    className="h-7 px-2 text-[10px] gap-1 shrink-0"
+                    className="h-10 px-3 text-[10px] gap-1 shrink-0"
                     onClick={() => relancarRegistro(reg)}
                   >
                     <Pencil className="h-3 w-3" /> Editar e relançar
