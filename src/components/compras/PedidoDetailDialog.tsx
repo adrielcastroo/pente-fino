@@ -298,7 +298,7 @@ export function PedidoDetailDialog({ pedido, open, onOpenChange }: PedidoDetailD
             <section className="space-y-2">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold">Documentos e XMLs</h3>
-                <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()} disabled={uploadAnexo.isPending}>
+                <Button variant="outline" onClick={() => fileRef.current?.click()} disabled={uploadAnexo.isPending}>
                   {uploadAnexo.isPending
                     ? <Loader2 className="w-4 h-4 mr-1 animate-spin" />
                     : <Paperclip className="w-4 h-4 mr-1" />}
@@ -328,16 +328,16 @@ export function PedidoDetailDialog({ pedido, open, onOpenChange }: PedidoDetailD
                           </div>
                           
                           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => baixarAnexo(a).catch((e) => toast.error(e.message))} title="Baixar">
-                              <DownloadCloud className="w-3.5 h-3.5" />
+                            <Button variant="ghost" size="icon" className="h-10 w-10" onClick={() => baixarAnexo(a).catch((e) => toast.error(e.message))} aria-label="Baixar">
+                              <DownloadCloud className="w-4 h-4" />
                             </Button>
                             {isXml && (
-                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => toast.info("Visualização de XML em breve")} title="Visualizar Online">
-                                <Eye className="w-3.5 h-3.5" />
+                              <Button variant="ghost" size="icon" className="h-10 w-10" onClick={() => toast.info("Visualização de XML em breve")} aria-label="Visualizar Online">
+                                <Eye className="w-4 h-4" />
                               </Button>
                             )}
-                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => delAnexo.mutate(a)} title="Remover">
-                              <Trash2 className="w-3.5 h-3.5" />
+                            <Button variant="ghost" size="icon" className="h-10 w-10 text-destructive" onClick={() => delAnexo.mutate(a)} aria-label="Remover">
+                              <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
                         </div>
@@ -364,7 +364,7 @@ export function PedidoDetailDialog({ pedido, open, onOpenChange }: PedidoDetailD
                       <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
                         <span className="font-medium text-foreground">{c.user_id ? (profiles[c.user_id] ?? 'Usuário') : 'Usuário'}</span>
                         <span>{formatDateTime(c.created_at)}</span>
-                        <Button variant="ghost" size="sm" className="ml-auto h-6 px-1" onClick={() => delComentario.mutate(c.id)} aria-label="Excluir comentário">
+                        <Button variant="ghost" size="sm" className="ml-auto h-10 px-2" onClick={() => delComentario.mutate(c.id)} aria-label="Excluir comentário">
                           <Trash2 className="w-3 h-3 text-destructive" />
                         </Button>
                       </div>
