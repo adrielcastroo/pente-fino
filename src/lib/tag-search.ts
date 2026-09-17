@@ -112,7 +112,7 @@ export function toIlikeTokens(raw: string): string[] {
   return clean
     .split(/[\s*]+/)
     .map((t) => t.trim())
-    .filter((t) => t.length >= 2)
+    .filter((t) => t.length >= 1)
     .slice(0, 12)
     .map((t) => `%${t}%`);
 }
@@ -205,6 +205,8 @@ export function ilikeAnd<T extends IlikeBuilder>(query: T, col: string, padrao: 
   let q: T = query;
   // Se houver tokens, aplicamos AND (cada token precisa estar na coluna)
   if (tokens.length > 0) {
+    // Aplica o padrão primeiro se existir
+    if (padrao) q = q.ilike(col, padrao) as T;
     for (const t of tokens) {
       if (t && t !== '%%') q = q.ilike(col, t) as T;
     }
@@ -221,11 +223,14 @@ export function ilikeOr(cols: string[], padrao: string, tokens: string[]): strin
     // Para implementar lógica AND entre tokens em várias colunas, o PostgREST
     // exige que todos os tokens casem com pelo menos UMA das colunas.
     // Ex: (col1.ilike.%A% | col2.ilike.%A%) & (col1.ilike.%B% | col2.ilike.%B%)
-    const groups = tokens.map(t => {
-      const orGroup = cols.map(c => `${c}.ilike.${JSON.stringify(t)}`).join(',');
-      return `and(${orGroup})`;
-    });
-    return groups.join(',');
+    const parts: string[] = [];
+    for (const c of cols) {
+      if (padrao) parts.push(`${c}.ilike.${JSON.stringify(padrao)}`);
+      for (const t of tokens) {
+        if (t && t !== '%%') parts.push(`${c}.ilike.${JSON.stringify(t)}`);
+      }
+    }
+    return parts.join(',');
   }
 
   const parts: string[] = [];

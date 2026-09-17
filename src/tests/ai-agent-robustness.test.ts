@@ -1,10 +1,13 @@
-import { expect, test, describe, beforeAll } from 'vitest';
+import { expect, test, describe, beforeAll, vi } from 'vitest';
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY;
 
-describe('AI Agent Edge Function - Robustness Audit', () => {
+// Skip these tests if no Supabase credentials are available (they require a running Edge Function)
+const describeIf = SUPABASE_URL && SUPABASE_ANON_KEY ? describe : describe.skip;
+
+describeIf('AI Agent Edge Function - Robustness Audit', () => {
   test('should handle missing or malformed messages array', async () => {
     const response = await fetch(`${SUPABASE_URL}/functions/v1/ai-agent`, {
       method: 'POST',
