@@ -291,10 +291,9 @@ export default function AugeTransferenciasTab({
         <Button
           type="button"
           variant="ghost"
-          size="sm"
-          className="h-8 -ml-2 px-2 gap-1 text-xs font-semibold text-muted-foreground hover:text-foreground"
+          className="h-10 -ml-2 px-2 gap-1 text-xs font-semibold text-muted-foreground hover:text-foreground"
           onClick={() => toggleSort(column)}
-          title={`Ordenar por ${SORT_LABELS[column]}`}
+          aria-label={`Ordenar por ${SORT_LABELS[column]}`}
         >
           <span className="whitespace-nowrap">{SORT_LABELS[column]}</span>
           <Icon className="w-3.5 h-3.5" />
@@ -320,7 +319,7 @@ export default function AugeTransferenciasTab({
             <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="pl-9 h-11 text-xs" aria-label="Data final" />
           </div>
           {(dateFrom || dateTo) && (
-            <Button type="button" variant="ghost" size="icon" className="h-11 w-11 shrink-0" onClick={clearDates} title="Limpar período">
+            <Button type="button" variant="ghost" size="icon" className="h-11 w-11 shrink-0" onClick={clearDates} aria-label="Limpar período">
               <X className="w-4 h-4" />
             </Button>
           )}
@@ -405,13 +404,13 @@ export default function AugeTransferenciasTab({
                     <TableCell className="p-1 text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1">
                         {rascunho && (
-                          <Button size="sm" variant="ghost" className="h-7 px-2 gap-1 text-warning hover:text-warning" onClick={() => efetivarRapido(r)} title="Efetivar no Auge">
+                          <Button variant="ghost" className="h-10 px-3 gap-1 text-warning hover:text-warning" onClick={() => efetivarRapido(r)} aria-label="Efetivar no Auge">
                             <Zap className="w-3 h-3" /> Efetivar
                           </Button>
                         )}
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button size="icon" variant="ghost" className="h-7 w-7">
+                            <Button variant="ghost" className="h-10 w-10">
                               <MoreVertical className="w-3.5 h-3.5" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -458,7 +457,7 @@ export default function AugeTransferenciasTab({
             <div className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground hidden sm:inline">Por página</span>
               <Select value={String(pageSize)} onValueChange={(v) => setPageSize(Number(v))}>
-                <SelectTrigger className="h-9 w-[80px] text-xs"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-10 w-[80px] text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {[25, 50, 100, 200].map(n => (
                     <SelectItem key={n} value={String(n)} className="text-xs">{n}</SelectItem>
@@ -467,17 +466,17 @@ export default function AugeTransferenciasTab({
               </Select>
             </div>
             <div className="flex items-center gap-1">
-              <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => setPage(1)} disabled={currentPage === 1} title="Primeira">
+              <Button variant="outline" size="icon" className="h-10 w-10" onClick={() => setPage(1)} disabled={currentPage === 1} aria-label="Primeira">
                 <ChevronsLeft className="w-4 h-4" />
               </Button>
-              <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} title="Anterior">
+              <Button variant="outline" size="icon" className="h-10 w-10" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} aria-label="Anterior">
                 <ChevronLeft className="w-4 h-4" />
               </Button>
               <span className="text-xs px-2 whitespace-nowrap">Página <span className="font-medium text-foreground">{currentPage}</span> / {totalPages}</span>
-              <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} title="Próxima">
+              <Button variant="outline" size="icon" className="h-10 w-10" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} aria-label="Próxima">
                 <ChevronRight className="w-4 h-4" />
               </Button>
-              <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => setPage(totalPages)} disabled={currentPage === totalPages} title="Última">
+              <Button variant="outline" size="icon" className="h-10 w-10" onClick={() => setPage(totalPages)} disabled={currentPage === totalPages} aria-label="Última">
                 <ChevronsRight className="w-4 h-4" />
               </Button>
             </div>
