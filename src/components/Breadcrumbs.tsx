@@ -39,6 +39,11 @@ export default function Breadcrumbs() {
   if (segments.length === 0 || (segments.length === 1 && segments[0] === 'dashboard')) {
     return null;
   }
+  // Rotas de 1 segmento fora de /dashboard ainda mostram breadcrumb — útil em
+  // /admin, /expedicao, /compras (top-level). Antes o nav era vazio/estranho.
+  if (segments.length === 1 && LABELS[segments[0]]) {
+    // continua — breadcrumb com 1 item (home + segmento atual)
+  }
 
   const effectiveSegments =
     segments.length > 0 && CONFERENCIA_CHILDREN.has(segments[0])

@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 
-// Desktop "real": mouse fino + hover, OU tela muito larga (≥1366px) como fallback.
-// Isto garante que notebooks com janelas <1366px continuem em layout desktop.
+// Desktop "real": tem mouse (hover + pointer fine), OU tela muito larga (≥1366px) como fallback.
+// Mudança: removemos `(min-width: 1024px) and (hover: hover) and (pointer: fine)` porque em
+// 2-in-1/notebooks touch com mouse Bluetooth entre 1024–1365px, isso falhava: desktop não era
+// detectado, sidebar sumia e BottomTabBar aparecia erradamente. Agora basta ter mouse real,
+// independentemente da largura da janela.
 const DESKTOP_QUERY =
-  '(min-width: 1024px) and (hover: hover) and (pointer: fine), (min-width: 1366px)';
+  '(hover: hover) and (pointer: fine), (min-width: 1366px)';
 
 const useMediaQuery = (query: string) => {
   const [matches, setMatches] = useState(() => {
