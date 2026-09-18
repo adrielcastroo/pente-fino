@@ -20,7 +20,6 @@ import {
   ScrollText,
   KeyRound,
   Activity,
-  RefreshCw,
   HardDrive,
   Package,
   Warehouse,
@@ -32,7 +31,6 @@ import {
   ChevronDown,
   PanelLeft,
   ArrowLeft,
-  Settings2,
   HardDriveDownload,
 } from 'lucide-react';
 
@@ -49,7 +47,6 @@ const ReleasesPage = lazy(() => import('@/pages/admin/ReleasesPage'));
 const TeamPanel = lazy(() => import('@/components/settings/TeamPanel'));
 const IntegrationsTab = lazy(() => import('@/pages/admin/tabs/IntegrationsTab'));
 const ObservabilityTab = lazy(() => import('@/pages/admin/tabs/ObservabilityTab'));
-const GlobalSettingsTab = lazy(() => import('@/pages/admin/tabs/GlobalSettingsTab'));
 const BackupTab = lazy(() => import('@/pages/admin/tabs/BackupTab'));
 const SentryTab = lazy(() => import('@/pages/admin/tabs/SentryTab'));
 const PostHogTab = lazy(() => import('@/pages/admin/tabs/PostHogTab'));
