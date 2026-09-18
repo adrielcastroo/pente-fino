@@ -406,6 +406,7 @@ function ChatWindow({
                     variant="ghost"
                     size="icon-sm"
                     className="h-6 w-6 rounded-full bg-background/50 hover:bg-background shadow-sm border"
+                    aria-label="Copiar texto"
                     title="Copiar texto"
                     onClick={() => {
                       const text = m.parts?.map(p => p.type === 'text' ? p.text : '').join('\n') || '';
@@ -567,7 +568,7 @@ function ChatWindow({
               <div className="flex items-center gap-1">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon-sm" title="Anexar">
+                    <Button variant="ghost" size="icon-sm" title="Anexar" aria-label="Anexar">
                       <Plus className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -582,11 +583,12 @@ function ChatWindow({
                 </DropdownMenu>
               </div>
               {status === "streaming" ? (
-                <Button 
-                  size="icon-sm" 
-                  variant="ghost" 
-                  onClick={() => stop()} 
+                <Button
+                  size="icon-sm"
+                  variant="ghost"
+                  onClick={() => stop()}
                   className="text-destructive hover:bg-destructive/10"
+                  aria-label="Parar geração"
                   title="Parar geração"
                 >
                   <XCircle className="h-4 w-4" />
@@ -748,6 +750,7 @@ export function AgentChatWidget() {
                     className={cn("h-7 w-7 rounded-md", activeTab === "fio" && "bg-background shadow-sm")}
                     onClick={() => setActiveTab("fio")}
                     title="Assistente Fio"
+                    aria-label="Assistente Fio"
                   >
                     <FioAvatar size={18} state={fioState} expression={fioExpr} hoverOnEnter={false} />
                   </Button>
@@ -757,6 +760,7 @@ export function AgentChatWidget() {
                     className={cn("h-7 w-7 rounded-md", activeTab === "team" && "bg-background shadow-sm")}
                     onClick={() => setActiveTab("team")}
                     title="Chat da Equipe"
+                    aria-label="Chat da Equipe"
                   >
                     <Users className="h-3.5 w-3.5" />
                   </Button>
@@ -884,6 +888,7 @@ function SidebarModeToggle() {
       size="icon-sm"
       onClick={() => toggleMode()}
       title={mode === "sidebar" ? "Flutuar painel" : "Fixar na lateral"}
+      aria-label={mode === "sidebar" ? "Flutuar painel" : "Fixar na lateral"}
     >
       {mode === "sidebar" ? <PanelRightClose className="h-4 w-4" /> : <PanelRightOpen className="h-4 w-4" />}
     </Button>
