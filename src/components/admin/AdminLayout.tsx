@@ -144,29 +144,27 @@ export function AdminTabs() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
     >
-      {activeKey === 'overview' && <OverviewTab />}
-      {activeKey === 'integrations' && <Suspense fallback={tabFallback}><IntegrationsTab /></Suspense>}
-      {activeKey === 'auge' && <Suspense fallback={tabFallback}><AugeAdminPanel /></Suspense>}
-      {activeKey === 'n8n' && <Suspense fallback={tabFallback}><N8nMonitorPage /></Suspense>}
-      {activeKey === 'backfill-transf' && <Suspense fallback={tabFallback}><BackfillTransferenciasTab /></Suspense>}
-      {activeKey === 'observability' && <Suspense fallback={tabFallback}><ObservabilityTab /></Suspense>}
-      {activeKey === 'sentry' && <Suspense fallback={tabFallback}><SentryTab /></Suspense>}
-      {activeKey === 'posthog' && <Suspense fallback={tabFallback}><PostHogTab /></Suspense>}
-      {activeKey === 'llm-tokens' && <Suspense fallback={tabFallback}><LlmTokensTab /></Suspense>}
-      {activeKey === 'flags' && <Suspense fallback={tabFallback}><FeatureFlagsPage /></Suspense>}
-      {activeKey === 'releases' && <Suspense fallback={tabFallback}><ReleasesPage /></Suspense>}
-      {activeKey === 'team' && (
-        <div className="rounded-md border border-border/40 shadow-sm bg-card/60 p-6">
-          <Suspense fallback={tabFallback}><TeamPanel /></Suspense>
-        </div>
-      )}
-      {activeKey === 'auge-perms' && <Suspense fallback={tabFallback}><AugePermissoesTab /></Suspense>}
-      {activeKey === 'database' && <DatabaseTab />}
-      {activeKey === 'backup' && <Suspense fallback={tabFallback}><BackupTab /></Suspense>}
-      {activeKey === 'security' && <SecurityTab />}
-      {activeKey === 'audit' && <AuditTab />}
-      {activeKey === 'audit-auge' && <Suspense fallback={tabFallback}><AugeKardexTab /></Suspense>}
-      {activeKey === 'technical-audit' && <TechnicalAuditTab />}
+      <Suspense fallback={tabFallback}>
+        {activeKey === 'overview' && <OverviewTab />}
+        {activeKey === 'integrations' && <IntegrationsTab />}
+        {activeKey === 'auge' && <AugeAdminPanel />}
+        {activeKey === 'n8n' && <N8nMonitorPage />}
+        {activeKey === 'backfill-transf' && <BackfillTransferenciasTab />}
+        {activeKey === 'observability' && <ObservabilityTab />}
+        {activeKey === 'sentry' && <SentryTab />}
+        {activeKey === 'posthog' && <PostHogTab />}
+        {activeKey === 'llm-tokens' && <LlmTokensTab />}
+        {activeKey === 'flags' && <FeatureFlagsPage />}
+        {activeKey === 'releases' && <ReleasesPage />}
+        {activeKey === 'auge-perms' && <AugePermissoesTab />}
+        {activeKey === 'database' && <DatabaseTab />}
+        {activeKey === 'backup' && <BackupTab />}
+        {activeKey === 'security' && <SecurityTab />}
+        {activeKey === 'audit' && <AuditTab />}
+        {activeKey === 'audit-auge' && <AugeKardexTab />}
+        {activeKey === 'technical-audit' && <TechnicalAuditTab />}
+        {activeKey === 'team' && <TeamPanel />}
+      </Suspense>
     </motion.div>
   );
 }

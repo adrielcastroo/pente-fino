@@ -28,7 +28,13 @@ function initObservability() {
     const script = document.createElement('script');
     script.src = 'https://cdn.posthog.com/posthog-js/stable/posthog.min.js';
     script.async = true;
-    script.onload = () => {
+    script.onerror = () => {
+      if (import.meta.env.DEV) console.warn('[PostHog] Script failed to load');
+    };
+    document.head.appendChild(script);
+
+    // Inicializa PostHog após o script carregar
+    const initPostHog = () => {
       // @ts-ignore - posthog pode não estar tipado corretamente
       if (typeof window !== 'undefined' && (window as any).posthog) {
         // @ts-ignore
@@ -43,10 +49,12 @@ function initObservability() {
         });
       }
     };
-    script.onerror = () => {
-      if (import.meta.env.DEV) console.warn('[PostHog] Script failed to load');
-    };
-    document.head.appendChild(script);
+
+    if (script.readyState === 'complete') {
+      initPostHog();
+    } else {
+      script.onload = initPostHog;
+    }
   }
 
   // Sentry — captura erros de runtime
