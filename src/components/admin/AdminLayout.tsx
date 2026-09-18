@@ -1,4 +1,4 @@
-import { Suspense, lazy, useState, useEffect } from 'react';
+import { Suspense, lazy, useState, useEffect, useMemo } from 'react';
 import { Navigate, useNavigate, useSearchParams, Outlet, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';
@@ -137,6 +137,31 @@ export function AdminTabs() {
   const tab = (params.get('tab') as string) || 'overview';
   const activeKey = ALL_KEYS.includes(tab) ? tab : 'overview';
 
+  const TabContent = useMemo(() => {
+    switch (activeKey) {
+      case 'overview': return <OverviewTab />;
+      case 'integrations': return <IntegrationsTab />;
+      case 'auge': return <AugeAdminPanel />;
+      case 'n8n': return <N8nMonitorPage />;
+      case 'backfill-transf': return <BackfillTransferenciasTab />;
+      case 'observability': return <ObservabilityTab />;
+      case 'sentry': return <SentryTab />;
+      case 'posthog': return <PostHogTab />;
+      case 'llm-tokens': return <LlmTokensTab />;
+      case 'flags': return <FeatureFlagsPage />;
+      case 'releases': return <ReleasesPage />;
+      case 'auge-perms': return <AugePermissoesTab />;
+      case 'database': return <DatabaseTab />;
+      case 'backup': return <BackupTab />;
+      case 'security': return <SecurityTab />;
+      case 'audit': return <AuditTab />;
+      case 'audit-auge': return <AugeKardexTab />;
+      case 'technical-audit': return <TechnicalAuditTab />;
+      case 'team': return <TeamPanel />;
+      default: return <OverviewTab />;
+    }
+  }, [activeKey]);
+
   return (
     <motion.div
       key={activeKey}
@@ -144,27 +169,7 @@ export function AdminTabs() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
     >
-      <Suspense fallback={tabFallback}>
-        {activeKey === 'overview' && <OverviewTab />}
-        {activeKey === 'integrations' && <IntegrationsTab />}
-        {activeKey === 'auge' && <AugeAdminPanel />}
-        {activeKey === 'n8n' && <N8nMonitorPage />}
-        {activeKey === 'backfill-transf' && <BackfillTransferenciasTab />}
-        {activeKey === 'observability' && <ObservabilityTab />}
-        {activeKey === 'sentry' && <SentryTab />}
-        {activeKey === 'posthog' && <PostHogTab />}
-        {activeKey === 'llm-tokens' && <LlmTokensTab />}
-        {activeKey === 'flags' && <FeatureFlagsPage />}
-        {activeKey === 'releases' && <ReleasesPage />}
-        {activeKey === 'auge-perms' && <AugePermissoesTab />}
-        {activeKey === 'database' && <DatabaseTab />}
-        {activeKey === 'backup' && <BackupTab />}
-        {activeKey === 'security' && <SecurityTab />}
-        {activeKey === 'audit' && <AuditTab />}
-        {activeKey === 'audit-auge' && <AugeKardexTab />}
-        {activeKey === 'technical-audit' && <TechnicalAuditTab />}
-        {activeKey === 'team' && <TeamPanel />}
-      </Suspense>
+      <Suspense fallback={tabFallback}>{TabContent}</Suspense>
     </motion.div>
   );
 }
