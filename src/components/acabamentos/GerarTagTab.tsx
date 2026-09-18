@@ -963,9 +963,6 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
   const resumoConfigs = useMemo(() => buscaPalavras?.rows ?? [], [buscaPalavras]);
   const tagsPalavras = useMemo(() => buscaPalavras?.rows ?? [], [buscaPalavras]);
   const tagsReconhecidas = useMemo(() => buscaPalavras?.rows ?? [], [buscaPalavras]);
-  const resumoConfigs = useMemo(() => buscaPalavras?.configs ?? [], [buscaPalavras]);
-  const tagsPalavras = useMemo(() => buscaPalavras?.tags ?? [], [buscaPalavras]);
-  const tagsReconhecidas = useMemo(() => buscaPalavras?.tags ?? [], [buscaPalavras]);
 
   // ---------- Configurações do bloco "Resumo" (alvo da alteração em massa) ----------
   // Busca DEDICADA sobre `auge_tag_custom_configuracoes` + `auge_tag_custom_scan`,
