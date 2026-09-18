@@ -246,17 +246,14 @@ export default function AdminLayout() {
   const location = useLocation();
   const [params, setParams] = useSearchParams();
 
-  if (loading) return null;
-  if (!isAdmin) return <Navigate to="/" replace />;
-
   const tab = (params.get('tab') as string) || 'overview';
   const activeKey = ALL_KEYS.includes(tab) ? tab : 'overview';
   const version = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'dev';
   const setTab = (k: string) => setParams({ tab: k }, { replace: true });
-
-  // Se estamos numa sub-rota dedicada (/admin/n8n, /automacoes...), o conteúdo
-  // vem do <Outlet/>. Senão, renderizamos o painel em tabs via ?tab=.
   const isSubRoute = location.pathname !== '/admin';
+
+  if (loading) return null;
+  if (!isAdmin) return <Navigate to="/" replace />;
 
   return (
     <div className="min-h-screen bg-background">
