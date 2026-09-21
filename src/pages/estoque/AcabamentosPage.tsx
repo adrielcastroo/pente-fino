@@ -527,11 +527,11 @@ export default function AcabamentosPage() {
             onAtualizar={async () => {
               if (!novaDescricao.trim()) {
                 toast.error('Digite uma descrição');
-                return;
+                return { success: false };
               }
               if (selectedAcabamentos.size === 0) {
                 toast.error('Selecione pelo menos um acabamento');
-                return;
+                return { success: false };
               }
               setAtualizando(true);
               try {
@@ -560,12 +560,11 @@ export default function AcabamentosPage() {
                 const count = selectedAcabamentos.size;
                 setSelectedAcabamentos(new Set());
                 setNovaDescricao('');
-                setSucessCount(count);
-                setShowSuccess(true);
-                setTimeout(() => setShowSuccess(false), 1500);
                 qc.invalidateQueries({ queryKey: ['acabamentos-list'] });
+                return { success: true, count };
               } catch (e: any) {
                 toast.error(e?.message || 'Erro ao atualizar descrição');
+                return { success: false };
               } finally {
                 setAtualizando(false);
               }
@@ -611,6 +610,16 @@ function AtualizarDescricaoTab({
 }: any) {
   const [showSuccess, setShowSuccess] = useState(false);
   const [sucessCount, setSucessCount] = useState(0);
+
+  const handleAtualizar = async () => {
+    const result = await onAtualizar();
+    if (result?.success) {
+      setSucessCount(result.count);
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 1500);
+    }
+  };
+
   const acabByCd = useMemo(() => {
     const m = new Map<string, any>();
     acabamentos.forEach((a: any) => m.set(a.cd_acabamento, a));
@@ -743,7 +752,7 @@ function AtualizarDescricaoTab({
               <Button variant="outline" onClick={() => setSelectedAcabamentos(new Set())} disabled={atualizando}>
                 Cancelar
               </Button>
-              <Button onClick={onAtualizar} disabled={atualizando || !novaDescricao.trim()}>
+              <Button onClick={handleAtualizar} disabled={atualizando || !novaDescricao.trim()}>
                 {atualizando ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
                 Atualizar no Auge ({selectedAcabamentos.size})
               </Button>
