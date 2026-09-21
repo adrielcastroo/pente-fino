@@ -57,7 +57,7 @@ export default defineConfig(({ mode }) => ({
           }
           // framer-motion só é usado em algumas rotas (login, dialogs) — isolar
           // permite que rotas frias não paguem seus ~40KB.
-          if (id.includes("framer-motion")) return "motion-vendor";
+          if (id.includes("framer-motion") || id.includes("motion")) return "motion-vendor";
           // React runtime + Radix (que depende de react em tempo de módulo).
           if (
             id.includes("react-dom") ||
