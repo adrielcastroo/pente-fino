@@ -25,16 +25,12 @@ function initObservability() {
   const posthogKey = import.meta.env.VITE_POSTHOG_KEY as string | undefined;
   if (posthogKey) {
     // Carregar posthog-js de forma não-bloqueante
+    // Se o CDN não estiver acessível (DNS, firewall), o PostHog é desativado
+    // silenciosamente — a aplicação não quebra.
     const script = document.createElement('script');
     script.src = 'https://cdn.posthog.com/posthog-js/stable/posthog.min.js';
     script.async = true;
-    script.onerror = () => {
-      if (import.meta.env.DEV) console.warn('[PostHog] Script failed to load');
-    };
-    document.head.appendChild(script);
-
-    // Inicializa PostHog após o script carregar
-    const initPostHog = () => {
+    script.onload = () => {
       // @ts-ignore - posthog pode não estar tipado corretamente
       if (typeof window !== 'undefined' && (window as any).posthog) {
         // @ts-ignore
@@ -49,12 +45,12 @@ function initObservability() {
         });
       }
     };
-
-    if (script.readyState === 'complete') {
-      initPostHog();
-    } else {
-      script.onload = initPostHog;
-    }
+    script.onerror = () => {
+      // CDN inacessível — PostHog client-side desativado.
+      // A edge function posthog-analytics (proxy) ainda funciona para consultas.
+      if (import.meta.env.DEV) console.warn('[PostHog] CDN inacessível (DNS). Client-side analytics desativado.');
+    };
+    document.head.appendChild(script);
   }
 
   // Sentry — captura erros de runtime
