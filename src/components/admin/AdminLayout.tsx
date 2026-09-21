@@ -8,18 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { StatCard, CardShell, SectionToolbar } from '@/components/design-system';
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarProvider,
-} from '@/components/ui/sidebar';
+import AdminSidebarWrapper from './AdminSidebarWrapper';
 import {
   ShieldCheck,
   LayoutDashboard,
@@ -73,7 +62,7 @@ type LucideIcon = typeof Activity;
 type NavItem = { key: string; label: string; icon: LucideIcon };
 type NavSection = { key: string; label: string; icon: LucideIcon; items: NavItem[] };
 
-const NAV: NavSection[] = [
+export const NAV: NavSection[] = [
   {
     key: 'visao',
     label: 'Visão',
@@ -135,7 +124,7 @@ const NAV: NavSection[] = [
   },
 ];
 
-const ALL_KEYS = NAV.flatMap((s) => s.items.map((i) => i.key));
+export const ALL_KEYS = NAV.flatMap((s) => s.items.map((i) => i.key));
 const tabFallback = <Skeleton className="h-96 rounded-md" />;
 
 // Conteúdo de cada tab (extraído para o painel renderizar)
@@ -327,9 +316,7 @@ export default function AdminLayout() {
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-4 items-start p-4">
-        <SidebarProvider>
-          <AdminSidebar activeKey={activeKey} onSelect={setTab} />
-        </SidebarProvider>
+        <AdminSidebarWrapper activeKey={activeKey} onSelect={setTab} />
         <main className="min-w-0">
           {isSubRoute ? (
             // Sub-rotas admin usam componentes lazy (N8nMonitorPage, HarTransferenciasPage,
