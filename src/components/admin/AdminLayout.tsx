@@ -327,7 +327,9 @@ export default function AdminLayout() {
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-4 items-start p-4">
-        <AdminSidebar activeKey={activeKey} onSelect={setTab} />
+        <SidebarProvider>
+          <AdminSidebar activeKey={activeKey} onSelect={setTab} />
+        </SidebarProvider>
         <main className="min-w-0">
           {isSubRoute ? (
             // Sub-rotas admin usam componentes lazy (N8nMonitorPage, HarTransferenciasPage,
