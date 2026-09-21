@@ -10,7 +10,32 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.17"
+    PostgrestVersion: "14.5"
+  }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
   public: {
     Tables: {
@@ -676,6 +701,69 @@ export type Database = {
         }
         Relationships: []
       }
+      auge_pedidos: {
+        Row: {
+          cd_pedido: string
+          cliente_final: string | null
+          dt_documento: string | null
+          dt_efetivacao: string | null
+          dt_entrega_prevista: string | null
+          id: string
+          nf_numero: string | null
+          nf_serie: string | null
+          nome_cliente: string | null
+          nr_pedido: string | null
+          sincronizado_em: string | null
+          situacao: string | null
+          situacao_id: string | null
+          status_tms: string | null
+          supervisor: string | null
+          vl_impostos: number | null
+          vl_produtos: number | null
+          vl_total: number | null
+        }
+        Insert: {
+          cd_pedido: string
+          cliente_final?: string | null
+          dt_documento?: string | null
+          dt_efetivacao?: string | null
+          dt_entrega_prevista?: string | null
+          id?: string
+          nf_numero?: string | null
+          nf_serie?: string | null
+          nome_cliente?: string | null
+          nr_pedido?: string | null
+          sincronizado_em?: string | null
+          situacao?: string | null
+          situacao_id?: string | null
+          status_tms?: string | null
+          supervisor?: string | null
+          vl_impostos?: number | null
+          vl_produtos?: number | null
+          vl_total?: number | null
+        }
+        Update: {
+          cd_pedido?: string
+          cliente_final?: string | null
+          dt_documento?: string | null
+          dt_efetivacao?: string | null
+          dt_entrega_prevista?: string | null
+          id?: string
+          nf_numero?: string | null
+          nf_serie?: string | null
+          nome_cliente?: string | null
+          nr_pedido?: string | null
+          sincronizado_em?: string | null
+          situacao?: string | null
+          situacao_id?: string | null
+          status_tms?: string | null
+          supervisor?: string | null
+          vl_impostos?: number | null
+          vl_produtos?: number | null
+          vl_total?: number | null
+        }
+        Relationships: []
+      }
       auge_permissoes: {
         Row: {
           actions: string[]
@@ -804,75 +892,6 @@ export type Database = {
           raw?: Json | null
           synced_at?: string | null
           unidade?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      auge_pedidos: {
-        Row: {
-          id: string
-          cd_pedido: string
-          nr_pedido: string | null
-          nome_cliente: string | null
-          cliente_final: string | null
-          supervisor: string | null
-          dt_documento: string | null
-          dt_efetivacao: string | null
-          dt_entrega_prevista: string | null
-          situacao_id: number | null
-          situacao: string | null
-          status_tms: string | null
-          nf_numero: string | null
-          nf_serie: string | null
-          vl_produtos: number | null
-          vl_impostos: number | null
-          vl_total: number | null
-          sincronizado_em: string
-          created_at: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          id?: string
-          cd_pedido: string
-          nr_pedido?: string | null
-          nome_cliente?: string | null
-          cliente_final?: string | null
-          supervisor?: string | null
-          dt_documento?: string | null
-          dt_efetivacao?: string | null
-          dt_entrega_prevista?: string | null
-          situacao_id?: number | null
-          situacao?: string | null
-          status_tms?: string | null
-          nf_numero?: string | null
-          nf_serie?: string | null
-          vl_produtos?: number | null
-          vl_impostos?: number | null
-          vl_total?: number | null
-          sincronizado_em?: string
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          id?: string
-          cd_pedido?: string
-          nr_pedido?: string | null
-          nome_cliente?: string | null
-          cliente_final?: string | null
-          supervisor?: string | null
-          dt_documento?: string | null
-          dt_efetivacao?: string | null
-          dt_entrega_prevista?: string | null
-          situacao_id?: number | null
-          situacao?: string | null
-          status_tms?: string | null
-          nf_numero?: string | null
-          nf_serie?: string | null
-          vl_produtos?: number | null
-          vl_impostos?: number | null
-          vl_total?: number | null
-          sincronizado_em?: string
-          created_at?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -2862,6 +2881,63 @@ export type Database = {
         }
         Relationships: []
       }
+      faturamento_regras: {
+        Row: {
+          codigo_cliente: string
+          condicao_pagamento: string | null
+          created_at: string
+          dados_extra: Json | null
+          frequencia_envio: string | null
+          grupo_economico: string | null
+          id: string
+          limite_credito: number | null
+          modalidade_frete: string
+          nome_cliente: string
+          observacoes: string | null
+          status: string
+          transportadora_cif: string | null
+          transportadora_fob: string | null
+          updated_at: string
+          valor_minimo_frete: number | null
+        }
+        Insert: {
+          codigo_cliente: string
+          condicao_pagamento?: string | null
+          created_at?: string
+          dados_extra?: Json | null
+          frequencia_envio?: string | null
+          grupo_economico?: string | null
+          id?: string
+          limite_credito?: number | null
+          modalidade_frete?: string
+          nome_cliente: string
+          observacoes?: string | null
+          status?: string
+          transportadora_cif?: string | null
+          transportadora_fob?: string | null
+          updated_at?: string
+          valor_minimo_frete?: number | null
+        }
+        Update: {
+          codigo_cliente?: string
+          condicao_pagamento?: string | null
+          created_at?: string
+          dados_extra?: Json | null
+          frequencia_envio?: string | null
+          grupo_economico?: string | null
+          id?: string
+          limite_credito?: number | null
+          modalidade_frete?: string
+          nome_cliente?: string
+          observacoes?: string | null
+          status?: string
+          transportadora_cif?: string | null
+          transportadora_fob?: string | null
+          updated_at?: string
+          valor_minimo_frete?: number | null
+        }
+        Relationships: []
+      }
       feature_flags: {
         Row: {
           created_at: string
@@ -4269,6 +4345,113 @@ export type Database = {
         }
         Relationships: []
       }
+      romaneio_dias: {
+        Row: {
+          atualizado_em: string | null
+          criado_em: string | null
+          criado_por: string | null
+          data_romaneio: string
+          id: string
+          origem_import: string | null
+          status: string | null
+          titulo: string | null
+          total_pedidos: number | null
+          total_valor: number | null
+        }
+        Insert: {
+          atualizado_em?: string | null
+          criado_em?: string | null
+          criado_por?: string | null
+          data_romaneio: string
+          id?: string
+          origem_import?: string | null
+          status?: string | null
+          titulo?: string | null
+          total_pedidos?: number | null
+          total_valor?: number | null
+        }
+        Update: {
+          atualizado_em?: string | null
+          criado_em?: string | null
+          criado_por?: string | null
+          data_romaneio?: string
+          id?: string
+          origem_import?: string | null
+          status?: string | null
+          titulo?: string | null
+          total_pedidos?: number | null
+          total_valor?: number | null
+        }
+        Relationships: []
+      }
+      romaneio_linhas: {
+        Row: {
+          cd_pedido: string | null
+          cliente: string | null
+          codigo_cliente: string
+          criado_em: string | null
+          flag_excecao: boolean | null
+          id: string
+          modalidade_frete: string | null
+          nome_cliente: string | null
+          nr_pedido: string | null
+          observacao: string | null
+          observacoes: string | null
+          quantidade: number | null
+          requires_confirmation: boolean | null
+          romaneio_id: string
+          transportadora: string | null
+          transportadora_sugerida: string | null
+          valor: number | null
+        }
+        Insert: {
+          cd_pedido?: string | null
+          cliente?: string | null
+          codigo_cliente: string
+          criado_em?: string | null
+          flag_excecao?: boolean | null
+          id?: string
+          modalidade_frete?: string | null
+          nome_cliente?: string | null
+          nr_pedido?: string | null
+          observacao?: string | null
+          observacoes?: string | null
+          quantidade?: number | null
+          requires_confirmation?: boolean | null
+          romaneio_id: string
+          transportadora?: string | null
+          transportadora_sugerida?: string | null
+          valor?: number | null
+        }
+        Update: {
+          cd_pedido?: string | null
+          cliente?: string | null
+          codigo_cliente?: string
+          criado_em?: string | null
+          flag_excecao?: boolean | null
+          id?: string
+          modalidade_frete?: string | null
+          nome_cliente?: string | null
+          nr_pedido?: string | null
+          observacao?: string | null
+          observacoes?: string | null
+          quantidade?: number | null
+          requires_confirmation?: boolean | null
+          romaneio_id?: string
+          transportadora?: string | null
+          transportadora_sugerida?: string | null
+          valor?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "romaneio_linhas_romaneio_id_fkey"
+            columns: ["romaneio_id"]
+            isOneToOne: false
+            referencedRelation: "romaneio_dias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tarefas_contagem: {
         Row: {
           codigo_lote: string
@@ -4655,6 +4838,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      generate_romaneio_for_date: {
+        Args: { p_date: string; p_origem: string }
+        Returns: string
+      }
       get_my_auge_permissoes: {
         Args: never
         Returns: {
@@ -4765,12 +4952,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -4794,11 +4981,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -4819,11 +5006,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -4844,11 +5031,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -4861,11 +5048,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -4875,6 +5062,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       app_role: ["admin", "operador", "user", "supervisor", "gerente"],
