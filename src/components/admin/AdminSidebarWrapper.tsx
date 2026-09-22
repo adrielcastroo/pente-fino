@@ -1,5 +1,5 @@
 import React from 'react';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 import {
   Sidebar,
   SidebarContent,
@@ -36,19 +36,20 @@ import {
   ShieldAlert,
   ArrowLeft,
   HardDriveDownload,
+  PanelLeft,
 } from 'lucide-react';
 
 export default function AdminSidebarWrapper({ activeKey, onSelect }: { activeKey: string; onSelect: (k: string) => void }) {
   const navigate = useNavigate();
   const activeSection = NAV.find((s) => s.items.some((i) => i.key === activeKey));
+  const { toggleSidebar } = useSidebar();
 
   return (
-    <SidebarProvider>
-      <Sidebar
-        collapsible="icon"
-        className="border-r border-border/40 bg-sidebar"
-        aria-label="Menu Painel Admin"
-      >
+    <Sidebar
+      collapsible="icon"
+      className="border-r border-border/40 bg-sidebar"
+      aria-label="Menu Painel Admin"
+    >
         <SidebarHeader className="overflow-hidden py-4 px-3">
           <div className="flex min-w-0 cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 transition-opacity hover:opacity-80">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center">
@@ -63,6 +64,9 @@ export default function AdminSidebarWrapper({ activeKey, onSelect }: { activeKey
               </span>
             </div>
           </div>
+          <SidebarTrigger className="mt-1 flex h-7 w-7 items-center justify-center rounded-md text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+            <PanelLeft className="h-4 w-4" />
+          </SidebarTrigger>
         </SidebarHeader>
 
         <SidebarContent className="custom-scrollbar overflow-x-hidden px-3">
@@ -141,6 +145,5 @@ export default function AdminSidebarWrapper({ activeKey, onSelect }: { activeKey
           </SidebarMenu>
         </SidebarFooter>
       </Sidebar>
-    </SidebarProvider>
   );
 }

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { StatCard, CardShell, SectionToolbar } from '@/components/design-system';
+import { SidebarProvider, useSidebar } from '@/components/ui/sidebar';
 import AdminSidebarWrapper from './AdminSidebarWrapper';
 import {
   ShieldCheck,
@@ -315,20 +316,34 @@ export default function AdminLayout() {
         </Badge>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-4 items-start p-4">
-        <AdminSidebarWrapper activeKey={activeKey} onSelect={setTab} />
-        <main className="min-w-0">
-          {isSubRoute ? (
-            // Sub-rotas admin usam componentes lazy (N8nMonitorPage, HarTransferenciasPage,
-            // DepositosAdminPage, AutomacoesPage, AugeSyncStatusPage) — precisam de Suspense.
-            <Suspense fallback={tabFallback}>
-              <Outlet />
-            </Suspense>
-          ) : (
-            <AdminTabs />
-          )}
-        </main>
-      </div>
+      <SidebarProvider>
+        <AdminLayoutContent />
+      </SidebarProvider>
+    </div>
+  );
+}
+
+// ============ ADMIN LAYOUT INNER CONTENT ============
+
+function AdminLayoutContent() {
+  const { state: sidebarState } = useSidebar();
+  const isCollapsed = sidebarState === 'collapsed';
+
+  return (
+    <div className={cn(
+      "grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-4 items-start p-4 transition-all duration-200",
+      isCollapsed && "lg:grid-cols-[72px_1fr]"
+    )}>
+      <AdminSidebarWrapper activeKey={activeKey} onSelect={setTab} />
+      <main className="min-w-0">
+        {isSubRoute ? (
+          <Suspense fallback={tabFallback}>
+            <Outlet />
+          </Suspense>
+        ) : (
+          <AdminTabs />
+        )}
+      </main>
     </div>
   );
 }
