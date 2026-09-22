@@ -329,18 +329,17 @@ export default function NecessidadeCronCard() {
                     <Button
                       key={w.key}
                       type="button"
-                      size="sm"
                       variant={active ? 'default' : 'outline'}
-                      className="h-8 min-w-[52px] text-xs"
+                      className="h-10 min-w-[52px] text-xs"
                       onClick={() => toggleDay(w.key)}
                     >
                       {w.label}
                     </Button>
                   );
                 })}
-                <Button type="button" size="sm" variant="ghost" className="h-8 text-[11px]"
+                <Button type="button" variant="ghost" className="h-10 text-[11px]"
                   onClick={() => setDays([1,2,3,4,5])}>Seg–Sex</Button>
-                <Button type="button" size="sm" variant="ghost" className="h-8 text-[11px]"
+                <Button type="button" variant="ghost" className="h-10 text-[11px]"
                   onClick={() => setDays([0,1,2,3,4,5,6])}>Todos</Button>
               </div>
             </div>
@@ -351,7 +350,7 @@ export default function NecessidadeCronCard() {
               {resumo}
               {cronExpr && <span className="ml-2 font-mono text-foreground/70">({cronExpr} UTC)</span>}
             </div>
-            <Button onClick={salvarCron} disabled={savingCron || !changed} size="sm" className="gap-1.5 h-9">
+            <Button onClick={salvarCron} disabled={savingCron || !changed} className="gap-1.5 h-10">
               {savingCron ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
               Salvar agendamento
             </Button>

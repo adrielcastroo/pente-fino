@@ -128,6 +128,7 @@ export function TeamChatPanel() {
             onClick={handleSend}
             disabled={!inputValue.trim() || sending}
             className="rounded-full h-8 w-8 shrink-0"
+            aria-label="Enviar mensagem"
           >
             {sending ? (
               <div className="h-3 w-3 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />

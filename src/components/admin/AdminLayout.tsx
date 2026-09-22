@@ -1,4 +1,4 @@
-import { Suspense, lazy, useState, useEffect } from 'react';
+import { Suspense, lazy, useState, useEffect, useMemo } from 'react';
 import { Navigate, useNavigate, useSearchParams, Outlet, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { StatCard, CardShell, SectionToolbar } from '@/components/design-system';
+import AdminSidebarWrapper from './AdminSidebarWrapper';
 import {
   ShieldCheck,
   LayoutDashboard,
@@ -20,7 +21,6 @@ import {
   ScrollText,
   KeyRound,
   Activity,
-  RefreshCw,
   HardDrive,
   Package,
   Warehouse,
@@ -29,10 +29,7 @@ import {
   Bug,
   LineChart,
   ShieldAlert,
-  ChevronDown,
-  PanelLeft,
   ArrowLeft,
-  Settings2,
   HardDriveDownload,
 } from 'lucide-react';
 
@@ -49,7 +46,6 @@ const ReleasesPage = lazy(() => import('@/pages/admin/ReleasesPage'));
 const TeamPanel = lazy(() => import('@/components/settings/TeamPanel'));
 const IntegrationsTab = lazy(() => import('@/pages/admin/tabs/IntegrationsTab'));
 const ObservabilityTab = lazy(() => import('@/pages/admin/tabs/ObservabilityTab'));
-const GlobalSettingsTab = lazy(() => import('@/pages/admin/tabs/GlobalSettingsTab'));
 const BackupTab = lazy(() => import('@/pages/admin/tabs/BackupTab'));
 const SentryTab = lazy(() => import('@/pages/admin/tabs/SentryTab'));
 const PostHogTab = lazy(() => import('@/pages/admin/tabs/PostHogTab'));
@@ -66,7 +62,7 @@ type LucideIcon = typeof Activity;
 type NavItem = { key: string; label: string; icon: LucideIcon };
 type NavSection = { key: string; label: string; icon: LucideIcon; items: NavItem[] };
 
-const NAV: NavSection[] = [
+export const NAV: NavSection[] = [
   {
     key: 'visao',
     label: 'Visão',
@@ -128,7 +124,7 @@ const NAV: NavSection[] = [
   },
 ];
 
-const ALL_KEYS = NAV.flatMap((s) => s.items.map((i) => i.key));
+export const ALL_KEYS = NAV.flatMap((s) => s.items.map((i) => i.key));
 const tabFallback = <Skeleton className="h-96 rounded-md" />;
 
 // Conteúdo de cada tab (extraído para o painel renderizar)
@@ -137,6 +133,31 @@ export function AdminTabs() {
   const tab = (params.get('tab') as string) || 'overview';
   const activeKey = ALL_KEYS.includes(tab) ? tab : 'overview';
 
+  const TabContent = useMemo(() => {
+    switch (activeKey) {
+      case 'overview': return <OverviewTab />;
+      case 'integrations': return <IntegrationsTab />;
+      case 'auge': return <AugeAdminPanel />;
+      case 'n8n': return <N8nMonitorPage />;
+      case 'backfill-transf': return <BackfillTransferenciasTab />;
+      case 'observability': return <ObservabilityTab />;
+      case 'sentry': return <SentryTab />;
+      case 'posthog': return <PostHogTab />;
+      case 'llm-tokens': return <LlmTokensTab />;
+      case 'flags': return <FeatureFlagsPage />;
+      case 'releases': return <ReleasesPage />;
+      case 'auge-perms': return <AugePermissoesTab />;
+      case 'database': return <DatabaseTab />;
+      case 'backup': return <BackupTab />;
+      case 'security': return <SecurityTab />;
+      case 'audit': return <AuditTab />;
+      case 'audit-auge': return <AugeKardexTab />;
+      case 'technical-audit': return <TechnicalAuditTab />;
+      case 'team': return <TeamPanel />;
+      default: return <OverviewTab />;
+    }
+  }, [activeKey]);
+
   return (
     <motion.div
       key={activeKey}
@@ -144,98 +165,114 @@ export function AdminTabs() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
     >
-      {activeKey === 'overview' && <OverviewTab />}
-      {activeKey === 'integrations' && <Suspense fallback={tabFallback}><IntegrationsTab /></Suspense>}
-      {activeKey === 'auge' && <Suspense fallback={tabFallback}><AugeAdminPanel /></Suspense>}
-      {activeKey === 'n8n' && <Suspense fallback={tabFallback}><N8nMonitorPage /></Suspense>}
-      {activeKey === 'backfill-transf' && <Suspense fallback={tabFallback}><BackfillTransferenciasTab /></Suspense>}
-      {activeKey === 'observability' && <Suspense fallback={tabFallback}><ObservabilityTab /></Suspense>}
-      {activeKey === 'sentry' && <Suspense fallback={tabFallback}><SentryTab /></Suspense>}
-      {activeKey === 'posthog' && <Suspense fallback={tabFallback}><PostHogTab /></Suspense>}
-      {activeKey === 'llm-tokens' && <Suspense fallback={tabFallback}><LlmTokensTab /></Suspense>}
-      {activeKey === 'flags' && <Suspense fallback={tabFallback}><FeatureFlagsPage /></Suspense>}
-      {activeKey === 'releases' && <Suspense fallback={tabFallback}><ReleasesPage /></Suspense>}
-      {activeKey === 'team' && (
-        <div className="rounded-md border border-border/40 shadow-sm bg-card/60 p-6">
-          <Suspense fallback={tabFallback}><TeamPanel /></Suspense>
-        </div>
-      )}
-      {activeKey === 'auge-perms' && <Suspense fallback={tabFallback}><AugePermissoesTab /></Suspense>}
-      {activeKey === 'database' && <DatabaseTab />}
-      {activeKey === 'backup' && <Suspense fallback={tabFallback}><BackupTab /></Suspense>}
-      {activeKey === 'security' && <SecurityTab />}
-      {activeKey === 'audit' && <AuditTab />}
-      {activeKey === 'audit-auge' && <Suspense fallback={tabFallback}><AugeKardexTab /></Suspense>}
-      {activeKey === 'technical-audit' && <TechnicalAuditTab />}
+      <Suspense fallback={tabFallback}>{TabContent}</Suspense>
     </motion.div>
   );
 }
 
 // ============ SIDEBAR ============
 function AdminSidebar({ activeKey, onSelect }: { activeKey: string; onSelect: (k: string) => void }) {
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const navigate = useNavigate();
   const activeSection = NAV.find((s) => s.items.some((i) => i.key === activeKey));
 
   return (
-    <aside className="sticky top-4 bg-card/60 rounded-md border border-border/40 shadow-sm p-2.5 max-h-[calc(100vh-7rem)] overflow-y-auto">
-      <div className="flex items-center justify-between mb-2 px-1">
-        <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground/70">
-          Painel Admin
-        </span>
-        <PanelLeft className="h-3.5 w-3.5 text-muted-foreground/50" />
-      </div>
+    <Sidebar
+      collapsible="icon"
+      className="border-r border-border/40 bg-sidebar"
+      aria-label="Menu Painel Admin"
+    >
+      <SidebarHeader className="overflow-hidden py-4 px-3">
+        <div className="flex min-w-0 cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 transition-opacity hover:opacity-80">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center">
+            <ShieldCheck className="h-7 w-7 text-primary" />
+          </div>
+          <div className="flex min-w-0 flex-col overflow-hidden">
+            <span className="text-sm font-bold leading-tight tracking-tight text-sidebar-accent-foreground truncate">
+              Pente Fino
+            </span>
+            <span className="text-[9px] font-semibold uppercase tracking-[0.15em] text-sidebar-foreground/70 truncate">
+              Painel Admin
+            </span>
+          </div>
+        </div>
+      </SidebarHeader>
 
-      <nav aria-label="Seções do painel admin" className="space-y-1">
+      <SidebarContent className="custom-scrollbar overflow-x-hidden px-3">
         {NAV.map((section) => {
           const SecIcon = section.icon;
-          const isOpen = collapsed[section.key] ?? true;
           const isSectionActive = activeSection?.key === section.key;
           return (
-            <div key={section.key} className="rounded-md">
-              <button
-                type="button"
-                onClick={() => setCollapsed((c) => ({ ...c, [section.key]: !isOpen }))}
-                className={cn(
-                  'w-full flex items-center gap-2 px-2.5 py-2 rounded-md text-xs font-semibold transition-colors',
-                  isSectionActive ? 'text-foreground bg-muted/50' : 'text-muted-foreground hover:text-foreground hover:bg-muted/30',
-                )}
+            <SidebarGroup key={section.key} className="mb-2 p-0 shrink-0">
+              <div
+                data-sidebar="module-group-label"
+                className="flex h-8 shrink-0 items-center px-2 text-[9px] font-semibold uppercase tracking-[0.2em] text-sidebar-foreground/50"
               >
-                <SecIcon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-                <span className="flex-1 text-left">{section.label}</span>
-                <ChevronDown className={cn('h-3.5 w-3.5 transition-transform', !isOpen && '-rotate-90')} />
-              </button>
-
-              {isOpen && (
-                <div className="ml-3 pl-2 border-l border-border/40 mt-0.5 space-y-0.5">
+                <SecIcon className="mr-1.5 h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
+                {section.label}
+              </div>
+              <SidebarGroupContent>
+                <SidebarMenu className="gap-0.5">
                   {section.items.map((item) => {
                     const ItemIcon = item.icon;
                     const isActive = activeKey === item.key;
                     return (
-                      <button
-                        key={item.key}
-                        type="button"
-                        role="tab"
-                        aria-selected={isActive}
-                        onClick={() => onSelect(item.key)}
-                        className={cn(
-                          'w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors',
-                          isActive
-                            ? 'bg-primary text-primary-foreground shadow-sm'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-muted/40',
-                        )}
-                      >
-                        <ItemIcon className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
-                        <span className="truncate">{item.label}</span>
-                      </button>
+                      <SidebarMenuItem key={item.key}>
+                        <SidebarMenuButton
+                          size="lg"
+                          onClick={() => onSelect(item.key)}
+                          isActive={isActive}
+                          aria-current={isActive ? 'page' : undefined}
+                          className={cn(
+                            'relative h-10 rounded-md transition-colors duration-150 active:scale-[0.97]',
+                            isActive
+                              ? 'font-bold text-primary'
+                              : 'font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                          )}
+                        >
+                          {isActive && (
+                            <div className="pointer-events-none absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-primary" />
+                          )}
+                          <div className="relative flex h-5 w-5 shrink-0 items-center justify-center">
+                            <ItemIcon
+                              className="h-[18px] w-[18px]"
+                              strokeWidth={isActive ? 2.4 : 1.75}
+                            />
+                          </div>
+                          <span className="min-w-0 flex-1 truncate text-left text-[13px]">
+                            {item.label}
+                          </span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
                     );
                   })}
-                </div>
-              )}
-            </div>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
           );
         })}
-      </nav>
-    </aside>
+      </SidebarContent>
+
+      <SidebarFooter className="overflow-hidden border-t border-border/30 py-3 px-3">
+        <SidebarMenu className="gap-0.5">
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              size="lg"
+              onClick={() => navigate('/')}
+              tooltip="Voltar ao app"
+              aria-label="Voltar ao app"
+              className="relative h-10 rounded-md text-sidebar-foreground transition-colors duration-150 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            >
+              <div className="flex h-5 w-5 shrink-0 items-center justify-center">
+                <ArrowLeft className="h-[18px] w-[18px]" />
+              </div>
+              <span className="min-w-0 flex-1 truncate text-left text-xs font-medium">
+                Voltar ao app
+              </span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+    </Sidebar>
   );
 }
 
@@ -246,22 +283,19 @@ export default function AdminLayout() {
   const location = useLocation();
   const [params, setParams] = useSearchParams();
 
-  if (loading) return null;
-  if (!isAdmin) return <Navigate to="/" replace />;
-
   const tab = (params.get('tab') as string) || 'overview';
   const activeKey = ALL_KEYS.includes(tab) ? tab : 'overview';
   const version = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'dev';
   const setTab = (k: string) => setParams({ tab: k }, { replace: true });
-
-  // Se estamos numa sub-rota dedicada (/admin/n8n, /automacoes...), o conteúdo
-  // vem do <Outlet/>. Senão, renderizamos o painel em tabs via ?tab=.
   const isSubRoute = location.pathname !== '/admin';
+
+  if (loading) return null;
+  if (!isAdmin) return <Navigate to="/" replace />;
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-border/40 bg-background/95 backdrop-blur px-4 py-2.5">
-        <div className="flex items-center gap-3">
+      <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-border/40 bg-background/95 backdrop-blur px-4 py-2.5 flex-wrap">
+        <div className="flex items-center gap-3 flex-wrap">
           <Button
             variant="outline"
             size="sm"
@@ -276,13 +310,13 @@ export default function AdminLayout() {
             <Badge variant="outline" className="font-mono h-6 px-2 text-[10px]">v{version}</Badge>
           </div>
         </div>
-        <Badge variant="secondary" className="gap-1 h-7 px-2.5 text-xs">
+        <Badge variant="secondary" className="gap-1 h-7 px-2.5 text-xs shrink-0">
           <ShieldCheck className="h-3 w-3" /> {user?.email}
         </Badge>
       </header>
 
-      <div className="grid grid-cols-[260px_1fr] gap-4 items-start p-4">
-        <AdminSidebar activeKey={activeKey} onSelect={setTab} />
+      <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-4 items-start p-4">
+        <AdminSidebarWrapper activeKey={activeKey} onSelect={setTab} />
         <main className="min-w-0">
           {isSubRoute ? (
             // Sub-rotas admin usam componentes lazy (N8nMonitorPage, HarTransferenciasPage,
@@ -350,7 +384,7 @@ function OverviewTab() {
           <ul className="divide-y divide-border/40">
             {stats.releases.map((r: any, index: number) => (
               <li key={r.id ?? `release-${index}`} className="flex flex-col py-3 text-sm gap-1">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-mono font-bold">v{r.version}</span>
                   {r.is_current && <Badge className="bg-primary text-[10px] h-5">Atual</Badge>}
                   {r.is_stable && <Badge variant="secondary" className="text-[10px] h-5">Estável</Badge>}
@@ -364,7 +398,7 @@ function OverviewTab() {
       </CardShell>
       <CardShell title="Automações" icon={<Workflow className="h-4 w-4 text-primary" />}>
         <a href="/automacoes" className="group flex items-start gap-3 rounded-md border border-border/40 bg-card/50 p-3 transition-colors hover:border-primary/40 hover:bg-card">
-          <div className="rounded-md bg-primary/10 p-2 text-primary"><Workflow className="h-4 w-4" /></div>
+          <div className="rounded-md bg-primary/10 p-2 text-primary shrink-0"><Workflow className="h-4 w-4" /></div>
           <div className="min-w-0">
             <div className="text-sm font-medium">Rotinas do Auge</div>
             <div className="text-xs text-muted-foreground">Entrega Após, abreviações e outras automações administrativas.</div>
@@ -405,7 +439,7 @@ function DatabaseTab() {
       <CardShell title="Tabelas monitoradas" icon={<HardDrive className="h-4 w-4 text-primary" />}>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
           {rows.map((r) => (
-            <div key={r.table} className="p-3 rounded-md border border-border/40 shadow-sm bg-card/60 hover:border-primary/40 hover:shadow-md transition-colors">
+            <div key={r.table} className="p-3 rounded-md border border-border/40 bg-card/60 hover:border-primary/40 transition-colors">
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground truncate"><HardDrive className="h-3 w-3 shrink-0" /><span className="truncate font-mono">{r.table}</span></div>
               <div className="text-xl font-semibold tabular-nums mt-1">{r.error ? <span className="text-xs text-destructive">erro</span> : (r.count ?? 0).toLocaleString('pt-BR')}</div>
             </div>

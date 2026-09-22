@@ -317,7 +317,7 @@ export default function TagsTab() {
           {isStalled && (
             <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-amber-500">
               <span>Varredura sem atualização recente. Retomada automática acionada; se necessário, retome manualmente.</span>
-              <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => resumeRun(false)}>
+              <Button variant="outline" className="h-10 text-[10px]" onClick={() => resumeRun(false)}>
                 Retomar agora
               </Button>
             </div>
@@ -337,7 +337,7 @@ export default function TagsTab() {
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
               placeholder="Buscar por configuração ou código…"
-              className="h-9 pl-7 text-xs"
+              className="h-10 pl-7 text-xs"
             />
           </div>
           <div className="flex items-center gap-1 border rounded-md p-0.5">
@@ -345,17 +345,16 @@ export default function TagsTab() {
             {(['sem_tag', 'com_tag', 'todos'] as Filtro[]).map(f => (
               <Button
                 key={f}
-                size="sm"
                 variant={filtro === f ? 'default' : 'ghost'}
                 onClick={() => setFiltro(f)}
-                className="h-7 text-[10px] px-2"
+                className="h-10 text-[10px] px-3"
               >
                 {f === 'sem_tag' ? 'Sem TAG' : f === 'com_tag' ? 'Com TAG' : 'Todos'}
               </Button>
             ))}
           </div>
 
-          <Button size="sm" variant="outline" onClick={() => refetch()} disabled={isFetching} className="h-9 gap-2 text-[11px]">
+          <Button variant="outline" onClick={() => refetch()} disabled={isFetching} className="h-10 gap-2 text-[11px]">
             {isFetching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
             Recarregar
           </Button>
@@ -365,19 +364,19 @@ export default function TagsTab() {
           <table className="w-full text-xs">
             <thead className="bg-muted sticky top-0 z-10">
               <tr className="text-left">
-                <th className="p-2 cursor-pointer select-none" onClick={() => toggleSort('nome')}>
+                <th className="p-2 cursor-pointer select-none" role="button" tabIndex={0} aria-label="Ordenar por Configuração" onClick={() => toggleSort('nome')} onKeyDown={(e) => e.key === 'Enter' && toggleSort('nome')}>
                   <div className="flex items-center gap-1">
                     Configuração
                     {sortBy === 'nome' && (sortDir === 'asc' ? <ArrowDownAZ className="h-3 w-3" /> : <ArrowUpAZ className="h-3 w-3" />)}
                   </div>
                 </th>
-                <th className="p-2 cursor-pointer select-none" onClick={() => toggleSort('codigo')}>
+                <th className="p-2 cursor-pointer select-none" role="button" tabIndex={0} aria-label="Ordenar por Código" onClick={() => toggleSort('codigo')} onKeyDown={(e) => e.key === 'Enter' && toggleSort('codigo')}>
                   <div className="flex items-center gap-1">
                     Código
                     {sortBy === 'codigo' && (sortDir === 'asc' ? <ArrowDownAZ className="h-3 w-3" /> : <ArrowUpAZ className="h-3 w-3" />)}
                   </div>
                 </th>
-                <th className="p-2 cursor-pointer select-none" onClick={() => toggleSort('qtd')}>
+                <th className="p-2 cursor-pointer select-none" role="button" tabIndex={0} aria-label="Ordenar por TAGs" onClick={() => toggleSort('qtd')} onKeyDown={(e) => e.key === 'Enter' && toggleSort('qtd')}>
                   <div className="flex items-center gap-1">
                     TAGs
                     {sortBy === 'qtd' && (sortDir === 'asc' ? <ArrowDownAZ className="h-3 w-3" /> : <ArrowUpAZ className="h-3 w-3" />)}

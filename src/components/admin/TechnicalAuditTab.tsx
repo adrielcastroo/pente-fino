@@ -6,9 +6,9 @@ import { ShieldAlert, CheckCircle2, AlertCircle, FileText, Code2, TestTube2, Lay
 export default function TechnicalAuditTab() {
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-semibold flex items-center gap-2">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="min-w-0">
+          <h2 className="text-lg font-semibold flex items-center gap-2 flex-wrap">
             <ShieldAlert className="h-5 w-5 text-destructive" />
             Relatório de Auditoria Técnica
           </h2>
@@ -16,10 +16,10 @@ export default function TechnicalAuditTab() {
             Diagnóstico e resolução do Incidente #1785694 (RUNTIME_ERROR no ai-agent).
           </p>
         </div>
-        <Badge variant="outline" className="text-xs font-mono">ID: 1785694565833</Badge>
+        <Badge variant="outline" className="text-xs font-mono shrink-0">ID: 1785694565833</Badge>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Card className="p-4 border-l-4 border-l-destructive bg-destructive/5">
           <div className="flex items-center gap-2 mb-2">
             <AlertCircle className="h-4 w-4 text-destructive" />
@@ -38,9 +38,9 @@ export default function TechnicalAuditTab() {
           <div className="text-xs text-muted-foreground leading-tight">Crash na renderização do chat por acesso a 'parts' indefinido em mensagens do usuário.</div>
         </Card>
 
-        <Card className="p-4 border-l-4 border-l-green-500 bg-green-500/5">
+        <Card className="p-4 border-l-4 border-l-emerald-500 bg-emerald-500/5">
           <div className="flex items-center gap-2 mb-2">
-            <CheckCircle2 className="h-4 w-4 text-green-500" />
+            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
             <span className="text-xs font-bold uppercase tracking-wider">Status Resolução</span>
           </div>
           <div className="text-lg font-bold leading-none mb-1">100% Corrigido</div>
@@ -55,20 +55,20 @@ export default function TechnicalAuditTab() {
           </h3>
           <div className="space-y-3">
             {[
-              { 
-                agent: "UI Architect", 
-                task: "Revisão de renderização defensiva no AgentChatWidget.", 
-                status: "Implementado optional chaining em m.parts e lastMessage.parts." 
+              {
+                agent: "UI Architect",
+                task: "Revisão de renderização defensiva no AgentChatWidget.",
+                status: "Implementado optional chaining em m.parts e lastMessage.parts."
               },
-              { 
-                agent: "Supabase Engineer", 
-                task: "Blindagem da Edge Function ai-agent contra payloads malformados.", 
-                status: "Normalização do array de mensagens com convertToModelMessages + Array.isArray check." 
+              {
+                agent: "Supabase Engineer",
+                task: "Blindagem da Edge Function ai-agent contra payloads malformados.",
+                status: "Normalização do array de mensagens com convertToModelMessages + Array.isArray check."
               },
-              { 
-                agent: "Code Auditor", 
-                task: "Detecção de padrões 'messages.some' e 'parts.map' sem guarda.", 
-                status: "Auditado 100% dos loops de mensagens na aplicação." 
+              {
+                agent: "Code Auditor",
+                task: "Detecção de padrões 'messages.some' e 'parts.map' sem guarda.",
+                status: "Auditado 100% dos loops de mensagens na aplicação."
               }
             ].map((step, i) => (
               <div key={i} className="p-3 rounded-md border border-border/40 bg-card/50 text-xs">
@@ -86,14 +86,14 @@ export default function TechnicalAuditTab() {
           </h3>
           <ScrollArea className="h-[240px] rounded-md border border-border/40 bg-muted/30 p-4">
             <div className="font-mono text-[10px] space-y-1.5 leading-tight">
-              <div className="text-green-500">[PASS] Edge Function: handle_missing_messages</div>
-              <div className="text-green-500">[PASS] Edge Function: handle_malformed_parts</div>
-              <div className="text-green-500">[PASS] Frontend: render_without_parts_optimistic</div>
-              <div className="text-green-500">[PASS] Frontend: multimodal_detection_safety</div>
+              <div className="text-success">[PASS] Edge Function: handle_missing_messages</div>
+              <div className="text-success">[PASS] Edge Function: handle_malformed_parts</div>
+              <div className="text-success">[PASS] Frontend: render_without_parts_optimistic</div>
+              <div className="text-success">[PASS] Frontend: multimodal_detection_safety</div>
               <div className="text-muted-foreground mt-4"># Cobertura de Testes: 94.2%</div>
               <div className="text-muted-foreground"># Tempo de resposta (p95): 420ms</div>
               <div className="text-muted-foreground"># Uptime (API Agent): 99.9%</div>
-              <div className="text-blue-500 mt-4">Próximos passos:</div>
+              <div className="text-primary mt-4">Próximos passos:</div>
               <div className="text-muted-foreground">- Monitoramento via Sentry (Tab Ativa)</div>
               <div className="text-muted-foreground">- Implementar Error Boundary específico para o chat</div>
             </div>

@@ -1502,11 +1502,11 @@ function LabelCanvas({
       {editable && (guides.v.length > 0 || guides.h.length > 0) && (
         <div className="pointer-events-none absolute inset-0 print:hidden">
           {guides.v.map((mm, i) => (
-            <div key={`v-${i}-${mm}`} className="absolute top-0 bottom-0 w-px bg-fuchsia-500"
+            <div key={`v-${i}-${mm}`} className="absolute top-0 bottom-0 w-px bg-primary/70"
               style={{ left: `${mm * MM_TO_PX}px` }} />
           ))}
           {guides.h.map((mm, i) => (
-            <div key={`h-${i}-${mm}`} className="absolute left-0 right-0 h-px bg-fuchsia-500"
+            <div key={`h-${i}-${mm}`} className="absolute left-0 right-0 h-px bg-primary/70"
               style={{ top: `${mm * MM_TO_PX}px` }} />
           ))}
         </div>
@@ -1534,14 +1534,14 @@ function ElementView({
     left: `${el.x * MM_TO_PX}px`, top: `${el.y * MM_TO_PX}px`,
     width: `${el.w * MM_TO_PX}px`, height: `${el.h * MM_TO_PX}px`,
   };
-  const PURPLE = '#8B3DFF';
+  const selection = 'hsl(var(--violet))';
   return (
     <div
       style={style}
       className={cn('label-el group',
         editable && !el.locked && 'cursor-move',
         editable && el.locked && 'cursor-not-allowed',
-        editable && !selected && !el.locked && 'hover:[outline-style:dashed] hover:[outline-width:1px] hover:[outline-color:#8B3DFF] hover:[outline-offset:2px]',
+        editable && !selected && !el.locked && 'hover:[outline-style:dashed] hover:[outline-width:1px] hover:[outline-color:var(--violet)] hover:[outline-offset:2px]',
       )}
       onPointerDown={(e) => onPointerDown(e, 'move')}
       onDoubleClick={(e) => {
@@ -1557,8 +1557,8 @@ function ElementView({
           <div
             className="pointer-events-none absolute -inset-px z-[5]"
             style={{
-              border: `1.5px solid ${PURPLE}`,
-              boxShadow: `0 0 0 1px rgba(255,255,255,0.6), 0 0 0 2px rgba(139,61,255,0.15)`,
+              border: `1.5px solid ${selection}`,
+              boxShadow: `0 0 0 1px rgba(255,255,255,0.6), 0 0 0 2px hsl(var(--violet) / 0.15)`,
               borderRadius: 2,
             }}
           />
@@ -1582,10 +1582,10 @@ function ElementView({
                 style={{
                   width: isCorner ? 12 : (isH ? 18 : 6),
                   height: isCorner ? 12 : (isH ? 6 : 18),
-                  background: '#ffffff',
-                  border: `1.5px solid ${PURPLE}`,
+                  background: 'hsl(var(--card))',
+                  border: `1.5px solid ${selection}`,
                   borderRadius: isCorner ? 999 : 3,
-                  boxShadow: '0 1px 3px rgba(15,23,42,0.28), 0 0 0 0.5px rgba(15,23,42,0.05)',
+                  boxShadow: `0 1px 3px hsl(var(--foreground) / 0.28), 0 0 0 0.5px hsl(var(--foreground) / 0.05)`,
                 }} />
             );
           })}
@@ -1593,16 +1593,16 @@ function ElementView({
           <div onPointerDown={(e) => e.stopPropagation()}
             className="label-actions absolute -top-12 left-0 flex items-center gap-0.5 rounded-full px-2 py-1.5 z-10"
             style={{
-              background: '#ffffff',
-              color: '#1e293b',
-              border: '1px solid #e2e8f0',
-              boxShadow: '0 6px 20px rgba(15,23,42,0.18), 0 2px 6px rgba(15,23,42,0.08)',
+              background: 'hsl(var(--card))',
+              color: 'hsl(var(--foreground))',
+              border: '1px solid hsl(var(--border))',
+              boxShadow: '0 6px 20px hsl(var(--foreground) / 0.18), 0 2px 6px hsl(var(--foreground) / 0.08)',
             }}>
-            <button className="p-1.5 rounded-full hover:bg-slate-100 transition-colors" style={{ color: '#1e293b' }} onClick={(e) => { e.stopPropagation(); onDuplicate(); }} title="Duplicar"><Copy className="size-[15px]" strokeWidth={2} /></button>
-            <button className="p-1.5 rounded-full hover:bg-slate-100 transition-colors" style={{ color: '#1e293b' }} onClick={(e) => { e.stopPropagation(); onMoveZ('up'); }} title="Trazer para frente"><ArrowUp className="size-[15px]" strokeWidth={2} /></button>
-            <button className="p-1.5 rounded-full hover:bg-slate-100 transition-colors" style={{ color: '#1e293b' }} onClick={(e) => { e.stopPropagation(); onMoveZ('down'); }} title="Enviar para trás"><ArrowDown className="size-[15px]" strokeWidth={2} /></button>
-            <div className="w-px h-4 mx-1" style={{ background: '#e2e8f0' }} />
-            <button className="p-1.5 rounded-full hover:bg-red-50 transition-colors" style={{ color: '#dc2626' }} onClick={(e) => { e.stopPropagation(); onRemove(); }} title="Remover"><Trash2 className="size-[15px]" strokeWidth={2} /></button>
+            <button className="p-1.5 rounded-full hover:bg-accent transition-colors" style={{ color: 'hsl(var(--foreground))' }} onClick={(e) => { e.stopPropagation(); onDuplicate(); }} title="Duplicar"><Copy className="size-[15px]" strokeWidth={2} /></button>
+            <button className="p-1.5 rounded-full hover:bg-accent transition-colors" style={{ color: 'hsl(var(--foreground))' }} onClick={(e) => { e.stopPropagation(); onMoveZ('up'); }} title="Trazer para frente"><ArrowUp className="size-[15px]" strokeWidth={2} /></button>
+            <button className="p-1.5 rounded-full hover:bg-accent transition-colors" style={{ color: 'hsl(var(--foreground))' }} onClick={(e) => { e.stopPropagation(); onMoveZ('down'); }} title="Enviar para trás"><ArrowDown className="size-[15px]" strokeWidth={2} /></button>
+            <div className="w-px h-4 mx-1" style={{ background: 'hsl(var(--border))' }} />
+            <button className="p-1.5 rounded-full hover:bg-destructive/10 transition-colors" style={{ color: 'hsl(var(--destructive))' }} onClick={(e) => { e.stopPropagation(); onRemove(); }} title="Remover"><Trash2 className="size-[15px]" strokeWidth={2} /></button>
           </div>
         </>
       )}

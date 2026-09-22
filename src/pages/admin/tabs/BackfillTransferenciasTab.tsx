@@ -276,10 +276,7 @@ function fmt(v: number | null | undefined) {
 function Stat({
   icon: Icon, label, value, tone, small,
 }: { icon: any; label: string; value: any; tone?: 'emerald' | 'amber' | 'red'; small?: boolean }) {
-  const cls =
-    tone === 'emerald' ? 'text-success' :
-    tone === 'amber' ? 'text-warning' :
-    tone === 'red' ? 'text-destructive' : 'text-foreground';
+  const cls = tone === 'emerald' ? 'text-success' : tone === 'amber' ? 'text-warning' : tone === 'red' ? 'text-destructive' : 'text-foreground';
   return (
     <Card className="p-3 rounded-md border-border/40">
       <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground uppercase tracking-wider mb-1">

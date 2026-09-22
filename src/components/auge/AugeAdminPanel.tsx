@@ -253,7 +253,7 @@ export default function AugeAdminPanel() {
             <div className={`w-10 h-10 rounded-full flex items-center justify-center ${syncEnabled ? 'bg-emerald-500/10' : 'bg-amber-500/10'}`}>
               <Power className={`w-5 h-5 ${syncEnabled ? 'text-success' : 'text-warning'}`} />
             </div>
-            <div>
+            <div className="min-w-0">
               <Label htmlFor="auge-sync-toggle" className="font-semibold text-sm cursor-pointer">
                 Sincronização com o Auge {syncEnabled ? 'ativa' : 'desligada'}
               </Label>
@@ -279,7 +279,7 @@ export default function AugeAdminPanel() {
       {/* Status da conexão */}
       <Card className="p-5 rounded-md border-border/40 relative overflow-hidden">
         <div className="absolute top-2 right-2">
-          <Button variant="ghost" size="sm" className="text-[10px] h-7 gap-1" asChild>
+          <Button variant="ghost" className="text-[10px] h-10 gap-1" asChild>
             <a href="/admin/auge-sync-status"><Activity className="w-3 h-3" /> Monitorar Status</a>
           </Button>
         </div>
@@ -293,11 +293,11 @@ export default function AugeAdminPanel() {
                 <Wifi className="w-5 h-5 text-success" />
               </div>
             ) : (
-              <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
                 <WifiOff className="w-5 h-5 text-destructive" />
               </div>
             )}
-            <div>
+            <div className="min-w-0">
               <h3 className="font-semibold text-sm">
                 {pinging ? 'Verificando...' : ping?.ok ? 'Conectado ao Auge ERP' : 'Sem conexão'}
               </h3>
@@ -309,30 +309,29 @@ export default function AugeAdminPanel() {
             </div>
           </div>
           <div className="flex gap-2 flex-wrap">
-            <Button size="sm" variant="outline" onClick={doPing} disabled={pinging} className="gap-1.5 h-9">
+            <Button variant="outline" onClick={doPing} disabled={pinging} className="gap-1.5 h-10">
               <RefreshCw className={`w-3.5 h-3.5 ${pinging ? 'animate-spin' : ''}`} />
               Testar conexão
             </Button>
-            <Button size="sm" variant="outline" asChild className="gap-1.5 h-9">
+            <Button variant="outline" asChild className="gap-1.5 h-10">
               <a href="/admin/har-transferencias"><Activity className="w-3.5 h-3.5" />Analisar HAR</a>
             </Button>
-            <Button size="sm" variant="outline" asChild className="gap-1.5 h-9">
+            <Button variant="outline" asChild className="gap-1.5 h-10">
               <a href="/admin/depositos"><Activity className="w-3.5 h-3.5" />Gerir depósitos</a>
             </Button>
-            <Button size="sm" variant="outline" onClick={syncTecidosMap} disabled={syncingEntity !== null || !syncEnabled} className="gap-1.5 h-9" title="Reconstrói /estoque/mapa a partir dos lotes do Auge">
+            <Button variant="outline" onClick={syncTecidosMap} disabled={syncingEntity !== null || !syncEnabled} className="gap-1.5 h-10" aria-label="Reconstrói /estoque/mapa a partir dos lotes do Auge">
               {syncingEntity === 'tecidos_map' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MapPin className="w-3.5 h-3.5" />}
               Sincronizar mapa tecidos
             </Button>
-            <Button size="sm" variant="outline" onClick={syncAll} disabled={syncingEntity !== null || !syncEnabled} title={!syncEnabled ? 'Sincronização desligada' : 'Apenas entidades (produtos, saldo, movimentações, entradas, transferências)'} className="gap-1.5 h-9">
+            <Button variant="outline" onClick={syncAll} disabled={syncingEntity !== null || !syncEnabled} aria-label={!syncEnabled ? 'Sincronização desligada' : 'Apenas entidades (produtos, saldo, movimentações, entradas, transferências)'} className="gap-1.5 h-10">
               {syncingEntity === 'all' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <PlayCircle className="w-3.5 h-3.5" />}
               Sincronizar entidades
             </Button>
             <Button
-              size="sm"
               onClick={syncEverything}
               disabled={syncingEntity !== null || !syncEnabled}
-              title={!syncEnabled ? 'Sincronização desligada' : 'Roda TUDO: entidades + mapa tecidos + acabamentos + TAGs custom'}
-              className="gap-1.5 h-9 bg-primary hover:bg-primary/90"
+              aria-label={!syncEnabled ? 'Sincronização desligada' : 'Roda TUDO: entidades + mapa tecidos + acabamentos + TAGs custom'}
+              className="gap-1.5 h-10 bg-primary hover:bg-primary/90"
             >
               {syncingEntity === 'everything' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
               SINCRONIZAR TUDO
@@ -373,8 +372,8 @@ export default function AugeAdminPanel() {
                       {count.toLocaleString('pt-BR')} registros
                     </p>
                   </div>
-                  <Button size="sm" variant="ghost" onClick={() => syncOne(ent.key)}
-                    disabled={syncingEntity !== null || !syncEnabled} className="h-7 px-2 gap-1">
+                  <Button variant="ghost" onClick={() => syncOne(ent.key)}
+                    disabled={syncingEntity !== null || !syncEnabled} className="h-10 px-2 gap-1">
                     {syncingEntity === ent.key ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
                   </Button>
                 </div>

@@ -381,9 +381,8 @@ function TagCalculadaCell({
       <div className="flex items-center gap-1.5">
         <span className="font-mono text-[11px] break-all flex-1">{valor}</span>
         <Button
-          size="sm"
           variant="ghost"
-          className="h-6 px-2 text-[10px] shrink-0"
+          className="h-10 px-3 text-[10px] shrink-0"
           onClick={() => { setAberto(true); setBusca(valor); }}
         >
           Trocar
@@ -403,7 +402,7 @@ function TagCalculadaCell({
           onFocus={() => !disabled && setAberto(true)}
           onChange={(e) => { setBusca(e.target.value); setAberto(true); }}
           placeholder={compacto ? 'Nome, descrição ou fórmula' : 'Buscar por nome, descrição ou fórmula (use * como curinga)'}
-          className="h-8 pl-7 text-[11px] font-mono"
+          className="h-10 pl-7 text-[11px] font-mono"
         />
       </div>
       {aberto && termo.length >= 2 && (
@@ -461,7 +460,7 @@ function TagCalculadaCell({
         </div>
       )}
       {aberto && valor && (
-        <Button size="sm" variant="ghost" className="h-6 px-2 text-[10px]" onClick={() => setAberto(false)}>
+        <Button variant="ghost" className="h-10 px-3 text-[10px]" onClick={() => setAberto(false)}>
           Cancelar
         </Button>
       )}
@@ -681,7 +680,7 @@ function TagConfiguradaSearch({
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
           placeholder="Pesquisar TAG Configurada (use * como curinga)"
-          className="h-9 pl-7 text-[11px] font-mono"
+          className="h-10 pl-7 text-[11px] font-mono"
         />
       </div>
       {termo.length >= 2 && (
@@ -719,7 +718,7 @@ function TagConfiguradaSearch({
         </div>
       )}
       {inline && onCancel && (
-        <Button size="sm" variant="ghost" className="h-7 px-2 text-[10px]" onClick={onCancel}>
+        <Button variant="ghost" className="h-10 px-3 text-[10px]" onClick={onCancel}>
           Cancelar
         </Button>
       )}
@@ -929,58 +928,41 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
     enabled: termoDeferido.trim().length >= 2,
     staleTime: 60 * 1000,
     queryFn: async () => {
-      const sel = 'cd_configuracao, nm_configuracao, nm_tag_customizada, ds_tag_customizada, ds_tag_calculada, ds_tag_texto';
-      const termo = termoDeferido.trim();
-      const tokensIlike = toIlikeTokens(termo);
-      const tokensPuros = termo.split(/[\s*]+/).map(t => t.trim().toLowerCase()).filter(t => t.length >= 2);
+      const sel =
+        'cd_configuracao, nm_configuracao, nm_tag_customizada, ds_tag_customizada, ds_tag_calculada, ds_tag_texto';
+      // Mesmas colunas pesquisadas no fluxo do `tagsBusca` (campos editáveis da
+      // TAG Custom): o usuário pode digitar "cortina*cm*35*10*balance*" mas a
+      // configuração pode estar grafada como "CORTINA ROLLO CM 35 BALANCE 10"
+      // em `ds_tag_customizada` ou `nm_tag_customizada`. Antes o AND era feito
+      // só em `nm_configuracao`, então o bloco resumo voltava vazio para casos
+      // onde as palavras-chave existem em outras colunas da TAG.
+      const colsPalavras = ['nm_configuracao', 'ds_tag_customizada', 'nm_tag_customizada', 'ds_tag_texto', 'ds_tag_calculada'];
 
-      if (tokensPuros.length === 0) return { configs: [], tags: [] };
-
-      // 1) Match por NOME DA CONFIGURAÇÃO (nm_configuracao)
-      // Aplicamos o filtro AND para garantir que todos os tokens estejam presentes no nome.
-      let qCfg = (supabase as any).from('auge_tag_custom').select(sel);
-      for (const t of tokensIlike) {
-        qCfg = qCfg.ilike('nm_configuracao', t);
+      // Relaxamento progressivo: começa exigindo todas as palavras (AND entre
+      // tokens, OR entre colunas) e vai descartando as menos relevantes até
+      // encontrar modelos existentes.
+      for (let n = palavras.length; n >= 1; n--) {
+        const usados = palavras.slice(0, n);
+        let q = (supabase as any).from('auge_tag_custom').select(sel);
+        for (const p of usados) {
+          const ilikeGroup = colsPalavras
+            .map((c) => `${c}.ilike.%${p.token}%`)
+            .join(',');
+          q = q.or(ilikeGroup);
+        }
+        const { data, error } = await q.limit(4000);
+        if (error) throw error;
+        if ((data ?? []).length > 0) {
+          return { rows: data as CustomTag[], usados: usados.map((u) => u.token) };
+        }
       }
-      
-      const { data: dataCfg, error: errorCfg } = await qCfg.limit(4000);
-      let acc: CustomTag[] = errorCfg ? [] : (dataCfg ?? []);
 
-      // 2) Deduplicação rigorosa e Validação Final no Cliente (Double Check)
-      // Para o bloco RESUMO, só aceitamos se bater no NOME DA CONFIGURAÇÃO.
-      const seenTag = new Set<string>();
-      const validRows = acc.filter((t) => {
-        const k = `${t.cd_configuracao}|${t.ds_tag_customizada ?? t.nm_tag_customizada ?? ''}|${t.ds_tag_texto ?? ''}`;
-        if (seenTag.has(k)) return false;
-        seenTag.add(k);
-
-        const nm = (t.nm_configuracao || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-        return tokensPuros.every(tk => nm.includes(tk));
-      });
-
-      // Deriva as configurações distintas
-      const cfgMap = new Map<string, ConfiguracaoLite>();
-      for (const t of validRows) {
-        const cd = String(t.cd_configuracao ?? '').trim();
-        if (!cd) continue;
-        const cur = cfgMap.get(cd) ?? {
-          cd_configuracao: cd,
-          nm_configuracao: t.nm_configuracao ?? cd,
-          qtd_tags: 0,
-        };
-        cur.qtd_tags += 1;
-        cfgMap.set(cd, cur);
-      }
-      
-      return { 
-        configs: Array.from(cfgMap.values()).sort((a, b) => a.nm_configuracao.localeCompare(b.nm_configuracao)), 
-        tags: validRows 
-      };
+      return { rows: [], usados: [] };
     },
   });
-  const resumoConfigs = useMemo(() => buscaPalavras?.configs ?? [], [buscaPalavras]);
-  const tagsPalavras = useMemo(() => buscaPalavras?.tags ?? [], [buscaPalavras]);
-  const tagsReconhecidas = useMemo(() => buscaPalavras?.tags ?? [], [buscaPalavras]);
+  const resumoConfigs = useMemo(() => buscaPalavras?.rows ?? [], [buscaPalavras]);
+  const tagsPalavras = useMemo(() => buscaPalavras?.rows ?? [], [buscaPalavras]);
+  const tagsReconhecidas = useMemo(() => buscaPalavras?.rows ?? [], [buscaPalavras]);
 
   // ---------- Configurações do bloco "Resumo" (alvo da alteração em massa) ----------
   // Busca DEDICADA sobre `auge_tag_custom_configuracoes` + `auge_tag_custom_scan`,
@@ -1930,12 +1912,11 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
             </div>
             {linhas.length > 0 && (
               <Button
-                size="sm"
                 variant="ghost"
-                className="h-7 px-2 text-[10px]"
-                onClick={() => { 
-                  setLinhas([]); 
-                  setResultado(null); 
+                className="h-10 px-3 text-[10px]"
+                onClick={() => {
+                  setLinhas([]);
+                  setResultado(null);
                   setModoEdicaoRelancamento(false);
                 }}
               >
@@ -1984,16 +1965,15 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                       <td className="p-2 text-right">
                         {!modoEdicaoRelancamento && (
                           <Button
-                            size="icon"
                             variant="ghost"
-                            className="h-7 w-7"
+                            className="h-10 w-10"
                             onClick={() => {
                               setLinhas((prev) => prev.filter((x) => x.id !== l.id));
                               setRemovidasManualmente((prev) => new Set(prev).add(l.code));
                             }}
                             aria-label="Remover TAG"
                           >
-                            <X className="h-3.5 w-3.5" />
+                            <X className="h-4 w-4" />
                           </Button>
                         )}
                       </td>
@@ -2022,9 +2002,8 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                     <tr className="border-t">
                       <td colSpan={4} className="p-2">
                         <Button
-                          size="sm"
                           variant="outline"
-                          className="h-8 px-2 text-[10px] gap-1"
+                          className="h-10 px-3 text-[10px] gap-1"
                           disabled={modoEdicaoRelancamento}
                           onClick={() => setAddManual(true)}
                         >
@@ -2054,7 +2033,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
             {modoEdicaoRelancamento && (
               <Button
                 variant="outline"
-                className="w-full h-9 text-xs border-emerald-500/30 text-emerald-700 hover:bg-emerald-50"
+                className="w-full h-10 text-xs border-emerald-500/30 text-emerald-700 hover:bg-emerald-50"
                 onClick={cancelarEdicao}
                 disabled={enviando}
               >
@@ -2096,13 +2075,12 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                 <div className="flex items-center gap-1.5">
                   {!!resultado.augeRows?.length && !editandoAuge && !modoEdicaoRelancamento && (
                     <Button
-                      size="sm"
                       variant="outline"
-                      className="h-7 px-2 text-[10px] gap-1 border-emerald-500/20 hover:bg-emerald-500/5"
+                      className="h-10 px-3 text-[10px] gap-1 border-emerald-500/20 hover:bg-emerald-500/5"
                       onClick={() => {
-                        const cfg = { 
-                          cd: customAberta?.cd || resultado?.cdConfiguracao || '', 
-                          nm: customAberta?.nm || resultado?.descricao || '' 
+                        const cfg = {
+                          cd: customAberta?.cd || resultado?.cdConfiguracao || '',
+                          nm: customAberta?.nm || resultado?.descricao || ''
                         };
                         iniciarEdicaoSegura(cfg);
                       }}
@@ -2113,18 +2091,16 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                   {editandoAuge && (
                     <div className="flex items-center gap-1">
                       <Button
-                        size="sm"
-                        className="h-7 px-2 text-[10px] gap-1 bg-emerald-600 hover:bg-emerald-700"
+                        className="h-10 px-3 text-[10px] gap-1 bg-emerald-600 hover:bg-emerald-700"
                         disabled={regravando || Object.keys(edicoesAuge).length === 0}
                         onClick={confirmarEdicaoAuge}
                       >
-                        {regravando ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                        {regravando ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
                         {regravando ? 'Regravando…' : 'Salvar'}
                       </Button>
                       <Button
-                        size="sm"
                         variant="ghost"
-                        className="h-7 px-2 text-[10px]"
+                        className="h-10 px-3 text-[10px]"
                         disabled={regravando}
                         onClick={() => { setEditandoAuge(false); setEdicoesAuge({}); }}
                       >
@@ -2133,9 +2109,8 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                     </div>
                   )}
                   <Button
-                    size="sm"
                     variant="ghost"
-                    className="h-7 w-7 p-0 hover:bg-black/5"
+                    className="h-10 w-10 p-0 hover:bg-black/5"
                     onClick={() => { setResultado(null); setEditandoAuge(false); setEdicoesAuge({}); }}
                   >
                     <X className="h-4 w-4" />
@@ -2311,9 +2286,8 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
                     </div>
                   </div>
                   <Button
-                    size="sm"
                     variant="outline"
-                    className="h-7 px-2 text-[10px] gap-1 shrink-0"
+                    className="h-10 px-3 text-[10px] gap-1 shrink-0"
                     onClick={() => relancarRegistro(reg)}
                   >
                     <Pencil className="h-3 w-3" /> Editar e relançar
