@@ -317,7 +317,7 @@ export default function AdminLayout() {
       </header>
 
       <SidebarProvider>
-        <AdminLayoutContent />
+        <AdminLayoutContent activeKey={activeKey} setTab={setTab} isSubRoute={isSubRoute} />
       </SidebarProvider>
     </div>
   );
@@ -325,7 +325,7 @@ export default function AdminLayout() {
 
 // ============ ADMIN LAYOUT INNER CONTENT ============
 
-function AdminLayoutContent() {
+function AdminLayoutContent({ activeKey, setTab, isSubRoute }: { activeKey: string; setTab: (k: string) => void; isSubRoute: boolean }) {
   const { state: sidebarState } = useSidebar();
   const isCollapsed = sidebarState === 'collapsed';
 
