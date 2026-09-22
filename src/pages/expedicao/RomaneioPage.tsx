@@ -138,12 +138,12 @@ export default function RomaneioPage() {
   const { data: regrasData, isLoading: isLoadingRegras, refetch: refetchRegras } = useQuery({
     queryKey: ['faturamento_regras'],
     queryFn: async () => {
-      const BATCH_SIZE = 500;
+      const BATCH_SIZE = 1000;
       const all: FaturamentoRegra[] = [];
       let offset = 0;
       let hasMore = true;
 
-      while (hasMore && all.length < 2000) {
+      while (hasMore && all.length < 5000000) {
         const { data, error } = await supabase
           .from('faturamento_regras')
           .select('*')

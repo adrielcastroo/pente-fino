@@ -11,10 +11,11 @@ export const CHANGELOG: ChangelogEntry[] = [
     date: '2026-09-16',
     highlights: [
       { type: 'feature', text: "Corrige testes de colunas de registro, busca de TAGs e robustez do agente IA — ajusta layouts de colunas (adiciona posicao), toIlikeTokens aceita tokens de 1 char, ilikeOr/ilikeAnd corrigidos, testes de Edge Function pulados sem credenciais" },
+      { type: 'fix', text: 'Remove limitação de 1000 clientes na aba "regras de frete" de /expedicao/romaneio — aplica limite 5000k para exibir todos os clientes' },
     ],
   },
   {
-    version: '4.12.6',
+    version: '4.12.7',
     date: '2026-08-31',
     highlights: [
       { type: 'fix', text: 'Corrige bug crítico de reload infinito na web app — flag sessionStorage previne múltiplos recarregamentos automáticos' },
