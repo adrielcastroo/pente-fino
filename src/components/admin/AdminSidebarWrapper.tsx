@@ -14,7 +14,6 @@ import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { NAV, ALL_KEYS } from './navData';
 import { ShieldCheck, ArrowLeft } from 'lucide-react';
-import { SidebarTrigger } from '@/components/ui/sidebar';
 
 export default function AdminSidebarWrapper({ activeKey, onSelect }: { activeKey: string; onSelect: (k: string) => void }) {
   const navigate = useNavigate();
@@ -27,16 +26,13 @@ export default function AdminSidebarWrapper({ activeKey, onSelect }: { activeKey
       aria-label="Menu Painel Admin"
     >
         <SidebarHeader className="overflow-hidden py-4 px-3">
-          <div className="flex items-center gap-2">
-            <SidebarTrigger className="h-7 w-7" />
-            <div className="flex min-w-0 cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 transition-opacity hover:opacity-80">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center">
-                <ShieldCheck className="h-7 w-7 text-primary" />
-              </div>
-              <span className="text-sm font-bold leading-tight tracking-tight text-sidebar-accent-foreground truncate">
-                Pente Fino
-              </span>
+          <div className="flex min-w-0 cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 transition-opacity hover:opacity-80">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center">
+              <ShieldCheck className="h-7 w-7 text-primary" />
             </div>
+            <span className="text-sm font-bold leading-tight tracking-tight text-sidebar-accent-foreground truncate">
+              Pente Fino
+            </span>
           </div>
         </SidebarHeader>
 

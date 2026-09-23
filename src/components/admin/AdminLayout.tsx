@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { StatCard, CardShell, SectionToolbar } from '@/components/design-system';
-import { SidebarProvider, useSidebar } from '@/components/ui/sidebar';
+import { SidebarProvider, useSidebar, SidebarTrigger } from '@/components/ui/sidebar';
 import { NAV, ALL_KEYS, tabFallback } from './navData';
 import AdminSidebarWrapper from './AdminSidebarWrapper';
 import {
@@ -229,6 +229,7 @@ function AdminLayoutContent() {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-border/40 bg-background/95 backdrop-blur px-4 py-2.5">
         <div className="flex items-center gap-3 flex-1 min-w-0">
+          <SidebarTrigger className="hidden md:inline-flex h-8 w-8 sm:h-10 sm:w-10 text-muted-foreground hover:text-primary hover:bg-primary/8 transition-all duration-200 rounded-lg sm:rounded-md shrink-0" />
           <Button
             variant="outline"
             size="sm"
