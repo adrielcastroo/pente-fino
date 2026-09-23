@@ -1,6 +1,5 @@
 import { Suspense, lazy, useState, useEffect, useMemo } from 'react';
 import { Navigate, useNavigate, useSearchParams, Outlet, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
@@ -83,14 +82,12 @@ export function AdminTabs() {
   }, [activeKey]);
 
   return (
-    <motion.div
+    <div
       key={activeKey}
-      initial={{ opacity: 0, y: 4 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2, ease: 'easeOut' }}
+      style={{ opacity: 1, y: 0 }}
     >
       <Suspense fallback={tabFallback}>{TabContent}</Suspense>
-    </motion.div>
+    </div>
   );
 }
 
