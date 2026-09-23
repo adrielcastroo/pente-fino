@@ -278,7 +278,19 @@ function AdminSidebar({ activeKey, onSelect }: { activeKey: string; onSelect: (k
 }
 
 // ============ LAYOUT ============
+
 export default function AdminLayout() {
+  return (
+    <SidebarProvider>
+      <AdminLayoutContent />
+    </SidebarProvider>
+  );
+}
+
+function AdminLayoutContent() {
+  const { state: sidebarState } = useSidebar();
+  const isCollapsed = sidebarState === 'collapsed';
+
   const { isAdmin, loading, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -289,8 +301,6 @@ export default function AdminLayout() {
   const version = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'dev';
   const setTab = (k: string) => setParams({ tab: k }, { replace: true });
   const isSubRoute = location.pathname !== '/admin';
-  const { state: sidebarState } = useSidebar();
-  const isCollapsed = sidebarState === 'collapsed';
 
   if (loading) return null;
   if (!isAdmin) return <Navigate to="/" replace />;
@@ -326,37 +336,24 @@ export default function AdminLayout() {
         </Badge>
       </header>
 
-      <SidebarProvider>
-        <AdminLayoutContent activeKey={activeKey} setTab={setTab} isSubRoute={isSubRoute} />
-      </SidebarProvider>
-    </div>
-  );
-}
-
-// ============ ADMIN LAYOUT INNER CONTENT ============
-
-function AdminLayoutContent({ activeKey, setTab, isSubRoute }: { activeKey: string; setTab: (k: string) => void; isSubRoute: boolean }) {
-  const { state: sidebarState } = useSidebar();
-  const isCollapsed = sidebarState === 'collapsed';
-
-  return (
-    <div className={cn(
-      "grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-4 items-start p-4 transition-all duration-200",
-      isCollapsed && "lg:grid-cols-[72px_1fr]"
-    )}>
-      <AdminSidebarWrapper activeKey={activeKey} onSelect={setTab} />
-      <main className={cn(
-        "min-w-0 transition-all duration-200",
-        isCollapsed && "ml-2"
+      <div className={cn(
+        "grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-4 items-start p-4 transition-all duration-200",
+        isCollapsed && "lg:grid-cols-[72px_1fr]"
       )}>
-        {isSubRoute ? (
-          <Suspense fallback={tabFallback}>
-            <Outlet />
-          </Suspense>
-        ) : (
-          <AdminTabs />
-        )}
-      </main>
+        <AdminSidebarWrapper activeKey={activeKey} onSelect={setTab} />
+        <main className={cn(
+          "min-w-0 transition-all duration-200",
+          isCollapsed && "ml-2"
+        )}>
+          {isSubRoute ? (
+            <Suspense fallback={tabFallback}>
+              <Outlet />
+            </Suspense>
+          ) : (
+            <AdminTabs />
+          )}
+        </main>
+      </div>
     </div>
   );
 }
