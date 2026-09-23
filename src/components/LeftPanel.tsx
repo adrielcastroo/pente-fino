@@ -882,7 +882,10 @@ export const LeftPanel = memo(function LeftPanel() {
       : generateLoteSistema(resolvedProcesso, resolvedEndereco, mLinear, registros, resolvedNf, item);
 
     // Live Allocation: assign position before adding to the list
-    let resolvedPosicao = (isEtiqPronta && posicao) ? parseInt(posicao) : undefined;
+    let resolvedPosicao = (isEtiqPronta && posicao) ? Math.trunc(parseInt(posicao) || 0) : undefined;
+    if (resolvedPosicao !== undefined && (resolvedPosicao < 1 || resolvedPosicao > 30)) {
+      resolvedPosicao = undefined;
+    }
     
     if (!resolvedPosicao && (requiresEndereco || isEtiqPronta) && resolvedEndereco) {
       try {

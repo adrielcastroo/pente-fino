@@ -106,9 +106,9 @@ function EditRegistroDialog({
         endereco: isPVT ? '' : (form.endereco || '').toUpperCase(),
         tipoTecido: form.tipoTecido || '',
         modoOrigem: form.modoOrigem || '',
-        quantidade: form.quantidade,
+        quantidade: form.quantidade != null ? Math.trunc(Number(form.quantidade)) : null,
         loteSistema: form.loteSistema || '',
-        posicao: Number(form.posicao) || null,
+        posicao: Math.trunc(Number(form.posicao) || 0) >= 1 && Math.trunc(Number(form.posicao) || 0) <= 30 ? Math.trunc(Number(form.posicao)) : null,
       });
       toast.success('Registro atualizado.', {
         action: snapshot ? {
