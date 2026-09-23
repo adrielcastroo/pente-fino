@@ -227,8 +227,8 @@ function AdminLayoutContent() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-border/40 bg-background/95 backdrop-blur px-4 py-2.5 flex-wrap">
-        <div className="flex items-center gap-3 flex-wrap">
+      <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-border/40 bg-background/95 backdrop-blur px-4 py-2.5">
+        <div className="flex items-center gap-3">
           <SidebarTrigger className="h-8 w-8" />
           <Button
             variant="outline"
@@ -236,15 +236,15 @@ function AdminLayoutContent() {
             onClick={() => navigate('/')}
             className={cn(
               "h-8 gap-1.5 transition-all duration-200",
-              isCollapsed && "opacity-0 w-0 px-0 overflow-hidden"
+              isCollapsed && "h-0 px-0 overflow-hidden opacity-0"
             )}
             disabled={isCollapsed}
           >
             <ArrowLeft className="h-3.5 w-3.5" /> Voltar ao app
           </Button>
           <div className={cn(
-            "flex items-center gap-2 transition-all duration-200",
-            isCollapsed && "opacity-0 w-0 overflow-hidden"
+            "flex items-center gap-2 transition-all duration-200 overflow-hidden",
+            isCollapsed && "h-0 opacity-0"
           )}>
             <ShieldCheck className="h-4 w-4 text-primary shrink-0" />
             <Badge variant="outline" className="font-mono h-6 px-2 text-[10px]">v{version}</Badge>
@@ -256,14 +256,11 @@ function AdminLayoutContent() {
       </header>
 
       <div className={cn(
-        "grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-4 items-start p-4 transition-all duration-200",
+        "grid grid-cols-1 lg:grid-cols-[256px_1fr] gap-4 items-start p-4 transition-all duration-200 overflow-hidden",
         isCollapsed && "lg:grid-cols-[72px_1fr]"
       )}>
         <AdminSidebarWrapper activeKey={activeKey} onSelect={setTab} />
-        <main className={cn(
-          "min-w-0 transition-all duration-200",
-          isCollapsed && "ml-2"
-        )}>
+        <main className="min-w-0 overflow-hidden transition-all duration-200">
           {isSubRoute ? (
             <Suspense fallback={tabFallback}>
               <Outlet />
