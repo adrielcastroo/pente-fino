@@ -103,7 +103,7 @@ function AdminSidebar({ activeKey, onSelect }: { activeKey: string; onSelect: (k
     <Sidebar
       collapsible="icon"
       className="border-r border-border/40 bg-sidebar"
-      aria-label="Menu Painel Admin"
+      aria-label="Menu"
     >
       <SidebarHeader className="overflow-hidden py-4 px-3">
         <div className="flex min-w-0 cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 transition-opacity hover:opacity-80">
@@ -250,7 +250,6 @@ function AdminLayoutContent() {
             isCollapsed && "opacity-0 w-0 overflow-hidden"
           )}>
             <ShieldCheck className="h-4 w-4 text-primary shrink-0" />
-            <span className="text-sm font-semibold">Painel Admin</span>
             <Badge variant="outline" className="font-mono h-6 px-2 text-[10px]">v{version}</Badge>
           </div>
         </div>
