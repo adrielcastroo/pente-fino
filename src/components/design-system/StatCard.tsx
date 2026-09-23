@@ -36,7 +36,7 @@ export const StatCard = React.forwardRef<HTMLDivElement, StatCardProps>(
         {...props}
       >
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          {typeof Icon === 'function' ? <Icon className="h-3.5 w-3.5" /> : null}
+          {Icon && typeof Icon === 'function' ? <Icon className="h-3.5 w-3.5" /> : Icon && typeof Icon === 'object' ? <Icon /> : null}
           <span>{label}</span>
         </div>
         <div className="text-xl font-semibold tabular-nums mt-1">{value}</div>
