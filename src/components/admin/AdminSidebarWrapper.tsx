@@ -36,7 +36,6 @@ import {
   ShieldAlert,
   ArrowLeft,
   HardDriveDownload,
-  PanelLeft,
 } from 'lucide-react';
 
 export default function AdminSidebarWrapper({ activeKey, onSelect }: { activeKey: string; onSelect: (k: string) => void }) {
@@ -64,9 +63,7 @@ export default function AdminSidebarWrapper({ activeKey, onSelect }: { activeKey
               </span>
             </div>
           </div>
-          <SidebarTrigger className="mt-1 flex h-7 w-7 items-center justify-center rounded-md text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
-            <PanelLeft className="h-4 w-4" />
-          </SidebarTrigger>
+          <SidebarTrigger className="mt-1 flex h-7 w-7 items-center justify-center rounded-md text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" />
         </SidebarHeader>
 
         <SidebarContent className="custom-scrollbar overflow-x-hidden px-3">
