@@ -932,7 +932,7 @@ export const useAppStore = create<AppState>()(
          },
         removeItem: (name) => localStorage.removeItem(name),
       },
-      partialize: (state) => ({
+partialize: (state) => ({
         registros: state.registros,
         reservas: state.reservas,
         undoStack: state.undoStack,
@@ -947,6 +947,7 @@ export const useAppStore = create<AppState>()(
         },
         sortBy: state.sortBy,
         sessionStartedAt: state.sessionStartedAt,
+        resumeMode: state.resumeMode,
         lockProcesso: state.lockProcesso,
         lockedProcesso: state.lockedProcesso,
         lockNf: state.lockNf,
