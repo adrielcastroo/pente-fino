@@ -228,14 +228,14 @@ function AdminLayoutContent() {
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-border/40 bg-background/95 backdrop-blur px-4 py-2.5">
-        <div className="flex items-center gap-3">
-          <SidebarTrigger className="h-8 w-8" />
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <SidebarTrigger className="h-8 w-8 shrink-0" />
           <Button
             variant="outline"
             size="sm"
             onClick={() => navigate('/')}
             className={cn(
-              "h-8 gap-1.5 transition-all duration-200",
+              "h-8 gap-1.5 transition-all duration-200 shrink-0",
               isCollapsed && "h-0 px-0 overflow-hidden opacity-0"
             )}
             disabled={isCollapsed}
@@ -243,11 +243,11 @@ function AdminLayoutContent() {
             <ArrowLeft className="h-3.5 w-3.5" /> Voltar ao app
           </Button>
           <div className={cn(
-            "flex items-center gap-2 transition-all duration-200 overflow-hidden",
+            "flex items-center gap-2 transition-all duration-200 overflow-hidden shrink-0",
             isCollapsed && "h-0 opacity-0"
           )}>
             <ShieldCheck className="h-4 w-4 text-primary shrink-0" />
-            <Badge variant="outline" className="font-mono h-6 px-2 text-[10px]">v{version}</Badge>
+            <Badge variant="outline" className="font-mono h-6 px-2 text-[10px] shrink-0">v{version}</Badge>
           </div>
         </div>
         <Badge variant="secondary" className="gap-1 h-7 px-2.5 text-xs shrink-0">
