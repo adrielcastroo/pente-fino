@@ -113,7 +113,7 @@ export default function LlmTokensTab() {
         </CardHeader>
         <CardContent className="space-y-3">
           {!data && loading && <div className="text-sm text-muted-foreground">Consultando provedores…</div>}
-          {data?.providers.map((p) => (
+          {(data?.providers ?? []).map((p) => (
             <ProviderRow
               key={p.id}
               p={p}
