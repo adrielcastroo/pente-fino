@@ -226,41 +226,32 @@ function AdminLayoutContent() {
   if (!isAdmin) return <Navigate to="/" replace />;
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-border/40 bg-background/95 backdrop-blur px-4 py-2.5">
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          <SidebarTrigger className="hidden md:inline-flex h-8 w-8 sm:h-10 sm:w-10 text-muted-foreground hover:text-primary hover:bg-primary/8 transition-all duration-200 rounded-lg sm:rounded-md shrink-0" />
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate('/')}
-            className={cn(
-              "h-8 gap-1.5 transition-all duration-200 shrink-0",
-              isCollapsed && "h-0 px-0 overflow-hidden opacity-0"
-            )}
-            disabled={isCollapsed}
-          >
-            <ArrowLeft className="h-3.5 w-3.5" /> Voltar ao app
-          </Button>
-          <div className={cn(
-            "flex items-center gap-2 transition-all duration-200 overflow-hidden shrink-0",
-            isCollapsed && "h-0 opacity-0"
-          )}>
-            <ShieldCheck className="h-4 w-4 text-primary shrink-0" />
-            <Badge variant="outline" className="font-mono h-6 px-2 text-[10px] shrink-0">v{version}</Badge>
-          </div>
-        </div>
-        <Badge variant="secondary" className="gap-1 h-7 px-2.5 text-xs shrink-0">
-          <ShieldCheck className="h-3 w-3" /> {user?.email}
-        </Badge>
-      </header>
+    <div className="h-[100dvh] flex flex-row w-full bg-background overflow-hidden relative">
+      <AdminSidebarWrapper activeKey={activeKey} onSelect={setTab} />
 
-      <div className={cn(
-        "grid grid-cols-1 lg:grid-cols-[256px_1fr] gap-4 items-start p-4 transition-all duration-200 overflow-hidden",
-        isCollapsed && "lg:grid-cols-[72px_1fr]"
-      )}>
-        <AdminSidebarWrapper activeKey={activeKey} onSelect={setTab} />
-        <main className="min-w-0 overflow-hidden transition-all duration-200">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+        <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-border/40 bg-background/95 backdrop-blur px-4 py-2.5 shrink-0">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <SidebarTrigger className="hidden md:inline-flex h-8 w-8 sm:h-10 sm:w-10 text-muted-foreground hover:text-primary hover:bg-primary/8 transition-all duration-200 rounded-lg sm:rounded-md shrink-0" />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/')}
+              className="h-8 gap-1.5 transition-all duration-200 shrink-0"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" /> Voltar ao app
+            </Button>
+            <div className="flex items-center gap-2 transition-all duration-200 shrink-0">
+              <ShieldCheck className="h-4 w-4 text-primary shrink-0" />
+              <Badge variant="outline" className="font-mono h-6 px-2 text-[10px] shrink-0">v{version}</Badge>
+            </div>
+          </div>
+          <Badge variant="secondary" className="gap-1 h-7 px-2.5 text-xs shrink-0">
+            <ShieldCheck className="h-3 w-3" /> {user?.email}
+          </Badge>
+        </header>
+
+        <main className="flex-1 overflow-y-auto bg-background/50 custom-scrollbar p-4 min-w-0">
           {isSubRoute ? (
             <Suspense fallback={tabFallback}>
               <Outlet />
