@@ -1,5 +1,4 @@
 import React from 'react';
-import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 import {
   Sidebar,
   SidebarContent,
@@ -41,7 +40,6 @@ import {
 export default function AdminSidebarWrapper({ activeKey, onSelect }: { activeKey: string; onSelect: (k: string) => void }) {
   const navigate = useNavigate();
   const activeSection = NAV.find((s) => s.items.some((i) => i.key === activeKey));
-  const { toggleSidebar } = useSidebar();
 
   return (
     <Sidebar
@@ -54,16 +52,10 @@ export default function AdminSidebarWrapper({ activeKey, onSelect }: { activeKey
             <div className="flex h-9 w-9 shrink-0 items-center justify-center">
               <ShieldCheck className="h-7 w-7 text-primary" />
             </div>
-            <div className="flex min-w-0 flex-col overflow-hidden">
-              <span className="text-sm font-bold leading-tight tracking-tight text-sidebar-accent-foreground truncate">
-                Pente Fino
-              </span>
-              <span className="text-[9px] font-semibold uppercase tracking-[0.15em] text-sidebar-foreground/70 truncate">
-                Painel Admin
-              </span>
-            </div>
+            <span className="text-sm font-bold leading-tight tracking-tight text-sidebar-accent-foreground truncate">
+              Pente Fino
+            </span>
           </div>
-          <SidebarTrigger className="mt-1 flex h-7 w-7 items-center justify-center rounded-md text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" />
         </SidebarHeader>
 
         <SidebarContent className="custom-scrollbar overflow-x-hidden px-3">

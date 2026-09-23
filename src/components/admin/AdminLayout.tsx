@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { StatCard, CardShell, SectionToolbar } from '@/components/design-system';
-import { SidebarProvider, useSidebar } from '@/components/ui/sidebar';
+import { SidebarProvider, useSidebar, SidebarTrigger } from '@/components/ui/sidebar';
 import AdminSidebarWrapper from './AdminSidebarWrapper';
 import {
   ShieldCheck,
@@ -289,6 +289,8 @@ export default function AdminLayout() {
   const version = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'dev';
   const setTab = (k: string) => setParams({ tab: k }, { replace: true });
   const isSubRoute = location.pathname !== '/admin';
+  const { state: sidebarState } = useSidebar();
+  const isCollapsed = sidebarState === 'collapsed';
 
   if (loading) return null;
   if (!isAdmin) return <Navigate to="/" replace />;
@@ -297,16 +299,24 @@ export default function AdminLayout() {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-border/40 bg-background/95 backdrop-blur px-4 py-2.5 flex-wrap">
         <div className="flex items-center gap-3 flex-wrap">
+          <SidebarTrigger className="h-8 w-8" />
           <Button
             variant="outline"
             size="sm"
             onClick={() => navigate('/')}
-            className="h-8 gap-1.5"
+            className={cn(
+              "h-8 gap-1.5 transition-all duration-200",
+              isCollapsed && "opacity-0 w-0 px-0 overflow-hidden"
+            )}
+            disabled={isCollapsed}
           >
             <ArrowLeft className="h-3.5 w-3.5" /> Voltar ao app
           </Button>
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-primary" />
+          <div className={cn(
+            "flex items-center gap-2 transition-all duration-200",
+            isCollapsed && "opacity-0 w-0 overflow-hidden"
+          )}>
+            <ShieldCheck className="h-4 w-4 text-primary shrink-0" />
             <span className="text-sm font-semibold">Painel Admin</span>
             <Badge variant="outline" className="font-mono h-6 px-2 text-[10px]">v{version}</Badge>
           </div>
@@ -335,7 +345,10 @@ function AdminLayoutContent({ activeKey, setTab, isSubRoute }: { activeKey: stri
       isCollapsed && "lg:grid-cols-[72px_1fr]"
     )}>
       <AdminSidebarWrapper activeKey={activeKey} onSelect={setTab} />
-      <main className="min-w-0">
+      <main className={cn(
+        "min-w-0 transition-all duration-200",
+        isCollapsed && "ml-2"
+      )}>
         {isSubRoute ? (
           <Suspense fallback={tabFallback}>
             <Outlet />
