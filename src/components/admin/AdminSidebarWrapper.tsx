@@ -12,30 +12,8 @@ import {
 } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
-import { NAV, ALL_KEYS, type LucideIcon } from './AdminLayout';
-import {
-  ShieldCheck,
-  LayoutDashboard,
-  Plug,
-  Eye,
-  Rocket,
-  Flag,
-  Users,
-  Database,
-  ScrollText,
-  KeyRound,
-  Activity,
-  HardDrive,
-  Package,
-  Warehouse,
-  ListChecks,
-  Workflow,
-  Bug,
-  LineChart,
-  ShieldAlert,
-  ArrowLeft,
-  HardDriveDownload,
-} from 'lucide-react';
+import { NAV, ALL_KEYS } from './navData';
+import { ShieldCheck, ArrowLeft } from 'lucide-react';
 
 export default function AdminSidebarWrapper({ activeKey, onSelect }: { activeKey: string; onSelect: (k: string) => void }) {
   const navigate = useNavigate();
