@@ -295,7 +295,7 @@ function OverviewTab() {
       users: users.count ?? 0,
       flagsTotal: flags.data?.length ?? 0,
       flagsAtivas: (flags.data ?? []).filter((f: any) => f.enabled).length,
-      releases: releases.data ?? [],
+      releases: Array.from(new Map((releases.data ?? []).map(r => [r.version, r])).values()),
       registros: registros.count ?? 0,
       conferences: conferences.count ?? 0,
       saidas: saidas.count ?? 0,
