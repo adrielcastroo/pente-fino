@@ -2,8 +2,6 @@ import { memo, useMemo } from 'react';
 import {
   Home,
   ScanLine,
-  Box,
-
   ArrowUpRight,
   Package,
   Table,
@@ -44,9 +42,8 @@ const EstoqueSidebar = memo(() => {
           label: 'Operações',
           items: [
             { key: 'inicio', label: 'Início', icon: Home, path: '/estoque/operacao' },
-            { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/estoque/dashboard', minRole: 'supervisor' },
-            { key: 'recebimento', label: 'Recebimento', icon: Box, path: '/expedicao/recebimento' },
-            { key: 'conferencia', label: 'Conferência', icon: ScanLine, path: '/estoque/conferencia' },
+                        { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/estoque/dashboard', minRole: 'supervisor' },
+                        { key: 'conferencia', label: 'Conferência', icon: ScanLine, path: '/estoque/conferencia' },
 
             { key: 'saida', label: 'Saída', icon: ArrowUpRight, path: '/estoque/saida' },
             { key: 'entradas', label: 'Entradas', icon: PackagePlus, path: '/estoque/entradas' },
