@@ -223,15 +223,23 @@ const App = () => (
 
                 {/* ===== EQUIPES (top-level, supervisor+) ===== */}
                 <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
-                  <Route
-                    path="/equipes"
-                    element={
-                      <RequireRole role="supervisor" fallback={<Navigate to="/" replace />}>
-                        <EquipesPage />
-                      </RequireRole>
-                    }
-                  />
-                </Route>
+                                  <Route
+                                    path="/equipes"
+                                    element={
+                                      <RequireRole role="supervisor" fallback={<Navigate to="/" replace />}>
+                                        <EquipesPage />
+                                      </RequireRole>
+                                    }
+                                  />
+                                  <Route
+                                    path="/automacoes"
+                                    element={
+                                      <RequireRole role="admin" fallback={<Navigate to="/" replace />}>
+                                        <AutomacoesPage />
+                                      </RequireRole>
+                                    }
+                                  />
+                                </Route>
 
 
 
@@ -310,12 +318,10 @@ const App = () => (
                   <Route path="/admin/n8n" element={<N8nMonitorPage />} />
                   <Route path="/admin/har-transferencias" element={<HarTransferenciasPage />} />
                   <Route path="/admin/depositos" element={<RequireRole role="admin" fallback={<Navigate to="/admin" replace />}><DepositosAdminPage /></RequireRole>} />
-                  <Route path="/automacoes" element={<RequireRole role="admin" fallback={<Navigate to="/admin" replace />}><AutomacoesPage /></RequireRole>} />
-                  <Route path="/admin/automacoes" element={<Navigate to="/automacoes" replace />} />
                   <Route path="/admin/auge-sync-status" element={<RequireRole role="admin" fallback={<Navigate to="/admin" replace />}><AugeSyncStatusPage /></RequireRole>} />
                 </Route>
 
-                <Route path="/admin/flags" element={<Navigate to="/admin?tab=flags" replace />} />
+                <Route path="/admin/automacoes" element={<Navigate to="/automacoes" replace />} />
                 <Route path="/admin/releases" element={<Navigate to="/admin?tab=releases" replace />} />
                 <Route path="/n8n" element={<Navigate to="/admin/n8n" replace />} />
 
