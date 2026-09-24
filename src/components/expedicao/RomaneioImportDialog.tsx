@@ -130,13 +130,19 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported, r
     setArquivo(null);
     setPreview([]);
     setPreviewCount(0);
+    setIsImporting(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
+  const handleCloseDialog = () => {
+    handleClose();
+    onOpenChange(false);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) handleClose(); onOpenChange(o); }}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto w-[95vw]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -215,7 +221,7 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported, r
 
         </div>
         <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
-          <Button variant="outline" onClick={handleClose} disabled={isLoading || isImporting}>Cancelar</Button>
+          <Button variant="outline" onClick={handleCloseDialog} disabled={isLoading || isImporting}>Cancelar</Button>
           {preview.length > 0 && !isImporting && !isLoading && (
             <Button
               onClick={async () => {
@@ -223,7 +229,7 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported, r
                 try {
                   await onImported(preview);
                   toast.success(`Romaneio com ${preview.length} clientes importado!`);
-                  handleClose();
+                  handleCloseDialog();
                 } catch (error: any) {
                   toast.error(error.message || 'Erro ao importar romaneio');
                 } finally {
