@@ -93,24 +93,24 @@ export const estoqueService = {
           occupiedSet.add(pos);
           const original = regMap.get(r.id);
           estoqueRows.push({
-            estrutura,
-            coluna,
-            nivel,
-            posicao: pos,
-            status: 'ocupado',
-            registro_id: r.id,
-            item: r.item,
-            proc: original?.processo || processo || '',
-            m2: r.m2,
-            largura: r.largura,
-            m_linear: r.m_linear,
-            lote: r.lote,
-            endereco: r.endereco,
-            lote_sistema: r.lote_sistema,
-            conferente_entrada: conferente,
-            conferente_saida: '',
-            data_registro: new Date().toISOString(),
-          });
+                      estrutura,
+                      coluna,
+                      nivel,
+                      posicao: pos,
+                      status: 'ocupado',
+                      registro_id: r.id,
+                      item: r.item,
+                      proc: original?.processo || processo || '',
+                      m2: Number(r.m2) || 0,
+                      largura: Number(r.largura) || 0,
+                      m_linear: Number(r.m_linear) || 0,
+                      lote: r.lote || '',
+                      endereco: r.endereco || '',
+                      lote_sistema: r.lote_sistema || '',
+                      conferente_entrada: conferente,
+                      conferente_saida: '',
+                      data_registro: new Date().toISOString(),
+                    });
         } else {
           skippedRegs.push(r.item || r.id);
           console.warn(`Position limit exceeded for ${cellKey}. Skipping record.`);

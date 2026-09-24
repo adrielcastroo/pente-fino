@@ -472,7 +472,13 @@ export async function exportConferenceToExcel(headers: string[], data: any[][], 
   try {
     const toastId = toast.loading('Preparando arquivo Excel...');
     const XLSX = await import('xlsx');
-    const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+    // Sanitiza dados: converte BigInt, NaN, Infinity para tipos seguros
+    const safeData = data.map(row => row.map(cell => {
+      if (typeof cell === 'bigint') return Number(cell);
+      if (typeof cell === 'number' && (Number.isNaN(cell) || !Number.isFinite(cell))) return '';
+      return cell;
+    }));
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...safeData]);
     if (columnWidths) {
       ws['!cols'] = columnWidths.map(w => ({ wch: w }));
     }
