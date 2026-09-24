@@ -24,33 +24,40 @@ function initObservability() {
   // PostHog — captura eventos de usuário
   const posthogKey = import.meta.env.VITE_POSTHOG_KEY as string | undefined;
   if (posthogKey) {
-    // Carregar posthog-js de forma não-bloqueante
-    // Se o CDN não estiver acessível (DNS, firewall), o PostHog é desativado
-    // silenciosamente — a aplicação não quebra.
-    const script = document.createElement('script');
-    script.src = 'https://cdn.posthog.com/posthog-js/stable/posthog.min.js';
-    script.async = true;
-    script.onload = () => {
-      // @ts-ignore - posthog pode não estar tipado corretamente
-      if (typeof window !== 'undefined' && (window as any).posthog) {
-        // @ts-ignore
-        (window as any).posthog.init(posthogKey, {
-          api_host: import.meta.env.VITE_POSTHOG_HOST || 'https://us.posthog.com',
-          autocapture: true,
-          capture_pageview: true,
-          persistence: 'localStorage',
-          loaded: (ph: any) => {
-            if (import.meta.env.DEV) console.log('[PostHog] Initialized');
-          },
-        });
-      }
-    };
-    script.onerror = () => {
-      // CDN inacessível — PostHog client-side desativado.
-      // A edge function posthog-analytics (proxy) ainda funciona para consultas.
-      if (import.meta.env.DEV) console.warn('[PostHog] CDN inacessível (DNS). Client-side analytics desativado.');
-    };
-    document.head.appendChild(script);
+    // Verifica se o CDN do PostHog está acessível antes de injetar o script.
+    // Se o DNS falhar (net::ERR_NAME_NOT_RESOLVED), não injeta o <script>
+    // para evitar o erro de console "Failed to load resource".
+    fetch('https://cdn.posthog.com/version.json', { method: 'HEAD', mode: 'no-cors' })
+      .then(res => {
+        if (!res.ok) throw new Error('CDN não acessível');
+        const script = document.createElement('script');
+        script.src = 'https://cdn.posthog.com/posthog-js/stable/posthog.min.js';
+        script.async = true;
+        script.onload = () => {
+          // @ts-ignore - posthog pode não estar tipado corretamente
+          if (typeof window !== 'undefined' && (window as any).posthog) {
+            // @ts-ignore
+            (window as any).posthog.init(posthogKey, {
+              api_host: import.meta.env.VITE_POSTHOG_HOST || 'https://us.posthog.com',
+              autocapture: true,
+              capture_pageview: true,
+              persistence: 'localStorage',
+              loaded: (ph: any) => {
+                if (import.meta.env.DEV) console.log('[PostHog] Initialized');
+              },
+            });
+          }
+        };
+        script.onerror = () => {
+          if (import.meta.env.DEV) console.warn('[PostHog] CDN inacessível. Client-side analytics desativado.');
+        };
+        document.head.appendChild(script);
+      })
+      .catch(() => {
+        // CDN inacessível (DNS, CORS, firewall) — PostHog client-side desativado.
+        // A edge function posthog-analytics (proxy) ainda funciona para consultas.
+        if (import.meta.env.DEV) console.warn('[PostHog] CDN inacessível (DNS). Client-side analytics desativado.');
+      });
   }
 
   // Sentry — captura erros de runtime

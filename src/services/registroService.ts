@@ -3,17 +3,31 @@ import { Registro } from '@/types';
 
 export const registroService = {
   async insertRegistros(conferenceId: string, registros: Registro[], currentMode: string) {
-    const rows = registros.map(r => ({
+    // Filtra registros com dados inválidos para evitar 400 do Supabase
+    const validRegistros = registros.filter(r => {
+      if (!r.id || typeof r.id !== 'string') return false;
+      // Valida que m2, m_linear, largura são números finitos
+      const m2 = Number(r.m2);
+      const mLinear = Number(r.mLinear);
+      const largura = Number(r.largura);
+      return Number.isFinite(m2) && Number.isFinite(mLinear) && Number.isFinite(largura);
+    });
+
+    if (validRegistros.length === 0) {
+      return [];
+    }
+
+    const rows = validRegistros.map(r => ({
       id: r.id,
       conference_id: conferenceId,
       item: r.item,
-      m2: r.m2,
-      m_linear: r.mLinear,
-      largura: r.largura,
-      endereco: r.endereco,
+      m2: Number(r.m2) || 0,
+      m_linear: Number(r.mLinear) || 0,
+      largura: Number(r.largura) || 0,
+      endereco: r.endereco || '',
       nf: r.nf || '',
-      lote: r.lote,
-      lote_sistema: r.loteSistema,
+      lote: r.lote || '',
+      lote_sistema: r.loteSistema || '',
       posicao: r.posicao != null ? Math.trunc(Number(r.posicao)) : null,
       tipo_tecido: r.tipoTecido || '',
       modo_origem: r.modoOrigem || currentMode,
