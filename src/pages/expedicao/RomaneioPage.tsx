@@ -197,8 +197,8 @@ export default function RomaneioPage() {
     if (logsData) setLogs(logsData);
   }, [logsData]);
 
-  // useEffect removed — romaneios state is now the single source of truth
-  // (optimistic update via setRomaneios, then queryClient.invalidateQueries syncs)
+  // Note: logs state is updated optimistically in handleImportRomaneio
+// queryClient.invalidateQueries keeps the cache fresh in background
 
   // ============================================================
   // Handlers
@@ -232,26 +232,20 @@ export default function RomaneioPage() {
       });
 
       // Save romaneio using upsert to avoid duplicate on same day/title
-      // Otimistic update: atualiza a UI imediatamente antes do DB
-      // Usa Date.now() para evitar compatibilidade com crypto.randomUUID()
-      const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-      const newRomaneio = {
-        id: uid(),
-        data_romaneio: new Date().toISOString().split('T')[0],
-        titulo: `Romaneio ${format(new Date(), 'dd/MM/yyyy', { locale: ptBR })}`,
-        status: 'ativo',
+      // Otimistic update na UI: adiciona o novo log instantaneamente
+      const newLog: LogRomaneio = {
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
         criado_em: new Date().toISOString(),
-        linhas: linhasComTransportador.map((l: any) => ({
-          id: uid(),
-          codigo_cliente: l.codigo_cliente,
-          nome_cliente: l.nome_cliente,
-          quantidade: l.quantidade || 1,
-          modalidade_frete: l.modalidade || 'CIF',
-          transportadora: l.transportadora || '',
-          observacoes: l.observacoes || null,
-        })),
+        data_faturamento: new Date().toISOString().split('T')[0],
+        status: 'ativo',
+        total_linhas: linhasComTransportador.length,
+        transportadora_id: null,
+        transportadora_nome: null,
+        json_detalhes: { importSource: 'manual', linhas: linhasComTransportador.map(l => ({ codigo: l.codigo_cliente, nome: l.nome_cliente })) },
+        usuario_id: null,
+        observacao: null,
       };
-      setRomaneios(prev => [newRomaneio, ...(prev ?? [])]);
+      setLogs(prev => [newLog, ...(prev ?? [])]);
 
       const { data: romaneioData, error: romaneioError } = await supabase
         .from('romaneio_dias')
@@ -281,7 +275,7 @@ export default function RomaneioPage() {
 
       toast.success(`Romaneio importado com ${linhas.length} clientes!`);
       // Force fresh fetch from server — optimistic update already showed instantly
-      queryClient.invalidateQueries({ queryKey: ['romaneio_dias'] });
+      queryClient.invalidateQueries({ queryKey: ['romaneio_logs'] });
     } catch (error: any) {
       toast.error(error.message || 'Erro ao importar romaneio');
     }
