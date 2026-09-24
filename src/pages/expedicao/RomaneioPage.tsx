@@ -231,6 +231,25 @@ export default function RomaneioPage() {
       });
 
       // Save romaneio using upsert to avoid duplicate on same day/title
+      // Otimistic update: atualiza a UI imediatamente antes do DB
+      const newRomaneio = {
+        id: crypto.randomUUID(),
+        data_romaneio: new Date().toISOString().split('T')[0],
+        titulo: `Romaneio ${format(new Date(), 'dd/MM/yyyy', { locale: ptBR })}`,
+        status: 'ativo',
+        criado_em: new Date().toISOString(),
+        linhas: linhasComTransportador.map((l: any) => ({
+          id: crypto.randomUUID(),
+          codigo_cliente: l.codigo_cliente,
+          nome_cliente: l.nome_cliente,
+          quantidade: l.quantidade || 1,
+          modalidade_frete: l.modalidade || 'CIF',
+          transportadora: l.transportadora || '',
+          observacoes: l.observacoes || null,
+        })),
+      };
+      setRomaneios(prev => [newRomaneio, ...(prev ?? [])]);
+
       const { data: romaneioData, error: romaneioError } = await supabase
         .from('romaneio_dias')
         .upsert({

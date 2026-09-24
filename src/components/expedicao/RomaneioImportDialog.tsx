@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Upload, FileSpreadsheet, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Upload, FileSpreadsheet, CheckCircle2, AlertCircle, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -29,7 +29,7 @@ interface FaturamentoRegra {
 interface RomaneioImportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onImported: (linhas: any[]) => void;
+  onImported: (linhas: any[]) => Promise<void> | void;
   regras: FaturamentoRegra[];
 }
 
@@ -49,6 +49,7 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported, r
   const [preview, setPreview] = useState<PreviewRow[]>([]);
   const [previewCount, setPreviewCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -115,9 +116,8 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported, r
       setPreviewCount(mapped.length);
       if (mapped.length === 0) {
         toast.error('Nenhuma linha de dados encontrada na planilha');
-      } else {
-        onImported(mapped);
       }
+      // onImported agora é chamado apenas ao clicar "Confirmar Importação" no DialogFooter
     } catch (error) {
       console.error(error);
       toast.error('Erro ao ler arquivo Excel');
@@ -214,8 +214,35 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported, r
           )}
 
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={handleClose} disabled={isLoading}>Cancelar</Button>
+        <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+          <Button variant="outline" onClick={handleClose} disabled={isLoading || isImporting}>Cancelar</Button>
+          {preview.length > 0 && !isImporting && !isLoading && (
+            <Button
+              onClick={async () => {
+                setIsImporting(true);
+                try {
+                  await onImported(preview);
+                  toast.success(`Romaneio com ${preview.length} clientes importado!`);
+                  handleClose();
+                } catch (error: any) {
+                  toast.error(error.message || 'Erro ao importar romaneio');
+                } finally {
+                  setIsImporting(false);
+                }
+              }}
+              disabled={isImporting}
+              className="gap-2"
+            >
+              {isImporting ? (
+                <>Importando...</>
+              ) : (
+                <>
+                  Confirmar Importação
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
