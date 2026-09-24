@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
-import { FileText, FileSpreadsheet, Truck, Plus, Loader2, Upload, RefreshCw, Calendar, ChevronDown, ChevronUp, Package, Search } from 'lucide-react';
+import { FileText, FileSpreadsheet, Truck, Plus, Loader2, Upload, RefreshCw, Calendar, ChevronDown, ChevronUp, Package, Search, CheckCircle2 } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -132,6 +132,7 @@ export default function RomaneioPage() {
   const [romaneios, setRomaneios] = useState<RomaneioDia[]>([]);
   const [selectedRomaneio, setSelectedRomaneio] = useState<RomaneioDia | null>(null);
   const [importedLinhas, setImportedLinhas] = useState<PreviewRow[]>([]);
+  const [importSuccess, setImportSuccess] = useState(false);
 
   // ============================================================
   // Queries
@@ -199,6 +200,14 @@ export default function RomaneioPage() {
     if (logsData) setLogs(logsData);
   }, [logsData]);
 
+  // Auto-dismiss success banner after 3 seconds
+  useEffect(() => {
+    if (importSuccess) {
+      const timer = setTimeout(() => setImportSuccess(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [importSuccess]);
+
   // ============================================================
   // Handlers
   // ============================================================
@@ -260,6 +269,7 @@ export default function RomaneioPage() {
       toast.success(`Romaneio importado com ${linhas.length} clientes!`);
       // Mostra os dados importados na tabela dedicada
       setImportedLinhas(linhasComTransportador);
+      setImportSuccess(true);
       // Force fresh fetch from server
       queryClient.invalidateQueries({ queryKey: ['romaneio_logs'] });
     } catch (error: any) {
@@ -387,6 +397,16 @@ export default function RomaneioPage() {
       {/* ============================================================ */}
       {activeTab === 'romaneio' && (
         <div className="space-y-6">
+          {/* Success Banner */}
+          {importSuccess && (
+            <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="flex items-center gap-3 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">
+                <CheckCircle2 className="w-5 h-5 shrink-0" />
+                <span className="text-sm font-medium">Romaneio importado com sucesso!</span>
+              </div>
+            </div>
+          )}
+
           {/* Import Button */}
           <Card>
             <CardHeader>
