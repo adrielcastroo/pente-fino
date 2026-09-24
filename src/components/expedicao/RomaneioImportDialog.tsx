@@ -111,7 +111,7 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported, r
           observacoes: row[6] ? String(row[6]).trim() : null,
         });
       }
-      setPreview(mapped.slice(0, 10));
+      setPreview(mapped);
       setPreviewCount(mapped.length);
       if (mapped.length === 0) {
         toast.error('Nenhuma linha de dados encontrada na planilha');
@@ -137,7 +137,7 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported, r
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) handleClose(); onOpenChange(o); }}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto w-[95vw]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileSpreadsheet className="w-5 h-5" />
@@ -183,32 +183,32 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported, r
                 <Badge variant="secondary">{previewCount} total</Badge>
               </div>
               <div className="border rounded-lg overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead className="bg-muted">
+                <div className="overflow-y-auto max-h-[50vh]">
+                <table className="w-full text-sm table-fixed border-collapse">
+                  <thead className="bg-muted sticky top-0 z-10">
                     <tr>
-                      <th className="px-3 py-2 text-left">Código</th>
-                      <th className="px-3 py-2 text-left">Nome</th>
-                      <th className="px-3 py-2 text-left">NF</th>
-                      <th className="px-3 py-2 text-left">Data</th>
-                      <th className="px-3 py-2 text-left">Transportador</th>
-                      <th className="px-3 py-2 text-right">Vol.</th>
+                      <th className="w-[80px] px-3 py-2 text-left font-medium">Código</th>
+                      <th className="w-[180px] px-3 py-2 text-left font-medium">Nome</th>
+                      <th className="w-[80px] px-3 py-2 text-left font-medium">NF</th>
+                      <th className="w-[100px] px-3 py-2 text-left font-medium">Data</th>
+                      <th className="w-[120px] px-3 py-2 text-left font-medium">Transportador</th>
+                      <th className="w-[80px] px-3 py-2 text-right font-medium">Vol.</th>
                     </tr>
                   </thead>
                   <tbody>
                     {preview.map((row, idx) => (
-                      <tr key={idx} className="border-t">
-                        <td className="px-3 py-2 font-mono">{row.codigo_cliente}</td>
-                        <td className="px-3 py-2 max-w-[200px] truncate" title={row.nome_cliente}>{row.nome_cliente}</td>
-                        <td className="px-3 py-2">{row.nf || '-'}</td>
-                        <td className="px-3 py-2">{row.data || '-'}</td>
-                        <td className="px-3 py-2">
-                          <Badge variant="outline" className="text-xs">{row.transportador || '-'}</Badge>
-                        </td>
-                        <td className="px-3 py-2 text-right">{row.volume}</td>
+                      <tr key={idx} className="border-t hover:bg-muted/50">
+                        <td className="px-3 py-2 font-mono text-xs break-all">{row.codigo_cliente}</td>
+                        <td className="px-3 py-2 text-xs break-words">{row.nome_cliente}</td>
+                        <td className="px-3 py-2 text-xs">{row.nf || '-'}</td>
+                        <td className="px-3 py-2 text-xs">{row.data || '-'}</td>
+                        <td className="px-3 py-2 text-xs"><Badge variant="outline" className="text-[10px]">{row.transportador || '-'}</Badge></td>
+                        <td className="px-3 py-2 text-xs text-right">{row.volume}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+                </div>
               </div>
             </div>
           )}
