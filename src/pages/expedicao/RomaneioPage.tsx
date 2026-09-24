@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { FileText, Truck, Plus, Loader2, Upload, RefreshCw, Calendar, ChevronDown, ChevronUp, Package, Search } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { PageShell, PageHeader } from '@/components/expedicao/ui';
@@ -175,6 +175,8 @@ export default function RomaneioPage() {
     },
   });
 
+  const queryClient = useQueryClient();
+
   const { data: romaneiosData, isLoading: isLoadingRomaneios, refetch: refetchRomaneios } = useQuery({
     queryKey: ['romaneio_dias'],
     queryFn: async () => {
@@ -195,9 +197,8 @@ export default function RomaneioPage() {
     if (logsData) setLogs(logsData);
   }, [logsData]);
 
-  useEffect(() => {
-    if (romaneiosData) setRomaneios(romaneiosData);
-  }, [romaneiosData]);
+  // useEffect removed — romaneios state is now the single source of truth
+  // (optimistic update via setRomaneios, then queryClient.invalidateQueries syncs)
 
   // ============================================================
   // Handlers
@@ -232,14 +233,16 @@ export default function RomaneioPage() {
 
       // Save romaneio using upsert to avoid duplicate on same day/title
       // Otimistic update: atualiza a UI imediatamente antes do DB
+      // Usa Date.now() para evitar compatibilidade com crypto.randomUUID()
+      const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
       const newRomaneio = {
-        id: crypto.randomUUID(),
+        id: uid(),
         data_romaneio: new Date().toISOString().split('T')[0],
         titulo: `Romaneio ${format(new Date(), 'dd/MM/yyyy', { locale: ptBR })}`,
         status: 'ativo',
         criado_em: new Date().toISOString(),
         linhas: linhasComTransportador.map((l: any) => ({
-          id: crypto.randomUUID(),
+          id: uid(),
           codigo_cliente: l.codigo_cliente,
           nome_cliente: l.nome_cliente,
           quantidade: l.quantidade || 1,
@@ -277,8 +280,8 @@ export default function RomaneioPage() {
       if (linhasError) throw linhasError;
 
       toast.success(`Romaneio importado com ${linhas.length} clientes!`);
-      // Refresh data
-      refetchRomaneios();
+      // Force fresh fetch from server — optimistic update already showed instantly
+      queryClient.invalidateQueries({ queryKey: ['romaneio_dias'] });
     } catch (error: any) {
       toast.error(error.message || 'Erro ao importar romaneio');
     }
