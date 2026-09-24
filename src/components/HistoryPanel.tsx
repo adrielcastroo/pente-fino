@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo, memo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store/useAppStore';
+import { pgInt } from '@/services/registroService';
 import { formatML, formatDateBR, formatTimeBR } from '@/lib/app-utils';
 import { Conference, Registro } from '@/types';
 import { toast } from 'sonner';
@@ -106,9 +107,9 @@ function EditRegistroDialog({
         endereco: isPVT ? '' : (form.endereco || '').toUpperCase(),
         tipoTecido: form.tipoTecido || '',
         modoOrigem: form.modoOrigem || '',
-        quantidade: form.quantidade != null ? Math.trunc(Number(form.quantidade)) : null,
-        loteSistema: form.loteSistema || '',
-        posicao: Math.trunc(Number(form.posicao) || 0) >= 1 && Math.trunc(Number(form.posicao) || 0) <= 30 ? Math.trunc(Number(form.posicao)) : null,
+        quantidade: form.quantidade != null ? pgInt(form.quantidade) : null,
+                loteSistema: form.loteSistema || '',
+                posicao: form.posicao != null ? (() => { const p = pgInt(form.posicao); return p != null && p >= 1 && p <= 30 ? p : null; })() : null,
       });
       toast.success('Registro atualizado.', {
         action: snapshot ? {

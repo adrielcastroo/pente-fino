@@ -1,6 +1,14 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Registro } from '@/types';
 
+/** Limita um valor ao range de INTEGER do PostgreSQL (32-bit signed) */
+const PG_INT_MAX = 2147483647;
+const PG_INT_MIN = -2147483648;
+export function pgInt(value: number | null | undefined): number | null {
+  if (value == null || isNaN(value) || !Number.isFinite(value)) return null;
+  return Math.min(PG_INT_MAX, Math.max(PG_INT_MIN, Math.trunc(value)));
+}
+
 export const registroService = {
   async insertRegistros(conferenceId: string, registros: Registro[], currentMode: string) {
     // Filtra registros com dados inválidos para evitar 400 do Supabase
@@ -28,13 +36,13 @@ export const registroService = {
       nf: r.nf || '',
       lote: r.lote || '',
       lote_sistema: r.loteSistema || '',
-      posicao: r.posicao != null ? Math.trunc(Number(r.posicao)) : null,
-      tipo_tecido: r.tipoTecido || '',
-      modo_origem: r.modoOrigem || currentMode,
-      was_edited: r.wasEdited || false,
-      edited_by: r.editedBy || '',
-      edited_at: r.editedAt || null,
-      quantidade: r.quantidade != null ? Math.trunc(Number(r.quantidade)) : null,
+      posicao: pgInt(r.posicao),
+            tipo_tecido: r.tipoTecido || '',
+            modo_origem: r.modoOrigem || currentMode,
+            was_edited: r.wasEdited || false,
+            edited_by: r.editedBy || '',
+            edited_at: r.editedAt || null,
+            quantidade: pgInt(r.quantidade),
       lote_mestre_id: r.loteMestreId ?? null,
       avaria_tipo: r.avariaTipo ?? null,
       avaria_descricao: r.avariaDescricao ?? null,
