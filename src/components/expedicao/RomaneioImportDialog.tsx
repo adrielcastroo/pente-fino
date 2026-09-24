@@ -33,7 +33,7 @@ interface RomaneioImportDialogProps {
   regras: FaturamentoRegra[];
 }
 
-interface PreviewRow {
+export interface PreviewRow {
   codigo_cliente: string;
   nome_cliente: string;
   nf?: string;

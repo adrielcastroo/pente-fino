@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
-import { FileText, Truck, Plus, Loader2, Upload, RefreshCw, Calendar, ChevronDown, ChevronUp, Package, Search } from 'lucide-react';
+import { FileText, FileSpreadsheet, Truck, Plus, Loader2, Upload, RefreshCw, Calendar, ChevronDown, ChevronUp, Package, Search } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -39,6 +39,7 @@ import * as XLSX from 'xlsx';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import RomaneioImportDialog from '@/components/expedicao/RomaneioImportDialog';
+import { PreviewRow } from '@/components/expedicao/RomaneioImportDialog';
 import ConsultaPedidos from '@/components/faturamento/ConsultaPedidos';
 
 // ============================================================
@@ -130,6 +131,7 @@ export default function RomaneioPage() {
   const [filterStatus, setFilterStatus] = useState('todos');
   const [romaneios, setRomaneios] = useState<RomaneioDia[]>([]);
   const [selectedRomaneio, setSelectedRomaneio] = useState<RomaneioDia | null>(null);
+  const [importedLinhas, setImportedLinhas] = useState<PreviewRow[]>([]);
 
   // ============================================================
   // Queries
@@ -197,9 +199,6 @@ export default function RomaneioPage() {
     if (logsData) setLogs(logsData);
   }, [logsData]);
 
-  // Note: logs state is updated optimistically in handleImportRomaneio
-// queryClient.invalidateQueries keeps the cache fresh in background
-
   // ============================================================
   // Handlers
   // ============================================================
@@ -232,21 +231,6 @@ export default function RomaneioPage() {
       });
 
       // Save romaneio using upsert to avoid duplicate on same day/title
-      // Otimistic update na UI: adiciona o novo log instantaneamente
-      const newLog: LogRomaneio = {
-        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
-        criado_em: new Date().toISOString(),
-        data_faturamento: new Date().toISOString().split('T')[0],
-        status: 'ativo',
-        total_linhas: linhasComTransportador.length,
-        transportadora_id: null,
-        transportadora_nome: null,
-        json_detalhes: { importSource: 'manual', linhas: linhasComTransportador.map(l => ({ codigo: l.codigo_cliente, nome: l.nome_cliente })) },
-        usuario_id: null,
-        observacao: null,
-      };
-      setLogs(prev => [newLog, ...(prev ?? [])]);
-
       const { data: romaneioData, error: romaneioError } = await supabase
         .from('romaneio_dias')
         .upsert({
@@ -274,7 +258,9 @@ export default function RomaneioPage() {
       if (linhasError) throw linhasError;
 
       toast.success(`Romaneio importado com ${linhas.length} clientes!`);
-      // Force fresh fetch from server — optimistic update already showed instantly
+      // Mostra os dados importados na tabela dedicada
+      setImportedLinhas(linhasComTransportador);
+      // Force fresh fetch from server
       queryClient.invalidateQueries({ queryKey: ['romaneio_logs'] });
     } catch (error: any) {
       toast.error(error.message || 'Erro ao importar romaneio');
@@ -461,6 +447,49 @@ export default function RomaneioPage() {
                         <TableCell>
                           <Button variant="ghost" size="sm">Ver Detalhes</Button>
                         </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Dados Importados */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Dados Importados ({importedLinhas.length})</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {importedLinhas.length === 0 ? (
+                <EmptyState
+                  icon={FileSpreadsheet}
+                  title="Nenhum dado importado ainda"
+                  description="Importe uma planilha para ver os dados aqui"
+                />
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Código</TableHead>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>NF</TableHead>
+                      <TableHead>Data</TableHead>
+                      <TableHead>Transportador</TableHead>
+                      <TableHead className="text-right">Vol.</TableHead>
+                      <TableHead>Observações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {importedLinhas.map((row, idx) => (
+                      <TableRow key={idx}>
+                        <td className="font-mono text-xs">{row.codigo_cliente}</td>
+                        <td className="text-xs">{row.nome_cliente}</td>
+                        <td className="text-xs">{row.nf || '-'}</td>
+                        <td className="text-xs">{row.data || '-'}</td>
+                        <td className="text-xs"><Badge variant="outline" className="text-[10px]">{row.transportador || '-'}</Badge></td>
+                        <td className="text-xs text-right">{row.volume}</td>
+                        <td className="text-xs">{row.observacoes || '-'}</td>
                       </TableRow>
                     ))}
                   </TableBody>
