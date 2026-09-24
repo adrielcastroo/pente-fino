@@ -406,7 +406,50 @@ export default function RomaneioPage() {
             </CardContent>
           </Card>
 
-          {/* Logs */}
+          {/* Dados Importados */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Dados Importados ({importedLinhas.length})</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {importedLinhas.length === 0 ? (
+                <EmptyState
+                  icon={FileSpreadsheet}
+                  title="Nenhum dado importado ainda"
+                  description="Importe uma planilha para ver os dados aqui"
+                />
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Código</TableHead>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>NF</TableHead>
+                      <TableHead>Data</TableHead>
+                      <TableHead>Transportador</TableHead>
+                      <TableHead className="text-right">Vol.</TableHead>
+                      <TableHead>Observações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {importedLinhas.map((row, idx) => (
+                      <TableRow key={idx}>
+                        <td className="font-mono text-xs">{row.codigo_cliente}</td>
+                        <td className="text-xs">{row.nome_cliente}</td>
+                        <td className="text-xs">{row.nf || '-'}</td>
+                        <td className="text-xs">{row.data || '-'}</td>
+                        <td className="text-xs"><Badge variant="outline" className="text-[10px]">{row.transportador || '-'}</Badge></td>
+                        <td className="text-xs text-right">{row.volume}</td>
+                        <td className="text-xs">{row.observacoes || '-'}</td>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Histórico */}
           <Card>
             <CardHeader>
               <CardTitle>Histórico de Gerações</CardTitle>
@@ -447,49 +490,6 @@ export default function RomaneioPage() {
                         <TableCell>
                           <Button variant="ghost" size="sm">Ver Detalhes</Button>
                         </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Dados Importados */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Dados Importados ({importedLinhas.length})</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {importedLinhas.length === 0 ? (
-                <EmptyState
-                  icon={FileSpreadsheet}
-                  title="Nenhum dado importado ainda"
-                  description="Importe uma planilha para ver os dados aqui"
-                />
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Código</TableHead>
-                      <TableHead>Nome</TableHead>
-                      <TableHead>NF</TableHead>
-                      <TableHead>Data</TableHead>
-                      <TableHead>Transportador</TableHead>
-                      <TableHead className="text-right">Vol.</TableHead>
-                      <TableHead>Observações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {importedLinhas.map((row, idx) => (
-                      <TableRow key={idx}>
-                        <td className="font-mono text-xs">{row.codigo_cliente}</td>
-                        <td className="text-xs">{row.nome_cliente}</td>
-                        <td className="text-xs">{row.nf || '-'}</td>
-                        <td className="text-xs">{row.data || '-'}</td>
-                        <td className="text-xs"><Badge variant="outline" className="text-[10px]">{row.transportador || '-'}</Badge></td>
-                        <td className="text-xs text-right">{row.volume}</td>
-                        <td className="text-xs">{row.observacoes || '-'}</td>
                       </TableRow>
                     ))}
                   </TableBody>
