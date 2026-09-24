@@ -3,6 +3,17 @@ import { Registro, Conference } from '@/types';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 
+/** Garante que um valor seja safe para células ExcelJS (evita BigInt, NaN, Infinity) */
+function safeExcelValue(value: unknown): string | number {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'bigint') return Number(value);
+  if (typeof value === 'number') {
+    if (Number.isNaN(value) || !Number.isFinite(value)) return '';
+    return value;
+  }
+  return String(value);
+}
+
 const BLUE_CORP = '0F172A';
 const WHITE = 'FFFFFF';
 const LIGHT_BLUE = 'F1F5F9';
@@ -615,7 +626,7 @@ export async function exportMotorControleToExcel(registros: Registro[], fileName
     if (coulisseRegs.length > 0) {
       ws.addRow(['COULISSE', 'Proc', 'Cx', 'Lote', 'Lote Final']);
       for (const r of coulisseRegs) {
-        ws.addRow([r.item, r.processo, r.quantidade, r.lote, normalizeProcToken(r.loteSistema)]);
+        ws.addRow([r.item, r.processo, safeExcelValue(r.quantidade), r.lote, normalizeProcToken(r.loteSistema)]);
       }
       ws.addRow(['', '', '', '', '']);
     }
