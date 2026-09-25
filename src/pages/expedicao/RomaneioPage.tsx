@@ -1,5 +1,5 @@
-import { useMemo, useState, useEffect } from 'react';
-import { FileText, FileSpreadsheet, Truck, Plus, Loader2, Upload, RefreshCw, Calendar, ChevronDown, ChevronUp, Package, Search, CheckCircle2 } from 'lucide-react';
+import { useMemo, useState, useEffect, useRef } from 'react';
+import { FileText, FileSpreadsheet, Truck, Plus, Loader2, Upload, RefreshCw, Calendar, ChevronDown, ChevronUp, Package, Search, CheckCircle2, Edit, Save, X, Printer } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,9 +15,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
+import apiService from '@/services/api';
+import { exportRomaneioPDF, exportMotorControleToExcel } from '@/lib/expedicao/exports';
 import {
   Dialog,
   DialogContent,
@@ -34,7 +37,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -133,6 +135,9 @@ export default function RomaneioPage() {
   const [selectedRomaneio, setSelectedRomaneio] = useState<RomaneioDia | null>(null);
   const [importedLinhas, setImportedLinhas] = useState<PreviewRow[]>([]);
   const [importSuccess, setImportSuccess] = useState(false);
+  const [editingRow, setEditingRow] = useState<number | null>(null);
+  const [editData, setEditData] = useState<Partial<PreviewRow> & { id?: string }>({});
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ============================================================
   // Queries
