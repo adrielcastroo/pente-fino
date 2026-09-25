@@ -2,6 +2,9 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import type { PreviewRow } from '@/components/expedicao/RomaneioImportDialog';
 
 /* ─────────── PDF: Romaneio ─────────── */
 
@@ -80,4 +83,74 @@ export function exportCSV<T extends Record<string, unknown>>(rows: T[], filename
   a.download = filename.endsWith('.csv') ? filename : `${filename}.csv`;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+/* ─────────── Excel: Romaneio Profissional ─────────── */
+
+export function exportRomaneioExcel(linhas: PreviewRow[]) {
+  const data = new Date();
+  const titulo = `Romaneio ${format(data, 'dd/MM/yyyy', { locale: ptBR })}`;
+
+  const wsData = linhas.map((l, i) => ({
+    '#': i + 1,
+    Código: l.codigo_cliente,
+    Nome: l.nome_cliente,
+    NF: l.nf || '-',
+    Data: l.data || '-',
+    Transportador: l.transportador || '-',
+    Volume: l.volume || 0,
+    Observações: l.observacoes || '-',
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(wsData);
+
+  // Set column widths for professional look
+  const colWidths = [
+    { wch: 5 },   // #
+    { wch: 15 },  // Código
+    { wch: 40 },  // Nome
+    { wch: 15 },  // NF
+    { wch: 15 },  // Data
+    { wch: 25 },  // Transportador
+    { wch: 10 },  // Volume
+    { wch: 40 },  // Observações
+  ];
+  ws['!cols'] = colWidths;
+
+  // Create workbook and add title
+  const wb = XLSX.utils.book_new();
+
+  // Title row
+  const titleRow = XLSX.utils.aoa_to_sheet([[titulo]]);
+  titleRow['!cols'] = colWidths;
+
+  // Info row
+  const infoRow = XLSX.utils.aoa_to_sheet([
+    [`Emitido em: ${format(data, 'dd/MM/yyyy HH:mm', { locale: ptBR })}`, `Total: ${linhas.length} clientes`]
+  ]);
+
+  XLSX.utils.book_append_sheet(wb, titleRow, 'Romaneio');
+  XLSX.utils.book_append_sheet(wb, infoRow, 'Romaneio');
+  XLSX.utils.book_append_sheet(wb, ws, 'Romaneio');
+
+  // Apply header styling
+  const range = XLSX.utils.decode_range(ws);
+  for (let col = range.s.c; col <= range.e.c; col++) {
+    const cell = ws[XLSX.utils.encode_cell({ r: 0, c: col })];
+    if (cell) {
+      cell.s = {
+        font: { bold: true, color: { rgb: 'FFFFFF' } },
+        fill: { fgColor: { rgb: '1E293B' } },
+        alignment: { horizontal: 'center' },
+        border: {
+          top: { style: 'thin' },
+          bottom: { style: 'thin' },
+          left: { style: 'thin' },
+          right: { style: 'thin' },
+        },
+      };
+    }
+  }
+
+  XLSX.writeFile(wb, `romaneio-${format(data, 'yyyy-MM-dd', { locale: ptBR })}.xlsx`);
 }

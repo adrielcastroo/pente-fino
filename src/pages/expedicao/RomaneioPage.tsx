@@ -20,7 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import apiService from '@/services/api';
-import { exportRomaneioPDF, exportMotorControleToExcel } from '@/lib/expedicao/exports';
+import { exportRomaneioPDF, exportRomaneioExcel } from '@/lib/expedicao/exports';
 import {
   Dialog,
   DialogContent,
@@ -470,12 +470,7 @@ export default function RomaneioPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        exportRomaneioPDF({
-                          numero: `ROM-${Date.now()}`,
-                          criado_em: new Date().toISOString(),
-                          status: 'importado',
-                          linhas: importedLinhas,
-                        });
+                        exportRomaneioExcel(importedLinhas);
                       }}
                       className="gap-1"
                     >
