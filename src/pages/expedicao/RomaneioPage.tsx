@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect, useRef } from 'react';
-import { FileText, FileSpreadsheet, Truck, Plus, Loader2, Upload, RefreshCw, Calendar, ChevronDown, ChevronUp, Package, Search, CheckCircle2, Edit, Save, X, Printer } from 'lucide-react';
+import { FileText, FileSpreadsheet, Truck, Plus, Loader2, Upload, RefreshCw, Calendar, ChevronDown, ChevronUp, Package, Search, CheckCircle2, Edit, Save, X, Printer, Archive } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -334,6 +334,34 @@ export default function RomaneioPage() {
   };
 
   // ============================================================
+  // Archive
+  // ============================================================
+  const handleArchiveRomaneio = async () => {
+    if (importedLinhas.length === 0) {
+      toast.warning('Nenhum romaneio para arquivar');
+      return;
+    }
+    try {
+      const { error } = await supabase
+        .from('romaneio_automatico_logs')
+        .insert({
+          referencia: `Romaneio ${format(new Date(), 'dd/MM/yyyy', { locale: ptBR })}`,
+          total_linhas: importedLinhas.length,
+          rows: JSON.stringify(importedLinhas),
+          origem: 'importacao_manual',
+          status: 'arquivado',
+        });
+      if (error) throw error;
+      setImportedLinhas([]);
+      setImportSuccess(false);
+      toast.success('Romaneio arquivado no histórico');
+      refetchRomaneios();
+    } catch (error: any) {
+      toast.error(error.message || 'Erro ao arquivar romaneio');
+    }
+  };
+
+  // ============================================================
   // Filtered data
   // ============================================================
 
@@ -434,7 +462,38 @@ export default function RomaneioPage() {
           {/* Dados Importados */}
           <Card>
             <CardHeader>
-              <CardTitle>Dados Importados ({importedLinhas.length})</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle>Dados Importados ({importedLinhas.length})</CardTitle>
+                {importedLinhas.length > 0 && (
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        exportRomaneioPDF({
+                          numero: `ROM-${Date.now()}`,
+                          criado_em: new Date().toISOString(),
+                          status: 'importado',
+                          linhas: importedLinhas,
+                        });
+                      }}
+                      className="gap-1"
+                    >
+                      <Printer className="w-3 h-3" />
+                      Imprimir
+                    </Button>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={handleArchiveRomaneio}
+                      className="gap-1"
+                    >
+                      <Archive className="w-3 h-3" />
+                      Arquivar
+                    </Button>
+                  </div>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               {importedLinhas.length === 0 ? (
