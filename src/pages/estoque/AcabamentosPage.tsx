@@ -749,7 +749,7 @@ function AtualizarDescricaoTab({
               />
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setSelectedAcabamentos(new Set())} disabled={atualizando}>
+              <Button variant="outline" onClick={() => onDeselectAll?.()} disabled={atualizando}>
                 Cancelar
               </Button>
               <Button onClick={handleAtualizar} disabled={atualizando || !novaDescricao.trim()}>

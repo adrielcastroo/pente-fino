@@ -2,7 +2,7 @@ import * as React from "react";
 import { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface StatCardProps {
+export interface StatCardProps extends React.HTMLAttributes<HTMLDivElement> {
   icon: LucideIcon | React.ReactNode;
   label: string;
   value: string | number;

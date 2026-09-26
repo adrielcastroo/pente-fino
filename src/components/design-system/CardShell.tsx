@@ -1,7 +1,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-interface CardShellProps {
+export interface CardShellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
   title: string;
   icon?: React.ReactNode;
   children: React.ReactNode;
