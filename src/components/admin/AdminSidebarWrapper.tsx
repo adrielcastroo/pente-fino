@@ -14,7 +14,8 @@ import {
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { NAV, ALL_KEYS } from './navData';
-import { ShieldCheck, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
+import logoComb from '@/assets/logo-comb.webp';
 
 export default function AdminSidebarWrapper({ activeKey, onSelect }: { activeKey: string; onSelect: (k: string) => void }) {
   const navigate = useNavigate();
@@ -36,7 +37,7 @@ export default function AdminSidebarWrapper({ activeKey, onSelect }: { activeKey
           )}
         >
           <div className="flex h-9 w-9 shrink-0 items-center justify-center">
-            <ShieldCheck className="h-7 w-7 text-primary" />
+            <img src={logoComb} alt="Pente Fino" className="h-7 w-7 object-contain drop-shadow-sm" />
           </div>
           {!isIconCollapsed && (
             <div className="flex min-w-0 flex-col overflow-hidden">
