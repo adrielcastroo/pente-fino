@@ -124,6 +124,7 @@ export default function RomaneioPage() {
   const [logs, setLogs] = useState<LogRomaneio[]>([]);
   const [showLogDetail, setShowLogDetail] = useState(false);
   const [selectedLog, setSelectedLog] = useState<LogRomaneio | null>(null);
+  const handleViewLogDetail = (log: LogRomaneio) => setSelectedLog(log);
   const [showImportModal, setShowImportModal] = useState(false);
   const [regras, setRegras] = useState<FaturamentoRegra[]>([]);
   const [editingRule, setEditingRule] = useState<FaturamentoRegra | null>(null);
@@ -156,7 +157,7 @@ export default function RomaneioPage() {
         if (error) throw error;
         if (!data || data.length === 0) break;
 
-        all.push(...data);
+        all.push(...(data as unknown as FaturamentoRegra[]));
         offset += BATCH_SIZE;
         hasMore = data.length === BATCH_SIZE;
       }
@@ -168,13 +169,13 @@ export default function RomaneioPage() {
   const { data: logsData, isLoading: isLoadingLogs } = useQuery({
     queryKey: ['romaneio_logs'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('romaneio_automatico_logs')
         .select('*')
         .order('criado_em', { ascending: false })
         .limit(50);
       if (error) throw error;
-      return data || [];
+      return (data || []) as LogRomaneio[];
     },
   });
 
@@ -246,7 +247,7 @@ export default function RomaneioPage() {
           data_romaneio: new Date().toISOString().split('T')[0],
           titulo: `Romaneio ${format(new Date(), 'dd/MM/yyyy', { locale: ptBR })}`,
           status: 'ativo',
-        }, { onConflict: ['data_romaneio', 'titulo'] })
+        }, { onConflict: 'data_romaneio,titulo' })
         .select()
         .single();
 
@@ -590,7 +591,7 @@ export default function RomaneioPage() {
               <Upload className="w-4 h-4" />
               Importar Excel
             </Button>
-            <Button onClick={() => setEditingRule({})} variant="outline" className="gap-2">
+            <Button onClick={() => setEditingRule({} as FaturamentoRegra)} variant="outline" className="gap-2">
               <Plus className="w-4 h-4" />
               Nova Regra
             </Button>
