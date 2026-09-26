@@ -84,7 +84,7 @@ export function AdminTabs() {
   return (
     <div
       key={activeKey}
-      style={{ opacity: 1, y: 0 }}
+      style={{ opacity: 1 }}
     >
       <Suspense fallback={tabFallback}>{TabContent}</Suspense>
     </div>
