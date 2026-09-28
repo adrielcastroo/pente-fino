@@ -98,4 +98,15 @@ if (rootElement) {
   registerAppServiceWorker();
   // Inicializar observabilidade após mount da app
   setTimeout(initObservability, 100);
+  // Tenta restaurar conferência do snapshot de autosave (IndexedDB) caso o
+  // localStorage tenha perdido dados (fechou aba antes do debounce, cota
+  // estourada, JSON corrompido).
+  setTimeout(async () => {
+    try {
+      const { useAppStore } = await import('./store/useAppStore');
+      useAppStore.getState().checkAndRestoreSnapshot();
+    } catch (e) {
+      console.warn('[main] falha ao restaurar snapshot', e);
+    }
+  }, 500);
 }
