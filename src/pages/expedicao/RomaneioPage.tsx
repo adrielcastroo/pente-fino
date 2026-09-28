@@ -126,6 +126,7 @@ export default function RomaneioPage() {
   const [logs, setLogs] = useState<LogRomaneio[]>([]);
   const [showLogDetail, setShowLogDetail] = useState(false);
   const [selectedLog, setSelectedLog] = useState<LogRomaneio | null>(null);
+  const handleViewLogDetail = (log: LogRomaneio) => setSelectedLog(log);
   const [showImportModal, setShowImportModal] = useState(false);
   const [regras, setRegras] = useState<FaturamentoRegra[]>([]);
   const [editingRule, setEditingRule] = useState<FaturamentoRegra | null>(null);
@@ -161,7 +162,7 @@ export default function RomaneioPage() {
         if (error) throw error;
         if (!data || data.length === 0) break;
 
-        all.push(...data);
+        all.push(...(data as unknown as FaturamentoRegra[]));
         offset += BATCH_SIZE;
         hasMore = data.length === BATCH_SIZE;
       }
@@ -173,13 +174,13 @@ export default function RomaneioPage() {
   const { data: logsData, isLoading: isLoadingLogs } = useQuery({
     queryKey: ['romaneio_logs'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('romaneio_automatico_logs')
         .select('*')
         .order('criado_em', { ascending: false })
         .limit(50);
       if (error) throw error;
-      return data || [];
+      return (data || []) as LogRomaneio[];
     },
   });
 
@@ -216,55 +217,41 @@ export default function RomaneioPage() {
   // ============================================================
   // Handlers
   // ============================================================
-  const handleImportRomaneio = async (linhas: any[]) => {
+  const handleImportRomaneio = async (linhas: PreviewRow[], dataRomaneio: string) => {
     try {
-      // Determine transportadora for each line using regras
-      const linhasComTransportador = linhas.map((l: any) => {
-        // If transportador already contains an instruction (e.g., starts with 'Agrupar'), keep it
-        const transportadorOrig = (l.transportador || '').trim();
-        const isInstrucao = /agrup|instrução|instru|agrupar/i.test(transportadorOrig);
-        if (isInstrucao && transportadorOrig) {
-          return { ...l, transportadora: transportadorOrig };
-        }
-        // Find rule for cliente
-        const regra = regras.find((r) => r.codigo_cliente === l.codigo_cliente);
-        if (!regra) {
-          return { ...l, transportadora: transportadorOrig || '' };
-        }
-        const modalidade = regra.modalidade_frete?.toUpperCase();
-        let transportadora = '';
-        if (modalidade === 'CIF') {
-          transportadora = regra.transportadora_cif || '';
-        } else if (modalidade === 'FOB') {
-          transportadora = regra.transportadora_fob || '';
-        } else {
-          // fallback: prefer CIF then FOB
-          transportadora = regra.transportadora_cif || regra.transportadora_fob || '';
-        }
-        return { ...l, transportadora };
-      });
+      // Decisão de frete (valor mínimo × pedidos do Auge) já calculada no diálogo
+      const linhasComTransportador = linhas.map((l) => ({
+        ...l,
+        transportadora: l.decisao?.transportadora ?? l.transportador ?? '',
+        modalidade: l.decisao?.modalidade || undefined,
+      }));
+      const [ay, am, ad] = dataRomaneio.split('-');
 
       // Save romaneio using upsert to avoid duplicate on same day/title
       const { data: romaneioData, error: romaneioError } = await supabase
         .from('romaneio_dias')
         .upsert({
-          data_romaneio: new Date().toISOString().split('T')[0],
-          titulo: `Romaneio ${format(new Date(), 'dd/MM/yyyy', { locale: ptBR })}`,
+          data_romaneio: dataRomaneio,
+          titulo: `Romaneio ${ad}/${am}/${ay}`,
           status: 'ativo',
-        }, { onConflict: ['data_romaneio', 'titulo'] })
+        }, { onConflict: 'data_romaneio,titulo' })
         .select()
         .single();
 
       if (romaneioError) throw romaneioError;
 
       // Save lines
-      const linhasParaInserir = linhasComTransportador.map((l: any) => ({
+      const linhasParaInserir = linhasComTransportador.map((l) => ({
         romaneio_id: romaneioData.id,
         codigo_cliente: l.codigo_cliente,
         nome_cliente: l.nome_cliente,
         quantidade: l.quantidade || 1,
         modalidade_frete: l.modalidade || 'CIF',
         transportadora: l.transportadora || '',
+        transportadora_sugerida: l.decisao?.transportadora || null,
+        valor: l.decisao?.valorPedidos ?? null,
+        flag_excecao: l.decisao?.flagExcecao ?? false,
+        cd_pedido: l.decisao?.pedidos.length ? l.decisao.pedidos.join(',') : null,
         observacoes: l.observacoes || null,
       }));
 
@@ -649,7 +636,7 @@ export default function RomaneioPage() {
               <Upload className="w-4 h-4" />
               Importar Excel
             </Button>
-            <Button onClick={() => setEditingRule({})} variant="outline" className="gap-2">
+            <Button onClick={() => setEditingRule({} as FaturamentoRegra)} variant="outline" className="gap-2">
               <Plus className="w-4 h-4" />
               Nova Regra
             </Button>

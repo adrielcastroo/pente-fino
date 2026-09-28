@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 
-interface SectionToolbarProps {
+export interface SectionToolbarProps {
   hint?: string;
   onRefresh: () => void;
   loading?: boolean;

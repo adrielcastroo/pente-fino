@@ -6829,6 +6829,64 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ------------------------------------------------------------
+    // romaneio_valor_minimo: soma, por cliente, os pedidos do Auge cuja
+    // data de expedição (DocDueDate) é igual à data do romaneio.
+    // O Auge só filtra por data do pedido, então buscamos uma janela
+    // de 180 dias e filtramos localmente pela data de entrega prevista.
+    // Fallback: cópia local em auge_pedidos.
+    // ------------------------------------------------------------
+    if (action === 'romaneio_valor_minimo') {
+      let payload: any = {};
+      try { payload = await req.json(); } catch (_err) { /* ignore */ }
+      const dataRomaneio = String(payload?.data ?? '').trim();
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dataRomaneio)) {
+        return new Response(JSON.stringify({ ok: false, error: 'Data do romaneio inválida (use AAAA-MM-DD).' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      type PedidoMin = { cd_pedido: string; nome_cliente: string; codigo_cliente: string | null; vl_total: number; situacao: string | null };
+      let pedidos: PedidoMin[] = [];
+      let fonte: 'auge' | 'cache' = 'auge';
+      try {
+        const d = new Date(`${dataRomaneio}T12:00:00Z`);
+        d.setUTCDate(d.getUTCDate() - 180);
+        const de = `${String(d.getUTCDate()).padStart(2, '0')}/${String(d.getUTCMonth() + 1).padStart(2, '0')}/${d.getUTCFullYear()}`;
+        const [y, m, dd] = dataRomaneio.split('-');
+        const ate = `${dd}/${m}/${y}`;
+        const rows = await fetchPedidos(auth, de, ate, 5000);
+        pedidos = rows
+          .map((r: any) => ({ raw: r, mapped: mapPedidoAuge(r) }))
+          .filter((x: any) => x.mapped.dt_entrega_prevista === dataRomaneio)
+          .map((x: any) => ({
+            cd_pedido: x.mapped.cd_pedido,
+            nome_cliente: x.mapped.nome_cliente,
+            codigo_cliente: x.raw?.CardCode ? String(x.raw.CardCode).trim() : null,
+            vl_total: Number(x.mapped.vl_total) || 0,
+            situacao: x.mapped.situacao,
+          }));
+      } catch (err) {
+        console.warn('[romaneio_valor_minimo] Auge indisponível, usando cópia local:', getErrorMessage(err));
+        fonte = 'cache';
+        const [y, m, dd] = dataRomaneio.split('-');
+        const { data: cache, error: cacheErr } = await admin
+          .from('auge_pedidos')
+          .select('cd_pedido, nome_cliente, vl_total, situacao, dt_entrega_prevista')
+          .in('dt_entrega_prevista', [dataRomaneio, `${dd}/${m}/${y}`])
+          .limit(5000);
+        if (cacheErr) throw cacheErr;
+        pedidos = (cache ?? []).map((c: any) => ({
+          cd_pedido: c.cd_pedido, nome_cliente: c.nome_cliente ?? '', codigo_cliente: null,
+          vl_total: Number(c.vl_total) || 0, situacao: c.situacao,
+        }));
+      }
+      return new Response(JSON.stringify({ ok: true, fonte, data: dataRomaneio, pedidos }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+
+
 
 // ==============================================================
 // sync_pedidos (consulta específica dos pedidos do auge)
