@@ -96,54 +96,56 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported, r
       const workbook = XLSX.read(data);
       const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
       const jsonData = XLSX.utils.sheet_to_json<any>(firstSheet, { header: 1 });
+      // Localiza o cabeçalho em qualquer coluna das primeiras 30 linhas
+      const norm = (v: unknown) => String(v ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
       let headerRowIndex = -1;
-      for (let i = 0; i < Math.min(10, jsonData.length); i++) {
-        const row = jsonData[i];
-        if (row && row[0] && String(row[0]).includes('Cód.')) {
+      for (let i = 0; i < Math.min(30, jsonData.length); i++) {
+        const cells = (jsonData[i] ?? []).map(norm);
+        if (cells.some((c: string) => /^(cod|codigo)\b|cod\.? ?cliente|cardcode/.test(c)) && cells.some((c: string) => /cliente|nome|razao/.test(c))) {
           headerRowIndex = i;
           break;
         }
       }
       if (headerRowIndex === -1) {
-        toast.error('Formato não reconhecido: não foi possível encontrar o cabeçalho');
+        toast.error('Não encontrei o cabeçalho da planilha (coluna "Cód." e "Cliente/Nome").');
         return;
       }
+      const header: string[] = (jsonData[headerRowIndex] ?? []).map(norm);
+      const col = (re: RegExp, fb: number) => { const i = header.findIndex((h) => re.test(h)); return i >= 0 ? i : fb; };
+      const cCod = col(/^(cod|codigo)|cardcode/, 0);
+      const cNome = col(/nome|razao|^cliente/, 1);
+      const cNf = col(/^nf|nota/, 2);
+      const cData = col(/data|dt/, 3);
+      const cTransp = col(/transp/, 4);
+      const cVol = col(/vol|qtd|quant/, 5);
+      const cObs = col(/obs/, 6);
+      const toIso = (v: unknown): string => {
+        if (typeof v === 'number') {
+          const d = XLSX.SSF.parse_date_code(v);
+          return d ? `${d.y}-${String(d.m).padStart(2, '0')}-${String(d.d).padStart(2, '0')}` : '';
+        }
+        const m = String(v ?? '').trim().match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{2,4})/);
+        if (!m) return /^\d{4}-\d{2}-\d{2}/.test(String(v)) ? String(v).slice(0, 10) : '';
+        const y = m[3].length === 2 ? `20${m[3]}` : m[3];
+        return `${y}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
+      };
       const mapped: PreviewRow[] = [];
       for (let i = headerRowIndex + 1; i < jsonData.length; i++) {
         const row = jsonData[i];
-        if (!row || !row[0]) continue;
-        const firstCell = String(row[0]);
-        if (firstCell.includes('SUBTOTAL') || firstCell.includes('Assinatura') || firstCell.includes('CPF')) continue;
-        let date = '';
-        if (row[3]) {
-          const dateStr = String(row[3]);
-          if (dateStr.includes('.')) {
-            const parts = dateStr.split('.');
-            if (parts.length === 3) {
-              const day = parts[0].padStart(2, '0');
-              const month = parts[1].padStart(2, '0');
-              const year = parts[2].length === 2 ? '20' + parts[2] : parts[2];
-              date = `${year}-${month}-${day}`;
-            }
-          } else if (dateStr.includes('/')) {
-            const parts = dateStr.split('/');
-            if (parts.length === 3) {
-              const day = parts[0].padStart(2, '0');
-              const month = parts[1].padStart(2, '0');
-              const year = parts[2].length === 2 ? '20' + parts[2] : parts[2];
-              date = `${year}-${month}-${day}`;
-            }
-          }
-        }
+        if (!row) continue;
+        const cod = String(row[cCod] ?? '').trim();
+        if (!cod) continue;
+        if (/subtotal|total|assinatura|cpf/i.test(cod)) continue;
+        const vol = parseInt(String(row[cVol] ?? '')) || 1;
         mapped.push({
-          codigo_cliente: String(row[0] || '').trim(),
-          nome_cliente: String(row[1] || '').trim(),
-          nf: row[2] ? String(row[2]) : undefined,
-          data: date,
-          transportador: String(row[4] || '').trim(),
-          volume: row[5] ? parseInt(row[5]) || 1 : 1,
-          quantidade: row[5] ? parseInt(row[5]) || 1 : 1,
-          observacoes: row[6] ? String(row[6]).trim() : null,
+          codigo_cliente: cod,
+          nome_cliente: String(row[cNome] ?? '').trim(),
+          nf: row[cNf] ? String(row[cNf]) : undefined,
+          data: toIso(row[cData]),
+          transportador: String(row[cTransp] ?? '').trim(),
+          volume: vol,
+          quantidade: vol,
+          observacoes: row[cObs] ? String(row[cObs]).trim() : null,
         });
       }
       const r = await aplicarRegras(mapped, regras);
