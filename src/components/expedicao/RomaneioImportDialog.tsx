@@ -53,7 +53,9 @@ const moeda = (v: number | null) =>
 /** Consulta pedidos do Auge na data e aplica a regra de frete em cada linha. */
 async function aplicarRegras(linhas: PreviewRow[], regras: FaturamentoRegra[]): Promise<{ linhas: PreviewRow[]; data: string; fonte: string | null }> {
   const data = dataPredominante(linhas.map((l) => l.data));
-  const regraDe = (cod: string) => regras.find((r) => r.codigo_cliente === cod);
+  // Compara códigos sem espaços/pontuação/zeros à esquerda (ex.: "C 001" = "C1")
+  const chave = (v: string) => String(v ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '').replace(/^([A-Z]*)0+(?=\d)/, '$1');
+  const regraDe = (cod: string) => regras.find((r) => chave(r.codigo_cliente) === chave(cod));
   const precisaConsulta = linhas.some((l) => Number(regraDe(l.codigo_cliente)?.valor_minimo_frete ?? 0) > 0);
   let pedidos: PedidoAugeMin[] | null = null;
   let fonte: string | null = null;
