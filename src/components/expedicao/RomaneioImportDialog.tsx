@@ -13,6 +13,8 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
+import { supabase } from '@/integrations/supabase/client';
+import { decidirFrete, dataPredominante, SITUACAO_LABEL, type DecisaoFrete, type PedidoAugeMin } from '@/lib/expedicao/regraFrete';
 
 interface FaturamentoRegra {
   id: string;
@@ -29,7 +31,7 @@ interface FaturamentoRegra {
 interface RomaneioImportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onImported: (linhas: any[]) => Promise<void> | void;
+  onImported: (linhas: PreviewRow[], dataRomaneio: string) => Promise<void> | void;
   regras: FaturamentoRegra[];
 }
 
@@ -42,6 +44,36 @@ export interface PreviewRow {
   volume?: number;
   quantidade?: number;
   observacoes?: string | null;
+  decisao?: DecisaoFrete;
+}
+
+const moeda = (v: number | null) =>
+  v === null ? '-' : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+/** Consulta pedidos do Auge na data e aplica a regra de frete em cada linha. */
+async function aplicarRegras(linhas: PreviewRow[], regras: FaturamentoRegra[]): Promise<{ linhas: PreviewRow[]; data: string; fonte: string | null }> {
+  const data = dataPredominante(linhas.map((l) => l.data));
+  const regraDe = (cod: string) => regras.find((r) => r.codigo_cliente === cod);
+  const precisaConsulta = linhas.some((l) => Number(regraDe(l.codigo_cliente)?.valor_minimo_frete ?? 0) > 0);
+  let pedidos: PedidoAugeMin[] | null = null;
+  let fonte: string | null = null;
+  if (precisaConsulta) {
+    try {
+      const { data: resp, error } = await supabase.functions.invoke('auge-sync?action=romaneio_valor_minimo', { body: { data } });
+      if (error || !resp?.ok) throw new Error(resp?.error || error?.message || 'Falha na consulta');
+      pedidos = resp.pedidos as PedidoAugeMin[];
+      fonte = resp.fonte;
+    } catch (e) {
+      toast.error(`Não foi possível consultar os pedidos no Auge: ${(e as Error).message}. Usando regra por modalidade.`);
+    }
+  }
+  return {
+    data, fonte,
+    linhas: linhas.map((l) => {
+      const decisao = decidirFrete({ codigoCliente: l.codigo_cliente, nomeCliente: l.nome_cliente, transportadorPlanilha: l.transportador, regra: regraDe(l.codigo_cliente), pedidos });
+      return { ...l, decisao };
+    }),
+  };
 }
 
 export default function RomaneioImportDialog({ open, onOpenChange, onImported, regras }: RomaneioImportDialogProps) {
@@ -50,6 +82,8 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported, r
   const [previewCount, setPreviewCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [dataRomaneio, setDataRomaneio] = useState('');
+  const [fonte, setFonte] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -112,8 +146,11 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported, r
           observacoes: row[6] ? String(row[6]).trim() : null,
         });
       }
-      setPreview(mapped);
-      setPreviewCount(mapped.length);
+      const r = await aplicarRegras(mapped, regras);
+      setDataRomaneio(r.data);
+      setFonte(r.fonte);
+      setPreview(r.linhas);
+      setPreviewCount(r.linhas.length);
       if (mapped.length === 0) {
         toast.error('Nenhuma linha de dados encontrada na planilha');
       }
@@ -130,6 +167,8 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported, r
     setArquivo(null);
     setPreview([]);
     setPreviewCount(0);
+    setDataRomaneio('');
+    setFonte(null);
     setIsImporting(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -185,20 +224,27 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported, r
           {preview.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label>Pré-visualização (primeiros 10)</Label>
-                <Badge variant="secondary">{previewCount} total</Badge>
+                <Label>Pré-visualização · romaneio de {dataRomaneio.split('-').reverse().join('/')}</Label>
+                <div className="flex gap-2">
+                  {fonte && <Badge variant="outline">Pedidos: {fonte === 'auge' ? 'Auge ao vivo' : 'cópia local'}</Badge>}
+                  <Badge variant="secondary">{previewCount} total</Badge>
+                </div>
               </div>
               <div className="border rounded-lg overflow-hidden">
-                <div className="overflow-y-auto max-h-[50vh]">
-                <table className="w-full text-sm table-fixed border-collapse">
+                <div className="overflow-auto max-h-[50vh]">
+                <table className="w-full min-w-[1100px] text-sm table-fixed border-collapse">
                   <thead className="bg-muted sticky top-0 z-10">
                     <tr>
                       <th className="w-[80px] px-3 py-2 text-left font-medium">Código</th>
                       <th className="w-[180px] px-3 py-2 text-left font-medium">Nome</th>
                       <th className="w-[80px] px-3 py-2 text-left font-medium">NF</th>
                       <th className="w-[100px] px-3 py-2 text-left font-medium">Data</th>
-                      <th className="w-[120px] px-3 py-2 text-left font-medium">Transportador</th>
-                      <th className="w-[80px] px-3 py-2 text-right font-medium">Vol.</th>
+                      <th className="w-[120px] px-3 py-2 text-left font-medium">Planilha</th>
+                      <th className="w-[60px] px-3 py-2 text-right font-medium">Vol.</th>
+                      <th className="w-[110px] px-3 py-2 text-right font-medium">Valor pedidos</th>
+                      <th className="w-[100px] px-3 py-2 text-right font-medium">Mínimo</th>
+                      <th className="w-[130px] px-3 py-2 text-left font-medium">Situação</th>
+                      <th className="w-[140px] px-3 py-2 text-left font-medium">Transportadora</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -210,6 +256,20 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported, r
                         <td className="px-3 py-2 text-xs">{row.data || '-'}</td>
                         <td className="px-3 py-2 text-xs"><Badge variant="outline" className="text-[10px]">{row.transportador || '-'}</Badge></td>
                         <td className="px-3 py-2 text-xs text-right">{row.volume}</td>
+                        <td className="px-3 py-2 text-xs text-right" title={row.decisao?.pedidos.join(', ')}>
+                          {moeda(row.decisao?.valorPedidos ?? null)}{row.decisao?.qtdPedidos ? ` (${row.decisao.qtdPedidos})` : ''}
+                        </td>
+                        <td className="px-3 py-2 text-xs text-right">{moeda(row.decisao?.valorMinimo ?? null)}</td>
+                        <td className="px-3 py-2 text-xs">
+                          {row.decisao && (
+                            <Badge variant={row.decisao.situacao === 'atingido' ? 'default' : row.decisao.flagExcecao ? 'destructive' : 'secondary'} className="text-[10px]">
+                              {SITUACAO_LABEL[row.decisao.situacao]}
+                            </Badge>
+                          )}
+                        </td>
+                        <td className="px-3 py-2 text-xs font-medium break-words">
+                          {row.decisao?.transportadora || '-'}{row.decisao?.modalidade ? ` · ${row.decisao.modalidade}` : ''}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -227,7 +287,7 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported, r
               onClick={async () => {
                 setIsImporting(true);
                 try {
-                  await onImported(preview);
+                  await onImported(preview, dataRomaneio);
                   toast.success(`Romaneio com ${preview.length} clientes importado!`);
                   handleCloseDialog();
                 } catch (error: any) {
