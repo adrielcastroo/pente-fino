@@ -834,7 +834,7 @@ export const LeftPanel = memo(function LeftPanel() {
       }
       addRegistro(reg);
       bipSuccess();
-      toast.success(`✓ ${item} adicionado (${registros.length + 1} itens)`);
+      toast.success(`✓ ${item} adicionado (${useAppStore.getState().registros.length + 1} itens)`);
 
 
       resetForm();
@@ -844,7 +844,7 @@ export const LeftPanel = memo(function LeftPanel() {
       setAvariaTipo(null);
       setAvariaDescricao('');
       setAvariaFotoUrl(null);
-      setTimeout(() => { useAppStore.getState().updateRegistro(reg.id, { isNew: false }); }, 400);
+      setTimeout(() => { useAppStore.getState().clearIsNew(reg.id); }, 400);
       return;
     }
 
@@ -938,11 +938,11 @@ export const LeftPanel = memo(function LeftPanel() {
     }
     addRegistro(reg);
     bipSuccess();
-    toast.success(`✓ ${reg.item} adicionado (${registros.length + 1} rolos)`);
+    toast.success(`✓ ${reg.item} adicionado (${useAppStore.getState().registros.length + 1} rolos)`);
 
 
     resetForm();
-    setTimeout(() => { useAppStore.getState().updateRegistro(reg.id, { isNew: false }); }, 400);
+    setTimeout(() => { useAppStore.getState().clearIsNew(reg.id); }, 400);
   };
 
   const handleUndo = () => {

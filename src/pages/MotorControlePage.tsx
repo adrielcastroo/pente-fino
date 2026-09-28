@@ -1,5 +1,6 @@
 import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
+import { useShallow } from 'zustand/react/shallow';
 import { toast } from 'sonner';
 import { Plus, Settings2, ScanBarcode, X, Eye, Sparkles, Lock, Unlock, Package, Hash, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -40,7 +41,29 @@ function sanitize(v: string) {
 
 export default function MotorControlePage() {
   useDocumentTitle('Motor / Controle');
-  const { registros, history, addRegistro, setMode, formData, setFormData, resetMotorFormData, lockMotorModelo, setLockMotorModelo, lockMotorNf, setLockMotorNf, labelSettings } = useAppStore();
+  const {
+    addRegistro,
+    formData,
+    setFormData,
+    resetMotorFormData,
+    lockMotorModelo,
+    setLockMotorModelo,
+    lockMotorNf,
+    setLockMotorNf,
+    labelSettings,
+  } = useAppStore(useShallow(s => ({
+    addRegistro: s.addRegistro,
+    formData: s.formData,
+    setFormData: s.setFormData,
+    resetMotorFormData: s.resetMotorFormData,
+    lockMotorModelo: s.lockMotorModelo,
+    setLockMotorModelo: s.setLockMotorModelo,
+    lockMotorNf: s.lockMotorNf,
+    setLockMotorNf: s.setLockMotorNf,
+    labelSettings: s.labelSettings,
+    registros: s.registros,
+    history: s.history,
+  })));
   const { isLow } = usePerformance();
   
   useEffect(() => {
@@ -94,12 +117,15 @@ export default function MotorControlePage() {
     return cleaned;
   }, []);
 
-  const { allSeriesSet, maxSequencial } = useMemo(() => {
+  // Função pura para computar séries/sequenciais a partir de um array de
+// registros + history. Usada dentro dos handlers após await para evitar
+// stale closures do useMemo.
+  const computeSeries = useCallback((regs: any[], hist: any[], curModelo: string, curSubMode: SubMode, curNf: string) => {
     const set = new Set<string>();
     let max = 0;
-    const currentModelo = subMode === 'controle' ? mapModelo(modelo) : null;
-    const currentNf = nf.trim();
-    
+    const currentModelo = curSubMode === 'controle' ? mapModelo(curModelo) : null;
+    const currentNf = curNf.trim();
+
     const processReg = (r: any) => {
       if (!r) return;
       if ((r.modoOrigem === 'motor' || r.modoOrigem === 'controle') && r.lote) set.add(String(r.lote).trim().toLowerCase());
@@ -111,13 +137,11 @@ export default function MotorControlePage() {
         if (!isNaN(num) && num > max) max = num;
       }
     };
-    
-    registros?.forEach(processReg);
-    history?.forEach(conf => conf.registros?.forEach(processReg));
-    return { allSeriesSet: set, maxSequencial: max };
-  }, [registros, history, modelo, subMode, nf]);
 
-  const isDuplicate = useCallback((cleanedSerie: string): boolean => allSeriesSet.has(cleanedSerie.trim().toLowerCase()), [allSeriesSet]);
+    regs?.forEach(processReg);
+    hist?.forEach(conf => conf.registros?.forEach(processReg));
+    return { allSeriesSet: set, maxSequencial: max };
+  }, []);
 
   const handleAddMotor = useCallback(async () => {
     if (!modelo.trim()) { toast.warning('Preencha o Modelo'); return; }
@@ -126,12 +150,18 @@ export default function MotorControlePage() {
     const cleanedModelo = modelo.trim().replace(/[a-zA-Z]$/, '').trim();
     const cleaned = cleanMotorSerie(serie, cleanedModelo);
     if (!cleaned) { toast.warning('Série inválida'); return; }
-    if (isDuplicate(cleaned)) { toast.warning('Série já cadastrada!'); setSerie(''); return; }
 
     // Converte código fornecedor → código interno
     const resolvedCad = await itensCadastroService.resolveItemFromScan(cleanedModelo, 'Motor');
     if (resolvedCad.source === 'fornecedor') {
       toast.success(`Fornecedor "${cleanedModelo}" → ${resolvedCad.codigoInterno}`);
+    }
+
+    // Recalcula duplicidade/sequencial após o await (evita stale closure).
+    const state = useAppStore.getState();
+    const { allSeriesSet } = computeSeries(state.registros, state.history, modelo, subMode, nf);
+    if (allSeriesSet.has(cleaned.trim().toLowerCase())) {
+      toast.warning('Série já cadastrada!'); setSerie(''); return;
     }
 
     const reg = {
@@ -150,19 +180,19 @@ export default function MotorControlePage() {
       mLinear: 0,
       largura: 0,
     };
-    if (labelSettings.autoPrint) printMotorLabel({ 
-      item: reg.item, 
-      descricao: 'Motor', 
-      lote: reg.lote, 
-      loteSistema: reg.loteSistema, 
-      nf: reg.nf, 
+    if (labelSettings.autoPrint) printMotorLabel({
+      item: reg.item,
+      descricao: 'Motor',
+      lote: reg.lote,
+      loteSistema: reg.loteSistema,
+      nf: reg.nf,
       cx: temCaixa ? (parseInt(caixaNum, 10) || 0) : null
     }, labelSettings);
     addRegistro(reg);
     toast.success(`Motor adicionado: ${cleaned}`);
     resetMotorFormData();
     serieRef.current?.focus();
-  }, [modelo, serie, nf, temCaixa, caixaNum, cleanMotorSerie, isDuplicate, addRegistro, resetMotorFormData, labelSettings]);
+  }, [modelo, serie, nf, temCaixa, caixaNum, cleanMotorSerie, subMode, computeSeries, addRegistro, resetMotorFormData, labelSettings]);
 
   const handleAddControle = useCallback(async () => {
     const resolvedModelo = mapModelo(modelo);
@@ -171,7 +201,6 @@ export default function MotorControlePage() {
 
     const cleaned = cleanControleSerie(serie);
     if (!cleaned) { toast.warning('Série inválida'); return; }
-    if (isDuplicate(cleaned)) { toast.warning('Série já cadastrada!'); setSerie(''); return; }
 
     // Converte código fornecedor → código interno
     const resolvedCad = await itensCadastroService.resolveItemFromScan(resolvedModelo.trim(), 'Controle');
@@ -180,7 +209,14 @@ export default function MotorControlePage() {
     }
     const itemFinal = resolvedCad.codigoInterno;
 
-    const seq = maxSequencial + 1;
+    // Recalcula duplicidade/sequencial após o await (evita stale closure).
+    const state = useAppStore.getState();
+    const { allSeriesSet, maxSequencial: curMax } = computeSeries(state.registros, state.history, modelo, subMode, nf);
+    if (allSeriesSet.has(cleaned.trim().toLowerCase())) {
+      toast.warning('Série já cadastrada!'); setSerie(''); return;
+    }
+    const seq = curMax + 1;
+
     const reg = {
       id: crypto.randomUUID(),
       item: itemFinal,
@@ -197,25 +233,24 @@ export default function MotorControlePage() {
       mLinear: 0,
       largura: 0,
     };
-    if (labelSettings.autoPrint) printMotorLabel({ 
-      item: reg.item, 
-      descricao: 'Controle', 
-      lote: reg.lote, 
-      loteSistema: reg.loteSistema, 
-      nf: reg.nf, 
-      sequencial: seq, 
+    if (labelSettings.autoPrint) printMotorLabel({
+      item: reg.item,
+      descricao: 'Controle',
+      lote: reg.lote,
+      loteSistema: reg.loteSistema,
+      nf: reg.nf,
+      sequencial: seq,
       cx: null
     }, labelSettings);
     addRegistro(reg);
     toast.success(`Controle #${seq} adicionado`);
     resetMotorFormData();
     serieRef.current?.focus();
-  }, [modelo, serie, nf, cleanControleSerie, isDuplicate, maxSequencial, addRegistro, resetMotorFormData, labelSettings]);
+  }, [modelo, serie, nf, cleanControleSerie, subMode, computeSeries, addRegistro, resetMotorFormData, labelSettings]);
 
   const handleAddCoulisse = useCallback(async () => {
     if (!coulisseModeloProcCx.trim()) { toast.warning('Preencha o Modelo/Proc/Cx'); return; }
     if (!coulisseLote.trim()) { toast.warning('Bipe o Lote'); return; }
-    if (isDuplicate(coulisseLote)) { toast.warning('Lote já cadastrado!'); setCoulisseLote(''); return; }
 
     const parsed = parseCoulisseString(coulisseModeloProcCx);
     const modeloRaw = parsed.modelo || coulisseModeloProcCx.trim();
@@ -223,6 +258,13 @@ export default function MotorControlePage() {
     const resolvedCad = await itensCadastroService.resolveItemFromScan(modeloRaw, 'Coulisse');
     if (resolvedCad.source === 'fornecedor') {
       toast.success(`Fornecedor "${modeloRaw}" → ${resolvedCad.codigoInterno}`);
+    }
+
+    // Recalcula duplicidade após o await (evita stale closure).
+    const state = useAppStore.getState();
+    const { allSeriesSet } = computeSeries(state.registros, state.history, modelo, subMode, nf);
+    if (allSeriesSet.has(coulisseLote.trim().toLowerCase())) {
+      toast.warning('Lote já cadastrado!'); setCoulisseLote(''); return;
     }
 
     const reg = {
@@ -241,18 +283,18 @@ export default function MotorControlePage() {
       mLinear: 0,
       largura: 0,
     };
-    if (labelSettings.autoPrint) printMotorLabel({ 
-      item: reg.item, 
-      descricao: 'Coulisse', 
-      lote: reg.lote, 
-      loteSistema: reg.loteSistema, 
+    if (labelSettings.autoPrint) printMotorLabel({
+      item: reg.item,
+      descricao: 'Coulisse',
+      lote: reg.lote,
+      loteSistema: reg.loteSistema,
       cx: parsed.cx || null
     }, labelSettings);
     addRegistro(reg);
     toast.success(`Coulisse adicionado: ${coulisseLote}`);
     resetMotorFormData();
     serieRef.current?.focus();
-  }, [coulisseModeloProcCx, coulisseLote, isDuplicate, addRegistro, resetMotorFormData, labelSettings]);
+  }, [coulisseModeloProcCx, coulisseLote, modelo, subMode, nf, computeSeries, addRegistro, resetMotorFormData, labelSettings]);
 
   return (
     <FormPageLayout>
