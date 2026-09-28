@@ -51,6 +51,7 @@ export default function MotorControlePage() {
     lockMotorNf,
     setLockMotorNf,
     labelSettings,
+    setMode,
   } = useAppStore(useShallow(s => ({
     addRegistro: s.addRegistro,
     formData: s.formData,
@@ -63,6 +64,7 @@ export default function MotorControlePage() {
     labelSettings: s.labelSettings,
     registros: s.registros,
     history: s.history,
+    setMode: s.setMode,
   })));
   const { isLow } = usePerformance();
   
