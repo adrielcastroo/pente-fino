@@ -89,7 +89,6 @@ export function exportCSV<T extends Record<string, unknown>>(rows: T[], filename
 
 export function exportRomaneioExcel(linhas: PreviewRow[]) {
   const data = new Date();
-  const titulo = `Romaneio ${format(data, 'dd/MM/yyyy', { locale: ptBR })}`;
 
   const wsData = linhas.map((l, i) => ({
     '#': i + 1,
@@ -105,7 +104,7 @@ export function exportRomaneioExcel(linhas: PreviewRow[]) {
   const ws = XLSX.utils.json_to_sheet(wsData);
 
   // Set column widths for professional look
-  const colWidths = [
+  ws['!cols'] = [
     { wch: 5 },   // #
     { wch: 15 },  // Código
     { wch: 40 },  // Nome
@@ -115,42 +114,30 @@ export function exportRomaneioExcel(linhas: PreviewRow[]) {
     { wch: 10 },  // Volume
     { wch: 40 },  // Observações
   ];
-  ws['!cols'] = colWidths;
 
-  // Create workbook and add title
-  const wb = XLSX.utils.book_new();
-
-  // Title row
-  const titleRow = XLSX.utils.aoa_to_sheet([[titulo]]);
-  titleRow['!cols'] = colWidths;
-
-  // Info row
-  const infoRow = XLSX.utils.aoa_to_sheet([
-    [`Emitido em: ${format(data, 'dd/MM/yyyy HH:mm', { locale: ptBR })}`, `Total: ${linhas.length} clientes`]
-  ]);
-
-  XLSX.utils.book_append_sheet(wb, titleRow, 'Romaneio');
-  XLSX.utils.book_append_sheet(wb, infoRow, 'Romaneio');
-  XLSX.utils.book_append_sheet(wb, ws, 'Romaneio');
-
-  // Apply header styling
+  // Apply header styling directly on the sheet
   const range = XLSX.utils.decode_range(ws);
-  for (let col = range.s.c; col <= range.e.c; col++) {
-    const cell = ws[XLSX.utils.encode_cell({ r: 0, c: col })];
-    if (cell) {
-      cell.s = {
-        font: { bold: true, color: { rgb: 'FFFFFF' } },
-        fill: { fgColor: { rgb: '1E293B' } },
-        alignment: { horizontal: 'center' },
-        border: {
-          top: { style: 'thin' },
-          bottom: { style: 'thin' },
-          left: { style: 'thin' },
-          right: { style: 'thin' },
-        },
-      };
+  for (let row = range.s.r; row <= range.e.r; row++) {
+    for (let col = range.s.c; col <= range.e.c; col++) {
+      const cell = ws[XLSX.utils.encode_cell({ r: row, c: col })];
+      if (cell && row === 0) {
+        cell.s = {
+          font: { bold: true, color: { rgb: 'FFFFFF' } },
+          fill: { fgColor: { rgb: '1E293B' } },
+          alignment: { horizontal: 'center' },
+          border: {
+            top: { style: 'thin' },
+            bottom: { style: 'thin' },
+            left: { style: 'thin' },
+            right: { style: 'thin' },
+          },
+        };
+      }
     }
   }
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Romaneio');
 
   XLSX.writeFile(wb, `romaneio-${format(data, 'yyyy-MM-dd', { locale: ptBR })}.xlsx`);
 }
