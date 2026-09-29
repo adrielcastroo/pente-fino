@@ -60,16 +60,20 @@ export default function AcabamentosPage() {
     return saved ? JSON.parse(saved) : [];
   });
   const [itemBuscaLoading, setItemBuscaLoading] = useState(false);
-  const [selectedAcabamentos, setSelectedAcabamentos] = useState<Set<string>>(() => {
-    const saved = localStorage.getItem('acabamentos:atualizar_desc:selecionados');
-    if (saved) return new Set(JSON.parse(saved));
-    return new Set();
-  });
-  const [novaDescricao, setNovaDescricao] = useState(() => {
-    const saved = localStorage.getItem('acabamentos:atualizar_desc:descricao');
-    return saved || '';
-  });
-  const [atualizando, setAtualizando] = useState(false);
+    const [selectedAcabamentos, setSelectedAcabamentos] = useState<Set<string>>(() => {
+      const saved = localStorage.getItem('acabamentos:atualizar_desc:selecionados');
+      if (saved) return new Set(JSON.parse(saved));
+      return new Set();
+    });
+    const [novaDescricao, setNovaDescricao] = useState(() => {
+      const saved = localStorage.getItem('acabamentos:atualizar_desc:descricao');
+      return saved || '';
+    });
+    const [kitComplementar01, setKitComplementar01] = useState(() => {
+      const saved = localStorage.getItem('acabamentos:atualizar_desc:kit_complementar01');
+      return saved || '';
+    });
+    const [atualizando, setAtualizando] = useState(false);
 
   // Persistência da aba "Atualizar descrição"
   useEffect(() => {
@@ -84,11 +88,12 @@ export default function AcabamentosPage() {
     } catch (e) { /* ignore */ }
   }, [selectedAcabamentos]);
 
+
   useEffect(() => {
     try {
-      localStorage.setItem('acabamentos:atualizar_desc:descricao', novaDescricao);
+      localStorage.setItem('acabamentos:atualizar_desc:kit_complementar01', kitComplementar01);
     } catch (e) { /* ignore */ }
-  }, [novaDescricao]);
+  }, [kitComplementar01]);
 
   useEffect(() => {
     try {
@@ -491,14 +496,15 @@ export default function AcabamentosPage() {
         <TabsContent value="massa" className="mt-0"><IncluirItemMassaTab /></TabsContent>
         <TabsContent value="atualizar_desc" className="mt-0">
           <AtualizarDescricaoTab
-            acabamentos={acabamentos}
-            itemBusca={itemBusca}
-            itemBuscaResult={itemBuscaResult}
-            itemBuscaLoading={itemBuscaLoading}
-            selectedAcabamentos={selectedAcabamentos}
-            novaDescricao={novaDescricao}
-            onItemBuscaChange={setItemBusca}
-            onSearchItem={async (term) => {
+                      acabamentos={acabamentos}
+                      itemBusca={itemBusca}
+                      itemBuscaResult={itemBuscaResult}
+                      itemBuscaLoading={itemBuscaLoading}
+                      selectedAcabamentos={selectedAcabamentos}
+                      novaDescricao={novaDescricao}
+                      kitComplementar01={kitComplementar01}
+                      onItemBuscaChange={setItemBusca}
+                      onSearchItem={async (term) => {
               setItemBuscaLoading(true);
               try {
                 const { data } = await supabase
@@ -524,11 +530,12 @@ export default function AcabamentosPage() {
               });
             }}
             onNovaDescricaoChange={setNovaDescricao}
-            onAtualizar={async () => {
-              if (!novaDescricao.trim()) {
-                toast.error('Digite uma descrição');
-                return { success: false };
-              }
+                        onKitComplementar01Change={setKitComplementar01}
+                        onAtualizar={async () => {
+                          if (!novaDescricao.trim() && !kitComplementar01.trim()) {
+                            toast.error('Digite uma descrição ou um kit complementar');
+                            return { success: false };
+                          }
               if (selectedAcabamentos.size === 0) {
                 toast.error('Selecione pelo menos um acabamento');
                 return { success: false };
@@ -546,7 +553,7 @@ export default function AcabamentosPage() {
                       dsItemAcabamento: novaDescricao,
                       dsItemAcabamentoReduzida: '',
                       dsItemAcabamentoOriginal: item.ds_item_acabamento_original || '',
-                      cdKitComplementar1: '',
+                      cdKitComplementar1: kitComplementar01,
                       cdKitComplementar2: '',
                       cdKitComplementar3: '',
                       cdKitComplementar4: '',
@@ -558,10 +565,11 @@ export default function AcabamentosPage() {
                   await supabase.functions.invoke('auge-sync?action=update_acabamento_item', { body: update });
                 }
                 const count = selectedAcabamentos.size;
-                setSelectedAcabamentos(new Set());
-                setNovaDescricao('');
-                qc.invalidateQueries({ queryKey: ['acabamentos-list'] });
-                return { success: true, count };
+                                setSelectedAcabamentos(new Set());
+                                setNovaDescricao('');
+                                setKitComplementar01('');
+                                qc.invalidateQueries({ queryKey: ['acabamentos-list'] });
+                                return { success: true, count };
               } catch (e: any) {
                 toast.error(e?.message || 'Erro ao atualizar descrição');
                 return { success: false };
@@ -599,12 +607,14 @@ function AtualizarDescricaoTab({
   itemBuscaLoading,
   selectedAcabamentos,
   novaDescricao,
+  kitComplementar01,
   onItemBuscaChange,
   onSearchItem,
   onSelectAll,
   onDeselectAll,
   onToggleAcabamento,
   onNovaDescricaoChange,
+  onKitComplementar01Change,
   onAtualizar,
   atualizando
 }: any) {
@@ -739,24 +749,34 @@ function AtualizarDescricaoTab({
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Nova Descrição</label>
-              <Textarea
-                value={novaDescricao}
-                onChange={(e) => onNovaDescricaoChange(e.target.value)}
-                placeholder="Digite a nova descrição para todos os itens selecionados..."
-                rows={4}
-                className="resize-none text-base"
-              />
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => onDeselectAll?.()} disabled={atualizando}>
-                Cancelar
-              </Button>
-              <Button onClick={handleAtualizar} disabled={atualizando || !novaDescricao.trim()}>
-                {atualizando ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                Atualizar no Auge ({selectedAcabamentos.size})
-              </Button>
-            </div>
+                                      <label className="text-sm font-medium">Nova Descrição</label>
+                                      <Textarea
+                                        value={novaDescricao}
+                                        onChange={(e) => onNovaDescricaoChange(e.target.value)}
+                                        placeholder="Digite a nova descrição para todos os itens selecionados..."
+                                        rows={4}
+                                        className="resize-none text-base"
+                                      />
+                                    </div>
+                                    <div className="space-y-2">
+                                      <label className="text-sm font-medium">Kit Complementar 01</label>
+                                      <Textarea
+                                        value={kitComplementar01}
+                                        onChange={(e) => onKitComplementar01Change(e.target.value)}
+                                        placeholder="Digite a descrição para Kit Complementar 01..."
+                                        rows={2}
+                                        className="resize-none text-base"
+                                      />
+                                    </div>
+                                    <div className="flex justify-end gap-2">
+                                      <Button variant="outline" onClick={() => onDeselectAll?.()} disabled={atualizando}>
+                                        Cancelar
+                                      </Button>
+                                      <Button onClick={handleAtualizar} disabled={atualizando || (!novaDescricao.trim() && !kitComplementar01.trim())}>
+                            {atualizando ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                            Atualizar no Auge ({selectedAcabamentos.size})
+                          </Button>
+                        </div>
           </CardContent>
         </Card>
       )}
