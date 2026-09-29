@@ -546,11 +546,11 @@ export default function AcabamentosPage() {
                       dsItemAcabamento: novaDescricao,
                       dsItemAcabamentoReduzida: '',
                       dsItemAcabamentoOriginal: item.ds_item_acabamento_original || '',
-                      cdKitComplementar1: '',
-                      cdKitComplementar2: '',
-                      cdKitComplementar3: '',
-                      cdKitComplementar4: '',
-                      cdKitComplementar5: '',
+                      cdKitComplementar1: item.cd_kit_complementar_1 ?? '',
+                      cdKitComplementar2: item.cd_kit_complementar_2 ?? '',
+                      cdKitComplementar3: item.cd_kit_complementar_3 ?? '',
+                      cdKitComplementar4: item.cd_kit_complementar_4 ?? '',
+                      cdKitComplementar5: item.cd_kit_complementar_5 ?? '',
                     });
                   }
                 }
