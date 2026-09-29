@@ -6,6 +6,15 @@ import { isSessionExpiredError } from '@/services/authGuard';
 import { toast } from 'sonner';
 import { Registro, Conference, AppMode, AppTab, FormData, UndoEntry, Reserva } from '@/types';
 import { generateLoteSistema, extractLarguraFromItem } from '@/lib/app-utils';
+import {
+  saveSnapshot,
+  loadSnapshot,
+  clearSnapshot,
+  type ConferenciaSnapshot,
+} from '@/lib/conferencia-autosave';
+
+/** Quantidade máxima de entradas no histórico de desfazer. */
+const UNDO_STACK_LIMIT = 50;
 
 
 
@@ -175,10 +184,18 @@ export interface AppState {
 
   /** Inicia a retomada de uma conferência arquivada na página operacional. */
   startResumeConference: (conf: Conference) => void;
+  /** Remove a marcação de "novo" de um registro (usado após o bip). */
+  clearIsNew: (id: string) => void;
   /** Persiste os novos registros adicionados em modo retomada e volta ao histórico. */
   finishResumeConference: () => Promise<void>;
   /** Aborta a retomada sem persistir nada novo. */
   cancelResumeConference: () => void;
+  /** Grava a conferência em andamento no armazenamento de recuperação. */
+  autosaveSnapshot: (notify?: boolean) => void;
+  /** Remove o snapshot após concluir, limpar ou arquivar a conferência. */
+  clearAutosaveSnapshot: () => void;
+  /** Restaura um snapshot válido quando não há registros carregados. */
+  checkAndRestoreSnapshot: () => Promise<void>;
 }
 
 const INITIAL_FORM_DATA: FormData = {
@@ -288,21 +305,24 @@ export const useAppStore = create<AppState>()(
 
 
       setMode: (mode) => set({ currentMode: mode }),
-      updateRegistro: (id, updates) => set(state => {
-        const index = state.registros.findIndex(r => r.id === id);
-        if (index === -1) return state;
-        
-        const newRegistros = [...state.registros];
-        newRegistros[index] = { 
-          ...newRegistros[index], 
-          ...updates, 
-          wasEdited: true, 
-          editedBy: state.conferente || 'Sistema',
-          editedAt: new Date().toISOString() 
-        };
-        
-        return { registros: newRegistros };
-      }),
+      updateRegistro: (id, updates) => {
+        set(state => {
+          const index = state.registros.findIndex(r => r.id === id);
+          if (index === -1) return state;
+
+          const newRegistros = [...state.registros];
+          newRegistros[index] = {
+            ...newRegistros[index],
+            ...updates,
+            wasEdited: true,
+            editedBy: state.conferente || 'Sistema',
+            editedAt: new Date().toISOString()
+          };
+
+          return { registros: newRegistros };
+        });
+        get().autosaveSnapshot();
+      },
       setProcesso: (p) => set({ processo: p }),
       setConferente: (c) => set({ conferente: c }),
       setSearchQuery: (q) => set({ searchQuery: q }),
@@ -428,14 +448,23 @@ export const useAppStore = create<AppState>()(
         return { formData: newData };
       }),
       
-      addRegistro: (reg) => set(state => {
-        const newRegs = [...state.registros, reg];
-        let sessionStartedAt = state.sessionStartedAt;
-        if (!sessionStartedAt) {
-          sessionStartedAt = new Date().toISOString();
-        }
-        return { registros: newRegs, sessionStartedAt };
-      }),
+      addRegistro: (reg) => {
+        const wasNew = !!reg.isNew;
+        set(state => {
+          const newRegs = [...state.registros, reg];
+          let sessionStartedAt = state.sessionStartedAt;
+          if (!sessionStartedAt) {
+            sessionStartedAt = new Date().toISOString();
+          }
+          return { registros: newRegs, sessionStartedAt };
+        });
+        // Pré-save: a cada bipagem o snapshot é gravado no IndexedDB.
+        // A notificação só é disparada quando houve bipagem real (wasNew).
+        get().autosaveSnapshot(wasNew);
+      },
+      clearIsNew: (id) => set(state => ({
+        registros: state.registros.map(r => r.id === id ? { ...r, isNew: false } : r)
+      })),
       
       deleteRegistro: (id) => {
         const state = get();
@@ -451,8 +480,12 @@ export const useAppStore = create<AppState>()(
           const reg = s.registros[idx];
           const newRegs = [...s.registros];
           newRegs.splice(idx, 1);
-          return { registros: newRegs, undoStack: [...s.undoStack, { reg, idx }], lastDeletedAt: Date.now() };
+          // Limita o histórico de desfazer para evitar estourar a cota do
+          // localStorage em conferências longas.
+          const undoStack = [...s.undoStack, { reg, idx }].slice(-UNDO_STACK_LIMIT);
+          return { registros: newRegs, undoStack, lastDeletedAt: Date.now() };
         });
+        get().autosaveSnapshot();
       },
       
       undo: () => {
@@ -462,11 +495,15 @@ export const useAppStore = create<AppState>()(
         const newRegs = [...state.registros];
         newRegs.splice(last.idx, 0, last.reg);
         set({ registros: newRegs, undoStack: state.undoStack.slice(0, -1), lastDeletedAt: null });
+        get().autosaveSnapshot();
         return last.reg;
       },
       clearLastDeleted: () => set({ lastDeletedAt: null }),
-      
-      clearAll: () => set({ registros: [], undoStack: [], sessionStartedAt: null, archiveError: null }),
+
+      clearAll: () => {
+        set({ registros: [], undoStack: [], sessionStartedAt: null, archiveError: null });
+        get().clearAutosaveSnapshot();
+      },
       
       addReserva: async (res) => {
         try {
@@ -540,10 +577,10 @@ export const useAppStore = create<AppState>()(
           if (!archivedId) {
             throw new Error('Conferência arquivada sem confirmação do histórico.');
           }
-          set({ 
-            registros: [], 
-            undoStack: [], 
-            sessionStartedAt: null, 
+          set({
+            registros: [],
+            undoStack: [],
+            sessionStartedAt: null,
             isArchiving: false,
             archiveError: null,
             lastArchivedConferenceId: archivedId,
@@ -551,6 +588,7 @@ export const useAppStore = create<AppState>()(
           get().resetFormData();
           get().resetMotorFormData();
           await get().loadHistory();
+          await get().clearAutosaveSnapshot();
 
         } catch (e: any) {
           console.error('Error archiving:', e);
@@ -599,6 +637,7 @@ export const useAppStore = create<AppState>()(
                 description: 'Será enviada automaticamente quando a conexão voltar.',
                 duration: 5000,
               });
+              await get().clearAutosaveSnapshot();
               return;
             } catch (queueErr) {
               console.error('Failed to enqueue archive:', queueErr);
@@ -899,6 +938,77 @@ export const useAppStore = create<AppState>()(
           sessionStartedAt: null,
           resumeMode: null,
         });
+        get().clearAutosaveSnapshot();
+      },
+
+      // ---- Salvamento automático (IndexedDB) ----------------------------
+      /**
+       * Grava um snapshot da conferência em andamento no IndexedDB.
+       * `notify` só é true quando houve bipagem real (item adicionado), para
+       * que o indicador de UI mostre "Salvamento automático realizado".
+       */
+      autosaveSnapshot(notify = false) {
+        const s = get();
+        if (!s.registros.length && !notify) {
+          // Nada a salvar — evita escrever snapshots vazios que atrapalham a
+          // recuperação posterior (o snapshot vazio "vence" o localStorage).
+          return;
+        }
+        saveSnapshot({
+          registros: s.registros,
+          processo: s.processo,
+          conferente: s.conferente,
+          currentMode: s.currentMode,
+          sessionStartedAt: s.sessionStartedAt,
+          resumeMode: s.resumeMode,
+          updatedAt: new Date().toISOString(),
+        }, { notify });
+      },
+      /** Remove o snapshot (conferência finalizada, arquivada, retomada ou limpa). */
+      clearAutosaveSnapshot() {
+        clearSnapshot();
+      },
+      /** Verifica se há snapshot válido no IndexedDB e restaura se o localStorage estiver vazio/corrompido. */
+      async checkAndRestoreSnapshot() {
+        const s = get();
+        // Se já há registros na store, nada a fazer.
+        if (s.registros.length > 0) return;
+
+        const snap = await loadSnapshot();
+        if (!snap || !snap.registros.length) return;
+
+        // Compara com o que há no localStorage (via re-hidratação).
+        // Se o localStorage estiver vazio ou o snapshot for mais novo/mais rico,
+        // restaura e avisa o usuário.
+        try {
+          const lsRaw = localStorage.getItem('cft4-registros');
+          const ls = lsRaw ? JSON.parse(lsRaw) : null;
+          const lsCount = ls?.state?.registros?.length ?? 0;
+
+          if (lsCount === 0 || snap.registros.length > lsCount) {
+            set({
+              registros: snap.registros,
+              processo: snap.processo,
+              conferente: snap.conferente,
+              currentMode: snap.currentMode,
+              sessionStartedAt: snap.sessionStartedAt,
+              resumeMode: snap.resumeMode,
+            });
+            toast.info(`${snap.registros.length} item(ns) recuperado(s) do salvamento automático.`);
+          }
+        } catch {
+          // JSON corrompido no localStorage — restaura do snapshot sem aviso
+          // adicional (já avisou no catch do getItem).
+          set({
+            registros: snap.registros,
+            processo: snap.processo,
+            conferente: snap.conferente,
+            currentMode: snap.currentMode,
+            sessionStartedAt: snap.sessionStartedAt,
+            resumeMode: snap.resumeMode,
+          });
+          toast.info(`${snap.registros.length} item(ns) recuperado(s) do salvamento automático.`);
+        }
       },
     }),
 
@@ -914,26 +1024,78 @@ export const useAppStore = create<AppState>()(
             return null;
           }
         },
-         setItem: (name, value) => {
-           // More robust debounce for storage persistence
-           const global = window as any;
-           if (global._persisterTimer) {
-             clearTimeout(global._persisterTimer);
-           }
-           global._persisterValue = value;
-           global._persisterTimer = setTimeout(() => {
-             try {
-               localStorage.setItem(name, JSON.stringify(global._persisterValue));
-             } catch (e) {
-               console.error('Error persisting state:', e);
-             }
-             global._persisterTimer = null;
-           }, 1000);
-         },
+        setItem: (name, value) => {
+          const global = window as any;
+          if (global._persisterTimer) {
+            clearTimeout(global._persisterTimer);
+          }
+          global._persisterValue = value;
+          global._persisterTimer = setTimeout(() => {
+            try {
+              localStorage.setItem(name, JSON.stringify(global._persisterValue));
+            } catch (e: any) {
+              // QuotaExceededError: tenta sem avariaFotoUrl base64 e sem undoStack
+              if (e?.name === 'QuotaExceededError' || e?.code === 22) {
+                try {
+                  const trimmed = JSON.parse(JSON.stringify(global._persisterValue));
+                  trimmed.state.registros = trimmed.state.registros.map((r: any) => ({
+                    ...r,
+                    avariaFotoUrl: null,
+                  }));
+                  trimmed.state.undoStack = [];
+                  localStorage.setItem(name, JSON.stringify(trimmed));
+                  toast.error('Armazenamento cheio — histórico de desfazer e fotos de avaria foram removidos para liberar espaço.');
+                } catch {
+                  console.error('Error persisting state after quota fallback:', e);
+                }
+              } else {
+                console.error('Error persisting state:', e);
+              }
+            }
+            global._persisterTimer = null;
+          }, 1000);
+        },
         removeItem: (name) => localStorage.removeItem(name),
       },
+      // Flush imediato ao fechar/esconder a aba para não perder o último
+      // debounce do localStorage (especialmente importante antes do primeiro
+      // pré-save do IndexedDB acontecer).
+      onRehydrateStorage: (state) => {
+        if (typeof window === 'undefined') return;
+        const flush = () => {
+          const global = window as any;
+          if (global._persisterTimer) {
+            clearTimeout(global._persisterTimer);
+            try {
+              localStorage.setItem('cft4-registros', JSON.stringify(global._persisterValue));
+            } catch (e) {
+              console.error('[persist] flush on unload falhou', e);
+            }
+            global._persisterTimer = null;
+          }
+        };
+        window.addEventListener('pagehide', flush);
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'hidden') flush();
+        });
+        // Retorna callback de re-hidratação para tentar restaurar do snapshot.
+        return (rehydratedState, error) => {
+          if (error) {
+            console.warn('[persist] erro ao hidratar do localStorage', error);
+          }
+          // A recuperação real do snapshot (se localStorage estiver vazio ou
+          // corrompido) é feita no init lazy via checkAndRestoreSnapshot().
+        };
+      },
 partialize: (state) => ({
-        registros: state.registros,
+        // A foto da avaria é um URL absoluto (Supabase), nunca base64 em
+        // memória. Mesmo assim, se algum registro tiver um data URL (ex.: foto
+        // capturada pela câmera e ainda não enviada), descartamos no snapshot
+        // para não estourar a cota do localStorage.
+        registros: state.registros.map(r => ({
+          ...r,
+          avariaFotoUrl: (r.avariaFotoUrl && !r.avariaFotoUrl.startsWith('data:')) ? r.avariaFotoUrl : null,
+        })),
         reservas: state.reservas,
         undoStack: state.undoStack,
         currentMode: state.currentMode,
