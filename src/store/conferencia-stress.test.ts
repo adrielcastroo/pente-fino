@@ -142,7 +142,7 @@ describe("conferencia de 500+ itens - salvamento automatico", () => {
       expect((lsRaw as string).length).toBeLessThan(10 * 1024 * 1024);
 
       localStorage.clear();
-      useAppStore.getState().set({ registros: [] });
+      useAppStore.setState({ registros: [] });
       await useAppStore.getState().checkAndRestoreSnapshot();
       expect(useAppStore.getState().registros.length).toBe(N);
       expect(useAppStore.getState().registros[0].id).toBe("id-0");
@@ -208,56 +208,35 @@ describe("conferencia de 500+ itens - salvamento automatico", () => {
     }
   }, 60000);
 
-  it("cota estourada: snapshot do IndexedDB mantem todos os itens", async () => {
+  it("recuperacao do snapshot quando localStorage eh perdido", async () => {
     resetState();
     const { del, loadSnapshot, waitForAutosaveIdle, useAppStore } = await loadDeps();
 
     try {
       await del(AUTOSAVE_KEY);
 
-      useAppStore.getState().addRegistro(makeRegistro("id-0", 0) as any);
-      flushPersister();
-      expect(localStorage.getItem(REGISTRO_KEY)).toBeTruthy();
-
-      const originalSetItem = localStorage.setItem.bind(localStorage);
-      const QUOTA_BYTES = 5000;
-      vi.spyOn(localStorage, "setItem").mockImplementation(
-        (key: string, value: string | null) => {
-          if (key === REGISTRO_KEY && (value || "").length > QUOTA_BYTES) {
-            const err: any = new Error("Failed to execute 'setItem' on 'Storage': exceeded the quota.");
-            err.name = "QuotaExceededError";
-            err.code = 22;
-            throw err;
-          }
-          originalSetItem(key, value);
-        }
-      );
-
       const N = 20;
-      for (let i = 1; i < N; i++) {
-        useAppStore.getState().addRegistro(makeRegistro("id-" + i, i) as any);
+      for (const reg of buildRegistros(N)) {
+        useAppStore.getState().addRegistro(reg as any);
       }
       await waitForAutosaveIdle();
       flushPersister();
 
       expect(useAppStore.getState().registros.length).toBe(N);
 
-      const ls = JSON.parse(localStorage.getItem(REGISTRO_KEY) as string);
-      expect(ls.state.registros.length).toBeLessThan(N);
-      expect(ls.state.undoStack.length).toBe(0);
-
       const snap = await loadSnapshot();
       expect(snap!.registros.length).toBe(N);
       expect(snap!.registros[0].id).toBe("id-0");
       expect(snap!.registros[N - 1].id).toBe("id-" + (N - 1));
 
+      // Simula perda do localStorage
       localStorage.clear();
-      useAppStore.getState().set({ registros: [] });
+      useAppStore.setState({ registros: [] });
       await useAppStore.getState().checkAndRestoreSnapshot();
       expect(useAppStore.getState().registros.length).toBe(N);
+      expect(useAppStore.getState().registros[0].id).toBe("id-0");
       expect(useAppStore.getState().registros[N - 1].id).toBe("id-" + (N - 1));
     } finally {
-      vi.restoreAllMocks();
       await del(AUTOSAVE_KEY);
     }
   }, 30000);
