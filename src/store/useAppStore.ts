@@ -444,17 +444,22 @@ export const useAppStore = create<AppState>()(
       
       addRegistro: (reg) => {
         const wasNew = !!reg.isNew;
+        let snapshot: ConferenciaSnapshot | null = null;
         set(state => {
-          const newRegs = [...state.registros, reg];
-          let sessionStartedAt = state.sessionStartedAt;
-          if (!sessionStartedAt) {
-            sessionStartedAt = new Date().toISOString();
-          }
-          return { registros: newRegs, sessionStartedAt };
+          const registros = [...state.registros, reg];
+          const sessionStartedAt = state.sessionStartedAt ?? new Date().toISOString();
+          snapshot = {
+            registros,
+            processo: state.processo,
+            conferente: state.conferente,
+            currentMode: state.currentMode,
+            sessionStartedAt,
+            resumeMode: state.resumeMode,
+            updatedAt: new Date().toISOString(),
+          };
+          return { registros, sessionStartedAt };
         });
-        // Pré-save: a cada bipagem o snapshot é gravado no IndexedDB.
-        // A notificação só é disparada quando houve bipagem real (wasNew).
-        get().autosaveSnapshot(wasNew);
+        if (snapshot) saveSnapshot(snapshot, { notify: wasNew });
       },
       clearIsNew: (id) => set(state => ({
         registros: state.registros.map(r => r.id === id ? { ...r, isNew: false } : r)

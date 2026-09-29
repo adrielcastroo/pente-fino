@@ -145,7 +145,7 @@ export default function MotorControlePage() {
     return { allSeriesSet: set, maxSequencial: max };
   }, []);
 
-  const handleAddMotor = useCallback(async () => {
+  const doAddMotor = useCallback(async () => {
     if (!modelo.trim()) { toast.warning('Preencha o Modelo'); return; }
     if (!serie.trim()) { toast.warning('Bipe a Série'); return; }
 
@@ -196,7 +196,7 @@ export default function MotorControlePage() {
     serieRef.current?.focus();
   }, [modelo, serie, nf, temCaixa, caixaNum, cleanMotorSerie, subMode, computeSeries, addRegistro, resetMotorFormData, labelSettings]);
 
-  const handleAddControle = useCallback(async () => {
+  const doAddControle = useCallback(async () => {
     const resolvedModelo = mapModelo(modelo);
     if (!resolvedModelo.trim()) { toast.warning('Preencha o Modelo'); return; }
     if (!serie.trim()) { toast.warning('Bipe a Série'); return; }
@@ -250,7 +250,7 @@ export default function MotorControlePage() {
     serieRef.current?.focus();
   }, [modelo, serie, nf, cleanControleSerie, subMode, computeSeries, addRegistro, resetMotorFormData, labelSettings]);
 
-  const handleAddCoulisse = useCallback(async () => {
+  const doAddCoulisse = useCallback(async () => {
     if (!coulisseModeloProcCx.trim()) { toast.warning('Preencha o Modelo/Proc/Cx'); return; }
     if (!coulisseLote.trim()) { toast.warning('Bipe o Lote'); return; }
 
@@ -297,6 +297,16 @@ export default function MotorControlePage() {
     resetMotorFormData();
     serieRef.current?.focus();
   }, [coulisseModeloProcCx, coulisseLote, modelo, subMode, nf, computeSeries, addRegistro, resetMotorFormData, labelSettings]);
+
+  const addQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const enqueueAdd = useCallback((fn: () => Promise<void>) => {
+    const next = addQueueRef.current.then(fn, fn);
+    addQueueRef.current = next.catch(() => undefined);
+    return next;
+  }, []);
+  const handleAddMotor = useCallback(() => enqueueAdd(doAddMotor), [enqueueAdd, doAddMotor]);
+  const handleAddControle = useCallback(() => enqueueAdd(doAddControle), [enqueueAdd, doAddControle]);
+  const handleAddCoulisse = useCallback(() => enqueueAdd(doAddCoulisse), [enqueueAdd, doAddCoulisse]);
 
   return (
     <FormPageLayout>
