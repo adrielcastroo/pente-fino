@@ -190,6 +190,12 @@ export interface AppState {
   finishResumeConference: () => Promise<void>;
   /** Aborta a retomada sem persistir nada novo. */
   cancelResumeConference: () => void;
+  /** Grava a conferência em andamento no armazenamento de recuperação. */
+  autosaveSnapshot: (notify?: boolean) => void;
+  /** Remove o snapshot após concluir, limpar ou arquivar a conferência. */
+  clearAutosaveSnapshot: () => void;
+  /** Restaura um snapshot válido quando não há registros carregados. */
+  checkAndRestoreSnapshot: () => Promise<void>;
 }
 
 const INITIAL_FORM_DATA: FormData = {
