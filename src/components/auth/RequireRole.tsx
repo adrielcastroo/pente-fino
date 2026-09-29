@@ -17,7 +17,7 @@ interface RequireRoleProps {
 }
 
 export function RequireRole({ role, action, fallback = null, showLocked, children }: RequireRoleProps) {
-  const { role: currentRole, loading } = useAuth();
+  const { role: currentRole, loading, isGuest } = useAuth();
   if (loading) return null;
 
   const allowed = action
@@ -25,6 +25,9 @@ export function RequireRole({ role, action, fallback = null, showLocked, childre
     : role
       ? atLeast(currentRole, role)
       : true;
+
+  // Visitantes têm acesso total de operação (sem papel definido).
+  if (isGuest) return <>{children}</>;
 
   if (allowed) return <>{children}</>;
 
