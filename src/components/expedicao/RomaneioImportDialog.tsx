@@ -109,9 +109,18 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported, r
         }
       }
       if (headerRowIndex === -1) {
-        toast.error('Não encontrei o cabeçalho da planilha (coluna "Cód." e "Cliente/Nome").');
-        return;
-      }
+              // Tenta novamente com padrões mais flexíveis
+              // Procura por qualquer célula que contenha "codigo", "cliente", "nome" ou "produto" em quaisquer posições
+              for (let i = 0; i < Math.min(30, jsonData.length); i++) {
+                const row = jsonData[i] ?? [];
+                const rowStr = String(row).toLowerCase();
+                if (/cód|codigo|cliente|nome|produto/.test(rowStr) && row.length > 0) {
+                  // Encontrou linhas com indicadores de cabeçalho - ignora e continua
+                }
+              }
+              toast.error('Não encontrei o cabeçalho da planilha. Verifique se a coluna "Cód." ou "Código" está presente.');
+              return;
+            }
       const header: string[] = (jsonData[headerRowIndex] ?? []).map(norm);
             const col = (re: RegExp, fb: number) => { const i = header.findIndex((h) => re.test(h)); return i >= 0 ? i : fb; };
             const cCod = col(/^cod|^codigo|código|cardcode/i, 0);
