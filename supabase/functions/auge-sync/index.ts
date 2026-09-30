@@ -3729,11 +3729,6 @@ async function updateAcabamentoItem(auth: any, payload: Record<string, string>):
     cdKitComplementar3: payload.cdKitComplementar3 ?? '',
     cdKitComplementar4: payload.cdKitComplementar4 ?? '',
     cdKitComplementar5: payload.cdKitComplementar5 ?? '',
-    nmKitComplementar1: payload.nmKitComplementar1 ?? '',
-    nmKitComplementar2: payload.nmKitComplementar2 ?? '',
-    nmKitComplementar3: payload.nmKitComplementar3 ?? '',
-    nmKitComplementar4: payload.nmKitComplementar4 ?? '',
-    nmKitComplementar5: payload.nmKitComplementar5 ?? '',
   });
   console.log(`[updateAcabamentoItem] cdAcabamentoItem=${payload.cdAcabamentoItem ?? ''} dsItem=${String(payload.dsItemAcabamento ?? '').slice(0,50)} dsReduzida=${String(payload.dsItemAcabamentoReduzida ?? '').slice(0,50)} kit1=${String(payload.cdKitComplementar1 ?? '').slice(0,50)}`);
   const txt = await postAugePhp(
