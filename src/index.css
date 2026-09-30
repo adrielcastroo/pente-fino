@@ -684,3 +684,10 @@ html.compact main .space-y-6 > * + * { margin-top: 1rem; }
 .animate-progress-success { animation: progress-success 4s linear forwards; }
 .animate-progress-error { animation: progress-error 4s linear forwards; }
 .animate-progress-info { animation: progress-info 4s linear forwards; }
+
+/* Toast animations */
+@keyframes slide-in { from { transform: translateX(-50%) translateY(-20px); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }
+.animate-slide-in { animation: slide-in 0.3s ease-out; }
+
+@keyframes progress { from { width: 100%; } to { width: 0%; } }
+.animate-progress { animation: progress 4s linear forwards; }
