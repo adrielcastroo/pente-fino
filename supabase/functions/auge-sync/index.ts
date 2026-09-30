@@ -6189,6 +6189,11 @@ Deno.serve(async (req) => {
             cdKitComplementar3: String(r.cd_kit_complementar_3 ?? ''),
             cdKitComplementar4: String(r.cd_kit_complementar_4 ?? ''),
             cdKitComplementar5: String(r.cd_kit_complementar_5 ?? ''),
+            nmKitComplementar1: String(r.nm_kit_complementar_1 ?? ''),
+            nmKitComplementar2: String(r.nm_kit_complementar_2 ?? ''),
+            nmKitComplementar3: String(r.nm_kit_complementar_3 ?? ''),
+            nmKitComplementar4: String(r.nm_kit_complementar_4 ?? ''),
+            nmKitComplementar5: String(r.nm_kit_complementar_5 ?? ''),
           });
 
           // Reflete localmente.
