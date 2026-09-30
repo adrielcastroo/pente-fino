@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info' | 'loading';
 
@@ -18,13 +18,7 @@ interface ToastContextType {
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
-// Singleton global para acessibilidade fora do React tree
-const globalState = {
-  toasts: [] as Toast[],
-  listeners: new Set<() => void>(),
-  nextId: 0,
-};
-
+// Hook para componentes React usarem
 export function useToast() {
   const context = useContext(ToastContext);
   if (!context) {
@@ -33,105 +27,25 @@ export function useToast() {
   return context;
 }
 
-// API global para acessibilidade fora do React tree
-export const toastAPI = {
-  success: (title: string, description?: string, options?: { duration?: number }) => {
-    const id = `toast_${++globalState.nextId}`;
-    const duration = options?.duration ?? 4000;
-    const toast: Toast = { id, type: 'success', title, description, duration };
-    globalState.toasts = [toast, ...globalState.toasts];
-    globalState.listeners.forEach(fn => fn());
-    if (duration > 0) setTimeout(() => {
-      globalState.toasts = globalState.toasts.filter(t => t.id !== id);
-      globalState.listeners.forEach(fn => fn());
-    }, duration);
-  },
-  error: (title: string, description?: string, options?: { duration?: number }) => {
-    const id = `toast_${++globalState.nextId}`;
-    const duration = options?.duration ?? 6000;
-    const toast: Toast = { id, type: 'error', title, description, duration };
-    globalState.toasts = [toast, ...globalState.toasts];
-    globalState.listeners.forEach(fn => fn());
-    if (duration > 0) setTimeout(() => {
-      globalState.toasts = globalState.toasts.filter(t => t.id !== id);
-      globalState.listeners.forEach(fn => fn());
-    }, duration);
-  },
-  warning: (title: string, description?: string, options?: { duration?: number }) => {
-    const id = `toast_${++globalState.nextId}`;
-    const duration = options?.duration ?? 4000;
-    const toast: Toast = { id, type: 'warning', title, description, duration };
-    globalState.toasts = [toast, ...globalState.toasts];
-    globalState.listeners.forEach(fn => fn());
-    if (duration > 0) setTimeout(() => {
-      globalState.toasts = globalState.toasts.filter(t => t.id !== id);
-      globalState.listeners.forEach(fn => fn());
-    }, duration);
-  },
-  info: (title: string, description?: string, options?: { duration?: number }) => {
-    const id = `toast_${++globalState.nextId}`;
-    const duration = options?.duration ?? 4000;
-    const toast: Toast = { id, type: 'info', title, description, duration };
-    globalState.toasts = [toast, ...globalState.toasts];
-    globalState.listeners.forEach(fn => fn());
-    if (duration > 0) setTimeout(() => {
-      globalState.toasts = globalState.toasts.filter(t => t.id !== id);
-      globalState.listeners.forEach(fn => fn());
-    }, duration);
-  },
-  loading: (title: string, description?: string, options?: { duration?: number }) => {
-    const id = `toast_${++globalState.nextId}`;
-    const toast: Toast = { id, type: 'loading', title, description, duration: 0 };
-    globalState.toasts = [toast, ...globalState.toasts];
-    globalState.listeners.forEach(fn => fn());
-  },
-  dismiss: (id: string) => {
-    globalState.toasts = globalState.toasts.filter(t => t.id !== id);
-    globalState.listeners.forEach(fn => fn());
-  },
-  remove: (id: string) => toastAPI.dismiss(id),
-  removeAll: () => {
-    globalState.toasts = [];
-    globalState.listeners.forEach(fn => fn());
-  },
-};
-
-// Hook personalizado com state local
-function useLocalToasts() {
-  const [toasts, setToasts] = useState<Toast[]>(globalState.toasts);
-
-  useEffect(() => {
-    const listener = () => setToasts([...globalState.toasts]);
-    globalState.listeners.add(listener);
-    return () => {
-      globalState.listeners.delete(listener);
-    };
-  }, []);
-
-  return toasts;
-}
-
 export function ToastProvider({ children }: { children: React.ReactNode }) {
-  const toasts = useLocalToasts();
+  const [toasts, setToasts] = useState<Toast[]>([]);
 
   const addToast = useCallback((type: ToastType, title: string, description?: string, options?: { duration?: number }) => {
-    const id = `toast_${++globalState.nextId}`;
+    const id = `toast_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const duration = options?.duration ?? 4000;
     const toast: Toast = { id, type, title, description, duration };
-    globalState.toasts = [toast, ...globalState.toasts];
-    globalState.listeners.forEach(fn => fn());
+    setToasts(prev => [toast, ...prev]);
 
     if (duration > 0) {
       setTimeout(() => {
-        globalState.toasts = globalState.toasts.filter(t => t.id !== id);
-        globalState.listeners.forEach(fn => fn());
+        setToasts(prev => prev.filter(t => t.id !== id));
       }, duration);
     }
+    return id;
   }, []);
 
   const dismissToast = useCallback((id: string) => {
-    globalState.toasts = globalState.toasts.filter(t => t.id !== id);
-    globalState.listeners.forEach(fn => fn());
+    setToasts(prev => prev.filter(t => t.id !== id));
   }, []);
 
   return (
@@ -232,29 +146,12 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: string)
           <line x1="6" y1="6" x2="18" y2="18" />
         </svg>
       </button>
-      {toast.duration > 0 && (
-        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-black/10 rounded-b-lg overflow-hidden">
-          <div
-            className="h-full bg-current opacity-30 animate-progress"
-            style={{ width: '100%' }}
-          />
-        </div>
-      )}
     </div>
   );
 }
 
-// Toaster component para renderizar as notificações
+// Toaster exportado para compatibilidade
 export function Toaster() {
   const { toasts, dismissToast } = useToast();
-
-  if (toasts.length === 0) return null;
-
-  return (
-    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] flex flex-col gap-2 w-full max-w-md px-4">
-      {toasts.map((toast) => (
-        <ToastItem key={toast.id} toast={toast} onDismiss={dismissToast} />
-      ))}
-    </div>
-  );
+  return <ToastContainer toasts={toasts} onDismiss={dismissToast} />;
 }
