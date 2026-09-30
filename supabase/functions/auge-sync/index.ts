@@ -3730,12 +3730,14 @@ async function updateAcabamentoItem(auth: any, payload: Record<string, string>):
     cdKitComplementar4: payload.cdKitComplementar4 ?? '',
     cdKitComplementar5: payload.cdKitComplementar5 ?? '',
   });
+  console.log(`[updateAcabamentoItem] cdAcabamentoItem=${payload.cdAcabamentoItem ?? ''} dsItem=${String(payload.dsItemAcabamento ?? '').slice(0,50)} dsReduzida=${String(payload.dsItemAcabamentoReduzida ?? '').slice(0,50)} kit1=${String(payload.cdKitComplementar1 ?? '').slice(0,50)}`);
   const txt = await postAugePhp(
     auth,
     '/l.unilux/modInventario/Controle/ctlAcabamentoItem.php',
     body,
     `/l.unilux/modInventario/manterAcabamentoItem.php?cdAcabamento=${payload.cdAcabamento ?? ''}`,
   );
+  console.log(`[updateAcabamentoItem] resp=${txt}`);
   let j: any = { message: txt };
   try { j = JSON.parse(txt); } catch { /* keep raw */ }
   if (typeof j?.message === 'string' && !/sucesso/i.test(j.message)) {

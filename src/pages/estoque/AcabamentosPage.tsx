@@ -73,6 +73,10 @@ export default function AcabamentosPage() {
       const saved = localStorage.getItem('acabamentos:atualizar_desc:kit_complementar01');
       return saved || '';
     });
+    const [descReduzida, setDescReduzida] = useState(() => {
+      const saved = localStorage.getItem('acabamentos:atualizar_desc:desc_reduzida');
+      return saved || '';
+    });
     const [atualizando, setAtualizando] = useState(false);
 
   // Persistência da aba "Atualizar descrição"
@@ -94,6 +98,12 @@ export default function AcabamentosPage() {
       localStorage.setItem('acabamentos:atualizar_desc:kit_complementar01', kitComplementar01);
     } catch (e) { /* ignore */ }
   }, [kitComplementar01]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('acabamentos:atualizar_desc:desc_reduzida', descReduzida);
+    } catch (e) { /* ignore */ }
+  }, [descReduzida]);
 
   useEffect(() => {
     try {
@@ -502,6 +512,7 @@ export default function AcabamentosPage() {
                       itemBuscaLoading={itemBuscaLoading}
                       selectedAcabamentos={selectedAcabamentos}
                       novaDescricao={novaDescricao}
+                      descReduzida={descReduzida}
                       kitComplementar01={kitComplementar01}
                       onItemBuscaChange={setItemBusca}
                       onSearchItem={async (term) => {
@@ -509,7 +520,7 @@ export default function AcabamentosPage() {
               try {
                 const { data } = await supabase
                   .from('auge_acabamento_itens')
-                  .select('cd_acabamento_item, cd_acabamento, cd_item_acabamento, ds_item_acabamento, ds_item_acabamento_original')
+                  .select('cd_acabamento_item, cd_acabamento, cd_item_acabamento, ds_item_acabamento, ds_item_acabamento_original, ds_item_acabamento_reduzida, cd_kit_complementar_1, cd_kit_complementar_2, cd_kit_complementar_3, cd_kit_complementar_4, cd_kit_complementar_5')
                   .ilike('cd_item_acabamento', `%${term}%`)
                   .limit(2000);
                 setItemBuscaResult(data || []);
@@ -530,10 +541,11 @@ export default function AcabamentosPage() {
               });
             }}
             onNovaDescricaoChange={setNovaDescricao}
+                        onDescReduzidaChange={setDescReduzida}
                         onKitComplementar01Change={setKitComplementar01}
                         onAtualizar={async () => {
-                          if (!novaDescricao.trim() && !kitComplementar01.trim()) {
-                            toast.error('Digite uma descrição ou um kit complementar');
+                          if (!novaDescricao.trim() && !descReduzida.trim() && !kitComplementar01.trim()) {
+                            toast.error('Digite uma descrição, descrição reduzida ou kit complementar');
                             return { success: false };
                           }
               if (selectedAcabamentos.size === 0) {
@@ -546,14 +558,16 @@ export default function AcabamentosPage() {
                 for (const cdAcabamento of selectedAcabamentos) {
                   const itens = itemBuscaResult.filter((r: any) => r.cd_acabamento === cdAcabamento);
                   for (const item of itens) {
+                    const dsExistente = item.ds_item_acabamento || '';
+                    const dsOriginalExistente = item.ds_item_acabamento_original || dsExistente;
                     updates.push({
                       cdAcabamentoItem: item.cd_acabamento_item,
                       cdAcabamento,
                       cdItemAcabamento: item.cd_item_acabamento,
-                      dsItemAcabamento: novaDescricao,
-                      dsItemAcabamentoReduzida: '',
-                      dsItemAcabamentoOriginal: item.ds_item_acabamento_original || '',
-                      cdKitComplementar1: kitComplementar01 || (item.cd_kit_complementar_1 ?? ''),
+                      dsItemAcabamento: novaDescricao.trim() || dsExistente,
+                      dsItemAcabamentoReduzida: descReduzida.trim() || (item.ds_item_acabamento_reduzida || dsExistente),
+                      dsItemAcabamentoOriginal: dsOriginalExistente,
+                      cdKitComplementar1: kitComplementar01.trim() || (item.cd_kit_complementar_1 ?? ''),
                       cdKitComplementar2: item.cd_kit_complementar_2 ?? '',
                       cdKitComplementar3: item.cd_kit_complementar_3 ?? '',
                       cdKitComplementar4: item.cd_kit_complementar_4 ?? '',
@@ -562,11 +576,18 @@ export default function AcabamentosPage() {
                   }
                 }
                 for (const update of updates) {
-                  await supabase.functions.invoke('auge-sync?action=update_acabamento_item', { body: update });
+                  const { data: resp, error: respError } = await supabase.functions.invoke('auge-sync?action=update_acabamento_item', { body: update });
+                  if (respError) {
+                    throw new Error(respError.message || 'Erro ao chamar a função de sincronização');
+                  }
+                  if (resp?.ok === false) {
+                    throw new Error(resp.error || 'A função de sincronização reportou uma falha');
+                  }
                 }
                 const count = selectedAcabamentos.size;
                                 setSelectedAcabamentos(new Set());
                                 setNovaDescricao('');
+                                setDescReduzida('');
                                 setKitComplementar01('');
                                 qc.invalidateQueries({ queryKey: ['acabamentos-list'] });
                                 return { success: true, count };
@@ -607,6 +628,7 @@ function AtualizarDescricaoTab({
   itemBuscaLoading,
   selectedAcabamentos,
   novaDescricao,
+  descReduzida,
   kitComplementar01,
   onItemBuscaChange,
   onSearchItem,
@@ -614,6 +636,7 @@ function AtualizarDescricaoTab({
   onDeselectAll,
   onToggleAcabamento,
   onNovaDescricaoChange,
+  onDescReduzidaChange,
   onKitComplementar01Change,
   onAtualizar,
   atualizando
@@ -759,6 +782,16 @@ function AtualizarDescricaoTab({
                                       />
                                     </div>
                                     <div className="space-y-2">
+                                      <label className="text-sm font-medium">Descrição Reduzida</label>
+                                      <Textarea
+                                        value={descReduzida}
+                                        onChange={(e) => onDescReduzidaChange(e.target.value)}
+                                        placeholder="Digite a descrição reduzida (máx. 30 chars)..."
+                                        rows={2}
+                                        className="resize-none text-base"
+                                      />
+                                    </div>
+                                    <div className="space-y-2">
                                       <label className="text-sm font-medium">Kit Complementar 01</label>
                                       <Textarea
                                         value={kitComplementar01}
@@ -772,7 +805,7 @@ function AtualizarDescricaoTab({
                                       <Button variant="outline" onClick={() => onDeselectAll?.()} disabled={atualizando}>
                                         Cancelar
                                       </Button>
-                                      <Button onClick={handleAtualizar} disabled={atualizando || (!novaDescricao.trim() && !kitComplementar01.trim())}>
+                                      <Button onClick={handleAtualizar} disabled={atualizando || (!novaDescricao.trim() && !descReduzida.trim() && !kitComplementar01.trim())}>
                             {atualizando ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
                             Atualizar no Auge ({selectedAcabamentos.size})
                           </Button>
