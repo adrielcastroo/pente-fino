@@ -37,109 +37,27 @@ interface SyncRun {
   } | null;
 }
 
-// Mapeamento de migração de keys antigas para novas
-const MIGRATION_MAP: Record<string, string> = {
-  'atualizar_desc:busca': 'atualizar_desc:itemBusca',
-  'atualizar_desc:selecionados': 'atualizar_desc:selectedAcabamentos',
-  'atualizar_desc:descricao': 'atualizar_desc:novaDescricao',
-  'atualizar_desc:desc_reduzida': 'atualizar_desc:descReduzida',
-  'atualizar_desc:resultados': 'atualizar_desc:itemBuscaResult',
-};
-
-// Utilitários de persistência
-function loadState<T>(key: string, fallback: T): T {
-  try {
-    // Tenta a nova key primeiro
-    const saved = localStorage.getItem(`acabamentos:${key}`);
-    if (saved !== null) return JSON.parse(saved);
-    // Migra da key antiga se existir
-    const oldKey = MIGRATION_MAP[key];
-    if (oldKey) {
-      const oldSaved = localStorage.getItem(`acabamentos:${oldKey}`);
-      if (oldSaved !== null) {
-        localStorage.setItem(`acabamentos:${key}`, oldSaved);
-        localStorage.removeItem(`acabamentos:${oldKey}`);
-        return JSON.parse(oldSaved);
-      }
-    }
-    return fallback;
-  } catch {
-    return fallback;
-  }
-}
-function saveState(key: string, value: any) {
-  try {
-    localStorage.setItem(`acabamentos:${key}`, JSON.stringify(value));
-  } catch { /* ignore */ }
-}
-
 export default function AcabamentosPage() {
   const qc = useQueryClient();
-  const [busca, setBusca] = useState(() => loadState('consulta:busca', ''));
-  const [acabSel, setAcabSel] = useState<string | null>(() => loadState('consulta:acabSel', null));
+  const [busca, setBusca] = useState('');
+  const [acabSel, setAcabSel] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
   const [run, setRun] = useState<SyncRun | null>(null);
   const [showPanel, setShowPanel] = useState(false);
-  const [sortBy, setSortBy] = useState<'nome' | 'codigo'>(() => loadState('consulta:sortBy', 'nome'));
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>(() => loadState('consulta:sortDir', 'asc'));
-  const [tab, setTab] = useState<string>(() => loadState('tab', 'consulta'));
+  const [sortBy, setSortBy] = useState<'nome' | 'codigo'>('nome');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const [tab, setTab] = useState<string>('consulta');
   const channelRef = useRef<any>(null);
 
   // Estados para aba "Atualizar descrição"
-  const [itemBusca, setItemBusca] = useState(() => loadState('atualizar_desc:itemBusca', ''));
-  const [itemBuscaResult, setItemBuscaResult] = useState<any[]>(() => {
-    const raw = loadState('atualizar_desc:itemBuscaResult', [] as any[]);
-    // Sanitiza valores "null" e "undefined" que podem estar como strings
-    return raw.map((item: any) => {
-      const sanitized: any = { ...item };
-      for (let n = 1; n <= 5; n++) {
-        const nmKey = `nm_kit_complementar_${n}`;
-        const cdKey = `cd_kit_complementar_${n}`;
-        if (sanitized[nmKey] === 'null' || sanitized[nmKey] === 'undefined') sanitized[nmKey] = '';
-        if (sanitized[cdKey] === 'null' || sanitized[cdKey] === 'undefined') sanitized[cdKey] = '';
-      }
-      return sanitized;
-    });
-  });
+  const [itemBusca, setItemBusca] = useState('');
+  const [itemBuscaResult, setItemBuscaResult] = useState<any[]>([]);
   const [itemBuscaLoading, setItemBuscaLoading] = useState(false);
-  const [selectedAcabamentos, setSelectedAcabamentos] = useState<Set<string>>(() => {
-    const raw = loadState('atualizar_desc:selectedAcabamentos', [] as string[]);
-    return new Set(raw);
-  });
-  const [novaDescricao, setNovaDescricao] = useState(() => loadState('atualizar_desc:novaDescricao', ''));
-  const [descReduzida, setDescReduzida] = useState(() => loadState('atualizar_desc:descReduzida', ''));
+  const [selectedAcabamentos, setSelectedAcabamentos] = useState<Set<string>>(new Set());
+  const [novaDescricao, setNovaDescricao] = useState('');
+  const [descReduzida, setDescReduzida] = useState('');
   const [atualizando, setAtualizando] = useState(false);
-
-  // Persistência: aba Consulta
-  useEffect(() => { saveState('consulta:busca', busca); }, [busca]);
-  useEffect(() => { saveState('consulta:acabSel', acabSel); }, [acabSel]);
-  useEffect(() => { saveState('consulta:sortBy', sortBy); }, [sortBy]);
-  useEffect(() => { saveState('consulta:sortDir', sortDir); }, [sortDir]);
-
-  // Persistência: aba "Atualizar descrição"
-  useEffect(() => { saveState('atualizar_desc:itemBusca', itemBusca); }, [itemBusca]);
-  useEffect(() => {
-    const sanitized = itemBuscaResult.map((item: any) => {
-      const s: any = { ...item };
-      for (let n = 1; n <= 5; n++) {
-        const nmKey = `nm_kit_complementar_${n}`;
-        const cdKey = `cd_kit_complementar_${n}`;
-        if (s[nmKey] === 'null' || s[nmKey] === 'undefined') s[nmKey] = '';
-        if (s[cdKey] === 'null' || s[cdKey] === 'undefined') s[cdKey] = '';
-      }
-      return s;
-    });
-    saveState('atualizar_desc:itemBuscaResult', sanitized);
-  }, [itemBuscaResult]);
-  useEffect(() => {
-    saveState('atualizar_desc:selectedAcabamentos', Array.from(selectedAcabamentos));
-  }, [selectedAcabamentos]);
-  useEffect(() => { saveState('atualizar_desc:novaDescricao', novaDescricao); }, [novaDescricao]);
-  useEffect(() => { saveState('atualizar_desc:descReduzida', descReduzida); }, [descReduzida]);
-
-  // Persistência de aba
-  useEffect(() => { saveState('tab', tab); }, [tab]);
 
   // 3. Recupera última execução de acabamentos ao montar
   useEffect(() => {
