@@ -572,6 +572,11 @@ export default function AcabamentosPage() {
                       cdKitComplementar3: item.cd_kit_complementar_3 ?? '',
                       cdKitComplementar4: item.cd_kit_complementar_4 ?? '',
                       cdKitComplementar5: item.cd_kit_complementar_5 ?? '',
+                      nmKitComplementar1: kitComplementar01.trim() || (item.nm_kit_complementar_1 || item.cd_kit_complementar_1 || ''),
+                      nmKitComplementar2: item.nm_kit_complementar_2 || item.cd_kit_complementar_2 || '',
+                      nmKitComplementar3: item.nm_kit_complementar_3 || item.cd_kit_complementar_3 || '',
+                      nmKitComplementar4: item.nm_kit_complementar_4 || item.cd_kit_complementar_4 || '',
+                      nmKitComplementar5: item.nm_kit_complementar_5 || item.cd_kit_complementar_5 || '',
                     });
                   }
                 }
