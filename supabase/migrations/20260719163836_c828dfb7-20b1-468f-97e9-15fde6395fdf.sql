@@ -16,17 +16,22 @@ DECLARE
 BEGIN
   IF p_version IS NULL OR btrim(p_version) = '' THEN RETURN; END IF;
 
+  -- Busca por versão apenas (ignora build_time): se já existe, apenas marca como atual
   SELECT id INTO v_existing_id
   FROM public.app_releases
-  WHERE version = p_version AND COALESCE(build_time, '1970-01-01'::timestamptz) = COALESCE(p_build_time, '1970-01-01'::timestamptz)
+  WHERE version = p_version
   LIMIT 1;
 
   IF v_existing_id IS NOT NULL THEN
+    -- Versão já existe: desmarca as demais e marca esta como atual
     UPDATE public.app_releases SET is_current = false WHERE is_current = true AND id <> v_existing_id;
     UPDATE public.app_releases SET is_current = true WHERE id = v_existing_id;
+    -- Atualiza o build_time da versão existente para o mais recente
+    UPDATE public.app_releases SET build_time = p_build_time WHERE id = v_existing_id;
     RETURN;
   END IF;
 
+  -- Nova versão: insere linha
   UPDATE public.app_releases SET is_current = false WHERE is_current = true;
   INSERT INTO public.app_releases (version, build_time, notes, is_current, is_stable, released_by)
   VALUES (p_version, p_build_time, p_notes, true, false, NULL);

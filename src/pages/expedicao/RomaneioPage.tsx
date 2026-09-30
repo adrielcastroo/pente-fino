@@ -1,5 +1,5 @@
-import { useMemo, useState, useEffect } from 'react';
-import { FileText, FileSpreadsheet, Truck, Plus, Loader2, Upload, RefreshCw, Calendar, ChevronDown, ChevronUp, Package, Search, CheckCircle2 } from 'lucide-react';
+import { useMemo, useState, useEffect, useRef } from 'react';
+import { FileText, FileSpreadsheet, Truck, Plus, Loader2, Upload, RefreshCw, Calendar, ChevronDown, ChevronUp, Package, Search, CheckCircle2, Edit, Save, X, Printer, Archive } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,9 +15,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
+import apiService from '@/services/api';
+import { exportRomaneioPDF, exportRomaneioExcel } from '@/lib/expedicao/exports';
 import {
   Dialog,
   DialogContent,
@@ -34,7 +37,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -134,6 +136,9 @@ export default function RomaneioPage() {
   const [selectedRomaneio, setSelectedRomaneio] = useState<RomaneioDia | null>(null);
   const [importedLinhas, setImportedLinhas] = useState<PreviewRow[]>([]);
   const [importSuccess, setImportSuccess] = useState(false);
+  const [editingRow, setEditingRow] = useState<number | null>(null);
+  const [editData, setEditData] = useState<Partial<PreviewRow> & { id?: string }>({});
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ============================================================
   // Queries
@@ -316,6 +321,34 @@ export default function RomaneioPage() {
   };
 
   // ============================================================
+  // Archive
+  // ============================================================
+  const handleArchiveRomaneio = async () => {
+    if (importedLinhas.length === 0) {
+      toast.warning('Nenhum romaneio para arquivar');
+      return;
+    }
+    try {
+      const { error } = await supabase
+        .from('romaneio_automatico_logs')
+        .insert({
+          referencia: `Romaneio ${format(new Date(), 'dd/MM/yyyy', { locale: ptBR })}`,
+          total_linhas: importedLinhas.length,
+          rows: JSON.stringify(importedLinhas),
+          origem: 'importacao_manual',
+          status: 'arquivado',
+        });
+      if (error) throw error;
+      setImportedLinhas([]);
+      setImportSuccess(false);
+      toast.success('Romaneio arquivado no histórico');
+      refetchRomaneios();
+    } catch (error: any) {
+      toast.error(error.message || 'Erro ao arquivar romaneio');
+    }
+  };
+
+  // ============================================================
   // Filtered data
   // ============================================================
 
@@ -416,7 +449,33 @@ export default function RomaneioPage() {
           {/* Dados Importados */}
           <Card>
             <CardHeader>
-              <CardTitle>Dados Importados ({importedLinhas.length})</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle>Dados Importados ({importedLinhas.length})</CardTitle>
+                {importedLinhas.length > 0 && (
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        exportRomaneioExcel(importedLinhas);
+                      }}
+                      className="gap-1"
+                    >
+                      <Printer className="w-3 h-3" />
+                      Imprimir
+                    </Button>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={handleArchiveRomaneio}
+                      className="gap-1"
+                    >
+                      <Archive className="w-3 h-3" />
+                      Arquivar
+                    </Button>
+                  </div>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               {importedLinhas.length === 0 ? (

@@ -641,3 +641,46 @@ html.compact main .space-y-6 > * + * { margin-top: 1rem; }
 .animate-success {
   animation: success-pop 0.4s ease-in-out;
 }
+
+/* Notification animations */
+@keyframes slide-in-top {
+  0% { transform: translateX(-50%) translateY(-20px); opacity: 0; }
+  100% { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+.animate-slide-in {
+  animation: slide-in-top 0.3s ease-out;
+}
+
+@keyframes check-draw {
+  0% { stroke-dashoffset: 24; }
+  100% { stroke-dashoffset: 0; }
+}
+.animate-check-draw {
+  animation: check-draw 0.3s ease-out forwards;
+  stroke-dasharray: 24;
+}
+
+@keyframes x-draw {
+  0% { stroke-dashoffset: 28; }
+  100% { stroke-dashoffset: 0; }
+}
+.animate-x-draw {
+  animation: x-draw 0.3s ease-out forwards;
+  stroke-dasharray: 28;
+}
+
+@keyframes progress-success {
+  0% { width: 100%; }
+  100% { width: 0%; }
+}
+@keyframes progress-error {
+  0% { width: 100%; }
+  100% { width: 0%; }
+}
+@keyframes progress-info {
+  0% { width: 100%; }
+  100% { width: 0%; }
+}
+.animate-progress-success { animation: progress-success 4s linear forwards; }
+.animate-progress-error { animation: progress-error 4s linear forwards; }
+.animate-progress-info { animation: progress-info 4s linear forwards; }

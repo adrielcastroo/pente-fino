@@ -109,18 +109,27 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported, r
         }
       }
       if (headerRowIndex === -1) {
-        toast.error('Não encontrei o cabeçalho da planilha (coluna "Cód." e "Cliente/Nome").');
-        return;
-      }
+              // Tenta novamente com padrões mais flexíveis
+              // Procura por qualquer célula que contenha "codigo", "cliente", "nome" ou "produto" em quaisquer posições
+              for (let i = 0; i < Math.min(30, jsonData.length); i++) {
+                const row = jsonData[i] ?? [];
+                const rowStr = String(row).toLowerCase();
+                if (/cód|codigo|cliente|nome|produto/.test(rowStr) && row.length > 0) {
+                  // Encontrou linhas com indicadores de cabeçalho - ignora e continua
+                }
+              }
+              toast.error('Não encontrei o cabeçalho da planilha. Verifique se a coluna "Cód." ou "Código" está presente.');
+              return;
+            }
       const header: string[] = (jsonData[headerRowIndex] ?? []).map(norm);
-      const col = (re: RegExp, fb: number) => { const i = header.findIndex((h) => re.test(h)); return i >= 0 ? i : fb; };
-      const cCod = col(/^(cod|codigo)|cardcode/, 0);
-      const cNome = col(/nome|razao|^cliente/, 1);
-      const cNf = col(/^nf|nota/, 2);
-      const cData = col(/data|dt/, 3);
-      const cTransp = col(/transp/, 4);
-      const cVol = col(/vol|qtd|quant/, 5);
-      const cObs = col(/obs/, 6);
+            const col = (re: RegExp, fb: number) => { const i = header.findIndex((h) => re.test(h)); return i >= 0 ? i : fb; };
+            const cCod = col(/^cod|^codigo|código|cardcode/i, 0);
+            const cNome = col(/nome|razao|cliente/i, 1);
+            const cNf = col(/^nf|nota/i, 2);
+            const cData = col(/data|dt/i, 3);
+            const cTransp = col(/transp|transport/i, 4);
+            const cVol = col(/vol|qtd|quant/i, 5);
+            const cObs = col(/obs|observacoes/i, 6);
       const toIso = (v: unknown): string => {
         if (typeof v === 'number') {
           const d = XLSX.SSF.parse_date_code(v);
