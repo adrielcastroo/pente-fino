@@ -1,0 +1,61 @@
+- generic:
+  - link [aria-hidden]:
+    - /url: "#main-content"
+    - text: Pular para o conteúdo
+  - generic:
+    - main [aria-hidden]:
+      - generic:
+        - generic:
+          - heading [level=1]: Pente Fino
+        - generic:
+          - generic:
+            - generic:
+              - heading [level=2]: Acesse sua operação
+              - paragraph: Entre para continuar suas conferências, endereçamentos e expedições.
+            - generic:
+              - generic:
+                - generic:
+                  - text: Email
+                  - generic:
+                    - textbox:
+                      - /placeholder: seu@email.com
+                      - text: adrielpompeo@gmail.com
+                - generic:
+                  - generic:
+                    - generic: Senha
+                    - link:
+                      - /url: /forgot-password
+                      - text: Esqueceu a senha?
+                  - generic:
+                    - textbox:
+                      - /placeholder: ••••••••
+                      - text: M
+                    - button
+                - generic:
+                  - checkbox [checked]
+                  - checkbox [checked] [aria-hidden]
+                  - generic: Lembrar de mim
+                - button: Entrar
+            - generic:
+              - generic:
+                - text: Ainda não tem conta?
+                - button: Cadastre-se
+              - generic: Acesso rápido
+              - button: Entrar como visitante (sem conta)
+        - paragraph: © 2026 Unilux · Pente Fino
+    - region "Notifications alt+T"
+  - dialog [ref=f2e51]:
+    - generic [ref=f2e52]:
+      - generic [ref=f2e53]:
+        - heading "Entrar como visitante" [level=2] [ref=f2e54]
+        - paragraph [ref=f2e55]: Seu nome identifica o conferente em cada bipagem e no histórico de auditoria.
+      - generic [ref=f2e56]:
+        - generic [ref=f2e57]:
+          - text: Nome do Conferente
+          - textbox "Nome do Conferente" [active] [ref=f2e62]:
+            - /placeholder: Seu nome
+            - text: od@0
+        - generic [ref=f2e63]:
+          - button "Cancelar" [ref=f2e64] [cursor=pointer]
+          - button "Entrar" [ref=f2e65] [cursor=pointer]
+    - button "Fechar" [ref=f2e66] [cursor=pointer]

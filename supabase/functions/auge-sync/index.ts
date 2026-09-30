@@ -3729,13 +3729,39 @@ async function updateAcabamentoItem(auth: any, payload: Record<string, string>):
     cdKitComplementar3: payload.cdKitComplementar3 ?? '',
     cdKitComplementar4: payload.cdKitComplementar4 ?? '',
     cdKitComplementar5: payload.cdKitComplementar5 ?? '',
+    nmKitComplementar1: payload.nmKitComplementar1 ?? payload.cdKitComplementar1 ?? '',
+    nmKitComplementar2: payload.cdKitComplementar2 ?? '',
+    nmKitComplementar3: payload.cdKitComplementar3 ?? '',
+    nmKitComplementar4: payload.cdKitComplementar4 ?? '',
+    nmKitComplementar5: payload.cdKitComplementar5 ?? '',
   });
+  // Log completo do payload
+  const fullPayload = {
+    cdAcabamentoItem: payload.cdAcabamentoItem ?? '',
+    cdAcabamento: payload.cdAcabamento ?? '',
+    cdItemAcabamento: payload.cdItemAcabamento ?? '',
+    dsItemAcabamento: payload.dsItemAcabamento ?? '',
+    dsItemAcabamentoReduzida: payload.dsItemAcabamentoReduzida ?? '',
+    dsItemAcabamentoOriginal: payload.dsItemAcabamentoOriginal ?? '',
+    cdKitComplementar1: payload.cdKitComplementar1 ?? '',
+    cdKitComplementar2: payload.cdKitComplementar2 ?? '',
+    cdKitComplementar3: payload.cdKitComplementar3 ?? '',
+    cdKitComplementar4: payload.cdKitComplementar4 ?? '',
+    cdKitComplementar5: payload.cdKitComplementar5 ?? '',
+    nmKitComplementar1: payload.nmKitComplementar1 ?? '',
+    nmKitComplementar2: payload.nmKitComplementar2 ?? '',
+    nmKitComplementar3: payload.nmKitComplementar3 ?? '',
+    nmKitComplementar4: payload.nmKitComplementar4 ?? '',
+    nmKitComplementar5: payload.nmKitComplementar5 ?? '',
+  };
+  console.log('[updateAcabamentoItem] FULL_PAYLOAD:', JSON.stringify(fullPayload));
   const txt = await postAugePhp(
     auth,
     '/l.unilux/modInventario/Controle/ctlAcabamentoItem.php',
     body,
     `/l.unilux/modInventario/manterAcabamentoItem.php?cdAcabamento=${payload.cdAcabamento ?? ''}`,
   );
+  console.log(`[updateAcabamentoItem] resp=${txt}`);
   let j: any = { message: txt };
   try { j = JSON.parse(txt); } catch { /* keep raw */ }
   if (typeof j?.message === 'string' && !/sucesso/i.test(j.message)) {
@@ -6182,6 +6208,11 @@ Deno.serve(async (req) => {
             cdKitComplementar3: String(r.cd_kit_complementar_3 ?? ''),
             cdKitComplementar4: String(r.cd_kit_complementar_4 ?? ''),
             cdKitComplementar5: String(r.cd_kit_complementar_5 ?? ''),
+            nmKitComplementar1: String(r.nm_kit_complementar_1 ?? ''),
+            nmKitComplementar2: String(r.nm_kit_complementar_2 ?? ''),
+            nmKitComplementar3: String(r.nm_kit_complementar_3 ?? ''),
+            nmKitComplementar4: String(r.nm_kit_complementar_4 ?? ''),
+            nmKitComplementar5: String(r.nm_kit_complementar_5 ?? ''),
           });
 
           // Reflete localmente.

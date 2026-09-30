@@ -1,0 +1,5 @@
+- generic [active] [ref=f4e1]:
+  - link "Pular para o conteúdo" [ref=f4e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=f4e3]:
+    - region "Notifications alt+T"
