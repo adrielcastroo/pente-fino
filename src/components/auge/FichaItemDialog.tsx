@@ -377,7 +377,7 @@ export default function FichaItemDialog({ codigo, open, onOpenChange }: Props) {
                       {acabamentos.map((a: any) => {
                         const kits = [1, 2, 3, 4, 5]
                           .map((n) => a[`nm_kit_complementar_${n}`])
-                          .filter(Boolean);
+                          .filter((v: any) => v && String(v).trim() && String(v) !== 'null' && String(v) !== 'undefined');
                         const ac = a.auge_acabamentos ?? {};
                         return (
                           <tr key={a.cd_acabamento_item} className="border-t align-top">
