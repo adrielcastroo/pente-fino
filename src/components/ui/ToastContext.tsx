@@ -33,6 +33,69 @@ export function useToast() {
   return context;
 }
 
+// API global para acessibilidade fora do React tree
+export const toastAPI = {
+  success: (title: string, description?: string, options?: { duration?: number }) => {
+    const id = `toast_${++globalState.nextId}`;
+    const duration = options?.duration ?? 4000;
+    const toast: Toast = { id, type: 'success', title, description, duration };
+    globalState.toasts = [toast, ...globalState.toasts];
+    globalState.listeners.forEach(fn => fn());
+    if (duration > 0) setTimeout(() => {
+      globalState.toasts = globalState.toasts.filter(t => t.id !== id);
+      globalState.listeners.forEach(fn => fn());
+    }, duration);
+  },
+  error: (title: string, description?: string, options?: { duration?: number }) => {
+    const id = `toast_${++globalState.nextId}`;
+    const duration = options?.duration ?? 6000;
+    const toast: Toast = { id, type: 'error', title, description, duration };
+    globalState.toasts = [toast, ...globalState.toasts];
+    globalState.listeners.forEach(fn => fn());
+    if (duration > 0) setTimeout(() => {
+      globalState.toasts = globalState.toasts.filter(t => t.id !== id);
+      globalState.listeners.forEach(fn => fn());
+    }, duration);
+  },
+  warning: (title: string, description?: string, options?: { duration?: number }) => {
+    const id = `toast_${++globalState.nextId}`;
+    const duration = options?.duration ?? 4000;
+    const toast: Toast = { id, type: 'warning', title, description, duration };
+    globalState.toasts = [toast, ...globalState.toasts];
+    globalState.listeners.forEach(fn => fn());
+    if (duration > 0) setTimeout(() => {
+      globalState.toasts = globalState.toasts.filter(t => t.id !== id);
+      globalState.listeners.forEach(fn => fn());
+    }, duration);
+  },
+  info: (title: string, description?: string, options?: { duration?: number }) => {
+    const id = `toast_${++globalState.nextId}`;
+    const duration = options?.duration ?? 4000;
+    const toast: Toast = { id, type: 'info', title, description, duration };
+    globalState.toasts = [toast, ...globalState.toasts];
+    globalState.listeners.forEach(fn => fn());
+    if (duration > 0) setTimeout(() => {
+      globalState.toasts = globalState.toasts.filter(t => t.id !== id);
+      globalState.listeners.forEach(fn => fn());
+    }, duration);
+  },
+  loading: (title: string, description?: string, options?: { duration?: number }) => {
+    const id = `toast_${++globalState.nextId}`;
+    const toast: Toast = { id, type: 'loading', title, description, duration: 0 };
+    globalState.toasts = [toast, ...globalState.toasts];
+    globalState.listeners.forEach(fn => fn());
+  },
+  dismiss: (id: string) => {
+    globalState.toasts = globalState.toasts.filter(t => t.id !== id);
+    globalState.listeners.forEach(fn => fn());
+  },
+  remove: (id: string) => toastAPI.dismiss(id),
+  removeAll: () => {
+    globalState.toasts = [];
+    globalState.listeners.forEach(fn => fn());
+  },
+};
+
 // Hook personalizado com state local
 function useLocalToasts() {
   const [toasts, setToasts] = useState<Toast[]>(globalState.toasts);
