@@ -3735,7 +3735,26 @@ async function updateAcabamentoItem(auth: any, payload: Record<string, string>):
     nmKitComplementar4: payload.cdKitComplementar4 ?? '',
     nmKitComplementar5: payload.cdKitComplementar5 ?? '',
   });
-  console.log(`[updateAcabamentoItem] cdAcabamentoItem=${payload.cdAcabamentoItem ?? ''} dsItem=${String(payload.dsItemAcabamento ?? '').slice(0,50)} dsReduzida=${String(payload.dsItemAcabamentoReduzida ?? '').slice(0,50)} kit1=${String(payload.cdKitComplementar1 ?? '').slice(0,50)}`);
+  // Log completo do payload
+  const fullPayload = {
+    cdAcabamentoItem: payload.cdAcabamentoItem ?? '',
+    cdAcabamento: payload.cdAcabamento ?? '',
+    cdItemAcabamento: payload.cdItemAcabamento ?? '',
+    dsItemAcabamento: payload.dsItemAcabamento ?? '',
+    dsItemAcabamentoReduzida: payload.dsItemAcabamentoReduzida ?? '',
+    dsItemAcabamentoOriginal: payload.dsItemAcabamentoOriginal ?? '',
+    cdKitComplementar1: payload.cdKitComplementar1 ?? '',
+    cdKitComplementar2: payload.cdKitComplementar2 ?? '',
+    cdKitComplementar3: payload.cdKitComplementar3 ?? '',
+    cdKitComplementar4: payload.cdKitComplementar4 ?? '',
+    cdKitComplementar5: payload.cdKitComplementar5 ?? '',
+    nmKitComplementar1: payload.nmKitComplementar1 ?? '',
+    nmKitComplementar2: payload.nmKitComplementar2 ?? '',
+    nmKitComplementar3: payload.nmKitComplementar3 ?? '',
+    nmKitComplementar4: payload.nmKitComplementar4 ?? '',
+    nmKitComplementar5: payload.nmKitComplementar5 ?? '',
+  };
+  console.log('[updateAcabamentoItem] FULL_PAYLOAD:', JSON.stringify(fullPayload));
   const txt = await postAugePhp(
     auth,
     '/l.unilux/modInventario/Controle/ctlAcabamentoItem.php',
