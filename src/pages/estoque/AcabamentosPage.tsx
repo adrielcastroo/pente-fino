@@ -520,7 +520,7 @@ export default function AcabamentosPage() {
               try {
                 const { data } = await supabase
                   .from('auge_acabamento_itens')
-                  .select('cd_acabamento_item, cd_acabamento, cd_item_acabamento, ds_item_acabamento, ds_item_acabamento_original, ds_item_acabamento_reduzida, cd_kit_complementar_1, cd_kit_complementar_2, cd_kit_complementar_3, cd_kit_complementar_4, cd_kit_complementar_5')
+                  .select('cd_acabamento_item, cd_acabamento, cd_item_acabamento, ds_item_acabamento, ds_item_acabamento_original, ds_item_acabamento_reduzida, cd_kit_complementar_1, nm_kit_complementar_1, cd_kit_complementar_2, nm_kit_complementar_2, cd_kit_complementar_3, nm_kit_complementar_3, cd_kit_complementar_4, nm_kit_complementar_4, cd_kit_complementar_5, nm_kit_complementar_5')
                   .ilike('cd_item_acabamento', `%${term}%`)
                   .limit(2000);
                 setItemBuscaResult(data || []);
