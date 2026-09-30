@@ -125,6 +125,9 @@ export default defineConfig(({ mode }) => ({
   ].filter(Boolean),
   resolve: {
     alias: {
+      "sonner": path.resolve(__dirname, "src/sonner-shim.ts"),
+    },
+    alias: {
       "@": path.resolve(__dirname, "./src"),
     },
   },
