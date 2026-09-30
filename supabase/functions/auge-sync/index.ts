@@ -3729,7 +3729,7 @@ async function updateAcabamentoItem(auth: any, payload: Record<string, string>):
     cdKitComplementar3: payload.cdKitComplementar3 ?? '',
     cdKitComplementar4: payload.cdKitComplementar4 ?? '',
     cdKitComplementar5: payload.cdKitComplementar5 ?? '',
-    nmKitComplementar1: payload.cdKitComplementar1 ?? '',
+    nmKitComplementar1: payload.nmKitComplementar1 ?? payload.cdKitComplementar1 ?? '',
     nmKitComplementar2: payload.cdKitComplementar2 ?? '',
     nmKitComplementar3: payload.cdKitComplementar3 ?? '',
     nmKitComplementar4: payload.cdKitComplementar4 ?? '',
