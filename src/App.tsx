@@ -2,8 +2,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
 import { BrowserRouter, Route, Routes, Navigate, Outlet } from "react-router-dom";
-import { Toaster } from "@/components/ui/sonner";
-import { NotificationProvider } from "@/components/ui/NotificationProvider";
+import { ToastProvider } from "@/components/ui/ToastProvider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Suspense, lazy } from "react";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
@@ -335,9 +334,9 @@ const App = () => (
             </Suspense>
             </PageAccessProvider>
           </AuthProvider>
-          <NotificationProvider>
-            <Toaster position="top-right" closeButton duration={2000} visibleToasts={1} />
-          </NotificationProvider>
+          <ToastProvider>
+            {/* Toast notifications centralizadas no topo */}
+          </ToastProvider>
         </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>
