@@ -2,6 +2,7 @@ import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { useShallow } from 'zustand/react/shallow';
 import { toast } from 'sonner';
+import { useOperationFeedback } from '@/components/ui/OperationFeedback';
 import { Plus, Settings2, ScanBarcode, X, Eye, Sparkles, Lock, Unlock, Package, Hash, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Switch } from '@/components/ui/switch';
@@ -41,6 +42,7 @@ function sanitize(v: string) {
 
 export default function MotorControlePage() {
   useDocumentTitle('Motor / Controle');
+  const { show } = useOperationFeedback();
   const {
     addRegistro,
     formData,
@@ -191,7 +193,7 @@ export default function MotorControlePage() {
       cx: temCaixa ? (parseInt(caixaNum, 10) || 0) : null
     }, labelSettings);
     addRegistro(reg);
-    toast.success(`Motor adicionado: ${cleaned}`);
+    show('success', 'Sucesso!', `Motor adicionado: ${cleaned}`);
     resetMotorFormData();
     serieRef.current?.focus();
   }, [modelo, serie, nf, temCaixa, caixaNum, cleanMotorSerie, subMode, computeSeries, addRegistro, resetMotorFormData, labelSettings]);
@@ -245,7 +247,7 @@ export default function MotorControlePage() {
       cx: null
     }, labelSettings);
     addRegistro(reg);
-    toast.success(`Controle #${seq} adicionado`);
+    show('success', 'Sucesso!', `Controle #${seq} adicionado`);
     resetMotorFormData();
     serieRef.current?.focus();
   }, [modelo, serie, nf, cleanControleSerie, subMode, computeSeries, addRegistro, resetMotorFormData, labelSettings]);
@@ -293,7 +295,7 @@ export default function MotorControlePage() {
       cx: parsed.cx || null
     }, labelSettings);
     addRegistro(reg);
-    toast.success(`Coulisse adicionado: ${coulisseLote}`);
+    show('success', 'Sucesso!', `Coulisse adicionado: ${coulisseLote}`);
     resetMotorFormData();
     serieRef.current?.focus();
   }, [coulisseModeloProcCx, coulisseLote, modelo, subMode, nf, computeSeries, addRegistro, resetMotorFormData, labelSettings]);

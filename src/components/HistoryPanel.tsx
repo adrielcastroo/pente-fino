@@ -5,6 +5,7 @@ import { pgInt } from '@/services/registroService';
 import { formatML, formatDateBR, formatTimeBR } from '@/lib/app-utils';
 import { Conference, Registro } from '@/types';
 import { toast } from 'sonner';
+import { useOperationFeedback } from '@/components/ui/OperationFeedback';
 import { usePerformance } from '@/hooks/use-performance';
 import { useShallow } from 'zustand/react/shallow';
 import { FolderOpen, ChevronDown, Trash2, Pencil, CheckCircle2, Search, Plus, X, Download, Printer, ArrowRightLeft } from 'lucide-react';
@@ -111,27 +112,13 @@ function EditRegistroDialog({
                 loteSistema: form.loteSistema || '',
                 posicao: form.posicao != null ? (() => { const p = pgInt(form.posicao); return p != null && p >= 1 && p <= 30 ? p : null; })() : null,
       });
-      toast.success('Registro atualizado.', {
-        action: snapshot ? {
-          label: 'Desfazer',
-          onClick: async () => {
-            try {
-              await updateHistoryRegistro(conferenceId, snapshot.id, snapshot as any);
-              toast.info('Alteração desfeita.');
-            } catch (err) {
-              console.error('[HistoryPanel] Erro ao desfazer:', err);
-              toast.error('Não foi possível desfazer.');
-            }
-          },
-        } : undefined,
-        duration: 8000,
-      });
+      show('success', 'Registro atualizado');
       setIsDirty(false);
       onOpenChange(false);
     } catch (err) {
       console.error('[HistoryPanel] Erro ao salvar registro:', err);
       const message = err instanceof Error ? err.message : 'Erro desconhecido';
-      toast.error(`Erro ao salvar: ${message}`);
+      show('error', 'Erro!', `Erro ao salvar: ${message}`);
     } finally {
       setSaving(false);
     }
@@ -306,13 +293,13 @@ function AddHistoryRegistroDialog({
         processo: '',
         loteSistema: form.loteSistema || '',
       });
-      toast.success('Registro adicionado ao histórico.');
+      show('success', 'Sucesso!', 'Registro adicionado ao histórico.');
       setForm(initial());
       onOpenChange(false);
     } catch (err) {
       console.error('[HistoryPanel] Erro ao adicionar registro:', err);
       const message = err instanceof Error ? err.message : 'Erro desconhecido';
-      toast.error(`Erro ao adicionar: ${message}`);
+      show('error', 'Erro!', `Erro ao adicionar: ${message}`);
     } finally {
       setSaving(false);
     }
@@ -761,13 +748,13 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
       });
       const { ok, total } = await printLabelsBatch(items, { ...labelSettings, autoPrint: true, printMethod: 'browser' });
       toast.dismiss(tid);
-      if (ok === total) toast.success(`${total} etiqueta(s) enviada(s) para impressão em lote.`);
-      else if (ok > 0) toast.warning(`${ok}/${total} etiqueta(s) enviadas — verifique o console.`);
-      else toast.error('Falha ao imprimir etiquetas.');
+      if (ok === total) show('success', 'Impressão concluída', `${total} etiqueta(s) enviada(s) para impressão.`);
+      else if (ok > 0) show('success', 'Impressão parcial', `${ok}/${total} etiqueta(s) enviadas — verifique o console.`);
+      else show('error', 'Erro!', 'Falha ao imprimir etiquetas.');
     } catch (e) {
       toast.dismiss(tid);
       console.error(e);
-      toast.error('Falha ao imprimir etiquetas.');
+      show('error', 'Erro!', 'Falha ao imprimir etiquetas.');
     } finally {
       setPrinting(false);
     }
@@ -1096,9 +1083,9 @@ const ConferenceCard = memo(({ conf, onDelete, highlight = false }: { conf: Conf
   const handleDeleteItem = async (registroId: string) => {
     try {
       await deleteHistoryRegistro(resolveConfId(registroId), registroId);
-      toast.success('Item removido do histórico.');
+      show('success', 'Sucesso!', 'Item removido do histórico.');
     } catch {
-      toast.error('Erro ao remover item do histórico.');
+      show('error', 'Erro!', 'Erro ao remover item do histórico.');
     }
   };
 
@@ -1224,6 +1211,7 @@ export default function HistoryPanel() {
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [highlightId, setHighlightId] = useState<string | null>(null);
   const { isLow } = usePerformance();
+  const { show } = useOperationFeedback();
 
   useEffect(() => {
     loadHistory();
@@ -1317,10 +1305,10 @@ export default function HistoryPanel() {
   const handleClear = async () => {
     try {
       await clearHistory();
-      toast.success('Todo o histórico foi removido.');
+      show('success', 'Sucesso!', 'Todo o histórico foi removido.');
       setShowClearConfirm(false);
     } catch {
-      toast.error('Erro ao limpar o histórico.');
+      show('error', 'Erro!', 'Erro ao limpar o histórico.');
     }
   };
 

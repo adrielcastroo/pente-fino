@@ -5,6 +5,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { useAppStore } from '@/store/useAppStore';
 import { formatML } from '@/lib/app-utils';
 import { toast } from 'sonner';
+import { useOperationFeedback } from '@/components/ui/OperationFeedback';
 import { usePerformance } from '@/hooks/use-performance';
 import { Search, Trash2, Undo2, Copy, X, Package, ArrowUpDown, CheckCircle2, FileText, Layers3, Clock, Info, Tag, ScanBarcode } from 'lucide-react';
 import { getRegistroColumns } from '@/lib/registroColumns';
@@ -212,6 +213,7 @@ TableRow.displayName = 'TableRow';
 
 export default function RightPanel() {
   const { isGuest } = useAuth();
+  const { show } = useOperationFeedback();
   const {
     registros, currentMode, searchQuery, setSearchQuery, sortBy, setSortBy,
     deleteRegistro, undo, undoStack, updateRegistro, activeTab
@@ -368,7 +370,7 @@ export default function RightPanel() {
         : editValue;
     updateRegistro(rowId, { [key]: parsedValue });
     setEditingCell(null);
-    toast.success('Registro atualizado com sucesso.');
+    show('success', 'Sucesso!', 'Registro atualizado com sucesso.');
   }, [editingCell, editValue, updateRegistro]);
 
   const cancelEdit = useCallback(() => {

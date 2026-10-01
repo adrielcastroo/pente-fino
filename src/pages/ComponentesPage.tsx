@@ -583,6 +583,7 @@ function ComponentesTabela({ itens, onAjustar, onRemover, totalPacotes, isLow }:
 
 export default function ComponentesPage() {
   useDocumentTitle('Conferência — Componentes');
+  const { show } = useOperationFeedback();
   const isMobile = useIsMobile();
   const isTablet = useIsTablet();
   const isNarrow = isMobile || isTablet;
@@ -978,7 +979,7 @@ export default function ComponentesPage() {
         toast.dismiss(toastId);
       }
       if (fail === 0) {
-        toast.success(`Conferência finalizada: ${ok} etiqueta(s) impressa(s).`);
+        show('success', 'Conferência finalizada', `${ok} etiqueta${ok > 1 ? 's' : ''} impressa${ok > 1 ? 's' : ''}`);
       } else {
         toast.warning(`Finalizada com falhas: ${ok} ok · ${fail} falha(s).`);
       }
@@ -1030,10 +1031,10 @@ export default function ComponentesPage() {
       })) as any;
 
       await registroService.insertRegistros((conf as any).id, registros, 'componentes');
-      toast.success('Conferência salva no histórico.');
+      show('success', 'Sucesso!', 'Conferência salva no histórico.');
     } catch (err) {
       console.error('[Componentes] falha ao salvar no histórico', err);
-      toast.error('Não foi possível salvar no histórico. Itens mantidos na tela.');
+      show('error', 'Erro!', 'Não foi possível salvar no histórico. Itens mantidos na tela.');
       return; // Não limpa a tela para o operador poder tentar novamente
     }
 
@@ -1155,16 +1156,11 @@ export default function ComponentesPage() {
       codigoRef.current?.focus();
 
       toast.dismiss(toastId);
-      toast.success(`Exportação concluída! ${snapshot.length} registros arquivados no histórico.`, {
-        action: {
-          label: 'Ver no histórico',
-          onClick: () => navigate('/estoque/historico'),
-        },
-      });
+      show('success', 'Exportação concluída', `${snapshot.length} registros arquivados no histórico.`);
     } catch (err: any) {
       toast.dismiss(toastId);
       console.error('[Componentes] falha ao exportar/arquivar', err);
-      toast.error(err?.message || 'Falha ao exportar e arquivar. Itens mantidos na tela.');
+      show('error', 'Erro!', err?.message || 'Falha ao exportar e arquivar. Itens mantidos na tela.');
     }
   }, [itens, user, isGuest, guestName, navigate]);
 

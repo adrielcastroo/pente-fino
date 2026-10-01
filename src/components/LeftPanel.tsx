@@ -9,6 +9,7 @@ import { printTecidoLabel } from '@/services/printService';
 import { extractLarguraFromItem, formatML, generateLoteSistema, generateLoteSistemaCaixa, ENDERECO_REGEX } from '@/lib/app-utils';
 import { Registro, FormData } from '@/types';
 import { toast } from 'sonner';
+import { useOperationFeedback } from '@/components/ui/OperationFeedback';
 import { bipSuccess, bipError } from '@/lib/bip-feedback';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePerformance } from '@/hooks/use-performance';
@@ -38,6 +39,7 @@ LARGURA (largura do tecido): WIDTH, Width, Largura
 Retorne SOMENTE JSON: {"item":"<código>","m2":<número float ou null>,"width":<número inteiro ou null>}`;
 
 export const LeftPanel = memo(function LeftPanel() {
+  const { show } = useOperationFeedback();
   const {
     currentMode, setMode, processo, setProcesso, conferente, registros,
     addRegistro, deleteRegistro, undoStack, undo: undoAction,
@@ -834,7 +836,8 @@ export const LeftPanel = memo(function LeftPanel() {
       }
       addRegistro(reg);
       bipSuccess();
-      toast.success(`✓ ${item} adicionado (${useAppStore.getState().registros.length + 1} itens)`);
+      const count = useAppStore.getState().registros.length + 1;
+      show('success', 'Item adicionado', `✓ ${item} (${count} item${count > 1 ? 's' : ''})`);
 
 
       resetForm();
@@ -938,7 +941,8 @@ export const LeftPanel = memo(function LeftPanel() {
     }
     addRegistro(reg);
     bipSuccess();
-    toast.success(`✓ ${reg.item} adicionado (${useAppStore.getState().registros.length + 1} rolos)`);
+    const count2 = useAppStore.getState().registros.length + 1;
+    show('success', 'Rolo adicionado', `✓ ${reg.item} (${count2} rolo${count2 > 1 ? 's' : ''})`);
 
 
     resetForm();

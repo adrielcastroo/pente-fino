@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { useOperationFeedback } from '@/components/ui/OperationFeedback';
 import { extractCodigoFornecedor, normalizarCodigo } from '@/lib/codigoFornecedor';
 import { useUpsertItemCadastro } from '@/hooks/useItensCadastro';
 import { ItemCadastro } from '@/services/itensCadastroService';
@@ -25,6 +26,7 @@ function arraysEqual(a: string[], b: string[]): boolean {
 }
 
 export default function ItemFormDialog({ open, onOpenChange, initial }: Props) {
+  const { show } = useOperationFeedback();
   const [codigoInterno, setCodigoInterno] = useState('');
   const [descricao, setDescricao] = useState('');
   const [codigos, setCodigos] = useState<string[]>([]);
@@ -139,10 +141,10 @@ export default function ItemFormDialog({ open, onOpenChange, initial }: Props) {
         },
         opts: { isEdit, changedField },
       });
-      toast.success('Item salvo');
+      show('success', 'Sucesso!', 'Item salvo');
       onOpenChange(false);
     } catch (e: any) {
-      toast.error(e?.message || 'Erro ao salvar');
+      show('error', 'Erro!', e?.message || 'Erro ao salvar');
     }
   };
 
