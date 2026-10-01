@@ -143,7 +143,7 @@ const App = () => (
               <ToastProvider>
                 <Toaster position="top-center" />
                 <OperationFeedbackProvider>
-                <Suspense fallback={<div className="h-screen w-screen flex items-center justify-center bg-background"><div className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin" /></div>}>
+                  <Suspense fallback={<div className="h-screen w-screen flex items-center justify-center bg-background"><div className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin" /></div>}>
 
               <Routes>
                 <Route path="/login" element={<LoginRoute><LoginPage /></LoginRoute>} />
@@ -335,7 +335,7 @@ const App = () => (
               {/* <AgentChatWidget /> */}
             </Suspense>
                 </OperationFeedbackProvider>
-                </ToastProvider>
+              </ToastProvider>
               </PageAccessProvider>
             </AuthProvider>
           </BrowserRouter>
