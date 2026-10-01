@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect, useRef } from 'react';
-import { FileText, FileSpreadsheet, Truck, Plus, Loader2, Upload, RefreshCw, Calendar, ChevronDown, ChevronUp, Package, Search, CheckCircle2, Edit, Save, X, Printer, Archive } from 'lucide-react';
+import { FileText, FileSpreadsheet, Truck, Plus, Loader2, Upload, RefreshCw, Calendar, ChevronDown, ChevronUp, Package, CheckCircle2, Edit, Save, X, Printer, Archive } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -42,7 +42,6 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import RomaneioImportDialog from '@/components/expedicao/RomaneioImportDialog';
 import { PreviewRow } from '@/components/expedicao/RomaneioImportDialog';
-import ConsultaPedidos from '@/components/faturamento/ConsultaPedidos';
 
 // ============================================================
 // Types
