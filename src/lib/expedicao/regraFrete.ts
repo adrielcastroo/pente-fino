@@ -84,7 +84,7 @@ export function decidirFrete(params: {
   pedidos: PedidoAugeMin[] | null; // null = consulta não realizada
 }): DecisaoFrete {
   const { codigoCliente, nomeCliente, transportadorPlanilha, regra, pedidos } = params;
-  const base = { valorPedidos: null, valorMinimo: regra?.valor_minimo_frete ?? null, qtdPedidos: 0, pedidos: [], flagExcecao: false };
+  const base = { valorPedidos: null, valorMinimo: regra?.valor_minimo_frete ?? 0, qtdPedidos: 0, pedidos: [], flagExcecao: false };
   const orig = (transportadorPlanilha ?? '').trim();
 
   if (orig && /agrup|instru/i.test(orig)) {
@@ -94,8 +94,11 @@ export function decidirFrete(params: {
     return { ...base, transportadora: orig, modalidade: '', situacao: 'sem_regra' };
   }
   const minimo = Number(regra.valor_minimo_frete ?? 0);
-  if (!(minimo > 0) || pedidos === null) {
+  if (pedidos === null) {
     return { ...base, ...porModalidade(regra), situacao: 'sem_minimo' };
+  }
+  if (!(minimo > 0)) {
+    return { ...base, ...porModalidade(regra), situacao: 'sem_minimo', transportadora: regra.transportadora_cif || regra.transportadora_fob || orig };
   }
 
   const doCliente = pedidosDoCliente(pedidos, codigoCliente, [nomeCliente, regra.nome_cliente]);
@@ -103,12 +106,12 @@ export function decidirFrete(params: {
   const info = { valorPedidos: total, valorMinimo: minimo, qtdPedidos: doCliente.length, pedidos: doCliente.map((p) => p.cd_pedido) };
 
   if (doCliente.length === 0) {
-    return { ...info, transportadora: regra.transportadora_fob || orig, modalidade: 'FOB', situacao: 'sem_pedidos', flagExcecao: true };
+    return { ...info, transportadora: regra.transportadora_fob || regra.transportadora_cif || orig, modalidade: 'FOB', situacao: 'sem_pedidos', flagExcecao: true };
   }
   if (total >= minimo) {
-    return { ...info, transportadora: regra.transportadora_cif || orig, modalidade: 'CIF', situacao: 'atingido', flagExcecao: false };
+    return { ...info, transportadora: regra.transportadora_cif || regra.transportadora_fob || orig, modalidade: 'CIF', situacao: 'atingido', flagExcecao: false };
   }
-  return { ...info, transportadora: regra.transportadora_fob || orig, modalidade: 'FOB', situacao: 'abaixo', flagExcecao: true };
+  return { ...info, transportadora: regra.transportadora_fob || regra.transportadora_cif || orig, modalidade: 'FOB', situacao: 'abaixo', flagExcecao: true };
 }
 
 /** Data mais frequente (AAAA-MM-DD) entre as linhas; fallback hoje. */

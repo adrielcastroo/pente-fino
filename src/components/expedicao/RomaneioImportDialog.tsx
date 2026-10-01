@@ -48,7 +48,7 @@ export interface PreviewRow {
 }
 
 const moeda = (v: number | null) =>
-  v === null ? '-' : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  v == null || v === 0 ? '-' : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 /** Consulta pedidos do Auge na data e aplica a regra de frete em cada linha. */
 async function aplicarRegras(linhas: PreviewRow[], regras: FaturamentoRegra[]): Promise<{ linhas: PreviewRow[]; data: string; fonte: string | null }> {
@@ -71,9 +71,7 @@ async function aplicarRegras(linhas: PreviewRow[], regras: FaturamentoRegra[]): 
     data, fonte,
     linhas: linhas.map((l) => {
       const regra = regraDe(l.codigo_cliente);
-      // Só aplica a regra se o cliente tiver valor mínimo configurado
-      const temMinimo = Number(regra?.valor_minimo_frete ?? 0) > 0;
-      const decisao = decidirFrete({ codigoCliente: l.codigo_cliente, nomeCliente: l.nome_cliente, transportadorPlanilha: l.transportador, regra: temMinimo ? regra : undefined, pedidos });
+      const decisao = decidirFrete({ codigoCliente: l.codigo_cliente, nomeCliente: l.nome_cliente, transportadorPlanilha: l.transportador, regra, pedidos });
       return { ...l, decisao };
     }),
   };
