@@ -56,23 +56,24 @@ async function aplicarRegras(linhas: PreviewRow[], regras: FaturamentoRegra[]): 
   // Compara códigos sem espaços/pontuação/zeros à esquerda (ex.: "C 001" = "C1")
   const chave = (v: string) => String(v ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '').replace(/^([A-Z]*)0+(?=\d)/, '$1');
   const regraDe = (cod: string) => regras.find((r) => chave(r.codigo_cliente) === chave(cod));
-  const precisaConsulta = linhas.some((l) => Number(regraDe(l.codigo_cliente)?.valor_minimo_frete ?? 0) > 0);
+  // Consulta sempre o Auge para alimentar a lógica de freight
   let pedidos: PedidoAugeMin[] | null = null;
   let fonte: string | null = null;
-  if (precisaConsulta) {
-    try {
-      const { data: resp, error } = await supabase.functions.invoke('auge-sync?action=romaneio_valor_minimo', { body: { data } });
-      if (error || !resp?.ok) throw new Error(resp?.error || error?.message || 'Falha na consulta');
-      pedidos = resp.pedidos as PedidoAugeMin[];
-      fonte = resp.fonte;
-    } catch (e) {
-      toast.error(`Não foi possível consultar os pedidos no Auge: ${(e as Error).message}. Usando regra por modalidade.`);
-    }
+  try {
+    const { data: resp, error } = await supabase.functions.invoke('auge-sync?action=romaneio_valor_minimo', { body: { data } });
+    if (error || !resp?.ok) throw new Error(resp?.error || error?.message || 'Falha na consulta');
+    pedidos = resp.pedidos as PedidoAugeMin[];
+    fonte = resp.fonte;
+  } catch (e) {
+    console.warn('[RomaneioImport] Falha na consulta Auge:', e);
   }
   return {
     data, fonte,
     linhas: linhas.map((l) => {
-      const decisao = decidirFrete({ codigoCliente: l.codigo_cliente, nomeCliente: l.nome_cliente, transportadorPlanilha: l.transportador, regra: regraDe(l.codigo_cliente), pedidos });
+      const regra = regraDe(l.codigo_cliente);
+      // Só aplica a regra se o cliente tiver valor mínimo configurado
+      const temMinimo = Number(regra?.valor_minimo_frete ?? 0) > 0;
+      const decisao = decidirFrete({ codigoCliente: l.codigo_cliente, nomeCliente: l.nome_cliente, transportadorPlanilha: l.transportador, regra: temMinimo ? regra : undefined, pedidos });
       return { ...l, decisao };
     }),
   };
