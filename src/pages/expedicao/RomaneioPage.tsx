@@ -121,7 +121,7 @@ function getTransportadoraCor(modalidade: string): string {
 // ============================================================
 
 export default function RomaneioPage() {
-  const [activeTab, setActiveTab] = useState<'romaneio' | 'regras' | 'consultar'>('romaneio');
+  const [activeTab, setActiveTab] = useState<'romaneio' | 'regras'>('romaneio');
   const [isGenerating, setIsGenerating] = useState(false);
   const [logs, setLogs] = useState<LogRomaneio[]>([]);
   const [showLogDetail, setShowLogDetail] = useState(false);
@@ -431,14 +431,6 @@ export default function RomaneioPage() {
           Romaneio
         </Button>
         <Button
-          variant={activeTab === 'consultar' ? 'default' : 'outline'}
-          onClick={() => setActiveTab('consultar')}
-          className="gap-2"
-        >
-          <Search className="w-4 h-4" />
-          Consultar Auge
-        </Button>
-        <Button
           variant={activeTab === 'regras' ? 'default' : 'outline'}
           onClick={() => setActiveTab('regras')}
           className="gap-2"
@@ -603,15 +595,6 @@ export default function RomaneioPage() {
       )}
 
       {/* ============================================================ */}
-      {/* TAB: CONSULTAR PEDIDOS AUGE                                   */}
-      {/* ============================================================ */}
-      {activeTab === 'consultar' && (
-        <ConsultaPedidos onPedidosSelecionados={(pedidos) => {
-          toast.success(`${pedidos.length} pedidos selecionados`);
-        }} />
-      )}
-
-      {/* ============================================================ */}
       {/* TAB: REGRAS DE FRETE                                         */}
       {/* ============================================================ */}
       {activeTab === 'regras' && (
@@ -767,15 +750,6 @@ export default function RomaneioPage() {
         </div>
       )}
 
-      {/* ============================================================ */}
-      {/* TAB: CONSULTAR PEDIDOS AUGE                                   */}
-      {/* ============================================================ */}
-      {activeTab === 'consultar' && (
-        <ConsultaPedidos onPedidosSelecionados={(pedidos) => {
-          toast.success(`${pedidos.length} pedidos selecionados`);
-        }} />
-      )}
-      
       {/* Import Dialog */}
       <RomaneioImportDialog
         open={showImportModal}
