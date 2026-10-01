@@ -31,7 +31,7 @@ export default function AutoSaveIndicator() {
     <div
       role="status"
       aria-live="polite"
-      className="pointer-events-none fixed inset-x-0 top-2 z-[100] flex justify-center"
+      className="pointer-events-none fixed inset-x-0 bottom-6 z-[100] flex justify-center"
     >
       <AnimatePresence>
         {visible && (
@@ -41,7 +41,7 @@ export default function AutoSaveIndicator() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.18 }}
-            className="flex items-center gap-2 rounded-full border border-emerald-500/30 bg-background/95 px-4 py-1.5 text-sm font-medium text-foreground shadow-lg backdrop-blur"
+            className="flex items-center gap-2 rounded-full border border-emerald-500/30 bg-background/95 px-4 py-2 text-sm font-medium text-foreground shadow-lg backdrop-blur"
           >
             <CheckCircle2 className="h-4 w-4 text-emerald-500" aria-hidden="true" />
             <span>Salvamento automático realizado</span>
