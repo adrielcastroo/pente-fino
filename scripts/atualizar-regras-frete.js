@@ -5,14 +5,14 @@
  * Uso: node scripts/atualizar-regras-frete.js
  */
 
-const { createClient } = require('@supabase/supabase-js');
-const fs = require('fs');
+import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
+import fs from 'fs';
 
-// Carrega variáveis de ambiente
-require('dotenv').config({ path: '.env.local' });
+dotenv.config({ path: '.env' });
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
   console.error('Erro: Variáveis de ambiente VITE_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY são necessárias.');
@@ -26,7 +26,6 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 // ============================================================
 
 function extrairMinimo(obs) {
-  // Pattern: 'acima de R$ X.XXX,XX'
   const idx = obs.toLowerCase().indexOf('acima de r');
   if (idx >= 0) {
     const after = obs.substring(idx + 9);
@@ -37,8 +36,6 @@ function extrairMinimo(obs) {
       if (!isNaN(valor) && valor > 0) return valor;
     }
   }
-
-  // Pattern: 'acima R$ X.XXX,XX'
   const idx2 = obs.toLowerCase().indexOf('acima r');
   if (idx2 >= 0) {
     const after = obs.substring(idx2 + 6);
@@ -49,12 +46,9 @@ function extrairMinimo(obs) {
       if (!isNaN(valor) && valor > 0) return valor;
     }
   }
-
-  // Verifica 'sem valor mínimo'
   if (obs.toLowerCase().includes('sem valor mínimo') || obs.includes('sem valor minimo')) {
     return 0;
   }
-
   return null;
 }
 
@@ -67,21 +61,14 @@ function extrairModalidade(obs) {
 
 function limparTransportadora(valor) {
   if (!valor) return null;
-
-  // Remove textos desnecessários no final
   let limpo = valor
     .replace(/\s*(?:quando|frete|transportadora)\b.*$/i, '')
     .replace(/\s*[:.]\s*$/, '')
     .replace(/\s*P\/\s*$/, '')
     .replace(/\s*P\/$/, '')
     .trim();
-
-  // Remove textos entre parênteses que são observações
   limpo = limpo.replace(/\s*\(.*?\)\s*/g, ' ').trim();
-
-  // Limpa espaços extras
   limpo = limpo.replace(/\s+/g, ' ');
-
   return limpo || null;
 }
 
@@ -92,52 +79,57 @@ function extrairTransportadora(obs, tipo) {
       return limparTransportadora(match[1]);
     }
   }
-
   if (tipo === 'FOB') {
     const match = obs.match(/(?:quando\s+)?(?:frete\s+)?fob\s*[:.]\s*([^,\n]+)/i);
     if (match) {
       return limparTransportadora(match[1]);
     }
   }
-
   return null;
 }
 
 function detectarPendencias(codigo, nome, obs, minimo, modal, cif, fob) {
   const pendencias = [];
-
-  // Cliente balcão - não envia por transportadora
   if (obs.includes('Cliente Balcão') || obs.includes('cliente balcão')) {
     pendencias.push('cliente_balcão');
-    return pendencias; // Balcão não precisa de transportadora
+    return pendencias;
   }
-
-  // Sem transportadora CIF definida
   if (!cif && minimo && minimo > 0) {
     pendencias.push('sem_cif');
   }
-
-  // Sem transportadora FOB definida
   if (!fob && minimo && minimo > 0) {
     pendencias.push('sem_fob');
   }
-
-  // Sem valor mínimo definido
-  if (minimo === null && !pendencias.includes('cliente_balcão')) {
+  if (minimo === null && !pendencias.includes('cliente_balcao')) {
     pendencias.push('sem_minimo');
   }
-
-  // CIF mal formatado
   if (cif && /P\/|quando fret|sempre que for/i.test(cif)) {
     pendencias.push('cif_mal_formatado');
   }
-
-  // FOB mal formatado
   if (fob && /frequencia|sempre que|solicitado|troca de|até 2m|tamanhos maiores/i.test(fob)) {
     pendencias.push('fob_mal_formatado');
   }
-
   return pendencias;
+}
+
+// ============================================================
+// Busca paginada (Supabase REST tem limite de 1000 por request)
+// ============================================================
+async function fetchAllRecords() {
+  let allData = [];
+  let page = 0;
+  while (true) {
+    const { data, error } = await supabase
+      .from('faturamento_regras')
+      .select('id, codigo_cliente, nome_cliente, modalidade_frete, valor_minimo_frete, transportadora_cif, transportadora_fob')
+      .range(page * 1000, (page + 1) * 1000 - 1);
+    if (error) throw error;
+    if (!data || data.length === 0) break;
+    allData = [...allData, ...data];
+    if (data.length < 1000) break;
+    page++;
+  }
+  return allData;
 }
 
 // ============================================================
@@ -153,10 +145,8 @@ async function processarArquivo() {
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i];
     if (!line.trim()) continue;
-
     const parts = line.split('\t');
     if (parts.length < 3) continue;
-
     const cod = parts[0];
     const nome = parts[1];
     const obs = parts[2];
@@ -178,48 +168,34 @@ async function processarArquivo() {
       obs
     });
   }
-
   console.log(`✅ Extraídos ${clientes.length} clientes do arquivo`);
 
-  // Busca regras existentes no banco
+  // Busca todas as regras existentes
   console.log('\n🔍 Buscando regras existentes no banco...');
-  const { data: regrasExistentes, error: errorBusca } = await supabase
-    .from('faturamento_regras')
-    .select('id, codigo_cliente, nome_cliente, modalidade_frete, valor_minimo_frete, transportadora_cif, transportadora_fob, pendencias');
-
-  if (errorBusca) {
-    console.error('❌ Erro ao buscar regras:', errorBusca);
+  let regrasExistentes = [];
+  try {
+    regrasExistentes = await fetchAllRecords();
+  } catch (e) {
+    console.error('❌ Erro ao buscar regras:', e.message);
     return;
   }
+  console.log(`✅ Encontradas ${regrasExistentes.length} regras no banco`);
 
-  const mapaRegras = new Map((regrasExistentes || []).map(r => [r.codigo_cliente, r]));
-  console.log(`✅ Encontradas ${regrasExistentes?.length || 0} regras no banco`);
+  const mapaRegras = new Map(regrasExistentes.map(r => [r.codigo_cliente, r]));
 
-  // Categoriza atualizações
   const paraAtualizar = [];
   const paraCriar = [];
-  const ignorados = [];
 
   clientes.forEach(c => {
     const existente = mapaRegras.get(c.codigo_cliente);
-
     if (existente) {
-      // Compara se há mudanças
       const mudou =
         existente.modalidade_frete !== c.modalidade_frete ||
         existente.valor_minimo_frete !== c.valor_minimo_frete ||
         existente.transportadora_cif !== c.transportadora_cif ||
-        existente.transportadora_fob !== c.transportadora_fob ||
-        JSON.stringify(existente.pendencias || []) !== JSON.stringify(c.pendencias);
-
+        existente.transportadora_fob !== c.transportadora_fob;
       if (mudou) {
-        paraAtualizar.push({
-          id: existente.id,
-          codigo_cliente: c.codigo_cliente,
-          ...c
-        });
-      } else {
-        ignorados.push(c);
+        paraAtualizar.push({ id: existente.id, ...c });
       }
     } else {
       paraCriar.push(c);
@@ -227,15 +203,12 @@ async function processarArquivo() {
   });
 
   console.log(`\n📊 Resumo:`);
-  console.log(`   Ignorados (sem mudança): ${ignorados.length}`);
   console.log(`   Para atualizar: ${paraAtualizar.length}`);
   console.log(`   Para criar: ${paraCriar.length}`);
 
   // Mostra pendências
   const comPendencias = clientes.filter(c => c.pendencias.length > 0);
   console.log(`\n⚠️  Clientes com pendências: ${comPendencias.length}`);
-
-  // Agrupa por tipo de pendência
   const contagemPendencias = {};
   comPendencias.forEach(c => {
     c.pendencias.forEach(p => {
@@ -249,6 +222,7 @@ async function processarArquivo() {
 
   // Atualiza regras
   console.log('\n🔄 Atualizando regras...');
+  let updateOk = 0, updateErr = 0;
   for (const regra of paraAtualizar) {
     const { error } = await supabase
       .from('faturamento_regras')
@@ -257,40 +231,52 @@ async function processarArquivo() {
         valor_minimo_frete: regra.valor_minimo_frete,
         transportadora_cif: regra.transportadora_cif,
         transportadora_fob: regra.transportadora_fob,
-        pendencias: regra.pendencias,
         updated_at: new Date().toISOString()
       })
       .eq('id', regra.id);
-
     if (error) {
-      console.error(`   ❌ Erro ao atualizar ${regra.codigo_cliente}:`, error.message);
+      updateErr++;
+      if (updateErr <= 5) console.error(`   ❌ Erro ao atualizar ${regra.codigo_cliente}:`, error.message);
+    } else {
+      updateOk++;
     }
   }
-  console.log(`   ✅ ${paraAtualizar.length} regras atualizadas`);
+  console.log(`   ✅ ${updateOk} regras atualizadas${updateErr > 0 ? `, ${updateErr} erros` : ''}`);
 
-  // Cria novas regras
+  // Cria novas regras (em batch de 100)
   console.log('\n➕ Criando novas regras...');
-  for (const regra of paraCriar) {
+  let createOk = 0, createErr = 0;
+  const BATCH_SIZE = 100;
+  for (let i = 0; i < paraCriar.length; i += BATCH_SIZE) {
+    const batch = paraCriar.slice(i, i + BATCH_SIZE);
     const { error } = await supabase
       .from('faturamento_regras')
-      .insert({
-        codigo_cliente: regra.codigo_cliente,
-        nome_cliente: regra.nome_cliente,
-        modalidade_frete: regra.modalidade_frete,
-        valor_minimo_frete: regra.valor_minimo_frete,
-        transportadora_cif: regra.transportadora_cif,
-        transportadora_fob: regra.transportadora_fob,
-        pendencias: regra.pendencias,
+      .insert(batch.map(r => ({
+        codigo_cliente: r.codigo_cliente,
+        nome_cliente: r.nome_cliente,
+        modalidade_frete: r.modalidade_frete,
+        valor_minimo_frete: r.valor_minimo_frete,
+        transportadora_cif: r.transportadora_cif,
+        transportadora_fob: r.transportadora_fob,
         status: 'ativo'
-      });
-
+      })));
     if (error) {
-      console.error(`   ❌ Erro ao criar ${regra.codigo_cliente}:`, error.message);
+      createErr += batch.length;
+      console.error(`   ❌ Erro no batch ${Math.floor(i / BATCH_SIZE) + 1}:`, error.message);
+    } else {
+      createOk += batch.length;
+    }
+    if ((i + BATCH_SIZE) % 500 === 0 || i + BATCH_SIZE >= paraCriar.length) {
+      console.log(`   Progresso: ${Math.min(i + BATCH_SIZE, paraCriar.length)}/${paraCriar.length}`);
     }
   }
-  console.log(`   ✅ ${paraCriar.length} regras criadas`);
+  console.log(`   ✅ ${createOk} regras criadas${createErr > 0 ? `, ${createErr} erros` : ''}`);
 
   console.log('\n✅ Processo concluído!');
+  console.log('\n💡 Lembre-se de aplicar a migração SQL no dashboard do Supabase para ativar as tags:');
+  console.log('   ALTER TABLE faturamento_regras ADD COLUMN IF NOT EXISTS pendencias text[];');
+  console.log('   CREATE INDEX IF NOT EXISTS idx_faturamento_regras_pendencias ON faturamento_regras USING GIN (pendencias);');
+  console.log('   Depois execute o script novamente para popular as tags de pendência.');
 }
 
 processarArquivo().catch(console.error);
