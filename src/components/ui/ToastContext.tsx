@@ -51,7 +51,6 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={{ toasts, addToast, dismissToast }}>
       {children}
-      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </ToastContext.Provider>
   );
 }
@@ -150,8 +149,8 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: string)
   );
 }
 
-// Toaster exportado para compatibilidade
-export function Toaster() {
+// Toaster para uso explícito
+export function Toaster({ position = 'top-center', ...props }: { position?: string; [key: string]: any }) {
   const { toasts, dismissToast } = useToast();
   return <ToastContainer toasts={toasts} onDismiss={dismissToast} />;
 }
