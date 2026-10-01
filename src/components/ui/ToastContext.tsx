@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info' | 'loading';
 
@@ -18,6 +18,10 @@ interface ToastContextType {
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
+// Singleton global para que chamadas fora do React funcionem
+let globalAddToast: ((type: ToastType, title: string, description?: string, options?: { duration?: number }) => void) | null = null;
+let globalDismissToast: ((id: string) => void) | null = null;
+
 // Hook para componentes React usarem
 export function useToast() {
   const context = useContext(ToastContext);
@@ -26,6 +30,52 @@ export function useToast() {
   }
   return context;
 }
+
+// API global para sonner-shim
+export const toastAPI = {
+  success: (title: string, description?: string, options?: { duration?: number }) => {
+    if (globalAddToast) {
+      globalAddToast('success', title, description, options);
+    } else {
+      console.log('[Toast success]', title, description);
+    }
+  },
+  error: (title: string, description?: string, options?: { duration?: number }) => {
+    if (globalAddToast) {
+      globalAddToast('error', title, description, options);
+    } else {
+      console.log('[Toast error]', title, description);
+    }
+  },
+  warning: (title: string, description?: string, options?: { duration?: number }) => {
+    if (globalAddToast) {
+      globalAddToast('warning', title, description, options);
+    } else {
+      console.log('[Toast warning]', title, description);
+    }
+  },
+  info: (title: string, description?: string, options?: { duration?: number }) => {
+    if (globalAddToast) {
+      globalAddToast('info', title, description, options);
+    } else {
+      console.log('[Toast info]', title, description);
+    }
+  },
+  loading: (title: string, description?: string, options?: { duration?: number }) => {
+    if (globalAddToast) {
+      globalAddToast('loading', title, description, options);
+    } else {
+      console.log('[Toast loading]', title, description);
+    }
+  },
+  dismiss: (id: string) => {
+    if (globalDismissToast) globalDismissToast(id);
+  },
+  remove: (id: string) => {
+    if (globalDismissToast) globalDismissToast(id);
+  },
+  removeAll: () => {},
+};
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -41,12 +91,21 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         setToasts(prev => prev.filter(t => t.id !== id));
       }, duration);
     }
-    return id;
   }, []);
 
   const dismissToast = useCallback((id: string) => {
     setToasts(prev => prev.filter(t => t.id !== id));
   }, []);
+
+  // Conectar a API global com as funções do provider
+  useEffect(() => {
+    globalAddToast = addToast;
+    globalDismissToast = dismissToast;
+    return () => {
+      globalAddToast = null;
+      globalDismissToast = null;
+    };
+  }, [addToast, dismissToast]);
 
   return (
     <ToastContext.Provider value={{ toasts, addToast, dismissToast }}>
@@ -59,9 +118,11 @@ function ToastContainer({ toasts, onDismiss }: { toasts: Toast[]; onDismiss: (id
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] flex flex-col gap-2 w-full max-w-md px-4">
+    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] flex flex-col gap-2 w-full max-w-md px-4 pointer-events-none">
       {toasts.map((toast) => (
-        <ToastItem key={toast.id} toast={toast} onDismiss={onDismiss} />
+        <div key={toast.id} className="pointer-events-auto">
+          <ToastItem toast={toast} onDismiss={onDismiss} />
+        </div>
       ))}
     </div>
   );
@@ -149,7 +210,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: string)
   );
 }
 
-// Toaster para uso explícito
+// Toaster component para uso explícito
 export function Toaster({ position = 'top-center', ...props }: { position?: string; [key: string]: any }) {
   const { toasts, dismissToast } = useToast();
   return <ToastContainer toasts={toasts} onDismiss={dismissToast} />;
