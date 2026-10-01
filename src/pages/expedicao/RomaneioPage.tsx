@@ -132,6 +132,8 @@ export default function RomaneioPage() {
   const [editingRule, setEditingRule] = useState<FaturamentoRegra | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('todos');
+  const [sortColumn, setSortColumn] = useState<keyof FaturamentoRegra>('codigo_cliente');
+  const [sortAsc, setSortAsc] = useState(true);
   const [romaneios, setRomaneios] = useState<RomaneioDia[]>([]);
   const [selectedRomaneio, setSelectedRomaneio] = useState<RomaneioDia | null>(null);
   const [importedLinhas, setImportedLinhas] = useState<PreviewRow[]>([]);
@@ -353,13 +355,47 @@ export default function RomaneioPage() {
   // ============================================================
 
   const filteredRegras = useMemo(() => {
-    return regras.filter(r => {
+    let result = regras.filter(r => {
       const matchesSearch = r.nome_cliente.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            r.codigo_cliente.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = filterStatus === 'todos' || r.status === filterStatus;
       return matchesSearch && matchesStatus;
     });
-  }, [regras, searchTerm, filterStatus]);
+    result.sort((a, b) => {
+      const aVal = a[sortColumn];
+      const bVal = b[sortColumn];
+      if (aVal == null) return 1;
+      if (bVal == null) return -1;
+      let comparison = 0;
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        comparison = aVal - bVal;
+      } else {
+        comparison = String(aVal).localeCompare(String(bVal), 'pt-BR');
+      }
+      return sortAsc ? comparison : -comparison;
+    });
+    return result;
+  }, [regras, searchTerm, filterStatus, sortColumn, sortAsc]);
+
+  // ============================================================
+  // Sort handlers
+  // ============================================================
+
+  const handleSort = (column: keyof FaturamentoRegra) => {
+    if (sortColumn === column) {
+      setSortAsc(prev => !prev);
+    } else {
+      setSortColumn(column);
+      setSortAsc(true);
+    }
+  };
+
+  const SortIndicator = ({ column }: { column: keyof FaturamentoRegra }) => {
+    if (sortColumn !== column) return <ChevronDown className="w-3 h-3 ml-1 opacity-0 group-hover:opacity-50" />;
+    return sortAsc
+      ? <ChevronUp className="w-3 h-3 ml-1" />
+      : <ChevronDown className="w-3 h-3 ml-1" />;
+  };
 
   // ============================================================
   // Stats
@@ -659,13 +695,27 @@ export default function RomaneioPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Código</TableHead>
-                      <TableHead>Nome do Cliente</TableHead>
-                      <TableHead>Modalidade</TableHead>
-                      <TableHead>Transportadora CIF</TableHead>
-                      <TableHead>Transportadora FOB</TableHead>
-                      <TableHead>Valor Mínimo</TableHead>
-                      <TableHead>Status</TableHead>
+                      <TableHead className="group cursor-pointer hover:bg-muted/50" onDoubleClick={() => handleSort('codigo_cliente')}>
+                        <span className="flex items-center">Código<SortIndicator column="codigo_cliente" /></span>
+                      </TableHead>
+                      <TableHead className="group cursor-pointer hover:bg-muted/50" onDoubleClick={() => handleSort('nome_cliente')}>
+                        <span className="flex items-center">Nome do Cliente<SortIndicator column="nome_cliente" /></span>
+                      </TableHead>
+                      <TableHead className="group cursor-pointer hover:bg-muted/50" onDoubleClick={() => handleSort('modalidade_frete')}>
+                        <span className="flex items-center">Modalidade<SortIndicator column="modalidade_frete" /></span>
+                      </TableHead>
+                      <TableHead className="group cursor-pointer hover:bg-muted/50" onDoubleClick={() => handleSort('transportadora_cif')}>
+                        <span className="flex items-center">Transportadora CIF<SortIndicator column="transportadora_cif" /></span>
+                      </TableHead>
+                      <TableHead className="group cursor-pointer hover:bg-muted/50" onDoubleClick={() => handleSort('transportadora_fob')}>
+                        <span className="flex items-center">Transportadora FOB<SortIndicator column="transportadora_fob" /></span>
+                      </TableHead>
+                      <TableHead className="group cursor-pointer hover:bg-muted/50 text-right" onDoubleClick={() => handleSort('valor_minimo_frete')}>
+                        <span className="flex items-center justify-end">Valor Mínimo<SortIndicator column="valor_minimo_frete" /></span>
+                      </TableHead>
+                      <TableHead className="group cursor-pointer hover:bg-muted/50" onDoubleClick={() => handleSort('status')}>
+                        <span className="flex items-center">Status<SortIndicator column="status" /></span>
+                      </TableHead>
                       <TableHead>Ações</TableHead>
                     </TableRow>
                   </TableHeader>
