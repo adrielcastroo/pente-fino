@@ -2869,6 +2869,7 @@ export type Database = {
           modalidade_frete: string
           nome_cliente: string
           observacoes: string | null
+          pendencias: string[] | null
           status: string
           transportadora_cif: string | null
           transportadora_fob: string | null
@@ -2887,6 +2888,7 @@ export type Database = {
           modalidade_frete?: string
           nome_cliente: string
           observacoes?: string | null
+          pendencias?: string[] | null
           status?: string
           transportadora_cif?: string | null
           transportadora_fob?: string | null
@@ -2905,6 +2907,7 @@ export type Database = {
           modalidade_frete?: string
           nome_cliente?: string
           observacoes?: string | null
+          pendencias?: string[] | null
           status?: string
           transportadora_cif?: string | null
           transportadora_fob?: string | null

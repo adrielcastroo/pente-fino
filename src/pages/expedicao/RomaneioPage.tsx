@@ -47,6 +47,8 @@ import { PreviewRow } from '@/components/expedicao/RomaneioImportDialog';
 // Types
 // ============================================================
 
+type PendenciaTipo = 'sem_cif' | 'sem_fob' | 'sem_minimo' | 'sem_transportadora' | 'cliente_balcão' | 'cif_mal_formatado' | 'fob_mal_formatado';
+
 interface FaturamentoRegra {
   id: string;
   codigo_cliente: string;
@@ -61,6 +63,7 @@ interface FaturamentoRegra {
   condicao_pagamento: string | null;
   limite_credito: number | null;
   observacoes: string | null;
+  pendencias: PendenciaTipo[] | null;
   dados_extra: Record<string, any>;
   created_at: string;
   updated_at: string;
@@ -131,6 +134,7 @@ export default function RomaneioPage() {
   const [editingRule, setEditingRule] = useState<FaturamentoRegra | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('todos');
+  const [filterPendencias, setFilterPendencias] = useState<string>('todos');
   const [sortColumn, setSortColumn] = useState<keyof FaturamentoRegra>('codigo_cliente');
   const [sortAsc, setSortAsc] = useState(true);
   const [romaneios, setRomaneios] = useState<RomaneioDia[]>([]);
@@ -353,12 +357,35 @@ export default function RomaneioPage() {
   // Filtered data
   // ============================================================
 
+  // Mapeamento de labels para as pendências
+  const PENDENCIAS_LABELS: Record<string, string> = {
+    'sem_cif': 'Sem CIF',
+    'sem_fob': 'Sem FOB',
+    'sem_minimo': 'Sem Mínimo',
+    'sem_transportadora': 'Sem Transportadora',
+    'cliente_balcão': 'Cliente Balcão',
+    'cif_mal_formatado': 'CIF Mal Formatado',
+    'fob_mal_formatado': 'FOB Mal Formatado',
+  };
+
+  const PENDENCIAS_CORES: Record<string, string> = {
+    'sem_cif': 'bg-red-100 text-red-800 border-red-200',
+    'sem_fob': 'bg-orange-100 text-orange-800 border-orange-200',
+    'sem_minimo': 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    'sem_transportadora': 'bg-purple-100 text-purple-800 border-purple-200',
+    'cliente_balcão': 'bg-blue-100 text-blue-800 border-blue-200',
+    'cif_mal_formatado': 'bg-pink-100 text-pink-800 border-pink-200',
+    'fob_mal_formatado': 'bg-teal-100 text-teal-800 border-teal-200',
+  };
+
   const filteredRegras = useMemo(() => {
     let result = regras.filter(r => {
       const matchesSearch = r.nome_cliente.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            r.codigo_cliente.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = filterStatus === 'todos' || r.status === filterStatus;
-      return matchesSearch && matchesStatus;
+      const matchesPendencias = filterPendencias === 'todos' ||
+        (r.pendencias || []).includes(filterPendencias);
+      return matchesSearch && matchesStatus && matchesPendencias;
     });
     result.sort((a, b) => {
       const aVal = a[sortColumn];
@@ -374,7 +401,7 @@ export default function RomaneioPage() {
       return sortAsc ? comparison : -comparison;
     });
     return result;
-  }, [regras, searchTerm, filterStatus, sortColumn, sortAsc]);
+  }, [regras, searchTerm, filterStatus, filterPendencias, sortColumn, sortAsc]);
 
   // ============================================================
   // Sort handlers
@@ -406,6 +433,8 @@ export default function RomaneioPage() {
     inativas: regras.filter(r => r.status === 'inativado').length,
     comCIF: regras.filter(r => r.transportadora_cif).length,
     comFOB: regras.filter(r => r.transportadora_fob).length,
+    comPendencias: regras.filter(r => (r.pendencias || []).length > 0).length,
+    clienteBalcao: regras.filter(r => (r.pendencias || []).includes('cliente_balcão')).length,
   }), [regras]);
 
   // ============================================================
@@ -632,8 +661,36 @@ export default function RomaneioPage() {
             </Card>
           </div>
 
+          {/* Stats Cards com Pendências */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-2xl font-bold text-red-600">{stats.comPendencias}</div>
+                <div className="text-sm text-muted-foreground">Com Pendências</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-2xl font-bold text-blue-600">{stats.clienteBalcao}</div>
+                <div className="text-sm text-muted-foreground">Clientes Balcão</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-2xl font-bold text-orange-600">{regras.filter(r => (r.pendencias || []).includes('sem_cif')).length}</div>
+                <div className="text-sm text-muted-foreground">Sem CIF</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-2xl font-bold text-yellow-600">{regras.filter(r => (r.pendencias || []).includes('sem_fob')).length}</div>
+                <div className="text-sm text-muted-foreground">Sem FOB</div>
+              </CardContent>
+            </Card>
+          </div>
+
           {/* Filters & Actions */}
-          <div className="flex flex-wrap gap-4 items-center">
+          <div className="flex flex-wrap gap-4 items-center mb-4">
             <Input
               placeholder="Buscar cliente..."
               value={searchTerm}
@@ -648,6 +705,20 @@ export default function RomaneioPage() {
                 <SelectItem value="todos">Todos</SelectItem>
                 <SelectItem value="ativo">Ativos</SelectItem>
                 <SelectItem value="inativado">Inativos</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filterPendencias} onValueChange={setFilterPendencias}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todas Pendências</SelectItem>
+                <SelectItem value="sem_cif">Sem CIF</SelectItem>
+                <SelectItem value="sem_fob">Sem FOB</SelectItem>
+                <SelectItem value="sem_minimo">Sem Mínimo</SelectItem>
+                <SelectItem value="cliente_balcão">Cliente Balcão</SelectItem>
+                <SelectItem value="cif_mal_formatado">CIF Mal Formatado</SelectItem>
+                <SelectItem value="fob_mal_formatado">FOB Mal Formatado</SelectItem>
               </SelectContent>
             </Select>
             <Button onClick={() => setShowImportModal(true)} variant="outline" className="gap-2">
@@ -698,12 +769,13 @@ export default function RomaneioPage() {
                       <TableHead className="group cursor-pointer hover:bg-muted/50" onDoubleClick={() => handleSort('status')}>
                         <span className="flex items-center">Status<SortIndicator column="status" /></span>
                       </TableHead>
+                      <TableHead>Tags/Pendências</TableHead>
                       <TableHead>Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredRegras.map((regra) => (
-                      <TableRow key={regra.id}>
+                      <TableRow key={regra.id} className={regra.pendencias && regra.pendencias.length > 0 ? 'bg-yellow-50 dark:bg-yellow-950/20' : ''}>
                         <TableCell className="font-mono">{regra.codigo_cliente}</TableCell>
                         <TableCell className="font-medium">{regra.nome_cliente}</TableCell>
                         <TableCell>
@@ -712,8 +784,8 @@ export default function RomaneioPage() {
                         <TableCell>{regra.transportadora_cif || '-'}</TableCell>
                         <TableCell>{regra.transportadora_fob || '-'}</TableCell>
                         <TableCell>
-                          {regra.valor_minimo_frete 
-                            ? formatarMoeda(regra.valor_minimo_frete) 
+                          {regra.valor_minimo_frete
+                            ? formatarMoeda(regra.valor_minimo_frete)
                             : '-'}
                         </TableCell>
                         <TableCell>
@@ -722,16 +794,33 @@ export default function RomaneioPage() {
                           </Badge>
                         </TableCell>
                         <TableCell>
+                          <div className="flex flex-wrap gap-1">
+                            {regra.pendencias && regra.pendencias.length > 0 ? (
+                              regra.pendencias.map((p) => (
+                                <Badge
+                                  key={p}
+                                  variant="outline"
+                                  className={`text-[10px] px-1.5 py-0 ${PENDENCIAS_CORES[p] || 'bg-gray-100 text-gray-800'}`}
+                                >
+                                  {PENDENCIAS_LABELS[p] || p}
+                                </Badge>
+                              ))
+                            ) : (
+                              <span className="text-xs text-muted-foreground">-</span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
                           <div className="flex gap-2">
-                            <Button 
-                              variant="ghost" 
+                            <Button
+                              variant="ghost"
                               size="sm"
                               onClick={() => setEditingRule(regra)}
                             >
                               Editar
                             </Button>
-                            <Button 
-                              variant="ghost" 
+                            <Button
+                              variant="ghost"
                               size="sm"
                               onClick={() => handleDeleteRule(regra.codigo_cliente)}
                             >
