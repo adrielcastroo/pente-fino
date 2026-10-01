@@ -11,6 +11,7 @@ import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Palette, RefreshCw, Search, Pencil, Loader2, AlertTriangle, CheckCircle2, X, ArrowDownAZ, ArrowUpAZ, ArrowUp01, ArrowDown01, Edit3 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useOperationFeedback } from '@/components/ui/OperationFeedback';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import AcabamentoItemEditDialog from '@/components/acabamentos/AcabamentoItemEditDialog';
@@ -586,15 +587,12 @@ function AtualizarDescricaoTab({
   onAtualizar,
   atualizando
 }: any) {
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [sucessCount, setSucessCount] = useState(0);
+  const { show } = useOperationFeedback();
 
   const handleAtualizar = async () => {
     const result = await onAtualizar();
     if (result?.success) {
-      setSucessCount(result.count);
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 1500);
+      show('success', 'Sucesso!', `Descrição atualizada em ${result.count} acabamento${result.count > 1 ? 's' : ''}`);
     }
   };
 
@@ -749,24 +747,6 @@ function AtualizarDescricaoTab({
         </Card>
       )}
 
-      {/* Modal de sucesso */}
-      {showSuccess && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-background border rounded-lg p-8 shadow-lg animate-in fade-in zoom-in duration-200">
-            <div className="flex flex-col items-center gap-3">
-              <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
-                <CheckCircle2 className="w-10 h-10 text-green-600 animate-success" />
-              </div>
-              <div className="text-center">
-                <div className="text-lg font-semibold text-foreground">Sucesso!</div>
-                <div className="text-sm text-muted-foreground mt-1">
-                  Descrição atualizada em {sucessCount} acabamento{sucessCount > 1 ? 's' : ''}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
