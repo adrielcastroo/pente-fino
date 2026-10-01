@@ -5,7 +5,7 @@ import { toastAPI, Toaster } from './components/ui/ToastContext';
 
 // Re-exportar como módulo sonner compatível
 export const toast = toastAPI;
-export const Toast = ToastAPI; // alias para compatibilidade
+export const Toast = toastAPI; // alias para compatibilidade
 export { Toaster };
 export default toastAPI;
 
