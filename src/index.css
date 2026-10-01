@@ -686,8 +686,8 @@ html.compact main .space-y-6 > * + * { margin-top: 1rem; }
 .animate-progress-info { animation: progress-info 4s linear forwards; }
 
 /* Toast animations */
-@keyframes slide-in { from { transform: translateX(-50%) translateY(-20px); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }
-.animate-slide-in { animation: slide-in 0.3s ease-out; }
+@keyframes slide-in { from { transform: translateY(-40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.animate-slide-in { animation: slide-in 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
 
 @keyframes progress { from { width: 100%; } to { width: 0%; } }
 .animate-progress { animation: progress 4s linear forwards; }

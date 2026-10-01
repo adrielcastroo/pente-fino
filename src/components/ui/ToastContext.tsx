@@ -18,11 +18,9 @@ interface ToastContextType {
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
-// Singleton global para que chamadas fora do React funcionem
 let globalAddToast: ((type: ToastType, title: string, description?: string, options?: { duration?: number }) => void) | null = null;
 let globalDismissToast: ((id: string) => void) | null = null;
 
-// Hook para componentes React usarem
 export function useToast() {
   const context = useContext(ToastContext);
   if (!context) {
@@ -31,41 +29,30 @@ export function useToast() {
   return context;
 }
 
-// API global para sonner-shim
 export const toastAPI = {
   success: (title: string, description?: string, options?: { duration?: number }) => {
     if (globalAddToast) {
       globalAddToast('success', title, description, options);
-    } else {
-      console.log('[Toast success]', title, description);
     }
   },
   error: (title: string, description?: string, options?: { duration?: number }) => {
     if (globalAddToast) {
       globalAddToast('error', title, description, options);
-    } else {
-      console.log('[Toast error]', title, description);
     }
   },
   warning: (title: string, description?: string, options?: { duration?: number }) => {
     if (globalAddToast) {
       globalAddToast('warning', title, description, options);
-    } else {
-      console.log('[Toast warning]', title, description);
     }
   },
   info: (title: string, description?: string, options?: { duration?: number }) => {
     if (globalAddToast) {
       globalAddToast('info', title, description, options);
-    } else {
-      console.log('[Toast info]', title, description);
     }
   },
   loading: (title: string, description?: string, options?: { duration?: number }) => {
     if (globalAddToast) {
       globalAddToast('loading', title, description, options);
-    } else {
-      console.log('[Toast loading]', title, description);
     }
   },
   dismiss: (id: string) => {
@@ -84,7 +71,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     const id = `toast_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const duration = options?.duration ?? 4000;
     const toast: Toast = { id, type, title, description, duration };
-    setToasts(prev => [toast, ...prev]);
+    // Substitui qualquer toast anterior — apenas o mais recente fica visível
+    setToasts([toast]);
 
     if (duration > 0) {
       setTimeout(() => {
@@ -97,7 +85,6 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     setToasts(prev => prev.filter(t => t.id !== id));
   }, []);
 
-  // Conectar a API global com as funções do provider
   useEffect(() => {
     globalAddToast = addToast;
     globalDismissToast = dismissToast;
@@ -132,19 +119,19 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: string)
   const { type, title, description, id } = toast;
 
   const styles = {
-    success: 'bg-emerald-50 border-emerald-200 text-emerald-900 dark:bg-emerald-950/30 dark:border-emerald-800 dark:text-emerald-100',
-    error: 'bg-red-50 border-red-200 text-red-900 dark:bg-red-950/30 dark:border-red-800 dark:text-red-100',
-    warning: 'bg-amber-50 border-amber-200 text-amber-900 dark:bg-amber-950/30 dark:border-amber-800 dark:text-amber-100',
-    info: 'bg-blue-50 border-blue-200 text-blue-900 dark:bg-blue-950/30 dark:border-blue-800 dark:text-blue-100',
-    loading: 'bg-slate-50 border-slate-200 text-slate-900 dark:bg-slate-950/30 dark:border-slate-800 dark:text-slate-100',
+    success: 'border-emerald-500/30 bg-background/95 text-foreground dark:bg-background/95 dark:text-foreground',
+    error: 'border-red-500/30 bg-background/95 text-foreground dark:bg-background/95 dark:text-foreground',
+    warning: 'border-amber-500/30 bg-background/95 text-foreground dark:bg-background/95 dark:text-foreground',
+    info: 'border-blue-500/30 bg-background/95 text-foreground dark:bg-background/95 dark:text-foreground',
+    loading: 'border-slate-500/30 bg-background/95 text-foreground dark:bg-background/95 dark:text-foreground',
   };
 
-  const iconBg = {
-    success: 'bg-emerald-500',
-    error: 'bg-red-500',
-    warning: 'bg-amber-500',
-    info: 'bg-blue-500',
-    loading: 'bg-slate-500',
+  const iconColor = {
+    success: 'text-emerald-500',
+    error: 'text-red-500',
+    warning: 'text-amber-500',
+    info: 'text-blue-500',
+    loading: 'text-slate-500',
   };
 
   const icons = {
@@ -182,23 +169,18 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: string)
 
   return (
     <div className={`
-      relative flex items-start gap-3 px-4 py-3 rounded-lg shadow-lg border
+      flex items-center gap-2 rounded-full border shadow-lg backdrop-blur
       animate-slide-in
       ${styles[type]}
     `} role="alert">
-      <div className={`
-        flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-white
-        ${iconBg[type]}
-      `}>
+      <span className={`ml-3 ${iconColor[type]}`}>
         {icons[type]}
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold">{title}</p>
-        {description && <p className="text-xs mt-0.5 opacity-80">{description}</p>}
-      </div>
+      </span>
+      <span className="text-sm font-medium">{title}</span>
+      {description && <span className="text-xs opacity-70">{description}</span>}
       <button
         onClick={() => onDismiss(id)}
-        className="flex-shrink-0 opacity-50 hover:opacity-100 transition-opacity"
+        className="mr-2 opacity-50 hover:opacity-100 transition-opacity"
         aria-label="Fechar"
       >
         <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -210,8 +192,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: string)
   );
 }
 
-// Toaster component para uso explícito
-export function Toaster({ position = 'top-center', ...props }: { position?: string; [key: string]: any }) {
+export function Toaster({ position = 'bottom-center', ...props }: { position?: string; [key: string]: any }) {
   const { toasts, dismissToast } = useToast();
   return <ToastContainer toasts={toasts} onDismiss={dismissToast} />;
 }

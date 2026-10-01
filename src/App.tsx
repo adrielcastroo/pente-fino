@@ -140,7 +140,9 @@ const App = () => (
         <BrowserRouter>
           <AuthProvider>
             <PageAccessProvider>
-            <Suspense fallback={<div className="h-screen w-screen flex items-center justify-center bg-background"><div className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin" /></div>}>
+              <ToastProvider>
+                <Toaster position="top-center" />
+                <Suspense fallback={<div className="h-screen w-screen flex items-center justify-center bg-background"><div className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin" /></div>}>
 
               <Routes>
                 <Route path="/login" element={<LoginRoute><LoginPage /></LoginRoute>} />
@@ -332,12 +334,10 @@ const App = () => (
               <ReleaseRegistrar />
               {/* <AgentChatWidget /> */}
             </Suspense>
-            </PageAccessProvider>
-          </AuthProvider>
-          <ToastProvider>
-            <Toaster position="top-center" />
-          </ToastProvider>
-        </BrowserRouter>
+                </ToastProvider>
+              </PageAccessProvider>
+            </AuthProvider>
+          </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>
