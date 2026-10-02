@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Upload, FileSpreadsheet, CheckCircle2, AlertCircle, ArrowRight } from 'lucide-react';
+import { Upload, FileSpreadsheet, CheckCircle2, AlertCircle, ArrowRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -219,11 +219,19 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported, r
                 onChange={handleFileSelect}
               />
               {arquivo ? (
-                <div className="space-y-2">
-                  <CheckCircle2 className="w-12 h-12 mx-auto text-green-500" />
-                  <p className="font-medium">{arquivo.name}</p>
-                  <p className="text-sm text-muted-foreground">{previewCount} clientes encontrados</p>
-                </div>
+                isLoading ? (
+                  <div className="space-y-3">
+                    <Loader2 className="w-12 h-12 mx-auto text-blue-500 animate-spin" />
+                    <p className="font-medium">Consultando Auge...</p>
+                    <p className="text-sm text-muted-foreground">Aplicando regras de frete</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <CheckCircle2 className="w-12 h-12 mx-auto text-green-500" />
+                    <p className="font-medium">{arquivo.name}</p>
+                    <p className="text-sm text-muted-foreground">{previewCount} clientes encontrados</p>
+                  </div>
+                )
               ) : (
                 <div className="space-y-2">
                   <Upload className="w-12 h-12 mx-auto text-muted-foreground" />
