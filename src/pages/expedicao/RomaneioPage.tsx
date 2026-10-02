@@ -766,9 +766,6 @@ export default function RomaneioPage() {
                       <TableHead className="group cursor-pointer hover:bg-muted/50 text-right" onDoubleClick={() => handleSort('valor_minimo_frete')}>
                         <span className="flex items-center justify-end">Valor Mínimo<SortIndicator column="valor_minimo_frete" /></span>
                       </TableHead>
-                      <TableHead className="group cursor-pointer hover:bg-muted/50" onDoubleClick={() => handleSort('status')}>
-                        <span className="flex items-center">Status<SortIndicator column="status" /></span>
-                      </TableHead>
                       <TableHead>Tags/Pendências</TableHead>
                       <TableHead>Ações</TableHead>
                     </TableRow>
@@ -787,11 +784,6 @@ export default function RomaneioPage() {
                           {regra.valor_minimo_frete
                             ? formatarMoeda(regra.valor_minimo_frete)
                             : '-'}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={regra.status === 'ativo' ? 'default' : 'destructive'}>
-                            {regra.status}
-                          </Badge>
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-wrap gap-1">
