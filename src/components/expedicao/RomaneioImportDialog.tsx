@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Upload, FileSpreadsheet, CheckCircle2, AlertCircle, ArrowRight, Loader2 } from 'lucide-react';
+import { Upload, FileSpreadsheet, CheckCircle2, AlertCircle, ArrowRight, Loader2, Truck, Package, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import { supabase } from '@/integrations/supabase/client';
@@ -98,7 +99,7 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported, r
       const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
       const jsonData = XLSX.utils.sheet_to_json<any>(firstSheet, { header: 1 });
       // Localiza o cabeçalho em qualquer coluna das primeiras 30 linhas
-      const norm = (v: unknown) => String(v ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+      const norm = (v: unknown) => String(v ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
       let headerRowIndex = -1;
       for (let i = 0; i < Math.min(30, jsonData.length); i++) {
         const cells = (jsonData[i] ?? []).map(norm);
@@ -108,27 +109,18 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported, r
         }
       }
       if (headerRowIndex === -1) {
-              // Tenta novamente com padrões mais flexíveis
-              // Procura por qualquer célula que contenha "codigo", "cliente", "nome" ou "produto" em quaisquer posições
-              for (let i = 0; i < Math.min(30, jsonData.length); i++) {
-                const row = jsonData[i] ?? [];
-                const rowStr = String(row).toLowerCase();
-                if (/cód|codigo|cliente|nome|produto/.test(rowStr) && row.length > 0) {
-                  // Encontrou linhas com indicadores de cabeçalho - ignora e continua
-                }
-              }
-              toast.error('Não encontrei o cabeçalho da planilha. Verifique se a coluna "Cód." ou "Código" está presente.');
-              return;
-            }
+        toast.error('Não encontrei o cabeçalho da planilha. Verifique se a coluna "Cód." ou "Código" está presente.');
+        return;
+      }
       const header: string[] = (jsonData[headerRowIndex] ?? []).map(norm);
-            const col = (re: RegExp, fb: number) => { const i = header.findIndex((h) => re.test(h)); return i >= 0 ? i : fb; };
-            const cCod = col(/^cod|^codigo|código|cardcode/i, 0);
-            const cNome = col(/nome|razao|cliente/i, 1);
-            const cNf = col(/^nf|nota/i, 2);
-            const cData = col(/data|dt/i, 3);
-            const cTransp = col(/transp|transport/i, 4);
-            const cVol = col(/vol|qtd|quant/i, 5);
-            const cObs = col(/obs|observacoes/i, 6);
+      const col = (re: RegExp, fb: number) => { const i = header.findIndex((h) => re.test(h)); return i >= 0 ? i : fb; };
+      const cCod = col(/^cod|^codigo|código|cardcode/i, 0);
+      const cNome = col(/nome|razao|cliente/i, 1);
+      const cNf = col(/^nf|nota/i, 2);
+      const cData = col(/data|dt/i, 3);
+      const cTransp = col(/transp|transport/i, 4);
+      const cVol = col(/vol|qtd|quant/i, 5);
+      const cObs = col(/obs|observacoes/i, 6);
       const toIso = (v: unknown): string => {
         if (typeof v === 'number') {
           const d = XLSX.SSF.parse_date_code(v);
@@ -166,7 +158,6 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported, r
       if (mapped.length === 0) {
         toast.error('Nenhuma linha de dados encontrada na planilha');
       }
-      // onImported agora é chamado apenas ao clicar "Confirmar Importação" no DialogFooter
     } catch (error) {
       console.error(error);
       toast.error('Erro ao ler arquivo Excel');
@@ -192,23 +183,34 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported, r
     onOpenChange(false);
   };
 
+  // Stats
+  const atingidos = preview.filter(r => r.decisao?.situacao === 'atingido').length;
+  const naoAtigidos = preview.filter(r => r.decisao?.situacao !== 'atingido').length;
+  const comExcecao = preview.filter(r => r.decisao?.flagExcecao).length;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto w-[95vw]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <FileSpreadsheet className="w-5 h-5" />
-            Importar Romaneio de Carga
-          </DialogTitle>
-          <DialogDescription>
-            Importe uma planilha Excel com os clientes do romaneio.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label>Planilha Excel</Label>
+      <DialogContent className="max-w-7xl w-[98vw] max-h-[95vh] p-0 overflow-hidden">
+        {/* Header */}
+        <div className="px-6 pt-6 pb-4 border-b">
+          <DialogHeader className="px-0">
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <FileSpreadsheet className="w-5 h-5" />
+              Importar Romaneio de Carga
+            </DialogTitle>
+            <DialogDescription>
+              Importe uma planilha Excel com os clientes do romaneio. O sistema aplicará automaticamente as regras de frete.
+            </DialogDescription>
+          </DialogHeader>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto px-6 py-5">
+          {/* Upload Area */}
+          <div className="mb-6">
+            <Label className="text-sm font-medium mb-2 block">Planilha Excel</Label>
             <div
-              className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-primary transition-colors"
+              className="border-2 border-dashed border-border rounded-xl p-8 text-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-all duration-200"
               onClick={() => fileInputRef.current?.click()}
             >
               <input
@@ -220,88 +222,169 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported, r
               />
               {arquivo ? (
                 isLoading ? (
-                  <div className="space-y-3">
-                    <Loader2 className="w-12 h-12 mx-auto text-blue-500 animate-spin" />
-                    <p className="font-medium">Consultando Auge...</p>
-                    <p className="text-sm text-muted-foreground">Aplicando regras de frete</p>
+                  <div className="space-y-3 py-4">
+                    <div className="w-16 h-16 mx-auto rounded-full bg-blue-50 flex items-center justify-center">
+                      <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-lg">{arquivo.name}</p>
+                      <p className="text-sm text-muted-foreground mt-1">Consultando Auge e aplicando regras de frete...</p>
+                    </div>
                   </div>
                 ) : (
-                  <div className="space-y-2">
-                    <CheckCircle2 className="w-12 h-12 mx-auto text-green-500" />
-                    <p className="font-medium">{arquivo.name}</p>
-                    <p className="text-sm text-muted-foreground">{previewCount} clientes encontrados</p>
+                  <div className="space-y-3 py-4">
+                    <div className="w-16 h-16 mx-auto rounded-full bg-green-50 flex items-center justify-center">
+                      <CheckCircle2 className="w-8 h-8 text-green-500" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-lg">{arquivo.name}</p>
+                      <p className="text-sm text-muted-foreground mt-1">{previewCount} clientes encontrados</p>
+                    </div>
                   </div>
                 )
               ) : (
-                <div className="space-y-2">
-                  <Upload className="w-12 h-12 mx-auto text-muted-foreground" />
-                  <p className="font-medium">Clique para selecionar a planilha</p>
-                  <p className="text-sm text-muted-foreground">Formatos aceitos: .xlsx, .xls</p>
+                <div className="space-y-3 py-4">
+                  <div className="w-16 h-16 mx-auto rounded-full bg-muted flex items-center justify-center">
+                    <Upload className="w-8 h-8 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-lg">Clique para selecionar a planilha</p>
+                    <p className="text-sm text-muted-foreground mt-1">Formatos aceitos: .xlsx, .xls</p>
+                  </div>
                 </div>
               )}
             </div>
           </div>
+
+          {/* Stats Cards */}
           {preview.length > 0 && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>Pré-visualização · romaneio de {dataRomaneio.split('-').reverse().join('/')}</Label>
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+                <Card>
+                  <CardContent className="pt-4 pb-3">
+                    <div className="flex items-center gap-2">
+                      <Package className="w-4 h-4 text-blue-500" />
+                      <div>
+                        <p className="text-2xl font-bold">{previewCount}</p>
+                        <p className="text-xs text-muted-foreground">Total</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-4 pb-3">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-green-500" />
+                      <div>
+                        <p className="text-2xl font-bold text-green-600">{atingidos}</p>
+                        <p className="text-xs text-muted-foreground">Atingido</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-4 pb-3">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-orange-500" />
+                      <div>
+                        <p className="text-2xl font-bold text-orange-600">{naoAtigidos}</p>
+                        <p className="text-xs text-muted-foreground">Não Atingido</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-4 pb-3">
+                    <div className="flex items-center gap-2">
+                      <Truck className="w-4 h-4 text-purple-500" />
+                      <div>
+                        <p className="text-2xl font-bold text-purple-600">{preview.filter(r => r.decisao?.transportadora).length}</p>
+                        <p className="text-xs text-muted-foreground">Transportadora</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Preview Header */}
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <Label className="text-sm font-medium">Pré-visualização</Label>
+                  <p className="text-xs text-muted-foreground">Romaneio de {dataRomaneio.split('-').reverse().join('/')}</p>
+                </div>
                 <div className="flex gap-2">
-                  {fonte && <Badge variant="outline">Pedidos: {fonte === 'auge' ? 'Auge ao vivo' : 'cópia local'}</Badge>}
+                  {fonte && (
+                    <Badge variant="outline" className="gap-1">
+                      <DollarSign className="w-3 h-3" />
+                      Pedidos: {fonte === 'auge' ? 'Auge ao vivo' : 'cópia local'}
+                    </Badge>
+                  )}
                   <Badge variant="secondary">{previewCount} total</Badge>
                 </div>
               </div>
-              <div className="border rounded-lg overflow-hidden">
-                <div className="overflow-auto max-h-[50vh]">
-                <table className="w-full min-w-[1100px] text-sm table-fixed border-collapse">
-                  <thead className="bg-muted sticky top-0 z-10">
-                    <tr>
-                      <th className="w-[80px] px-3 py-2 text-left font-medium">Código</th>
-                      <th className="w-[180px] px-3 py-2 text-left font-medium">Nome</th>
-                      <th className="w-[80px] px-3 py-2 text-left font-medium">NF</th>
-                      <th className="w-[100px] px-3 py-2 text-left font-medium">Data</th>
-                      <th className="w-[120px] px-3 py-2 text-left font-medium">Planilha</th>
-                      <th className="w-[60px] px-3 py-2 text-right font-medium">Vol.</th>
-                      <th className="w-[110px] px-3 py-2 text-right font-medium">Valor pedidos</th>
-                      <th className="w-[100px] px-3 py-2 text-right font-medium">Mínimo</th>
-                      <th className="w-[130px] px-3 py-2 text-left font-medium">Situação</th>
-                      <th className="w-[140px] px-3 py-2 text-left font-medium">Transportadora</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {preview.map((row, idx) => (
-                      <tr key={idx} className="border-t hover:bg-muted/50">
-                        <td className="px-3 py-2 font-mono text-xs break-all">{row.codigo_cliente}</td>
-                        <td className="px-3 py-2 text-xs break-words">{row.nome_cliente}</td>
-                        <td className="px-3 py-2 text-xs">{row.nf || '-'}</td>
-                        <td className="px-3 py-2 text-xs">{row.data || '-'}</td>
-                        <td className="px-3 py-2 text-xs"><Badge variant="outline" className="text-[10px]">{row.transportador || '-'}</Badge></td>
-                        <td className="px-3 py-2 text-xs text-right">{row.volume}</td>
-                        <td className="px-3 py-2 text-xs text-right" title={row.decisao?.pedidos.join(', ')}>
-                          {moeda(row.decisao?.valorPedidos ?? null)}{row.decisao?.qtdPedidos ? ` (${row.decisao.qtdPedidos})` : ''}
-                        </td>
-                        <td className="px-3 py-2 text-xs text-right">{moeda(row.decisao?.valorMinimo ?? null)}</td>
-                        <td className="px-3 py-2 text-xs">
-                          {row.decisao && (
-                            <Badge variant={row.decisao.situacao === 'atingido' ? 'default' : row.decisao.flagExcecao ? 'destructive' : 'secondary'} className="text-[10px]">
-                              {SITUACAO_LABEL[row.decisao.situacao]}
-                            </Badge>
-                          )}
-                        </td>
-                        <td className="px-3 py-2 text-xs font-medium break-words">
-                          {row.decisao?.transportadora || '-'}{row.decisao?.modalidade ? ` · ${row.decisao.modalidade}` : ''}
-                        </td>
+
+              {/* Table */}
+              <div className="border rounded-xl overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/50">
+                      <tr>
+                        <th className="px-3 py-2.5 text-left font-medium w-[80px]">Código</th>
+                        <th className="px-3 py-2.5 text-left font-medium min-w-[200px]">Nome</th>
+                        <th className="px-3 py-2.5 text-left font-medium w-[80px]">NF</th>
+                        <th className="px-3 py-2.5 text-left font-medium w-[90px]">Data</th>
+                        <th className="px-3 py-2.5 text-left font-medium w-[100px]">Transportador</th>
+                        <th className="px-3 py-2.5 text-right font-medium w-[60px]">Vol.</th>
+                        <th className="px-3 py-2.5 text-right font-medium w-[110px]">Valor Pedidos</th>
+                        <th className="px-3 py-2.5 text-right font-medium w-[100px]">Mínimo</th>
+                        <th className="px-3 py-2.5 text-left font-medium w-[110px]">Situação</th>
+                        <th className="px-3 py-2.5 text-left font-medium w-[140px]">Transportadora</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {preview.map((row, idx) => (
+                        <tr key={idx} className="border-t hover:bg-muted/30 transition-colors">
+                          <td className="px-3 py-2 font-mono text-xs">{row.codigo_cliente}</td>
+                          <td className="px-3 py-2 text-xs max-w-[200px] truncate" title={row.nome_cliente}>{row.nome_cliente}</td>
+                          <td className="px-3 py-2 text-xs">{row.nf || '-'}</td>
+                          <td className="px-3 py-2 text-xs">{row.data || '-'}</td>
+                          <td className="px-3 py-2">
+                            <Badge variant="outline" className="text-[10px]">{row.transportador || '-'}</Badge>
+                          </td>
+                          <td className="px-3 py-2 text-xs text-right">{row.volume}</td>
+                          <td className="px-3 py-2 text-xs text-right" title={row.decisao?.pedidos?.join(', ')}>
+                            {moeda(row.decisao?.valorPedidos ?? null)}
+                            {row.decisao?.qtdPedidos ? ` <span className="text-muted-foreground">(${row.decisao.qtdPedidos})</span>` : ''}
+                          </td>
+                          <td className="px-3 py-2 text-xs text-right font-medium">{moeda(row.decisao?.valorMinimo ?? null)}</td>
+                          <td className="px-3 py-2">
+                            {row.decisao && (
+                              <Badge
+                                variant={row.decisao.situacao === 'atingido' ? 'default' : row.decisao.flagExcecao ? 'destructive' : 'secondary'}
+                                className="text-[10px]"
+                              >
+                                {SITUACAO_LABEL[row.decisao.situacao]}
+                              </Badge>
+                            )}
+                          </td>
+                          <td className="px-3 py-2 text-xs font-medium">
+                            {row.decisao?.transportadora || '-'}{row.decisao?.modalidade ? ` <span className="text-muted-foreground">· {row.decisao.modalidade}</span>` : ''}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
-            </div>
+            </>
           )}
-
         </div>
-        <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
-          <Button variant="outline" onClick={handleCloseDialog} disabled={isLoading || isImporting}>Cancelar</Button>
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t bg-muted/20 flex items-center justify-between">
+          <Button variant="outline" onClick={handleCloseDialog} disabled={isLoading || isImporting}>
+            Cancelar
+          </Button>
           {preview.length > 0 && !isImporting && !isLoading && (
             <Button
               onClick={async () => {
@@ -317,10 +400,13 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported, r
                 }
               }}
               disabled={isImporting}
-              className="gap-2"
+              className="gap-2 min-w-[180px]"
             >
               {isImporting ? (
-                <>Importando...</>
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Importando...
+                </>
               ) : (
                 <>
                   Confirmar Importação
@@ -329,7 +415,7 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported, r
               )}
             </Button>
           )}
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );
