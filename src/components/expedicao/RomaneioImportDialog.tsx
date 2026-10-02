@@ -255,6 +255,8 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported, r
             </div>
           </div>
 
+          {preview.length > 0 && (
+            <>
               {/* Preview Header */}
               <div className="flex items-center justify-between mb-3">
                 <div>
