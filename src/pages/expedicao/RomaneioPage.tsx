@@ -58,6 +58,7 @@ interface FaturamentoRegra {
   transportadora_cif: string | null;
   transportadora_fob: string | null;
   frequencia_envio: string | null;
+  detalhes_adicionais: string | null;
   grupo_economico: string | null;
   status: string;
   condicao_pagamento: string | null;
@@ -132,6 +133,7 @@ export default function RomaneioPage() {
   const [showImportModal, setShowImportModal] = useState(false);
   const [regras, setRegras] = useState<FaturamentoRegra[]>([]);
   const [editingRule, setEditingRule] = useState<FaturamentoRegra | null>(null);
+  const [selectedRegra, setSelectedRegra] = useState<FaturamentoRegra | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('todos');
   const [filterPendencias, setFilterPendencias] = useState<string>('todos');
@@ -766,13 +768,26 @@ export default function RomaneioPage() {
                       <TableHead className="group cursor-pointer hover:bg-muted/50 text-right" onDoubleClick={() => handleSort('valor_minimo_frete')}>
                         <span className="flex items-center justify-end">Valor Mínimo<SortIndicator column="valor_minimo_frete" /></span>
                       </TableHead>
+                      <TableHead className="group cursor-pointer hover:bg-muted/50" onDoubleClick={() => handleSort('frequencia_envio')}>
+                        <span className="flex items-center">Frequência<SortIndicator column="frequencia_envio" /></span>
+                      </TableHead>
+                      <TableHead>Frequência</TableHead>
                       <TableHead>Tags/Pendências</TableHead>
                       <TableHead>Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredRegras.map((regra) => (
-                      <TableRow key={regra.id} className={regra.pendencias && regra.pendencias.length > 0 ? 'bg-yellow-50 dark:bg-yellow-950/20' : ''}>
+                      <TableRow
+                        key={regra.id}
+                        className={
+                          'group cursor-pointer hover:bg-muted/50 ' +
+                          (regra.pendencias && regra.pendencias.length > 0
+                            ? 'bg-yellow-50 dark:bg-yellow-950/20'
+                            : '')
+                        }
+                        onClick={() => setSelectedRegra(regra)}
+                      >
                         <TableCell className="font-mono">{regra.codigo_cliente}</TableCell>
                         <TableCell className="font-medium">{regra.nome_cliente}</TableCell>
                         <TableCell>
@@ -784,6 +799,9 @@ export default function RomaneioPage() {
                           {regra.valor_minimo_frete
                             ? formatarMoeda(regra.valor_minimo_frete)
                             : '-'}
+                        </TableCell>
+                        <TableCell>
+                          {regra.frequencia_envio || '-'}
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-wrap gap-1">
@@ -837,6 +855,108 @@ export default function RomaneioPage() {
         regras={regras}
         onImported={handleImportRomaneio}
       />
+
+      {/* Regra Detail Dialog */}
+      <Dialog open={!!selectedRegra} onOpenChange={(open) => !open && setSelectedRegra(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedRegra ? `Detail - ${selectedRegra.codigo_cliente}` : ''}
+            </DialogTitle>
+            <DialogDescription>
+              Informasi lengkap aturan frete klien ini.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedRegra && (
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Kode Klien</Label>
+                  <p className="font-mono text-sm">{selectedRegra.codigo_cliente}</p>
+                </div>
+                <div>
+                  <Label>Nama Klien</Label>
+                  <p className="font-medium text-sm">{selectedRegra.nome_cliente}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Modalitas Frete</Label>
+                  <Badge variant="outline">{selectedRegra.modalidade_frete}</Badge>
+                </div>
+                <div>
+                  <Label>Frequência Pengiriman</Label>
+                  <p className="text-sm">{selectedRegra.frequencia_envio || '-'}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Transportadora CIF</Label>
+                  <p className="text-sm">{selectedRegra.transportadora_cif || '-'}</p>
+                </div>
+                <div>
+                  <Label>Transportadora FOB</Label>
+                  <p className="text-sm">{selectedRegra.transportadora_fob || '-'}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Nilai Minimum</Label>
+                  <p className="text-sm">
+                    {selectedRegra.valor_minimo_frete
+                      ? formatarMoeda(selectedRegra.valor_minimo_frete)
+                      : '-'}
+                  </p>
+                </div>
+                <div>
+                  <Label>Status</Label>
+                  <Badge variant={selectedRegra.status === 'ativo' ? 'default' : 'secondary'}>
+                    {selectedRegra.status}
+                  </Badge>
+                </div>
+              </div>
+              {selectedRegra.pendencias && selectedRegra.pendencias.length > 0 && (
+                <div>
+                  <Label>Pendensas</Label>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {selectedRegra.pendencias.map((p) => (
+                      <Badge
+                        key={p}
+                        variant="outline"
+                        className={`text-[10px] px-1.5 py-0 ${PENDENCIAS_CORES[p] || 'bg-gray-100 text-gray-800'}`}
+                      >
+                        {PENDENCIAS_LABELS[p] || p}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {selectedRegra.detalhes_adicionais && (
+                <div>
+                  <Label>Detalles Adicionales</Label>
+                  <p className="text-sm whitespace-pre-wrap mt-1">{selectedRegra.detalhes_adicionais}</p>
+                </div>
+              )}
+              {selectedRegra.observacoes && (
+                <div>
+                  <Label>Observaciones</Label>
+                  <p className="text-sm whitespace-pre-wrap mt-1">{selectedRegra.observaciones}</p>
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSelectedRegra(null)}>
+              Tutup
+            </Button>
+            {selectedRegra && (
+              <Button onClick={() => { setEditingRule(selectedRegra); setSelectedRegra(null); }}>
+                Editar
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Log Detail Dialog */}
       <Dialog open={showLogDetail} onOpenChange={(open) => !open && setShowLogDetail(false)}>
