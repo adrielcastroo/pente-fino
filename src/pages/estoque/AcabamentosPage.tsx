@@ -48,7 +48,21 @@ export default function AcabamentosPage() {
   const [showPanel, setShowPanel] = useState(false);
   const [sortBy, setSortBy] = useState<'nome' | 'codigo'>('nome');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
-  const [tab, setTab] = useState<string>('consulta');
+  const [tab, setTab] = useState<string>(() => {
+    try {
+      return localStorage.getItem('acabamentos:tab') || 'consulta';
+    } catch {
+      return 'consulta';
+    }
+  });
+
+  // Persiste a aba atual no localStorage para sobreviver a navegação
+  const setTabPersist = (next: string) => {
+    setTab(next);
+    try {
+      localStorage.setItem('acabamentos:tab', next);
+    } catch { /* ignore */ }
+  };
   const channelRef = useRef<any>(null);
 
   // Estados para aba "Atualizar descrição"
@@ -238,7 +252,7 @@ export default function AcabamentosPage() {
         }
       />
 
-      <Tabs value={tab} onValueChange={setTab} className="space-y-4">
+      <Tabs value={tab} onValueChange={setTabPersist} className="space-y-4">
         <TabsList className="grid grid-cols-2 md:grid-cols-6 w-full md:w-auto">
           <TabsTrigger value="consulta" className="text-xs">Consulta</TabsTrigger>
           <TabsTrigger value="massa" className="text-xs">Incluir em massa</TabsTrigger>
@@ -550,7 +564,7 @@ export default function AcabamentosPage() {
         </TabsContent>
         <TabsContent value="tags" className="mt-0"><TagsTab /></TabsContent>
         <TabsContent value="gerar" className="mt-0">
-          <GerarTagTab onVerHistorico={() => setTab('historico')} />
+          <GerarTagTab onVerHistorico={() => setTabPersist('historico')} />
         </TabsContent>
         <TabsContent value="historico" className="mt-0"><HistoricoTagsTab /></TabsContent>
       </Tabs>
