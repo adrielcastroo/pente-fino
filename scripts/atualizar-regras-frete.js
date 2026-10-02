@@ -37,7 +37,7 @@ async function fetchAllRecords() {
   while (true) {
     const { data, error } = await supabase
       .from('faturamento_regras')
-      .select('id, codigo_cliente')
+      .select('*')
       .range(page * 1000, (page + 1) * 1000 - 1);
     if (error) throw error;
     if (!data || data.length === 0) break;
@@ -59,7 +59,7 @@ async function processarPlanilha(caminhoArquivo) {
   });
   console.log('Headers encontrados:', headers);
 
-  let idxCodigo = -1, idxNome = -1, idxCIF = -1, idxFOB = -1, idxBalcao = -1, idxMinimo = -1;
+  let idxCodigo = -1, idxNome = -1, idxCIF = -1, idxFOB = -1, idxBalcao = -1, idxMinimo = -1, idxFrequencia = -1, idxDetalhes = -1;
 
   headers.forEach((h, idx) => {
     if (!h) return;
@@ -70,9 +70,11 @@ async function processarPlanilha(caminhoArquivo) {
     else if (str.includes('fob')) idxFOB = idx;
     else if (str.includes('balc')) idxBalcao = idx;
     else if (str.includes('valor') || str.includes('mínimo') || str.includes('minimo')) idxMinimo = idx;
+    else if (str.includes('frequencia')) idxFrequencia = idx;
+    else if (str.includes('detalhes')) idxDetalhes = idx;
   });
 
-  console.log(`Mapeamento colunas (1-based): Código=${idxCodigo}, Nome=${idxNome}, CIF=${idxCIF}, FOB=${idxFOB}, Balcão=${idxBalcao}, Minimo=${idxMinimo}`);
+  console.log(`Mapeamento: Código=${idxCodigo}, Nome=${idxNome}, CIF=${idxCIF}, FOB=${idxFOB}, Balcão=${idxBalcao}, Minimo=${idxMinimo}, Frequencia=${idxFrequencia}, Detalhes=${idxDetalhes}`);
 
   const clientes = [];
   sheet.eachRow((row, rowNumber) => {
@@ -84,6 +86,8 @@ async function processarPlanilha(caminhoArquivo) {
     const fob = row.getCell(idxFOB).value;
     const balcao = idxBalcao !== -1 ? parseBalcao(row.getCell(idxBalcao).value) : false;
     const minimo = idxMinimo !== -1 ? parseMinimo(row.getCell(idxMinimo).value) : null;
+    const frequencia = idxFrequencia !== -1 ? (row.getCell(idxFrequencia).value || null) : null;
+    const detalhes = idxDetalhes !== -1 ? (row.getCell(idxDetalhes).value || null) : null;
 
     const modal = balcao ? 'CIF' : (cif === '-' && fob !== '-' ? 'FOB' : 'CIF');
 
@@ -104,12 +108,14 @@ async function processarPlanilha(caminhoArquivo) {
     if (minimo === null && !balcao) pendencias.push('sem_minimo');
 
     clientes.push({
-      codigo_cliente: cod,
-      nome_cliente: nome,
+      codigoCliente: cod,
+      nomeCliente: nome,
       modalidade_frete: modal,
       valor_minimo_frete: minimo,
       transportadora_cif: limpar(cif),
       transportadora_fob: limpar(fob),
+      frequencia_envio: limpar(frequencia),
+      detalhes_adicionais: limpar(detalhes),
       pendencias
     });
   });
@@ -118,7 +124,7 @@ async function processarPlanilha(caminhoArquivo) {
 
   console.log('\n🔍 Buscando regras existentes no banco...');
   const regrasExistentes = await fetchAllRecords();
-  const mapaRegras = new Map(regrasExistentes.map(r => [r.codigo_cliente, r]));
+  const mapaRegras = new Map(regrasExistentes.map(r => [r.codigoCliente, r]));
   console.log(`✅ Encontradas ${regrasExistentes.length} regras no banco.`);
 
   const comPendencias = clientes.filter(c => c.pendencias.length > 0);
@@ -139,13 +145,15 @@ async function processarPlanilha(caminhoArquivo) {
   for (let i = 0; i < clientes.length; i += BATCH_SIZE) {
     const batch = clientes.slice(i, i + BATCH_SIZE);
     await Promise.all(batch.map(async (c) => {
-      const existente = mapaRegras.get(c.codigo_cliente);
+      const existente = mapaRegras.get(c.codigoCliente);
       if (existente) {
         await supabase.from('faturamento_regras').update({
           modalidade_frete: c.modalidade_frete,
           valor_minimo_frete: c.valor_minimo_frete,
           transportadora_cif: c.transportadora_cif,
           transportadora_fob: c.transportadora_fob,
+          frequencia_envio: c.frequencia_envio,
+          detalhes_adicionais: c.detalhes_adicionais,
           pendencias: c.pendencias,
           updated_at: new Date().toISOString()
         }).eq('id', existente.id);
