@@ -771,7 +771,6 @@ export default function RomaneioPage() {
                       <TableHead className="group cursor-pointer hover:bg-muted/50" onDoubleClick={() => handleSort('frequencia_envio')}>
                         <span className="flex items-center">Frequência<SortIndicator column="frequencia_envio" /></span>
                       </TableHead>
-                      <TableHead>Frequência</TableHead>
                       <TableHead>Tags/Pendências</TableHead>
                       <TableHead>Ações</TableHead>
                     </TableRow>
@@ -861,31 +860,31 @@ export default function RomaneioPage() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {selectedRegra ? `Detail - ${selectedRegra.codigo_cliente}` : ''}
+              {selectedRegra ? `Detalhes - ${selectedRegra.codigo_cliente}` : ''}
             </DialogTitle>
             <DialogDescription>
-              Informasi lengkap aturan frete klien ini.
+              Informações completas do cliente e regras de frete.
             </DialogDescription>
           </DialogHeader>
           {selectedRegra && (
             <div className="space-y-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Kode Klien</Label>
+                  <Label>Código do Cliente</Label>
                   <p className="font-mono text-sm">{selectedRegra.codigo_cliente}</p>
                 </div>
                 <div>
-                  <Label>Nama Klien</Label>
+                  <Label>Nome do Cliente</Label>
                   <p className="font-medium text-sm">{selectedRegra.nome_cliente}</p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Modalitas Frete</Label>
+                  <Label>Modalidade de Frete</Label>
                   <Badge variant="outline">{selectedRegra.modalidade_frete}</Badge>
                 </div>
                 <div>
-                  <Label>Frequência Pengiriman</Label>
+                  <Label>Frequência de Envio</Label>
                   <p className="text-sm">{selectedRegra.frequencia_envio || '-'}</p>
                 </div>
               </div>
@@ -901,7 +900,7 @@ export default function RomaneioPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Nilai Minimum</Label>
+                  <Label>Valor Mínimo</Label>
                   <p className="text-sm">
                     {selectedRegra.valor_minimo_frete
                       ? formatarMoeda(selectedRegra.valor_minimo_frete)
@@ -917,7 +916,7 @@ export default function RomaneioPage() {
               </div>
               {selectedRegra.pendencias && selectedRegra.pendencias.length > 0 && (
                 <div>
-                  <Label>Pendensas</Label>
+                  <Label>Pendências</Label>
                   <div className="flex flex-wrap gap-1 mt-1">
                     {selectedRegra.pendencias.map((p) => (
                       <Badge
@@ -933,21 +932,21 @@ export default function RomaneioPage() {
               )}
               {selectedRegra.detalhes_adicionais && (
                 <div>
-                  <Label>Detalles Adicionales</Label>
+                  <Label>Detalhes Adicionais</Label>
                   <p className="text-sm whitespace-pre-wrap mt-1">{selectedRegra.detalhes_adicionais}</p>
                 </div>
               )}
               {selectedRegra.observacoes && (
                 <div>
-                  <Label>Observaciones</Label>
-                  <p className="text-sm whitespace-pre-wrap mt-1">{selectedRegra.observaciones}</p>
+                  <Label>Observações</Label>
+                  <p className="text-sm whitespace-pre-wrap mt-1">{selectedRegra.observacoes}</p>
                 </div>
               )}
             </div>
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setSelectedRegra(null)}>
-              Tutup
+              Fechar
             </Button>
             {selectedRegra && (
               <Button onClick={() => { setEditingRule(selectedRegra); setSelectedRegra(null); }}>
