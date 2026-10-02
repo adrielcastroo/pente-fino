@@ -36,25 +36,17 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        // Posição base centralizada (funciona em mobile e desktop)
-        "fixed left-[50%] top-[50%] z-50 flex flex-col w-[95vw] -translate-x-1/2 -translate-y-1/2 gap-3 border border-border bg-card p-4 shadow-2xl rounded-lg overflow-hidden",
-        // Mobile-first: max-height para telas pequenas
-        "max-h-[92vh] sm:max-h-[85vh]",
-        // Desktop (sm+): largura padrão do shadcn
-        "sm:max-w-lg sm:p-6 sm:rounded-lg",
-        // Animações: centralização absoluta no centro da viewport
-        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-1/2 data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-1/2 duration-300 ease-in-out",
+        "fixed left-[50%] top-[50%] z-50 w-[95vw] sm:w-full sm:max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-card p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] rounded-lg",
+        "max-h-[90vh] overflow-hidden flex flex-col",
         className,
       )}
       {...props}
     >
-      {/* Grab handle visual (somente mobile) */}
-      
       <div className="flex-1 overflow-y-auto custom-scrollbar -mx-1 px-1">
         {children}
       </div>
-      <DialogPrimitive.Close className="absolute right-3 top-3 sm:right-4 sm:top-4 p-1.5 rounded-md text-muted-foreground ring-offset-background transition-colors hover:bg-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 disabled:pointer-events-none">
-        <X className="h-4 w-4" strokeWidth={2} />
+      <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+        <X className="h-4 w-4" />
         <span className="sr-only">Fechar</span>
       </DialogPrimitive.Close>
     </DialogPrimitive.Content>
@@ -62,33 +54,23 @@ const DialogContent = React.forwardRef<
 ));
 DialogContent.displayName = DialogPrimitive.Content.displayName;
 
-/**
- * ERP-style header. A quiet inset divider under the title creates the same
- * "framed section" look as professional ERP dialogs without breaking out of
- * whatever padding the DialogContent uses — so any dialog that overrides
- * DialogContent with p-0 (chart dialogs, custom bodies) keeps working.
- */
-const DialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
+const DialogHeader = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => (
   <div
-    className={cn(
-      "flex flex-col space-y-1 text-left pr-10 pb-3 mb-2 border-b border-border/60",
-      className,
-    )}
+    className={cn("flex flex-col space-y-1.5 text-center sm:text-left pb-2 border-b border-border/60 mb-4", className)}
     {...props}
   />
 );
 DialogHeader.displayName = "DialogHeader";
 
-/**
- * ERP-style footer with a matching top divider. Safe with any DialogContent
- * padding — no negative margins, no layout surprises.
- */
-const DialogFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
+const DialogFooter = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => (
   <div
-    className={cn(
-      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-2 sm:gap-0 mt-3 pt-3 border-t border-border/60",
-      className,
-    )}
+    className={cn("flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 pt-4 mt-4 border-t border-border/60", className)}
     {...props}
   />
 );
@@ -100,7 +82,7 @@ const DialogTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Title
     ref={ref}
-    className={cn("text-base sm:text-lg font-semibold leading-tight tracking-tight text-foreground", className)}
+    className={cn("text-lg font-semibold leading-none tracking-tight", className)}
     {...props}
   />
 ));
@@ -110,7 +92,11 @@ const DialogDescription = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Description>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
 >(({ className, ...props }, ref) => (
-  <DialogPrimitive.Description ref={ref} className={cn("text-xs sm:text-sm text-muted-foreground", className)} {...props} />
+  <DialogPrimitive.Description
+    ref={ref}
+    className={cn("text-sm text-muted-foreground", className)}
+    {...props}
+  />
 ));
 DialogDescription.displayName = DialogPrimitive.Description.displayName;
 
