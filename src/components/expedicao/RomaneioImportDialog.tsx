@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Upload, FileSpreadsheet, CheckCircle2, AlertCircle, ArrowRight, Loader2, Truck, Package, DollarSign } from 'lucide-react';
+import { Upload, FileSpreadsheet, CheckCircle2, Loader2, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -11,7 +11,6 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import { supabase } from '@/integrations/supabase/client';
@@ -274,9 +273,8 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported, r
               </div>
 
               {/* Table */}
-              <div className="border rounded-xl overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
+              <div className="border rounded-xl overflow-hidden max-h-[360px] overflow-auto">
+                <table className="w-full text-sm">
                     <thead className="bg-muted/50">
                       <tr>
                         <th className="px-2 py-2 text-left font-medium text-xs w-[70px]">Cód</th>
