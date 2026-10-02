@@ -135,6 +135,24 @@ export default function RomaneioPage() {
   const [editingRule, setEditingRule] = useState<FaturamentoRegra | null>(null);
   const [selectedRegra, setSelectedRegra] = useState<FaturamentoRegra | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 50;
+
+  useEffect(() => {
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    searchTimeoutRef.current = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setCurrentPage(1);
+    }, 300);
+    return () => {
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    };
+  }, [searchTerm]);
+
   const [filterStatus, setFilterStatus] = useState('todos');
   const [filterPendencias, setFilterPendencias] = useState<string>('todos');
   const [sortColumn, setSortColumn] = useState<keyof FaturamentoRegra>('codigo_cliente');
@@ -382,8 +400,8 @@ export default function RomaneioPage() {
 
   const filteredRegras = useMemo(() => {
     let result = regras.filter(r => {
-      const matchesSearch = r.nome_cliente.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           r.codigo_cliente.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = r.nome_cliente.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+                           r.codigo_cliente.toLowerCase().includes(debouncedSearch.toLowerCase());
       const matchesStatus = filterStatus === 'todos' || r.status === filterStatus;
       const matchesPendencias = filterPendencias === 'todos' ||
         (r.pendencias || []).includes(filterPendencias);
@@ -403,7 +421,14 @@ export default function RomaneioPage() {
       return sortAsc ? comparison : -comparison;
     });
     return result;
-  }, [regras, searchTerm, filterStatus, filterPendencias, sortColumn, sortAsc]);
+  }, [regras, debouncedSearch, filterStatus, filterPendencias, sortColumn, sortAsc]);
+
+  // Pagination calculation
+  const totalPages = Math.max(1, Math.ceil(filteredRegras.length / PAGE_SIZE));
+  const paginatedRegras = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filteredRegras.slice(start, start + PAGE_SIZE);
+  }, [filteredRegras, currentPage]);
 
   // ============================================================
   // Sort handlers
@@ -776,7 +801,7 @@ export default function RomaneioPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredRegras.map((regra) => (
+                    {paginatedRegras.map((regra) => (
                       <TableRow
                         key={regra.id}
                         className={
@@ -843,6 +868,34 @@ export default function RomaneioPage() {
                 </Table>
               )}
             </CardContent>
+            {filteredRegras.length > PAGE_SIZE && (
+              <div className="flex items-center justify-between px-6 py-3 border-t">
+                <div className="text-sm text-muted-foreground">
+                  Mostrando {(currentPage - 1) * PAGE_SIZE + 1} - {Math.min(currentPage * PAGE_SIZE, filteredRegras.length)} de {filteredRegras.length} clientes
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Anterior
+                  </Button>
+                  <span className="text-sm text-muted-foreground">
+                    {currentPage} / {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Próximo
+                  </Button>
+                </div>
+              </div>
+            )}
           </Card>
         </div>
       )}
