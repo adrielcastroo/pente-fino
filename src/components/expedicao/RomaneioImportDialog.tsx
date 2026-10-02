@@ -190,7 +190,7 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported, r
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-7xl w-[98vw] max-h-[95vh] p-0 overflow-hidden">
+      <DialogContent className="max-w-5xl w-[95vw] max-h-[95vh] p-0 overflow-hidden">
         {/* Header */}
         <div className="px-6 pt-6 pb-4 border-b">
           <DialogHeader className="px-0">
@@ -256,56 +256,6 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported, r
             </div>
           </div>
 
-          {/* Stats Cards */}
-          {preview.length > 0 && (
-            <>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-                <Card>
-                  <CardContent className="pt-4 pb-3">
-                    <div className="flex items-center gap-2">
-                      <Package className="w-4 h-4 text-blue-500" />
-                      <div>
-                        <p className="text-2xl font-bold">{previewCount}</p>
-                        <p className="text-xs text-muted-foreground">Total</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-4 pb-3">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-green-500" />
-                      <div>
-                        <p className="text-2xl font-bold text-green-600">{atingidos}</p>
-                        <p className="text-xs text-muted-foreground">Atingido</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-4 pb-3">
-                    <div className="flex items-center gap-2">
-                      <AlertCircle className="w-4 h-4 text-orange-500" />
-                      <div>
-                        <p className="text-2xl font-bold text-orange-600">{naoAtigidos}</p>
-                        <p className="text-xs text-muted-foreground">Não Atingido</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-4 pb-3">
-                    <div className="flex items-center gap-2">
-                      <Truck className="w-4 h-4 text-purple-500" />
-                      <div>
-                        <p className="text-2xl font-bold text-purple-600">{preview.filter(r => r.decisao?.transportadora).length}</p>
-                        <p className="text-xs text-muted-foreground">Transportadora</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
               {/* Preview Header */}
               <div className="flex items-center justify-between mb-3">
                 <div>
@@ -329,35 +279,28 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported, r
                   <table className="w-full text-sm">
                     <thead className="bg-muted/50">
                       <tr>
-                        <th className="px-3 py-2.5 text-left font-medium w-[80px]">Código</th>
-                        <th className="px-3 py-2.5 text-left font-medium min-w-[200px]">Nome</th>
-                        <th className="px-3 py-2.5 text-left font-medium w-[80px]">NF</th>
-                        <th className="px-3 py-2.5 text-left font-medium w-[90px]">Data</th>
-                        <th className="px-3 py-2.5 text-left font-medium w-[100px]">Transportador</th>
-                        <th className="px-3 py-2.5 text-right font-medium w-[60px]">Vol.</th>
-                        <th className="px-3 py-2.5 text-right font-medium w-[110px]">Valor Pedidos</th>
-                        <th className="px-3 py-2.5 text-right font-medium w-[100px]">Mínimo</th>
-                        <th className="px-3 py-2.5 text-left font-medium w-[110px]">Situação</th>
-                        <th className="px-3 py-2.5 text-left font-medium w-[140px]">Transportadora</th>
+                        <th className="px-2 py-2 text-left font-medium text-xs w-[70px]">Cód</th>
+                        <th className="px-2 py-2 text-left font-medium text-xs min-w-[150px]">Cliente</th>
+                        <th className="px-2 py-2 text-left font-medium text-xs w-[70px]">NF</th>
+                        <th className="px-2 py-2 text-left font-medium text-xs w-[80px]">Data</th>
+                        <th className="px-2 py-2 text-left font-medium text-xs w-[110px]">Transportador</th>
+                        <th className="px-2 py-2 text-right font-medium text-xs w-[50px]">Vol.</th>
+                        <th className="px-2 py-2 text-left font-medium text-xs w-[90px]">Situação</th>
+                        <th className="px-2 py-2 text-left font-medium text-xs w-[100px]">Transportadora</th>
                       </tr>
                     </thead>
                     <tbody>
                       {preview.map((row, idx) => (
                         <tr key={idx} className="border-t hover:bg-muted/30 transition-colors">
-                          <td className="px-3 py-2 font-mono text-xs">{row.codigo_cliente}</td>
-                          <td className="px-3 py-2 text-xs max-w-[200px] truncate" title={row.nome_cliente}>{row.nome_cliente}</td>
-                          <td className="px-3 py-2 text-xs">{row.nf || '-'}</td>
-                          <td className="px-3 py-2 text-xs">{row.data || '-'}</td>
-                          <td className="px-3 py-2">
+                          <td className="px-2 py-1.5 font-mono text-xs">{row.codigo_cliente}</td>
+                          <td className="px-2 py-1.5 text-xs max-w-[150px] truncate" title={row.nome_cliente}>{row.nome_cliente}</td>
+                          <td className="px-2 py-1.5 text-xs">{row.nf || '-'}</td>
+                          <td className="px-2 py-1.5 text-xs">{row.data || '-'}</td>
+                          <td className="px-2 py-1.5">
                             <Badge variant="outline" className="text-[10px]">{row.transportador || '-'}</Badge>
                           </td>
-                          <td className="px-3 py-2 text-xs text-right">{row.volume}</td>
-                          <td className="px-3 py-2 text-xs text-right" title={row.decisao?.pedidos?.join(', ')}>
-                            {moeda(row.decisao?.valorPedidos ?? null)}
-                            {row.decisao?.qtdPedidos ? ` <span className="text-muted-foreground">(${row.decisao.qtdPedidos})</span>` : ''}
-                          </td>
-                          <td className="px-3 py-2 text-xs text-right font-medium">{moeda(row.decisao?.valorMinimo ?? null)}</td>
-                          <td className="px-3 py-2">
+                          <td className="px-2 py-1.5 text-xs text-right">{row.volume}</td>
+                          <td className="px-2 py-1.5">
                             {row.decisao && (
                               <Badge
                                 variant={row.decisao.situacao === 'atingido' ? 'default' : row.decisao.flagExcecao ? 'destructive' : 'secondary'}
@@ -367,7 +310,7 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported, r
                               </Badge>
                             )}
                           </td>
-                          <td className="px-3 py-2 text-xs font-medium">
+                          <td className="px-2 py-1.5 text-xs font-medium">
                             {row.decisao?.transportadora || '-'}{row.decisao?.modalidade ? ` <span className="text-muted-foreground">· {row.decisao.modalidade}</span>` : ''}
                           </td>
                         </tr>
