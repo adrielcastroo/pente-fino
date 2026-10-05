@@ -42,6 +42,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import RomaneioImportDialog from '@/components/expedicao/RomaneioImportDialog';
 import { PreviewRow } from '@/components/expedicao/RomaneioImportDialog';
+import { SITUACAO_LABEL } from '@/lib/expedicao/regraFrete';
 
 // ============================================================
 // Types
@@ -199,13 +200,11 @@ export default function RomaneioPage() {
   const { data: logsData, isLoading: isLoadingLogs } = useQuery({
     queryKey: ['romaneio_logs'],
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from('romaneio_automatico_logs')
-        .select('*')
-        .order('criado_em', { ascending: false })
-        .limit(50);
+      const { data, error } = await supabase.functions.invoke('romaneio-logs', {
+        body: { action: 'list' },
+      });
       if (error) throw error;
-      return (data || []) as LogRomaneio[];
+      return (data?.data || []) as LogRomaneio[];
     },
   });
 
@@ -214,9 +213,11 @@ export default function RomaneioPage() {
   const { data: romaneiosData, isLoading: isLoadingRomaneios, refetch: refetchRomaneios } = useQuery({
     queryKey: ['romaneio_dias'],
     queryFn: async () => {
+      // Usa a view romaneio_dias_linhas para evitar problemas de cache do PostgREST
+      // com múltiplas FK entre romaneio_dias e romaneio_linhas
       const { data, error } = await supabase
-        .from('romaneio_dias')
-        .select('*, linhas(*)')
+        .from('romaneio_dias_linhas')
+        .select('*')
         .order('data_romaneio', { ascending: false });
       if (error) throw error;
       return data || [];
@@ -354,16 +355,20 @@ export default function RomaneioPage() {
       return;
     }
     try {
-      const { error } = await supabase
-        .from('romaneio_automatico_logs')
-        .insert({
-          referencia: `Romaneio ${format(new Date(), 'dd/MM/yyyy', { locale: ptBR })}`,
-          total_linhas: importedLinhas.length,
-          rows: JSON.stringify(importedLinhas),
-          origem: 'importacao_manual',
-          status: 'arquivado',
+      try {
+        const { error: invokeErr } = await supabase.functions.invoke('romaneio-logs', {
+          body: {
+            action: 'archive',
+            referencia: `Romaneio ${format(new Date(), 'dd/MM/yyyy', { locale: ptBR })}`,
+            total_linhas: importedLinhas.length,
+            rows: importedLinhas,
+          },
         });
-      if (error) throw error;
+        if (invokeErr) throw invokeErr;
+      } catch (_logErr: any) {
+        // Edge function 失败也继续（后台日志表缺失或网络问题）
+        console.warn('[Romaneio] Não foi possível salvar o log de arquivamento:', _logErr?.message);
+      }
       setImportedLinhas([]);
       setImportSuccess(false);
       toast.success('Romaneio arquivado no histórico');
@@ -586,10 +591,35 @@ export default function RomaneioPage() {
                         <td className="font-mono text-xs">{row.codigo_cliente}</td>
                         <td className="text-xs">{row.nome_cliente}</td>
                         <td className="text-xs">{row.nf || '-'}</td>
-                        <td className="text-xs">{row.data || '-'}</td>
-                        <td className="text-xs"><Badge variant="outline" className="text-[10px]">{row.transportador || '-'}</Badge></td>
-                        <td className="text-xs text-right">{row.volume}</td>
-                        <td className="text-xs">{row.observacoes || '-'}</td>
+                        <td className="text-xs">
+                          {row.data
+                            ? (() => {
+                                const d = row.data.split('-');
+                                return d.length === 3 ? `${d[2]}/${d[1]}/${d[0]}` : row.data;
+                              })()
+                            : '-'}
+                        </td>
+                        <td className="text-xs"><Badge variant="outline" className="text-[10px]">{row.decisao?.transportadora || row.transportador || '-'}</Badge></td>
+                        <td className="text-xs text-center">
+                          {typeof row.volume === 'number' ? row.volume : '-'}
+                        </td>
+                        {(() => {
+                          const parts: string[] = [];
+                          if (row.decisao) {
+                            const { situacao, modalidade, flagExcecao, qtdPedidos } = row.decisao;
+                            if (modalidade) parts.push(modalidade);
+                            if (situacao === 'atingido' && qtdPedidos > 0) parts.push(`${qtdPedidos}x`);
+                            else if (situacao === 'sem_pedidos') parts.push('sem pedidos');
+                            if (flagExcecao && !parts.includes('sem pedidos')) parts.push('exceção');
+                            if (situacao === 'instrucao') parts.push('instrução planilha');
+                          }
+                          if (row.observacoes) parts.push(row.observacoes);
+                          return (
+                            <td className="text-xs text-center">
+                              {parts.length > 0 ? parts.join(' · ') : '-'}
+                            </td>
+                          );
+                        })()}
                       </TableRow>
                     ))}
                   </TableBody>
