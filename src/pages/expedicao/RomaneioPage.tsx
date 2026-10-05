@@ -160,8 +160,29 @@ export default function RomaneioPage() {
   const [sortAsc, setSortAsc] = useState(true);
   const [romaneios, setRomaneios] = useState<RomaneioDia[]>([]);
   const [selectedRomaneio, setSelectedRomaneio] = useState<RomaneioDia | null>(null);
-  const [importedLinhas, setImportedLinhas] = useState<PreviewRow[]>([]);
+  // ─── 从 localStorage 恢复已导入的 romaneio 数据 ─────────────────────────
+  const initialImported = (() => {
+    try {
+      const raw = localStorage.getItem('romaneio_imported');
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+    } catch {}
+    return [];
+  })();
+  const [importedLinhas, setImportedLinhas] = useState<PreviewRow[]>(initialImported);
   const [importSuccess, setImportSuccess] = useState(false);
+
+  // ─── 写回 localStorage ───────────────────────────────────────────────
+  useEffect(() => {
+    try {
+      if (importedLinhas.length > 0) {
+        localStorage.setItem('romaneio_imported', JSON.stringify(importedLinhas));
+      } else {
+        localStorage.removeItem('romaneio_imported');
+      }
+    } catch {}
+  }, [importedLinhas]);
   const [editingRow, setEditingRow] = useState<number | null>(null);
   const [editData, setEditData] = useState<Partial<PreviewRow> & { id?: string }>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
