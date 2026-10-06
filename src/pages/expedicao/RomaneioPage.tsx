@@ -637,47 +637,10 @@ export default function RomaneioPage() {
                       <TableHead>Observações</TableHead>
                     </TableRow>
                   </TableHeader>
-                                    <TableBody>
+                  <TableBody>
                     {importedLinhas.map((row, idx) => {
                       const isEditing = editingRow === idx;
                       const current = isEditing ? editData : row;
-                      const cell = (
-                        field: keyof PreviewRow,
-                        display: React.ReactNode,
-                        inputType: 'text' | 'number' = 'text',
-                        className = 'text-xs',
-                      ) => {
-                        if (!isEditing) {
-                          return <td className={className}>{display}</td>;
-                        }
-                        return (
-                          <td className={className} onClick={(e) => e.stopPropagation()}>
-                            <Input
-                              type={inputType}
-                              value={String(current[field] ?? '')}
-                              onChange={(e) =>
-                                handleEditChange(
-                                  field,
-                                  inputType === 'number'
-                                    ? Number(e.target.value) || 0
-                                    : e.target.value,
-                                )
-                              }
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                  e.preventDefault();
-                                  handleEditSave(idx);
-                                } else if (e.key === 'Escape') {
-                                  e.preventDefault();
-                                  handleEditCancel();
-                                }
-                              }}
-                              autoFocus
-                              className="h-7 text-xs"
-                            />
-                          </td>
-                        );
-                      };
                       const parts: string[] = [];
                       if (row.decisao) {
                         const { situacao, modalidade, flagExcecao, qtdPedidos } = row.decisao;
@@ -688,38 +651,76 @@ export default function RomaneioPage() {
                         if (situacao === 'instrucao') parts.push('instrução planilha');
                       }
                       if (row.observacoes) parts.push(row.observacoes);
+                      const editCell = (
+                        field: keyof PreviewRow,
+                        inputType: 'text' | 'number' = 'text',
+                        className = 'text-xs',
+                      ) => (
+                        <td className={className} onClick={(e) => e.stopPropagation()}>
+                          <Input
+                            type={inputType}
+                            value={String(current[field] ?? '')}
+                            onChange={(e) =>
+                              handleEditChange(
+                                field,
+                                inputType === 'number'
+                                  ? Number(e.target.value) || 0
+                                  : e.target.value,
+                              )
+                            }
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleEditSave(idx);
+                              } else if (e.key === 'Escape') {
+                                e.preventDefault();
+                                handleEditCancel();
+                              }
+                            }}
+                            autoFocus
+                            className="h-7 text-xs"
+                          />
+                        </td>
+                      );
                       return (
                         <TableRow
                           key={idx}
                           onDoubleClick={() => handleEditStart(idx)}
                           className={isEditing ? 'bg-muted/50' : ''}
                         >
-                          {cell('codigoCliente', row.codigoCliente, 'text', 'font-mono text-xs')}
-                          {cell('nomeCliente', row.nomeCliente)}
-                          {cell('nf', row.nf || '-')}
-                          {cell(
-                            'data',
-                            row.data
-                              ? (() => {
-                                  const d = row.data.split('-');
-                                  return d.length === 3 ? `${d[2]}/${d[1]}/${d[0]}` : row.data;
-                                })()
-                              : '-',
-                          )}
-                          {cell(
-                            'transportador',
-                            <Badge variant="outline" className="text-[10px]">
-                              {row.decisao?.transportadora || row.transportador || '-'}
-                            </Badge>,
-                          )}
-                          {cell('volume', typeof row.volume === 'number' ? row.volume : '-', 'number', 'text-xs text-center')}
+                          {isEditing
+                            ? editCell('codigo_cliente', 'text', 'font-mono text-xs')
+                            : <td className="font-mono text-xs">{row.codigo_cliente}</td>}
+                          {isEditing
+                            ? editCell('nome_cliente')
+                            : <td className="text-xs">{row.nome_cliente}</td>}
+                          {isEditing
+                            ? editCell('nf')
+                            : <td className="text-xs">{row.nf || '-'}</td>}
+                          {isEditing
+                            ? editCell('data')
+                            : <td className="text-xs">
+                                {row.data
+                                  ? (() => {
+                                      const d = row.data.split('-');
+                                      return d.length === 3 ? `${d[2]}/${d[1]}/${d[0]}` : row.data;
+                                    })()
+                                  : '-'}
+                              </td>}
+                          {isEditing
+                            ? editCell('transportador')
+                            : <td className="text-xs"><Badge variant="outline" className="text-[10px]">{row.decisao?.transportadora || row.transportador || '-'}</Badge></td>}
+                          {isEditing
+                            ? editCell('volume', 'number', 'text-xs text-center')
+                            : <td className="text-xs text-center">{typeof row.volume === 'number' ? row.volume : '-'}</td>}
                           <td className="text-xs text-center">
                             {parts.length > 0 ? parts.join(' · ') : '-'}
                           </td>
                         </TableRow>
                       );
                     })}
-                  </TableBody>               </Table>
+                  </TableBody>
+                </Table>
               )}
             </CardContent>
           </Card>
