@@ -151,3 +151,103 @@ export function exportRomaneioExcel(linhas: PreviewRow[]) {
   a.click();
   setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
 }
+
+/* ─────────── PDF: Romaneio Importado (dados do PreviewRow) ─────────── */
+
+export type RomaneioImportadoPdfInput = {
+  dataRomaneio: string;
+  linhas: PreviewRow[];
+};
+
+export function exportRomaneioImportadoPDF({ dataRomaneio, linhas }: RomaneioImportadoPdfInput) {
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const w = doc.internal.pageSize.getWidth();
+  const h = doc.internal.pageSize.getHeight();
+  const dataFormatada = dataRomaneio
+    ? new Date(dataRomaneio + 'T00:00:00').toLocaleDateString('pt-BR')
+    : format(new Date(), 'dd/MM/yyyy', { locale: ptBR });
+
+  // Cabeçalho
+  doc.setFontSize(18);
+  doc.text('Romaneio de Expedição', 14, 20);
+
+  doc.setFontSize(10);
+  doc.text(`Data do Romaneio: ${dataFormatada}`, 14, 30);
+  doc.text(`Total de linhas: ${linhas.length}`, w - 14, 30, { align: 'right' });
+
+  // Linha separadora
+  doc.setDrawColor(30, 41, 59);
+  doc.setLineWidth(0.5);
+  doc.line(14, 35, w - 14, 35);
+
+  // Tabela de dados
+  const body = linhas.map((l, i) => {
+    const trans = l.decisao?.transportadora || l.transportador || '-';
+    const obs = l.observacoes || '-';
+    return [
+      String(i + 1),
+      l.codigo_cliente,
+      l.nome_cliente,
+      l.nf || '-',
+      l.data || '-',
+      trans,
+      String(typeof l.volume === 'number' ? l.volume : '-'),
+      obs,
+    ];
+  });
+
+  autoTable(doc, {
+    startY: 40,
+    head: [['#', 'Código', 'Nome do Cliente', 'NF', 'Data', 'Transportador', 'Vol.', 'Observações']],
+    body,
+    styles: { fontSize: 7, cellPadding: 1.5 },
+    headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontSize: 7, halign: 'center' },
+    columnStyles: {
+      0: { halign: 'center', cellWidth: 6 },
+      1: { cellWidth: 16 },
+      2: { cellWidth: 38 },
+      3: { cellWidth: 14, halign: 'center' },
+      4: { cellWidth: 16, halign: 'center' },
+      5: { cellWidth: 22 },
+      6: { cellWidth: 8, halign: 'center' },
+      7: { cellWidth: 32 },
+    },
+    alternateRowStyles: { fillColor: [248, 250, 252] },
+    tableLineWidth: 0.1,
+    headLineWidth: 0.5,
+    bodyLineWidth: 0.1,
+  });
+
+  const finalY = (doc as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? 40;
+  const sigY = Math.min(finalY + 18, h - 25);
+
+  // Linha separadora antes das assinaturas
+  doc.setDrawColor(200, 200, 200);
+  doc.setLineWidth(0.3);
+  doc.line(14, sigY - 4, w - 14, sigY - 4);
+
+  // Campos de assinatura e data
+  doc.setFontSize(9);
+  const colW = (w - 28) / 3;
+
+  // Data
+  doc.text('Data:', 14, sigY + 6);
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.4);
+  doc.line(24, sigY + 8, 24 + colW, sigY + 8);
+
+  // Assinatura do responsável
+  doc.text('Assinatura do Responsável', 14, sigY + 20);
+  doc.line(14, sigY + 22, 14 + colW, sigY + 22);
+
+  // Assinatura do coletador / transportadora
+  doc.text('Assinatura do Coletador', 14 + colW + 8, sigY + 20);
+  doc.line(14 + colW + 8, sigY + 22, 14 + 2 * colW + 8, sigY + 22);
+
+  // Rodapé
+  doc.setFontSize(8);
+  doc.text('Pente Fino — Gestão de Estoque Têxtil', 14, h - 10);
+  doc.text(`Página 1 de 1`, w - 14, h - 10, { align: 'right' });
+
+  doc.save(`romaneio-${dataFormatada}.pdf`);
+}
