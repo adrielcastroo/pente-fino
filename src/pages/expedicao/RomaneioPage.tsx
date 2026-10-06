@@ -184,7 +184,8 @@ export default function RomaneioPage() {
     } catch {}
   }, [importedLinhas]);
   const [editingRow, setEditingRow] = useState<number | null>(null);
-  const [editData, setEditData] = useState<Partial<PreviewRow> & { id?: string }>({});
+  const [editingField, setEditingField] = useState<keyof PreviewRow | null>(null);
+  const [editData, setEditData] = useState<Partial<PreviewRow>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ============================================================
@@ -399,9 +400,11 @@ export default function RomaneioPage() {
     }
   };
 
-  // ─── Edição inline da tabela de romaneio importado ──────────────────────
-  const handleEditStart = (idx: number) => {
+  // ─── Edição inline por célula (duplo clique em cada campo) ────────────────
+  const handleEditStart = (idx: number, field: keyof PreviewRow) => {
     setEditingRow(idx);
+    setEditingField(field);
+    setEditingField(field);
     setEditData(importedLinhas[idx]);
   };
 
@@ -422,11 +425,15 @@ export default function RomaneioPage() {
       })
     );
     setEditingRow(null);
+    setEditingField(null);
+    setEditingField(null);
     setEditData({});
   };
 
   const handleEditCancel = () => {
     setEditingRow(null);
+    setEditingField(null);
+    setEditingField(null);
     setEditData({});
   };
 
@@ -651,68 +658,72 @@ export default function RomaneioPage() {
                         if (situacao === 'instrucao') parts.push('instrução planilha');
                       }
                       if (row.observacoes) parts.push(row.observacoes);
-                      const editCell = (
+                      const renderCell = (
                         field: keyof PreviewRow,
+                        display: React.ReactNode,
                         inputType: 'text' | 'number' = 'text',
                         className = 'text-xs',
-                      ) => (
-                        <td className={className} onClick={(e) => e.stopPropagation()}>
-                          <Input
-                            type={inputType}
-                            value={String(current[field] ?? '')}
-                            onChange={(e) =>
-                              handleEditChange(
-                                field,
-                                inputType === 'number'
-                                  ? Number(e.target.value) || 0
-                                  : e.target.value,
-                              )
-                            }
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
-                                handleEditSave(idx);
-                              } else if (e.key === 'Escape') {
-                                e.preventDefault();
-                                handleEditCancel();
+                      ) => {
+                        const editingFieldHere = isEditing && editingField === field;
+                        if (!editingFieldHere) {
+                          return (
+                            <td
+                              className={className}
+                              onDoubleClick={() => handleEditStart(idx, field)}
+                            >
+                              {display}
+                            </td>
+                          );
+                        }
+                        return (
+                          <td className={className} onClick={(e) => e.stopPropagation()}>
+                            <Input
+                              type={inputType}
+                              value={String(current[field] ?? '')}
+                              onChange={(e) =>
+                                handleEditChange(
+                                  field,
+                                  inputType === 'number'
+                                    ? Number(e.target.value) || 0
+                                    : e.target.value,
+                                )
                               }
-                            }}
-                            autoFocus
-                            className="h-7 text-xs"
-                          />
-                        </td>
-                      );
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  handleEditSave(idx);
+                                } else if (e.key === 'Escape') {
+                                  e.preventDefault();
+                                  handleEditCancel();
+                                }
+                              }}
+                              autoFocus
+                              className="h-7 text-xs"
+                            />
+                          </td>
+                        );
+                      };
                       return (
-                        <TableRow
-                          key={idx}
-                          onDoubleClick={() => handleEditStart(idx)}
-                          className={isEditing ? 'bg-muted/50' : ''}
-                        >
-                          {isEditing
-                            ? editCell('codigo_cliente', 'text', 'font-mono text-xs')
-                            : <td className="font-mono text-xs">{row.codigo_cliente}</td>}
-                          {isEditing
-                            ? editCell('nome_cliente')
-                            : <td className="text-xs">{row.nome_cliente}</td>}
-                          {isEditing
-                            ? editCell('nf')
-                            : <td className="text-xs">{row.nf || '-'}</td>}
-                          {isEditing
-                            ? editCell('data')
-                            : <td className="text-xs">
-                                {row.data
-                                  ? (() => {
-                                      const d = row.data.split('-');
-                                      return d.length === 3 ? `${d[2]}/${d[1]}/${d[0]}` : row.data;
-                                    })()
-                                  : '-'}
-                              </td>}
-                          {isEditing
-                            ? editCell('transportador')
-                            : <td className="text-xs"><Badge variant="outline" className="text-[10px]">{row.decisao?.transportadora || row.transportador || '-'}</Badge></td>}
-                          {isEditing
-                            ? editCell('volume', 'number', 'text-xs text-center')
-                            : <td className="text-xs text-center">{typeof row.volume === 'number' ? row.volume : '-'}</td>}
+                        <TableRow key={idx} className={isEditing ? 'bg-muted/50' : ''}>
+                          {renderCell('codigoCliente', row.codigoCliente, 'text', 'font-mono text-xs')}
+                          {renderCell('nomeCliente', row.nomeCliente)}
+                          {renderCell('nf', row.nf || '-')}
+                          {renderCell(
+                            'data',
+                            row.data
+                              ? (() => {
+                                  const d = row.data.split('-');
+                                  return d.length === 3 ? `${d[2]}/${d[1]}/${d[0]}` : row.data;
+                                })()
+                              : '-',
+                          )}
+                          {renderCell(
+                            'transportador',
+                            <Badge variant="outline" className="text-[10px]">
+                              {row.decisao?.transportadora || row.transportador || '-'}
+                            </Badge>,
+                          )}
+                          {renderCell('volume', typeof row.volume === 'number' ? row.volume : '-', 'number', 'text-xs text-center')}
                           <td className="text-xs text-center">
                             {parts.length > 0 ? parts.join(' · ') : '-'}
                           </td>
@@ -753,21 +764,91 @@ export default function RomaneioPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {logs.map((log) => (
-                      <TableRow key={log.id} className="cursor-pointer" onClick={() => handleViewLogDetail(log)}>
-                        <TableCell>{new Date(log.criado_em).toLocaleString('pt-BR')}</TableCell>
-                        <TableCell>{new Date(log.data_faturamento).toLocaleDateString('pt-BR')}</TableCell>
-                        <TableCell>{log.total_linhas}</TableCell>
-                        <TableCell>
-                          <Badge variant={log.status === 'gerado' ? 'default' : 'secondary'}>
-                            {log.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Button variant="ghost" size="sm">Ver Detalhes</Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {importedLinhas.map((row, idx) => {
+                      const isEditing = editingRow === idx;
+                      const current = isEditing ? editData : row;
+                      const parts: string[] = [];
+                      if (row.decisao) {
+                        const { situacao, modalidade, flagExcecao, qtdPedidos } = row.decisao;
+                        if (modalidade) parts.push(modalidade);
+                        if (situacao === 'atingido' && qtdPedidos > 0) parts.push(`${qtdPedidos}x`);
+                        else if (situacao === 'sem_pedidos') parts.push('sem pedidos');
+                        if (flagExcecao && !parts.includes('sem pedidos')) parts.push('exceção');
+                        if (situacao === 'instrucao') parts.push('instrução planilha');
+                      }
+                      if (row.observacoes) parts.push(row.observacoes);
+                      const renderCell = (
+                        field: keyof PreviewRow,
+                        display: React.ReactNode,
+                        inputType: 'text' | 'number' = 'text',
+                        className = 'text-xs',
+                      ) => {
+                        const editingFieldHere = isEditing && editingField === field;
+                        if (!editingFieldHere) {
+                          return (
+                            <td
+                              className={className}
+                              onDoubleClick={() => handleEditStart(idx, field)}
+                            >
+                              {display}
+                            </td>
+                          );
+                        }
+                        return (
+                          <td className={className} onClick={(e) => e.stopPropagation()}>
+                            <Input
+                              type={inputType}
+                              value={String(current[field] ?? '')}
+                              onChange={(e) =>
+                                handleEditChange(
+                                  field,
+                                  inputType === 'number'
+                                    ? Number(e.target.value) || 0
+                                    : e.target.value,
+                                )
+                              }
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  handleEditSave(idx);
+                                } else if (e.key === 'Escape') {
+                                  e.preventDefault();
+                                  handleEditCancel();
+                                }
+                              }}
+                              autoFocus
+                              className="h-7 text-xs"
+                            />
+                          </td>
+                        );
+                      };
+                      return (
+                        <TableRow key={idx} className={isEditing ? 'bg-muted/50' : ''}>
+                          {renderCell('codigoCliente', row.codigoCliente, 'text', 'font-mono text-xs')}
+                          {renderCell('nomeCliente', row.nomeCliente)}
+                          {renderCell('nf', row.nf || '-')}
+                          {renderCell(
+                            'data',
+                            row.data
+                              ? (() => {
+                                  const d = row.data.split('-');
+                                  return d.length === 3 ? `${d[2]}/${d[1]}/${d[0]}` : row.data;
+                                })()
+                              : '-',
+                          )}
+                          {renderCell(
+                            'transportador',
+                            <Badge variant="outline" className="text-[10px]">
+                              {row.decisao?.transportadora || row.transportador || '-'}
+                            </Badge>,
+                          )}
+                          {renderCell('volume', typeof row.volume === 'number' ? row.volume : '-', 'number', 'text-xs text-center')}
+                          <td className="text-xs text-center">
+                            {parts.length > 0 ? parts.join(' · ') : '-'}
+                          </td>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               )}
@@ -928,69 +1009,91 @@ export default function RomaneioPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {paginatedRegras.map((regra) => (
-                      <TableRow
-                        key={regra.id}
-                        className={
-                          'group cursor-pointer hover:bg-muted/50 ' +
-                          (regra.pendencias && regra.pendencias.length > 0
-                            ? 'bg-yellow-50 dark:bg-yellow-950/20'
-                            : '')
+                    {importedLinhas.map((row, idx) => {
+                      const isEditing = editingRow === idx;
+                      const current = isEditing ? editData : row;
+                      const parts: string[] = [];
+                      if (row.decisao) {
+                        const { situacao, modalidade, flagExcecao, qtdPedidos } = row.decisao;
+                        if (modalidade) parts.push(modalidade);
+                        if (situacao === 'atingido' && qtdPedidos > 0) parts.push(`${qtdPedidos}x`);
+                        else if (situacao === 'sem_pedidos') parts.push('sem pedidos');
+                        if (flagExcecao && !parts.includes('sem pedidos')) parts.push('exceção');
+                        if (situacao === 'instrucao') parts.push('instrução planilha');
+                      }
+                      if (row.observacoes) parts.push(row.observacoes);
+                      const renderCell = (
+                        field: keyof PreviewRow,
+                        display: React.ReactNode,
+                        inputType: 'text' | 'number' = 'text',
+                        className = 'text-xs',
+                      ) => {
+                        const editingFieldHere = isEditing && editingField === field;
+                        if (!editingFieldHere) {
+                          return (
+                            <td
+                              className={className}
+                              onDoubleClick={() => handleEditStart(idx, field)}
+                            >
+                              {display}
+                            </td>
+                          );
                         }
-                        onClick={() => setSelectedRegra(regra)}
-                      >
-                        <TableCell className="font-mono">{regra.codigo_cliente}</TableCell>
-                        <TableCell className="font-medium">{regra.nome_cliente}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{regra.modalidade_frete}</Badge>
-                        </TableCell>
-                        <TableCell>{regra.transportadora_cif || '-'}</TableCell>
-                        <TableCell>{regra.transportadora_fob || '-'}</TableCell>
-                        <TableCell>
-                          {regra.valor_minimo_frete
-                            ? formatarMoeda(regra.valor_minimo_frete)
-                            : '-'}
-                        </TableCell>
-                        <TableCell>
-                          {regra.frequencia_envio || '-'}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-wrap gap-1">
-                            {regra.pendencias && regra.pendencias.length > 0 ? (
-                              regra.pendencias.map((p) => (
-                                <Badge
-                                  key={p}
-                                  variant="outline"
-                                  className={`text-[10px] px-1.5 py-0 ${PENDENCIAS_CORES[p] || 'bg-gray-100 text-gray-800'}`}
-                                >
-                                  {PENDENCIAS_LABELS[p] || p}
-                                </Badge>
-                              ))
-                            ) : (
-                              <span className="text-xs text-muted-foreground">-</span>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setEditingRule(regra)}
-                            >
-                              Editar
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDeleteRule(regra.codigo_cliente)}
-                            >
-                              Excluir
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                        return (
+                          <td className={className} onClick={(e) => e.stopPropagation()}>
+                            <Input
+                              type={inputType}
+                              value={String(current[field] ?? '')}
+                              onChange={(e) =>
+                                handleEditChange(
+                                  field,
+                                  inputType === 'number'
+                                    ? Number(e.target.value) || 0
+                                    : e.target.value,
+                                )
+                              }
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  handleEditSave(idx);
+                                } else if (e.key === 'Escape') {
+                                  e.preventDefault();
+                                  handleEditCancel();
+                                }
+                              }}
+                              autoFocus
+                              className="h-7 text-xs"
+                            />
+                          </td>
+                        );
+                      };
+                      return (
+                        <TableRow key={idx} className={isEditing ? 'bg-muted/50' : ''}>
+                          {renderCell('codigoCliente', row.codigoCliente, 'text', 'font-mono text-xs')}
+                          {renderCell('nomeCliente', row.nomeCliente)}
+                          {renderCell('nf', row.nf || '-')}
+                          {renderCell(
+                            'data',
+                            row.data
+                              ? (() => {
+                                  const d = row.data.split('-');
+                                  return d.length === 3 ? `${d[2]}/${d[1]}/${d[0]}` : row.data;
+                                })()
+                              : '-',
+                          )}
+                          {renderCell(
+                            'transportador',
+                            <Badge variant="outline" className="text-[10px]">
+                              {row.decisao?.transportadora || row.transportador || '-'}
+                            </Badge>,
+                          )}
+                          {renderCell('volume', typeof row.volume === 'number' ? row.volume : '-', 'number', 'text-xs text-center')}
+                          <td className="text-xs text-center">
+                            {parts.length > 0 ? parts.join(' · ') : '-'}
+                          </td>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               )}
