@@ -399,6 +399,37 @@ export default function RomaneioPage() {
     }
   };
 
+  // ─── Edição inline da tabela de romaneio importado ──────────────────────
+  const handleEditStart = (idx: number) => {
+    setEditingRow(idx);
+    setEditData(importedLinhas[idx]);
+  };
+
+  const handleEditChange = (field: keyof PreviewRow, value: string | number) => {
+    setEditData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleEditSave = (idx: number) => {
+    setImportedLinhas((prev) =>
+      prev.map((row, i) => {
+        if (i !== idx) return row;
+        const next = { ...row, ...editData };
+        // Mantém a exibição do transportador consistente com o valor editado
+        if (editData.transportador !== undefined && next.decisao) {
+          next.decisao = { ...next.decisao, transportadora: editData.transportador };
+        }
+        return next;
+      })
+    );
+    setEditingRow(null);
+    setEditData({});
+  };
+
+  const handleEditCancel = () => {
+    setEditingRow(null);
+    setEditData({});
+  };
+
   // ============================================================
   // Filtered data
   // ============================================================
@@ -606,45 +637,89 @@ export default function RomaneioPage() {
                       <TableHead>Observações</TableHead>
                     </TableRow>
                   </TableHeader>
-                  <TableBody>
-                    {importedLinhas.map((row, idx) => (
-                      <TableRow key={idx}>
-                        <td className="font-mono text-xs">{row.codigo_cliente}</td>
-                        <td className="text-xs">{row.nome_cliente}</td>
-                        <td className="text-xs">{row.nf || '-'}</td>
-                        <td className="text-xs">
-                          {row.data
-                            ? (() => {
-                                const d = row.data.split('-');
-                                return d.length === 3 ? `${d[2]}/${d[1]}/${d[0]}` : row.data;
-                              })()
-                            : '-'}
-                        </td>
-                        <td className="text-xs"><Badge variant="outline" className="text-[10px]">{row.decisao?.transportadora || row.transportador || '-'}</Badge></td>
-                        <td className="text-xs text-center">
-                          {typeof row.volume === 'number' ? row.volume : '-'}
-                        </td>
-                        {(() => {
-                          const parts: string[] = [];
-                          if (row.decisao) {
-                            const { situacao, modalidade, flagExcecao, qtdPedidos } = row.decisao;
-                            if (modalidade) parts.push(modalidade);
-                            if (situacao === 'atingido' && qtdPedidos > 0) parts.push(`${qtdPedidos}x`);
-                            else if (situacao === 'sem_pedidos') parts.push('sem pedidos');
-                            if (flagExcecao && !parts.includes('sem pedidos')) parts.push('exceção');
-                            if (situacao === 'instrucao') parts.push('instrução planilha');
-                          }
-                          if (row.observacoes) parts.push(row.observacoes);
-                          return (
-                            <td className="text-xs text-center">
-                              {parts.length > 0 ? parts.join(' · ') : '-'}
-                            </td>
-                          );
-                        })()}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                                    <TableBody>
+                    {importedLinhas.map((row, idx) => {
+                      const isEditing = editingRow === idx;
+                      const current = isEditing ? editData : row;
+                      const cell = (
+                        field: keyof PreviewRow,
+                        display: React.ReactNode,
+                        inputType: 'text' | 'number' = 'text',
+                        className = 'text-xs',
+                      ) => {
+                        if (!isEditing) {
+                          return <td className={className}>{display}</td>;
+                        }
+                        return (
+                          <td className={className} onClick={(e) => e.stopPropagation()}>
+                            <Input
+                              type={inputType}
+                              value={String(current[field] ?? '')}
+                              onChange={(e) =>
+                                handleEditChange(
+                                  field,
+                                  inputType === 'number'
+                                    ? Number(e.target.value) || 0
+                                    : e.target.value,
+                                )
+                              }
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  handleEditSave(idx);
+                                } else if (e.key === 'Escape') {
+                                  e.preventDefault();
+                                  handleEditCancel();
+                                }
+                              }}
+                              autoFocus
+                              className="h-7 text-xs"
+                            />
+                          </td>
+                        );
+                      };
+                      const parts: string[] = [];
+                      if (row.decisao) {
+                        const { situacao, modalidade, flagExcecao, qtdPedidos } = row.decisao;
+                        if (modalidade) parts.push(modalidade);
+                        if (situacao === 'atingido' && qtdPedidos > 0) parts.push(`${qtdPedidos}x`);
+                        else if (situacao === 'sem_pedidos') parts.push('sem pedidos');
+                        if (flagExcecao && !parts.includes('sem pedidos')) parts.push('exceção');
+                        if (situacao === 'instrucao') parts.push('instrução planilha');
+                      }
+                      if (row.observacoes) parts.push(row.observacoes);
+                      return (
+                        <TableRow
+                          key={idx}
+                          onDoubleClick={() => handleEditStart(idx)}
+                          className={isEditing ? 'bg-muted/50' : ''}
+                        >
+                          {cell('codigoCliente', row.codigoCliente, 'text', 'font-mono text-xs')}
+                          {cell('nomeCliente', row.nomeCliente)}
+                          {cell('nf', row.nf || '-')}
+                          {cell(
+                            'data',
+                            row.data
+                              ? (() => {
+                                  const d = row.data.split('-');
+                                  return d.length === 3 ? `${d[2]}/${d[1]}/${d[0]}` : row.data;
+                                })()
+                              : '-',
+                          )}
+                          {cell(
+                            'transportador',
+                            <Badge variant="outline" className="text-[10px]">
+                              {row.decisao?.transportadora || row.transportador || '-'}
+                            </Badge>,
+                          )}
+                          {cell('volume', typeof row.volume === 'number' ? row.volume : '-', 'number', 'text-xs text-center')}
+                          <td className="text-xs text-center">
+                            {parts.length > 0 ? parts.join(' · ') : '-'}
+                          </td>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>               </Table>
               )}
             </CardContent>
           </Card>
