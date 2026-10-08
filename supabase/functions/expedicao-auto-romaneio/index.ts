@@ -290,7 +290,7 @@ serve(async (req) => {
           rules.map((r) => ({
             codigo_cliente: r.codigo_cliente,
             nome_cliente: r.nome_cliente || r.codigo_cliente,
-            modalidade_frete: r.modalidade_frete || "CIF",
+            modalidade_frete: (r.modalidade_frete || "CIF").replace(/[\s-]*\d+x/i, "").trim() || "CIF",
             valor_minimo_frete: r.valor_minimo_frete || null,
             transportadora_cif: r.transportadora_cif || null,
             transportadora_fob: r.transportadora_fob || null,

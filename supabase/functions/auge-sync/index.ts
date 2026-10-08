@@ -1782,6 +1782,7 @@ async function tryPHP(
         method: p.method,
         headers,
         body: p.method === 'POST' ? p.body : undefined,
+        signal: AbortSignal.timeout(8000),
       });
       auth.jar.ingest(res);
       const text = await res.text();
@@ -4417,7 +4418,6 @@ async function fetchPedidos(
   dateTo?: string,
   length = 500,
 ): Promise<any[]> {
-  const path = '/l.unilux/modComercial/ajax/getListaGestaoPedidos.php';
   const body = new URLSearchParams();
   body.set('pesquisa[idAcao]', '1');
   // Status IDs: 10,12,20,30,40,50,55,60 (Aberto a Entregue)
@@ -4430,66 +4430,84 @@ async function fetchPedidos(
   body.set('pesquisa[Situacao][6]', '55');
   body.set('pesquisa[Situacao][7]', '60');
   body.set('pesquisa[valueAnaliseTecnica]', 'N');
-  if (dateFrom) body.set('pesquisa[dtPedidoDe]', dateFrom);
-  if (dateTo) body.set('pesquisa[dtPedidoAte]', dateTo);
+  if (dateFrom) body.set('pesquisa[dtPedidioDe]', dateFrom);
+  if (dateTo) body.set('pesquisa[dtPedidioAte]', dateTo);
+  body.set('length', String(length));
 
-  const headers: Record<string, string> = {
-    'Cookie': auth.jar.header(),
-    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-    'X-Requested-With': 'XMLHttpRequest',
-    'X-CSRF-TOKEN': auth.csrf,
-    'Origin': AUGE_BASE_URL,
-    'Referer': `${AUGE_BASE_URL}/l.unilux/modComercial/pedidos/gestaoPedidos.php`,
-    'User-Agent': UA,
-    'Accept': 'application/json, text/javascript, */*; q=0.01',
-    'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
-  };
-  if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
-  const res = await fetch(`${AUGE_BASE_URL}${path}`, { method: 'POST', headers, body });
-  auth.jar.ingest(res);
-  const text = await res.text();
-  if (!res.ok) throw new Error(`${path} HTTP ${res.status}: ${text.slice(0, 200)}`);
-  let j: any;
-  try { j = JSON.parse(text); } catch { throw new Error(`Resposta não-JSON em getListaGestaoPedidos: ${text.slice(0, 120)}`); }
-  return Array.isArray(j?.data) ? j.data : [];
+  const candidates = [
+    { method: 'POST' as const, path: '/l.unilux/modVendas/Ajax/getListaGestaoPedidos.php', body, referer: `${AUGE_BASE_URL}/l.unilux/modVendas/gestaoPedidos.php` },
+    { method: 'POST' as const, path: '/l.unilux/modComercial/ajax/getListaGestaoPedidos.php', body, referer: '/l.unilux/modComercial/pedidos/gestaoPedidos.php' },
+  ];
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 12000);
+  try {
+    const { data } = await tryPHP(auth, candidates);
+    return data;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
+// ---------- Helper functions for Auge data mapping ----------
+const stripHtml = (v: any): string => {
+  if (!v) return '';
+  const s = String(v).trim();
+  return s.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+};
+const parseDate = (v: any): string | null => {
+  if (!v) return null;
+  const s = stripHtml(v);
+  if (!s) return null;
+  // Only accept valid date formats: DD/MM/YYYY or YYYY-MM-DD
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) {
+    const parts = s.split('/');
+    return `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+  }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+    return s;
+  }
+  return null;
+};
 
 // ---------- mapearPedidoAuge ----------
 function mapPedidoAuge(row: any): any {
-  const parseDate = (v: any): string | null => {
-    if (!v) return null;
-    const s = String(v).trim();
-    if (!s) return null;
-    // Formatos possíveis: DD/MM/YYYY, YYYY-MM-DD, timestamp
-    if (s.includes('/')) {
-      const parts = s.split('/');
-      if (parts.length === 3) return `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
-    }
-    return s.length >= 10 ? s.slice(0, 10) : s;
-  };
-  const parseNum = (v: any): number => {
-    if (v == null) return 0;
-    const n = Number(String(v).replace(/[^\d.,-]/g, '').replace(',', '.'));
-    return Number.isFinite(n) ? n : 0;
-  };
 
   return {
-    cd_pedido: String(row['NumAtCard'] ?? row['id'] ?? row['code'] ?? '').trim(),
-    nr_pedido: String(row['NumAtCard'] ?? '').trim() || String(row['id'] ?? ''),
-    nome_cliente: String(row['CardName'] ?? '').trim(),
-    cliente_final: String(row['U_dsCliFim'] ?? '').trim() || null,
-    supervisor: String(row['SlpName'] ?? '').trim() || null,
+    cd_pedido: stripHtml(row['cdPedido'] ?? row['NumAtCard'] ?? row['id'] ?? '').slice(0, 30),
+    nr_pedido: stripHtml(row['NumAtCard'] ?? '').trim().slice(0, 30) || stripHtml(row['cdPedido'] ?? '').slice(0, 30),
+    nome_cliente: stripHtml(row['CardName'] ?? '').trim().slice(0, 100),
+    cliente_final: stripHtml(row['U_dsCliFim'] ?? '').trim().slice(0, 100) || null,
+    supervisor: stripHtml(row['SlpName'] ?? '').trim().slice(0, 100) || null,
     dt_documento: parseDate(row['DocDate']),
     dt_efetivacao: parseDate(row['dtEfetivacao']),
-    dt_entrega_prevista: parseDate(row['DocDueDate']),
-    situacao_id: row['idSituacao'] ?? null,
-    situacao: String(row['idSituacao'] ?? '').trim() || null,
-    status_tms: String(row['dsStatusTMS'] ?? '').trim() || null,
-    nf_numero: String(row['invoice_number'] ?? '').trim() || null,
-    nf_serie: String(row['invoice_serie'] ?? '').trim() || null,
+    // DocDate pode ser vazio para pedidos não faturados; usar DocDueDate como fallback
+    dt_entrega_prevista: parseDate(row['DocDueDate'] ?? row['DocDate']),
+    situacao_id: String(row['_idSituacao'] ?? row['idSituacao'] ?? '').slice(0, 30) || null,
+    situacao: stripHtml(row['idSituacao'] ?? '').trim().slice(0, 30) || null,
+    status_tms: stripHtml(row['dsStatusTMS'] ?? '').trim().slice(0, 30) || null,
+    nf_numero: String(row['invoice_number'] ?? '').trim().slice(0, 30) || null,
+    nf_serie: String(row['invoice_serie'] ?? '').trim().slice(0, 30) || null,
     vl_produtos: parseNum(row['vlProdutos']),
     vl_impostos: parseNum(row['vlImpostos']),
-    vl_total: parseNum(row['vlTotalPedido']),
+    // Tentar múltiplos campos possíveis para o valor total do pedido
+    // Para pedidos faturados, o valor pode estar em campos diferentes
+    vl_total: parseNum(
+      row['vlTotalPedido'] ??
+      row['vlTotal'] ??
+      row['ValorTotal'] ??
+      row['vlValor'] ??
+      row['TotalGeral'] ??
+      row['vlTotalGeral'] ??
+      row['vlValorTotal'] ??
+      row['vlLiquido'] ??
+      row['vlLiq'] ??
+      row['vlProdutos'] ??
+      row['vlSubtotal'] ??
+      row['vlSub'] ??
+      row['vl_base'] ??
+      row['vl_total_vendas'] ??
+      row['vlTotalVendas'] ??
+      0
+    ),
     sincronizado_em: new Date().toISOString(),
   };
 }
@@ -4574,11 +4592,65 @@ Deno.serve(async (req) => {
         }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
+      // DEBUG: Ver campos raw do Auge para um pedido específico
+      if (action === 'debug_raw_fields') {
+        const targetCd = String(requestPayload?.target_cd ?? '443674');
+        const debugBody = new URLSearchParams();
+        debugBody.set('pesquisa[idAcao]', '1');
+        debugBody.set('pesquisa[Situacao][0]', '10');
+        debugBody.set('pesquisa[Situacao][1]', '12');
+        debugBody.set('pesquisa[Situacao][2]', '20');
+        debugBody.set('pesquisa[Situacao][3]', '30');
+        debugBody.set('pesquisa[Situacao][4]', '40');
+        debugBody.set('pesquisa[Situacao][5]', '50');
+        debugBody.set('pesquisa[Situacao][6]', '55');
+        debugBody.set('pesquisa[Situacao][7]', '60');
+        debugBody.set('pesquisa[valueAnaliseTecnica]', 'N');
+        debugBody.set('length', '5000');
+        const debugCandidates = [
+          { method: 'POST' as const, path: '/l.unilux/modVendas/Ajax/getListaGestaoPedidos.php', body: debugBody, referer: `${AUGE_BASE_URL}/l.unilux/modVendas/gestaoPedidos.php` },
+          { method: 'POST' as const, path: '/l.unilux/modComercial/ajax/getListaGestaoPedidos.php', body: debugBody, referer: '/l.unilux/modComercial/pedidos/gestaoPedidos.php' },
+        ];
+        const debugData = await tryPHP(auth, debugCandidates);
+        const debugArray = Array.isArray(debugData) ? debugData : [];
+        const match = debugArray.find((r: any) => stripHtml(r['cdPedido'] ?? '').startsWith(targetCd));
+        if (match) {
+          console.log(`[debug_raw] RAW fields for cdPedido=${targetCd}:`, JSON.stringify(match, null, 2));
+          return new Response(JSON.stringify({ ok: true, targetCd, rawFields: match, allKeys: Object.keys(match) }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        } else {
+          return new Response(JSON.stringify({ ok: false, error: `Pedido ${targetCd} não encontrado`, sampleKeys: Object.keys(debugArray[0] ?? {}) }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+      }
+
     // Sonda de descoberta: inspeciona a página de peças prontas do Auge
     // (https://unilux.auge.app/record-manufactured-documents) para mapear o
     // endpoint AJAX/DataTables que alimenta a fila de expedição.
     if (action === 'expedicao_probe_prontos') {
       const probePath = cleanText(requestPayload.path) ?? '/record-manufactured-documents';
+      // Modo GET: testa endpoints ajax do Auge via query string.
+      if (requestPayload.get === true) {
+        const qs = new URLSearchParams();
+        const fields = (requestPayload.fields ?? {}) as Record<string, string>;
+        for (const [k, v] of Object.entries(fields)) qs.set(k, String(v));
+        const r = await fetch(`${AUGE_BASE_URL}${probePath}?${qs}`, {
+          method: 'GET',
+          headers: {
+            'Cookie': jar.header(),
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': csrf,
+            'Origin': AUGE_BASE_URL,
+            'Referer': `${AUGE_BASE_URL}/l/unilux/modVendas/gestaoPedidos.php`,
+            'User-Agent': UA,
+            'Accept': 'application/json, text/javascript, */*; q=0.01',
+          },
+        });
+        jar.ingest(r);
+        const t = await r.text();
+        return new Response(JSON.stringify({
+          ok: r.ok, status: r.status, len: t.length,
+          sample: t.slice(0, 4000),
+        }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
       // Modo POST: testa endpoints ajax legados (DataTables) do Auge.
       if (requestPayload.post === true) {
         const params = new URLSearchParams();
@@ -6944,9 +7016,9 @@ Deno.serve(async (req) => {
 
     // ------------------------------------------------------------
     // romaneio_valor_minimo: soma, por cliente, os pedidos do Auge cuja
-    // data de expedição (DocDueDate) é igual à data do romaneio.
+    // data de expedição (DocDate) é igual à data do romaneio.
     // O Auge só filtra por data do pedido, então buscamos uma janela
-    // de 180 dias e filtramos localmente pela data de entrega prevista.
+    // de 180 dias e filtramos localmente pela data de documento.
     // Fallback: cópia local em auge_pedidos.
     // ------------------------------------------------------------
     if (action === 'romaneio_valor_minimo') {
@@ -6960,40 +7032,51 @@ Deno.serve(async (req) => {
       }
       type PedidoMin = { cd_pedido: string; nome_cliente: string; codigo_cliente: string | null; vl_total: number; situacao: string | null };
       let pedidos: PedidoMin[] = [];
-      let fonte: 'auge' | 'cache' = 'auge';
-      try {
-        const d = new Date(`${dataRomaneio}T12:00:00Z`);
-        d.setUTCDate(d.getUTCDate() - 180);
-        const de = `${String(d.getUTCDate()).padStart(2, '0')}/${String(d.getUTCMonth() + 1).padStart(2, '0')}/${d.getUTCFullYear()}`;
-        const [y, m, dd] = dataRomaneio.split('-');
-        const ate = `${dd}/${m}/${y}`;
-        const rows = await fetchPedidos(auth, de, ate, 5000);
-        pedidos = rows
-          .map((r: any) => ({ raw: r, mapped: mapPedidoAuge(r) }))
-          .filter((x: any) => x.mapped.dt_entrega_prevista === dataRomaneio)
-          .map((x: any) => ({
-            cd_pedido: x.mapped.cd_pedido,
-            nome_cliente: x.mapped.nome_cliente,
-            codigo_cliente: x.raw?.CardCode ? String(x.raw.CardCode).trim() : null,
-            vl_total: Number(x.mapped.vl_total) || 0,
-            situacao: x.mapped.situacao,
-          }));
-      } catch (err) {
-        console.warn('[romaneio_valor_minimo] Auge indisponível, usando cópia local:', getErrorMessage(err));
-        fonte = 'cache';
-        const [y, m, dd] = dataRomaneio.split('-');
-        const { data: cache, error: cacheErr } = await admin
-          .from('auge_pedidos')
-          .select('cd_pedido, nome_cliente, vl_total, situacao, dt_entrega_prevista')
-          .in('dt_entrega_prevista', [dataRomaneio, `${dd}/${m}/${y}`])
-          .limit(5000);
-        if (cacheErr) throw cacheErr;
-        pedidos = (cache ?? []).map((c: any) => ({
-          cd_pedido: c.cd_pedido, nome_cliente: c.nome_cliente ?? '', codigo_cliente: null,
-          vl_total: Number(c.vl_total) || 0, situacao: c.situacao,
-        }));
+      let fonte: 'auge' | 'cache' = 'cache';
+      let augeErro: string | null = null;
+
+      // Primeiro tenta o cache (rápido)
+      const [y, m, dd] = dataRomaneio.split('-');
+      const { data: cache, error: cacheErr } = await admin
+        .from('auge_pedidos')
+        .select('cd_pedido, nome_cliente, vl_total, situacao, dt_entrega_prevista')
+        .in('dt_entrega_prevista', [dataRomaneio, `${dd}/${m}/${y}`])
+        .limit(5000);
+      if (cacheErr) throw cacheErr;
+      pedidos = (cache ?? []).map((c: any) => ({
+        cd_pedido: c.cd_pedido, nome_cliente: c.nome_cliente ?? '', codigo_cliente: null,
+        vl_total: Number(c.vl_total) || 0, situacao: c.situacao,
+      }));
+
+      // Se o cache estiver vazio ou com poucos pedidos, tenta a API
+      if (pedidos.length < 10) {
+        try {
+          const d = new Date(`${dataRomaneio}T12:00:00Z`);
+          d.setUTCDate(d.getUTCDate() - 30);
+          const de = `${String(d.getUTCDate()).padStart(2, '0')}/${String(d.getUTCMonth() + 1).padStart(2, '0')}/${d.getUTCFullYear()}`;
+          const ate = `${dd}/${m}/${y}`;
+          console.log(`[romaneio] cache insuficiente (${pedidos.length}), tentando API...`);
+          const rows = await fetchPedidos(auth, de, ate, 5000);
+          pedidos = rows
+            .map((r: any) => mapPedidoAuge(r))
+            .filter((mapped: any) => {
+              const augeDate = mapped.dt_entrega_prevista;
+              return augeDate === dataRomaneio || augeDate === `${dataRomaneio.replace(/-/g, '/')}`;
+            })
+            .map((mapped: any) => ({
+              cd_pedido: mapped.cd_pedido,
+              nome_cliente: mapped.nome_cliente,
+              codigo_cliente: null,
+              vl_total: Number(mapped.vl_total) || 0,
+              situacao: mapped.situacao,
+            }));
+          fonte = 'auge';
+        } catch (err) {
+          augeErro = getErrorMessage(err);
+          console.warn('[romaneio_valor_minimo] API falhou, mantendo cache:', augeErro);
+        }
       }
-      return new Response(JSON.stringify({ ok: true, fonte, data: dataRomaneio, pedidos }), {
+      return new Response(JSON.stringify({ ok: true, fonte, data: dataRomaneio, pedidos, _debug: { augeError: augeErro } }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -7041,34 +7124,20 @@ if (action === 'sync_pedidos') {
       }
     }
 
-    // Buscar todos os pedidos (com paginação se necessário)
-    let allPedidos: any[] = [];
-    let offset = 0;
-    const batchSize = 500;
+    // Buscar todos os pedidos de uma vez (Auge não suporta offset/paginação)
+    // Para sync incremental, usa a data como filtro via dateFrom
+    const dateFrom = lastMaxDt
+      ? (() => {
+          const d = new Date(lastMaxDt);
+          return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+        })()
+      : undefined;
 
-    while (true) {
-      // Para sync incremental, usa a data como filtro
-      const dateFrom = lastMaxDt
-        ? (() => {
-            const d = new Date(lastMaxDt);
-            return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
-          })()
-        : undefined;
+    console.log(`[sync_pedidos] Buscando pedidos${dateFrom ? ` (desde ${dateFrom})` : ' (completo)'}`);
+    const allRows = await fetchPedidos(auth, dateFrom, undefined, 5000);
+    console.log(`[sync_pedidos] ${allRows.length} linhas retornadas do Auge`);
 
-      const batch = await fetchPedidos(auth, dateFrom, undefined, batchSize);
-      if (!batch || batch.length === 0) break;
-
-      // Mapear campos do Auge para o formato do Supabase
-      const mapped = batch.map(mapPedidoAuge);
-      allPedidos.push(...mapped);
-
-      // Se pegou menos que o tamanho do batch, acabou
-      if (batch.length < batchSize) break;
-
-      offset += batchSize;
-      // Limite de segurança para evitar loop infinito
-      if (allPedidos.length >= 5000) break;
-    }
+    const allPedidos = allRows.map(mapPedidoAuge);
 
     if (allPedidos.length === 0) {
       return new Response(JSON.stringify({
@@ -7076,12 +7145,47 @@ if (action === 'sync_pedidos') {
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
+    // Deduplicate by cd_pedido to avoid ON CONFLICT error
+    const seen = new Set<string>();
+    const uniquePedidos = allPedidos.filter(p => {
+      if (seen.has(p.cd_pedido)) return false;
+      seen.add(p.cd_pedido);
+      return true;
+    });
+    if (uniquePedidos.length !== allPedidos.length) {
+      console.log(`[sync_pedidos] Removidos ${allPedidos.length - uniquePedidos.length} duplicatas por cd_pedido`);
+    }
+
     // Upsert na tabela supabase
+    const first = uniquePedidos[0];
+    const fieldLengths = Object.entries(first).map(([k,v]) => `${k}=${String(v).length}`).join(', ');
+    console.log(`[sync_pedidos] Primeiro pedido mapeado: ${JSON.stringify(first)}`);
+    console.log(`[sync_pedidos] Campos e tamanhos: ${fieldLengths}`);
+    // Check ALL rows for long fields
+    let longFieldFound = false;
+    for (const p of uniquePedidos) {
+      for (const [k, v] of Object.entries(p)) {
+        if (String(v).length > 30) {
+          console.error(`[sync_pedidos] CAMPO LONGO: ${k}=${String(v).substring(0,80)} (len=${String(v).length})`);
+          longFieldFound = true;
+        }
+      }
+    }
+    if (!longFieldFound) {
+      console.log(`[sync_pedidos] Nenhum campo excede 30 chars nas ${uniquePedidos.length} linhas`);
+    }
     const { error } = await admin
       .from('auge_pedidos')
-      .upsert(allPedidos, { onConflict: 'cd_pedido' });
+      .upsert(uniquePedidos, { onConflict: 'cd_pedido' });
 
-    if (error) throw error;
+    if (error) {
+      console.error('[sync_pedidos] Erro upsert:', error.message, 'detalhes:', error.details, 'hint:', error.hint);
+      return new Response(JSON.stringify({
+        ok: false,
+        error: error.message,
+        debug: { fieldLengths, firstRow: first, totalRows: allPedidos.length }
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
 
     // Atualiza estado incremental
     const nowIso = new Date().toISOString();

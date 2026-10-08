@@ -1245,9 +1245,6 @@ export default function RomaneioPage() {
                   <SelectContent>
                     <SelectItem value="CIF">CIF</SelectItem>
                     <SelectItem value="FOB">FOB</SelectItem>
-                    <SelectItem value="CIF_FOB">CIF + FOB</SelectItem>
-                    <SelectItem value="FOB_SEMPRE">FOB Sempre</SelectItem>
-                    <SelectItem value="CIF_SEMPRE">CIF Sempre</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

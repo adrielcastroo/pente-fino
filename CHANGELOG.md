@@ -2,6 +2,15 @@
 
 Todas as releases seguem SemVer (MAJOR.MINOR.PATCH). Fonte única: `src/lib/changelog.ts`.
 
+## 4.13.1 — 2026-10-08
+- 🔧 Expedição: padronização de modalidade_frete para apenas CIF/FOB, removendo opções CIF_FOB, FOB_SEMPRE, CIF_SEMPRE
+- 🔧 Expedição: normalização de valores "CIF 5x"/"FOB 3x" na importação de regras
+- 🐞 Auge-sync: correção de function parseNum duplicada que causava erro 500 em todas as actions
+- 🐞 Auge-sync: campo vl_total agora busca em múltiplas fontes possíveis do Auge
+- 🐞 Auge-sync: timeout de 8s nas requisições e 12s no fetchPedidos para evitar travamentos
+- ⚡ Romaneio: consulta cache-first (~4s vs ~14s) com fallback para API
+- ⚡ Romaneio: timeout de 15s no frontend com feedback visual ao usuário
+
 ## 4.13.0 — 2026-09-16
 - ✨ Corrige testes de colunas de registro, busca de TAGs e robustez do agente IA — ajusta layouts de colunas (adiciona posicao), toIlikeTokens aceita tokens de 1 char, ilikeOr/ilikeAnd corrigidos, testes de Edge Function pulados sem credenciais
 

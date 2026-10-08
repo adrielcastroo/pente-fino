@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { decidirFrete, dataPredominante, type RegraFreteMin, type PedidoAugeMin } from './regraFrete';
 
 const regra: RegraFreteMin = {
-  codigo_cliente: 'C001', nome_cliente: 'Loja Ação Ltda', modalidade_frete: 'CIF_FOB',
+  codigo_cliente: 'C001', nome_cliente: 'Loja Ação Ltda', modalidade_frete: 'CIF',
   valor_minimo_frete: 1000, transportadora_cif: 'TRANSP CIF', transportadora_fob: 'TRANSP FOB',
 };
 const ped = (cd: string, nome: string, v: number, situacao: string | null = '20'): PedidoAugeMin =>

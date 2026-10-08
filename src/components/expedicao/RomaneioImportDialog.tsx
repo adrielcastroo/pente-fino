@@ -67,12 +67,25 @@ async function aplicarRegras(linhas: PreviewRow[], regras: FaturamentoRegra[]): 
   let pedidos: PedidoAugeMin[] | null = null;
   let fonte: string | null = null;
   try {
-    const { data: resp, error } = await supabase.functions.invoke('auge-sync?action=romaneio_valor_minimo', { body: { data } });
-    if (error || !resp?.ok) throw new Error(resp?.error || error?.message || 'Falha na consulta');
-    pedidos = resp.pedidos as PedidoAugeMin[];
-    fonte = resp.fonte;
-  } catch (e) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    try {
+      const { data: resp, error } = await supabase.functions.invoke('auge-sync?action=romaneio_valor_minimo', {
+        body: { data },
+        signal: controller.signal,
+      });
+      if (error || !resp?.ok) throw new Error(resp?.error || error?.message || 'Falha na consulta');
+      pedidos = resp.pedidos as PedidoAugeMin[];
+      fonte = resp.fonte;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  } catch (e: any) {
     console.warn('[RomaneioImport] Falha na consulta Auge:', e);
+    if (e?.name !== 'AbortError') {
+      // Timeout ou erro: tenta usar cache se disponível
+      pedidos = null;
+    }
   }
   return {
     data, fonte,
@@ -285,7 +298,7 @@ export default function RomaneioImportDialog({ open, onOpenChange, onImported, r
                   <div className="space-y-3">
                     <Loader2 className="w-12 h-12 mx-auto text-blue-500 animate-spin" />
                     <p className="font-medium">Consultando Auge...</p>
-                    <p className="text-sm text-muted-foreground">Aplicando regras de frete</p>
+                    <p className="text-sm text-muted-foreground">Isso pode levar até 15 segundos</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
