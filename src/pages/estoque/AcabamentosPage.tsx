@@ -19,6 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import IncluirItemMassaTab from '@/components/acabamentos/IncluirItemMassaTab';
 import TagsTab from '@/components/acabamentos/TagsTab';
 import GerarTagTab from '@/components/acabamentos/GerarTagTab';
+import BuscarAvancadoTab from '@/components/acabamentos/BuscarAvancadoTab';
 import HistoricoTagsTab from '@/components/acabamentos/HistoricoTagsTab';
 
 interface SyncRun {
@@ -259,6 +260,7 @@ export default function AcabamentosPage() {
           <TabsTrigger value="atualizar_desc" className="text-xs">Atualizar descrição</TabsTrigger>
           <TabsTrigger value="tags" className="text-xs">TAGs</TabsTrigger>
           <TabsTrigger value="gerar" className="text-xs">Gerar TAG</TabsTrigger>
+          <TabsTrigger value="buscar" className="text-xs">Buscar avançado</TabsTrigger>
           <TabsTrigger value="historico" className="text-xs">Histórico</TabsTrigger>
         </TabsList>
 
@@ -565,6 +567,9 @@ export default function AcabamentosPage() {
         <TabsContent value="tags" className="mt-0"><TagsTab /></TabsContent>
         <TabsContent value="gerar" className="mt-0">
           <GerarTagTab onVerHistorico={() => setTabPersist('historico')} />
+        </TabsContent>
+        <TabsContent value="buscar" className="mt-0">
+          <BuscarAvancadoTab onVerHistorico={() => setTabPersist('historico')} />
         </TabsContent>
         <TabsContent value="historico" className="mt-0"><HistoricoTagsTab /></TabsContent>
       </Tabs>
