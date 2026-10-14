@@ -254,7 +254,7 @@ export default function AcabamentosPage() {
       />
 
       <Tabs value={tab} onValueChange={setTabPersist} className="space-y-4">
-        <TabsList className="grid grid-cols-2 md:grid-cols-6 w-full md:w-auto">
+        <TabsList className="inline-flex flex-wrap gap-1 w-full md:w-auto md:max-w-fit">
           <TabsTrigger value="consulta" className="text-xs">Consulta</TabsTrigger>
           <TabsTrigger value="massa" className="text-xs">Incluir em massa</TabsTrigger>
           <TabsTrigger value="atualizar_desc" className="text-xs">Atualizar descrição</TabsTrigger>

@@ -4592,6 +4592,57 @@ Deno.serve(async (req) => {
         }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
+    // ------------------------------------------------------------
+    // Regras de Tag Padrão (conformidade na Busca Avançada).
+    // Gerencia mapeamentos padrao_nm -> tag_padrao na tabela
+    // auge_tag_padrao. Não depende de login no Auge: é colocado aqui,
+    // antes do login(), para que o gerenciamento de regras funcione
+    // mesmo sem credenciais do ERP configuradas.
+    // ------------------------------------------------------------
+    if (action === 'tag_padrao_list') {
+      const { data, error } = await admin
+        .from('auge_tag_padrao')
+        .select('id, padrao_nm, tag_padrao, ativo')
+        .order('padrao_nm', { ascending: true });
+      if (error) throw error;
+      return new Response(JSON.stringify({ ok: true, rules: data ?? [] }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (action === 'tag_padrao_save') {
+      let payload: any = {};
+      try { payload = await req.json(); } catch { /* ignore */ }
+      const padraoNm = String(payload?.padrao_nm ?? '').trim();
+      const tagPadrao = String(payload?.tag_padrao ?? '').trim();
+      const ativo = payload?.ativo !== false;
+      if (!padraoNm || !tagPadrao) throw new Error('padrao_nm e tag_padrao são obrigatórios.');
+
+      // Uma regra por padrao_nm: substitui a existente (evita duplicatas).
+      await admin.from('auge_tag_padrao').delete().eq('padrao_nm', padraoNm);
+      const { data, error } = await admin
+        .from('auge_tag_padrao')
+        .insert({ padrao_nm: padraoNm, tag_padrao: tagPadrao, ativo })
+        .select()
+        .single();
+      if (error) throw error;
+      return new Response(JSON.stringify({ ok: true, rule: data }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (action === 'tag_padrao_delete') {
+      let payload: any = {};
+      try { payload = await req.json(); } catch { /* ignore */ }
+      const id = String(payload?.id ?? '').trim();
+      if (!id) throw new Error('id é obrigatório.');
+      const { error } = await admin.from('auge_tag_padrao').delete().eq('id', id);
+      if (error) throw error;
+      return new Response(JSON.stringify({ ok: true, deleted: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
       // DEBUG: Ver campos raw do Auge para um pedido específico
       if (action === 'debug_raw_fields') {
         const targetCd = String(requestPayload?.target_cd ?? '443674');
@@ -5683,6 +5734,56 @@ Deno.serve(async (req) => {
 
 
 
+
+    // ------------------------------------------------------------
+    // Lista de TAGs existentes (valor + fórmula) para alimentar o
+    // seletor de "tag padrão" na Busca Avançada.
+    // Prioridade: auge_tags_calculadas (valor + fórmula completa);
+    // fallback: ds_tag_customizada/distinto em auge_tag_custom.
+    // ------------------------------------------------------------
+    if (action === 'tag_padrao_tags') {
+      let payload: any = {};
+      try { payload = await req.json(); } catch { /* ignore */ }
+      const term = String(payload?.term ?? '').trim();
+      const limit = Math.min(Number(payload?.limit ?? 300), 1000);
+      const seen = new Map<string, { valor: string; formula: string; nm: string }>();
+
+      const push = (valorRaw: unknown, formulaRaw: unknown, nmRaw: unknown) => {
+        const v = String(valorRaw ?? '').trim();
+        if (!v || seen.has(v)) return;
+        seen.set(v, { valor: v, formula: String(formulaRaw ?? '').trim(), nm: String(nmRaw ?? '').trim() });
+      };
+
+      // 1) Espelho local das TAGs calculadas (valor + fórmula).
+      let q = (admin as any)
+        .from('auge_tags_calculadas')
+        .select('nome, nm_tag, descricao, formula')
+        .order('nome', { ascending: true })
+        .limit(limit);
+      if (term) q = q.or(`nome.ilike.%${term}%,nm_tag.ilike.%${term}%,descricao.ilike.%${term}%,formula.ilike.%${term}%`);
+      const { data: calcRows } = await q;
+      for (const r of (calcRows ?? []) as any[]) {
+        push(r.nome ?? r.nm_tag ?? r.descricao, r.formula, r.descricao);
+      }
+
+      // 2) Fallback: TAGs customizadas já salvas (ds_tag_customizada).
+      if (seen.size === 0 || term) {
+        let q2 = (admin as any)
+          .from('auge_tag_custom')
+          .select('ds_tag_customizada, ds_tag_calculada, nm_configuracao')
+          .order('ds_tag_customizada', { ascending: true })
+          .limit(limit);
+        if (term) q2 = q2.ilike('ds_tag_customizada', `%${term}%`);
+        const { data: customRows } = await q2;
+        for (const r of (customRows ?? []) as any[]) {
+          push(r.ds_tag_customizada, r.ds_tag_calculada, r.nm_configuracao);
+        }
+      }
+
+      return new Response(JSON.stringify({ ok: true, tags: Array.from(seen.values()) }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     if (action === 'sync_tag_custom_chunk') {
       const runId = url.searchParams.get('run_id') ?? '';

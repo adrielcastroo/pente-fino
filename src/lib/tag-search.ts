@@ -240,6 +240,56 @@ export function ilikeOr(cols: string[], padrao: string, tokens: string[]): strin
   return parts.join(',');
 }
 
+export interface TagPadraoRegra {
+  id: string;
+  padrao_nm: string;
+  tag_padrao: string;
+  ativo: boolean;
+}
+
+export interface TagCustomRowWithRule {
+  cd_configuracao: string;
+  nm_configuracao: string;
+  tag: string;
+  formula?: string;
+  score: number;
+  /** Regra de tag padrão aplicada (se houver) */
+  regra?: TagPadraoRegra;
+  /** true se a config NÃO possui tag customizada igual ao tag_padrao */
+  foraDoPadrao: boolean;
+}
+
+/**
+ * Marca cada resultado com a regra de tag padrão aplicada e se está fora do padrão.
+ *
+ * Uma config está "fora do padrão" quando nenhuma de suas tags customizadas
+ * (ds_tag_customizada) é exatamente igual ao tag_padrao da regra correspondente.
+ */
+export function aplicarRegrasPadrao(
+  rows: Array<{
+    cd_configuracao: string;
+    nm_configuracao: string;
+    tag: string;
+    formula?: string;
+    score: number;
+  }>,
+  regras: TagPadraoRegra[],
+): TagCustomRowWithRule[] {
+  return rows.map((r) => {
+    const regra = regras.find((rgr) =>
+      (r.nm_configuracao ?? '').toLowerCase().includes(rgr.padrao_nm.toLowerCase())
+    );
+    const temTagPadrao = regra
+      ? rows.some((rw) => rw.cd_configuracao === r.cd_configuracao && rw.tag === regra.tag_padrao)
+      : true;
+    return {
+      ...r,
+      regra,
+      foraDoPadrao: !temTagPadrao,
+    };
+  });
+}
+
 /**
  * PROMPT PARA DESENVOLVIMENTO - CORREÇÃO DE FILTRAGEM NO BLOCO RESUMO
  * 
