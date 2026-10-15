@@ -116,7 +116,7 @@ export function exportRomaneioExcel(linhas: PreviewRow[]) {
   ];
 
   // Apply header styling directly on the sheet
-  const range = XLSX.utils.decode_range(ws);
+  const range = XLSX.utils.decode_range(ws['!ref'] ?? 'A1');
   for (let row = range.s.r; row <= range.e.r; row++) {
     for (let col = range.s.c; col <= range.e.c; col++) {
       const cell = ws[XLSX.utils.encode_cell({ r: row, c: col })];
@@ -214,7 +214,6 @@ export function exportRomaneioImportadoPDF({ dataRomaneio, linhas }: RomaneioImp
     },
     alternateRowStyles: { fillColor: [248, 250, 252] },
     tableLineWidth: 0.1,
-    headLineWidth: 0.5,
     bodyLineWidth: 0.1,
   });
 

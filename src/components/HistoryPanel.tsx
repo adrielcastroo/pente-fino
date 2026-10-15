@@ -8,6 +8,13 @@ import { toast } from 'sonner';
 import { useOperationFeedback } from '@/components/ui/OperationFeedback';
 import { usePerformance } from '@/hooks/use-performance';
 import { useShallow } from 'zustand/react/shallow';
+
+// Feedback simples via toast (substitui referências soltas a 'show').
+const show = (type: 'success' | 'error' | 'info' | 'warning', title: string, description?: string) => {
+  const fn = type === 'success' ? toast.success : type === 'error' ? toast.error : type === 'warning' ? toast.warning : toast.info;
+  fn(title, description ? { description } : undefined);
+};
+
 import { FolderOpen, ChevronDown, Trash2, Pencil, CheckCircle2, Search, Plus, X, Download, Printer, ArrowRightLeft } from 'lucide-react';
 import { RequireRole } from '@/components/auth/RequireRole';
 import { exportConferenceToExcel, exportMotorControleToExcel } from '@/lib/export-utils';
