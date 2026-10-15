@@ -5042,7 +5042,7 @@ Deno.serve(async (req) => {
           body.append('cdItem[]', limparCdItemTransf(r.cdItem));
           body.append('cdDepositoOrigem[]', String(r.cdDepositoOrigem ?? r.deposito ?? '01'));
           body.append('cdDepositoDestino[]', String(r.cdDepositoDestino ?? 'Balcão.'));
-          body.append('qtdTransferencia[]', String(r.qtd ?? r.quantidade ?? ''));
+          body.append('qtdTransferencia[]', String(r.qtd ?? r.quantidade ?? '').toFixed(6).replace('.', ','));
           body.append('cdIndex[]', String(i));
           body.append('nrLote[]', '');
         });
