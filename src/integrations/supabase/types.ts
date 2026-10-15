@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.15"
   }
   public: {
     Tables: {
@@ -1081,6 +1081,33 @@ export type Database = {
           last_scanned_at?: string | null
           nm_configuracao?: string | null
           qtd_tags?: number
+        }
+        Relationships: []
+      }
+      auge_tag_padrao: {
+        Row: {
+          ativo: boolean
+          atualizado_em: string
+          criado_em: string
+          id: string
+          padrao_nm: string
+          tag_padrao: string
+        }
+        Insert: {
+          ativo?: boolean
+          atualizado_em?: string
+          criado_em?: string
+          id?: string
+          padrao_nm: string
+          tag_padrao: string
+        }
+        Update: {
+          ativo?: boolean
+          atualizado_em?: string
+          criado_em?: string
+          id?: string
+          padrao_nm?: string
+          tag_padrao?: string
         }
         Relationships: []
       }
@@ -2251,10 +2278,73 @@ export type Database = {
           },
         ]
       }
+      expedicao_estruturas_temporarias: {
+        Row: {
+          capacidade: number | null
+          codigo: string
+          created_at: string | null
+          descricao: string | null
+          id: string
+        }
+        Insert: {
+          capacidade?: number | null
+          codigo: string
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+        }
+        Update: {
+          capacidade?: number | null
+          codigo?: string
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      expedicao_eventos: {
+        Row: {
+          created_at: string | null
+          detalhes: Json | null
+          estado_anterior: string | null
+          estado_novo: string
+          id: string
+          operador_id: string | null
+          peca_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          detalhes?: Json | null
+          estado_anterior?: string | null
+          estado_novo: string
+          id?: string
+          operador_id?: string | null
+          peca_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          detalhes?: Json | null
+          estado_anterior?: string | null
+          estado_novo?: string
+          id?: string
+          operador_id?: string | null
+          peca_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expedicao_eventos_peca_id_fkey"
+            columns: ["peca_id"]
+            isOneToOne: false
+            referencedRelation: "expedicao_pecas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       expedicao_pecas: {
         Row: {
           alocada_at: string | null
           carrinho_id: string | null
+          cliente_id: string | null
           codigo_etiqueta: string
           codigo_peca: string | null
           conferente_id: string | null
@@ -2262,9 +2352,13 @@ export type Database = {
           created_at: string
           descricao: string | null
           embalador_id: string | null
+          estrutura_temporaria_id: string | null
           etiquetada_at: string
           faturada_at: string | null
           id: string
+          item_pedido_id: string | null
+          pedido_id: string | null
+          picking_id: string | null
           romaneio_id: string | null
           status: Database["public"]["Enums"]["expedicao_peca_status"]
           updated_at: string
@@ -2272,6 +2366,7 @@ export type Database = {
         Insert: {
           alocada_at?: string | null
           carrinho_id?: string | null
+          cliente_id?: string | null
           codigo_etiqueta: string
           codigo_peca?: string | null
           conferente_id?: string | null
@@ -2279,9 +2374,13 @@ export type Database = {
           created_at?: string
           descricao?: string | null
           embalador_id?: string | null
+          estrutura_temporaria_id?: string | null
           etiquetada_at?: string
           faturada_at?: string | null
           id?: string
+          item_pedido_id?: string | null
+          pedido_id?: string | null
+          picking_id?: string | null
           romaneio_id?: string | null
           status?: Database["public"]["Enums"]["expedicao_peca_status"]
           updated_at?: string
@@ -2289,6 +2388,7 @@ export type Database = {
         Update: {
           alocada_at?: string | null
           carrinho_id?: string | null
+          cliente_id?: string | null
           codigo_etiqueta?: string
           codigo_peca?: string | null
           conferente_id?: string | null
@@ -2296,9 +2396,13 @@ export type Database = {
           created_at?: string
           descricao?: string | null
           embalador_id?: string | null
+          estrutura_temporaria_id?: string | null
           etiquetada_at?: string
           faturada_at?: string | null
           id?: string
+          item_pedido_id?: string | null
+          pedido_id?: string | null
+          picking_id?: string | null
           romaneio_id?: string | null
           status?: Database["public"]["Enums"]["expedicao_peca_status"]
           updated_at?: string
@@ -2309,6 +2413,27 @@ export type Database = {
             columns: ["carrinho_id"]
             isOneToOne: false
             referencedRelation: "expedicao_carrinhos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expedicao_pecas_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "auge_clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expedicao_pecas_estrutura_temporaria_id_fkey"
+            columns: ["estrutura_temporaria_id"]
+            isOneToOne: false
+            referencedRelation: "expedicao_estruturas_temporarias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expedicao_pecas_picking_id_fkey"
+            columns: ["picking_id"]
+            isOneToOne: false
+            referencedRelation: "expedicao_pickings"
             referencedColumns: ["id"]
           },
           {
@@ -2862,6 +2987,7 @@ export type Database = {
           condicao_pagamento: string | null
           created_at: string
           dados_extra: Json | null
+          detalhes_adicionais: string | null
           frequencia_envio: string | null
           grupo_economico: string | null
           id: string
@@ -2881,6 +3007,7 @@ export type Database = {
           condicao_pagamento?: string | null
           created_at?: string
           dados_extra?: Json | null
+          detalhes_adicionais?: string | null
           frequencia_envio?: string | null
           grupo_economico?: string | null
           id?: string
@@ -2900,6 +3027,7 @@ export type Database = {
           condicao_pagamento?: string | null
           created_at?: string
           dados_extra?: Json | null
+          detalhes_adicionais?: string | null
           frequencia_envio?: string | null
           grupo_economico?: string | null
           id?: string
@@ -4323,6 +4451,39 @@ export type Database = {
         }
         Relationships: []
       }
+      romaneio_automatico_logs: {
+        Row: {
+          criado_em: string
+          id: string
+          observacao: string | null
+          origem: string
+          referencia: string | null
+          rows: Json | null
+          status: string
+          total_linhas: number
+        }
+        Insert: {
+          criado_em?: string
+          id?: string
+          observacao?: string | null
+          origem?: string
+          referencia?: string | null
+          rows?: Json | null
+          status?: string
+          total_linhas?: number
+        }
+        Update: {
+          criado_em?: string
+          id?: string
+          observacao?: string | null
+          origem?: string
+          referencia?: string | null
+          rows?: Json | null
+          status?: string
+          total_linhas?: number
+        }
+        Relationships: []
+      }
       romaneio_dias: {
         Row: {
           atualizado_em: string | null
@@ -4426,6 +4587,13 @@ export type Database = {
             columns: ["romaneio_id"]
             isOneToOne: false
             referencedRelation: "romaneio_dias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "romaneio_linhas_romaneio_id_fkey"
+            columns: ["romaneio_id"]
+            isOneToOne: false
+            referencedRelation: "romaneio_dias_linhas"
             referencedColumns: ["id"]
           },
         ]
@@ -4795,6 +4963,23 @@ export type Database = {
           cd_configuracao: string | null
           nm_configuracao: string | null
           qtd_tags: number | null
+        }
+        Relationships: []
+      }
+      romaneio_dias_linhas: {
+        Row: {
+          codigo_cliente: string | null
+          criado_em: string | null
+          data_romaneio: string | null
+          id: string | null
+          linha_id: string | null
+          modalidade_frete: string | null
+          nome_cliente: string | null
+          observacoes: string | null
+          quantidade: number | null
+          status: string | null
+          titulo: string | null
+          transportadora: string | null
         }
         Relationships: []
       }
