@@ -19,7 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import apiService from '@/services/api';
+import { apiService } from '@/services/api';
 import { exportRomaneioPDF, exportRomaneioExcel, exportRomaneioImportadoPDF } from '@/lib/expedicao/exports';
 import {
   Dialog,
@@ -467,7 +467,7 @@ export default function RomaneioPage() {
                            r.codigo_cliente.toLowerCase().includes(debouncedSearch.toLowerCase());
       const matchesStatus = filterStatus === 'todos' || r.status === filterStatus;
       const matchesPendencias = filterPendencias === 'todos' ||
-        (r.pendencias || []).includes(filterPendencias);
+        ((r.pendencias || []) as string[]).includes(filterPendencias);
       return matchesSearch && matchesStatus && matchesPendencias;
     });
     result.sort((a, b) => {

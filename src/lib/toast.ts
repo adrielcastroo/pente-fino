@@ -60,4 +60,3 @@ const createToast = () => {
 export const toast = createToast();
 
 // Export types for consumers
-export type { ToastType };
