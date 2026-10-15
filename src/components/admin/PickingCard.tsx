@@ -11,7 +11,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 const DEPOSITO_ORIGEM_PADRAO = '01';
-const DEPOSITO_DESTINO = 'BALCÃO';
+const DEPOSITO_DESTINO = 'Balcão.';
 
 interface PickingRow {
   index: number;

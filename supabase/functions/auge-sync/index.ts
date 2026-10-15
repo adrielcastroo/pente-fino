@@ -5008,8 +5008,8 @@ Deno.serve(async (req) => {
         const nome = String(r.nomeItem ?? r.cdItem ?? '').trim();
         const cdForcado = limparCdItemTransf(r.cdItem);
         const cdValido = /^[A-Z0-9._\-]{2,48}$/i.test(cdForcado) ? cdForcado : '';
-        if (cdValido) return { cdItem: cdValido, cdDepositoOrigem: String(r.cdDepositoOrigem ?? r.deposito ?? '01'), cdDepositoDestino: String(r.cdDepositoDestino ?? 'BALCÃO'), qtd: String(r.qtd ?? r.quantidade ?? '') };
-        return { cdItem: '', cdDepositoOrigem: String(r.cdDepositoOrigem ?? r.deposito ?? '01'), cdDepositoDestino: String(r.cdDepositoDestino ?? 'BALCÃO'), qtd: String(r.qtd ?? r.quantidade ?? ''), _nome: nome };
+        if (cdValido) return { cdItem: cdValido, cdDepositoOrigem: String(r.cdDepositoOrigem ?? r.deposito ?? '01'), cdDepositoDestino: String(r.cdDepositoDestino ?? 'Balcão.'), qtd: String(r.qtd ?? r.quantidade ?? '') };
+        return { cdItem: '', cdDepositoOrigem: String(r.cdDepositoOrigem ?? r.deposito ?? '01'), cdDepositoDestino: String(r.cdDepositoDestino ?? 'Balcão.'), qtd: String(r.qtd ?? r.quantidade ?? ''), _nome: nome };
       });
 
       // Resolve nomes não-correspondentes via busca no Auge
@@ -5041,7 +5041,7 @@ Deno.serve(async (req) => {
         itens.forEach((r: any, i: number) => {
           body.append('cdItem[]', limparCdItemTransf(r.cdItem));
           body.append('cdDepositoOrigem[]', String(r.cdDepositoOrigem ?? r.deposito ?? '01'));
-          body.append('cdDepositoDestino[]', String(r.cdDepositoDestino ?? 'BALCÃO'));
+          body.append('cdDepositoDestino[]', String(r.cdDepositoDestino ?? 'Balcão.'));
           body.append('qtdTransferencia[]', String(r.qtd ?? r.quantidade ?? ''));
           body.append('cdIndex[]', String(i));
           body.append('nrLote[]', '');
