@@ -155,6 +155,7 @@ export default function PickingCard() {
           itens,
           observacao,
           efetivar: false,
+          skip_validacao: true,
         });
 
         if (!resp?.ok || resp?.cdMovimentacao === undefined) {

@@ -4894,9 +4894,13 @@ Deno.serve(async (req) => {
             throw new Error('Cada item precisa de cdItem, cdDepositoOrigem, cdDepositoDestino e qtd.');
           }
         }
-        const { validos, invalidos } = await validarItensTransferencia(auth, itens);
-        if (invalidos.length) {
-          throw new Error(`Itens não encontrados no cadastro: ${invalidos.join(', ')}`);
+        // Picking usa descrição do item como cdItem — pula validação por padrão
+        const skipValidacao = payload?.skip_validacao === true;
+        if (!skipValidacao) {
+          const { validos, invalidos } = await validarItensTransferencia(auth, itens);
+          if (invalidos.length) {
+            throw new Error(`Itens não encontrados no cadastro: ${invalidos.join(', ')}`);
+          }
         }
         const cd = await criarTransferencia(auth, itens, String(payload?.observacao ?? ''));
         let efetivado = false;
@@ -6223,6 +6227,21 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Debug: inspeciona colunas e amostra de linhas de uma consulta
+    if (action === 'debug_consulta') {
+      let payload: any = {};
+      try { payload = await req.json(); } catch { /* ignore */ }
+      const idC = String(payload?.idConsulta ?? '').trim();
+      const limit = Number(payload?.limit ?? 3);
+      if (!idC) throw new Error('idConsulta é obrigatório.');
+      const result = await runConsultaAuge(auth, idC, {});
+      const r = result?.resultado;
+      const cols = r?.columns ?? [];
+      const rows = Array.isArray(r?.data) ? r.data.slice(0, limit) : [];
+      return new Response(JSON.stringify({ ok: true, idConsulta: idC, columns: cols, rows }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
 
 
