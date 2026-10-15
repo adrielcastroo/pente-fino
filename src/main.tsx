@@ -27,9 +27,21 @@ function initObservability() {
     // Verifica se o CDN do PostHog está acessível antes de injetar o script.
     // Se o DNS falhar (net::ERR_NAME_NOT_RESOLVED), não injeta o <script>
     // para evitar o erro de console "Failed to load resource".
-    fetch('https://cdn.posthog.com/version.json', { method: 'HEAD', mode: 'no-cors' })
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+
+    fetch('https://cdn.posthog.com/version.json', {
+      method: 'HEAD',
+      mode: 'no-cors',
+      signal: controller.signal
+    })
       .then(res => {
-        if (!res.ok) throw new Error('CDN não acessível');
+        clearTimeout(timeoutId);
+        // Verify we got a valid JSON response (not an HTML error page from DNS failure)
+        const contentType = res.headers.get('content-type') || '';
+        if (!res.ok || !contentType.includes('application/json')) {
+          throw new Error('CDN não retornou JSON válido');
+        }
         const script = document.createElement('script');
         script.src = 'https://cdn.posthog.com/posthog-js/stable/posthog.min.js';
         script.async = true;
@@ -53,10 +65,14 @@ function initObservability() {
         };
         document.head.appendChild(script);
       })
-      .catch(() => {
+      .catch((error) => {
+        clearTimeout(timeoutId);
         // CDN inacessível (DNS, CORS, firewall) — PostHog client-side desativado.
         // A edge function posthog-analytics (proxy) ainda funciona para consultas.
-        if (import.meta.env.DEV) console.warn('[PostHog] CDN inacessível (DNS). Client-side analytics desativado.');
+        if (import.meta.env.DEV) {
+          console.warn('[PostHog] CDN inacessível:', error.message);
+          console.warn('[PostHog] Client-side analytics desativado.');
+        }
       });
   }
 
