@@ -102,8 +102,27 @@ export default function PickingCard() {
           selecionado: false,
         };
       });
-      setRows(mapped);
-      toast.success(`${mapped.length} pedido(s) encontrado(s).`);
+      // Filtra client-side para garantir precisão (o Auge pode não filtrar datas corretamente)
+      const parseBRDate = (s: string): Date | null => {
+        if (!s) return null;
+        const parts = s.split(/[\/\-]/);
+        if (parts.length !== 3) return null;
+        const day = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1;
+        const year = parts[2].length === 2 ? 2000 + parseInt(parts[2], 10) : parseInt(parts[2], 10);
+        const d = new Date(year, month, day);
+        return isNaN(d.getTime()) ? null : d;
+      };
+      const dInicio = parseBRDate(dataInicio);
+      const dFim = parseBRDate(dataFim);
+      const filtered = dInicio && dFim
+        ? mapped.filter(r => {
+            const d = parseBRDate(r.dtEntrega);
+            return d && d >= dInicio && d <= dFim;
+          })
+        : mapped;
+      setRows(filtered);
+      toast.success(`${filtered.length} pedido(s) encontrado(s).`);
     } catch (e: any) {
       toast.error(e?.message ?? 'Erro na consulta.');
     } finally {
