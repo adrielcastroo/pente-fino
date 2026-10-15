@@ -2529,6 +2529,33 @@ async function postCtlTransferencia(
   try { return JSON.parse(text); } catch { throw new Error(`ctlTransferencia resposta não-JSON: ${text.slice(0, 120)}`); }
 }
 
+/**
+ * Código do item exatamente como o portal Auge envia (HAR de referência):
+ * sem o curinga "*" — com ele o Auge grava um código inexistente e a coluna
+ * "Nome Item" fica vazia.
+ */
+function limparCdItemTransf(cd: string | null | undefined): string {
+  return String(cd ?? '').trim().replace(/\*+$/g, '').slice(0, 48);
+}
+
+/**
+ * Normaliza texto livre antes de enviar ao Auge (PHP legado):
+ * - NFC: acentos "decompostos" (teclados de celular/Mac) viram caracteres únicos;
+ * - aspas/traços tipográficos e espaços especiais viram ASCII;
+ * - remove emoji e caracteres de controle que o Auge não grava.
+ */
+function sanitizarTextoAuge(v: string | null | undefined): string {
+  return String(v ?? '')
+    .normalize('NFC')
+    .replace(/[\u2018\u2019\u201A\u2032]/g, "'")
+    .replace(/[\u201C\u201D\u201E\u2033]/g, '"')
+    .replace(/[\u2013\u2014\u2212]/g, '-')
+    .replace(/\u2026/g, '...')
+    .replace(/[\u00A0\u2000-\u200B\u202F\u205F\u3000]/g, ' ')
+    .replace(/[^\u0009\u000A\u000D\u0020-\u007E\u00A1-\u00FF]/g, '')
+    .trim();
+}
+
 async function criarTransferencia(
   auth: { jar: Jar; csrf: string; apiToken: string | null },
   itens: TransferenciaItem[],
@@ -2542,10 +2569,10 @@ async function criarTransferencia(
   body.set('idEfetivacao', '');
   body.set('idValidacao', 'N');
   body.set('idDuplicar', 'N');
-  body.set('dsObservacao', observacao || '');
+  body.set('dsObservacao', sanitizarTextoAuge(observacao));
   body.set('idLancamentoAjuste', 'N');
   itens.forEach((it, i) => {
-    body.append('cdItem[]', (it.cdItem ?? '').slice(0, 48) + '*');
+    body.append('cdItem[]', limparCdItemTransf(it.cdItem));
     body.append('cdDepositoOrigem[]', it.cdDepositoOrigem);
     body.append('cdDepositoDestino[]', it.cdDepositoDestino);
     const q = typeof it.qtd === 'number' ? it.qtd.toFixed(6).replace('.', ',') : String(it.qtd);
@@ -2713,10 +2740,10 @@ async function atualizarTransferencia(
   body.set('idEfetivacao', '');
   body.set('idValidacao', 'N');
   body.set('idDuplicar', 'N');
-  body.set('dsObservacao', observacao || '');
+  body.set('dsObservacao', sanitizarTextoAuge(observacao));
   body.set('idLancamentoAjuste', 'N');
   itens.forEach((it, i) => {
-    body.append('cdItem[]', (it.cdItem ?? '').slice(0, 48) + '*');
+    body.append('cdItem[]', limparCdItemTransf(it.cdItem));
     body.append('cdDepositoOrigem[]', it.cdDepositoOrigem);
     body.append('cdDepositoDestino[]', it.cdDepositoDestino);
     const q = typeof it.qtd === 'number' ? it.qtd.toFixed(6).replace('.', ',') : String(it.qtd);
