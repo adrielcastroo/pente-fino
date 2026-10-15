@@ -1796,6 +1796,44 @@ async function buscarItemPorCodigo(auth: { jar: Jar; csrf: string; apiToken: str
   return { codigo: String(r.cdItem ?? '').trim(), descricao: r.nmItem ?? null };
 }
 
+// Busca item pelo nome/descrição e retorna o código (cdItem) do primeiro match.
+async function buscarItemPorNome(auth: { jar: Jar; csrf: string; apiToken: string | null }, nome: string): Promise<{ codigo: string; descricao: string } | null> {
+  const qs = new URLSearchParams({
+    idEstoca: 'Y',
+    idVende: '',
+    idCompra: '',
+    idLiquidavel: 'Y',
+    idEmEstoque: '',
+    idAtivo: 'Y',
+    dsPesquisaGeralCdItem: '',
+    dsPesquisaGeralNmItem: nome.trim().slice(0, 80),
+    cdGrupo: '102',
+    idTipoItem: 'N',
+    _: String(Date.now()),
+  });
+  const path = `/l.unilux/modInventario/Ajax/getItensEstoque.php?${qs.toString()}`;
+  const headers: Record<string, string> = {
+    'Cookie': auth.jar.header(),
+    'X-Requested-With': 'XMLHttpRequest',
+    'X-CSRF-TOKEN': auth.csrf,
+    'Referer': `${AUGE_BASE_URL}/l.unilux/modInventario/consultaItens.php`,
+    'User-Agent': UA,
+    'Accept': 'application/json, text/javascript, */*; q=0.01',
+    'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
+  };
+  if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
+  const res = await fetch(`${AUGE_BASE_URL}${path}`, { method: 'GET', headers });
+  auth.jar.ingest(res);
+  const text = await res.text();
+  if (!res.ok) return null;
+  let j: any;
+  try { j = JSON.parse(text); } catch { return null; }
+  const items = Array.isArray(j?.data) ? j.data : [];
+  if (!items.length) return null;
+  const r = items[0];
+  return { codigo: String(r.cdItem ?? '').trim(), descricao: r.nmItem ?? null };
+}
+
 async function validarItensTransferencia(auth: { jar: Jar; csrf: string; apiToken: string | null }, itens: TransferenciaItem[]): Promise<{ validos: string[]; invalidos: string[] }> {
   const validos: string[] = [];
   const invalidos: string[] = [];
@@ -2640,7 +2678,9 @@ async function criarTransferencia(
   body.append('cdIndex[]', String(itens.length));
   body.append('cdMovivimentacao', '');
 
+  console.log(`[criarTransferencia] Body params:`, body.toString().slice(0, 500));
   const j = await postCtlTransferencia(auth, body);
+  console.log(`[criarTransferencia] Resposta ctlTransferencia para itens=${itens.length}:`, JSON.stringify(j).slice(0, 500));
   const cd = j?.cdMovimentacao ?? j?.cdMovivimentacao;
   if (!cd) throw new Error(`Resposta sem cdMovimentacao: ${JSON.stringify(j).slice(0, 200)}`);
   return String(cd);
@@ -4871,6 +4911,88 @@ Deno.serve(async (req) => {
     }
 
 
+    if (action === 'picking_criar') {
+      let payload: any = {};
+      try { payload = await req.json(); } catch { /* ignore */ }
+      const itensIn = Array.isArray(payload?.itens) ? payload.itens : [];
+      if (!itensIn.length) throw new Error('itens é obrigatório.');
+      const observacao = String(payload?.observacao ?? '');
+      const depositos: Record<string, string> = {};
+
+      // Busca TODOS os itens do Auge uma vez (cache por depósito)
+      console.log('[picking_criar] Buscando catálogo de itens...');
+      const catalogo: Array<{ cdItem: string; nmItem: string }> = [];
+      try {
+        const rows = await fetchItensPHP(auth);
+        for (const r of rows) {
+          const cd = String(r.cdItem ?? '').trim();
+          const nm = String(r.nmItem ?? '').trim();
+          if (cd && nm) catalogo.push({ cdItem: cd, nmItem: nm });
+        }
+        console.log(`[picking_criar] Catálogo carregado: ${catalogo.length} itens`);
+      } catch (e: any) {
+        console.warn('[picking_criar] Falha ao carregar catálogo:', e.message);
+      }
+
+      // Resolve cada nome → código
+      const itensResolvidos: TransferenciaItem[] = [];
+      const naoEncontrados: string[] = [];
+      for (const it of itensIn) {
+        const nome = String(it?.nomeItem ?? it?.cdItem ?? '').trim();
+        const depositoOrigem = String(it?.cdDepositoOrigem ?? it?.deposito ?? '01').trim();
+        const depositoDestino = String(it?.cdDepositoDestino ?? 'Balcão.').trim();
+        const qtdRaw = String(it?.quantidade ?? it?.qtd ?? '1').trim();
+        const qtd = parseFloat(qtdRaw.replace('.', ''));
+
+        if (!depositos[depositoOrigem]) {
+          depositos[depositoOrigem] = depositoOrigem; // já normalizado
+        }
+
+        // Tenta resolver pelo nome
+        const match = catalogo.find(c =>
+          c.nmItem.toLowerCase().includes(nome.toLowerCase()) ||
+          nome.toLowerCase().includes(c.nmItem.toLowerCase())
+        );
+        if (match) {
+          itensResolvidos.push({
+            cdItem: match.cdItem,
+            cdDepositoOrigem: depositoOrigem,
+            cdDepositoDestino: depositoDestino,
+            qtd: Number.isFinite(qtd) ? qtd : 1,
+          });
+        } else {
+          // Fallback: tenta buscar diretamente
+          const direct = await buscarItemPorNome(auth, nome);
+          if (direct) {
+            itensResolvidos.push({
+              cdItem: direct.codigo,
+              cdDepositoOrigem: depositoOrigem,
+              cdDepositoDestino: depositoDestino,
+              qtd: Number.isFinite(qtd) ? qtd : 1,
+            });
+          } else {
+            naoEncontrados.push(nome);
+          }
+        }
+      }
+
+      if (!itensResolvidos.length) {
+        throw new Error(`Nenhum item foi resolvido. Não encontrados: ${naoEncontrados.slice(0, 5).join(', ')}`);
+      }
+
+      console.log(`[picking_criar] ${itensResolvidos.length} itens resolvidos, ${naoEncontrados.length} não encontrados`);
+
+      const cd = await criarTransferencia(auth, itensResolvidos, observacao);
+      await admin.from('auge_sync_runs').insert({
+        status: 'success', triggered_by: triggeredBy, entidade: 'transferencias',
+        finished_at: new Date().toISOString(),
+        detalhes: { action: 'picking_criar', cdMovimentacao: cd, itens: itensResolvidos.length, nao_encontrados: naoEncontrados },
+      });
+      return new Response(JSON.stringify({ ok: true, cdMovimentacao: cd, itens_resolvidos: itensResolvidos.length, nao_encontrados: naoEncontrados }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     if (
       action === 'transferencia_criar' ||
       action === 'transferencia_efetivar' ||
@@ -6241,6 +6363,118 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ ok: true, idConsulta: idC, columns: cols, rows }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
+    }
+
+    // Debug: cria transferência de teste e salva resposta completa no banco
+    if (action === 'debug_criar_transferencia') {
+      let payload: any = {};
+      try { payload = await req.json(); } catch { /* ignore */ }
+      const itensIn = Array.isArray(payload?.itens) ? payload.itens : [];
+      if (!itensIn.length) throw new Error('itens é obrigatório.');
+      const observacao = String(payload?.observacao ?? 'debug');
+      try {
+        // Re-cria com logging completo
+        const body = new URLSearchParams();
+        body.set('idAcao', '1');
+        body.set('cdMovivimentacao', '');
+        body.set('idUm', 'UN');
+        body.set('idEfetivacao', '');
+        body.set('idValidacao', 'N');
+        body.set('idDuplicar', 'N');
+        body.set('dsObservacao', toLatin1(observacao || ''));
+        body.set('idLancamentoAjuste', 'N');
+        itensIn.forEach((it: any, i: number) => {
+          body.append('cdItem[]', String(it.cdItem ?? '').slice(0, 48));
+          body.append('cdDepositoOrigem[]', String(it.cdDepositoOrigem ?? ''));
+          body.append('cdDepositoDestino[]', String(it.cdDepositoDestino ?? ''));
+          const q = typeof it.qtd === 'number' ? it.qtd.toFixed(6).replace('.', ',') : String(it.qtd);
+          body.append('qtdTransferencia[]', q);
+          body.append('cdIndex[]', String(i));
+          body.append('nrLote[]', String(it.nrLote ?? ''));
+        });
+        body.append('cdItem[]', '');
+        body.append('cdIndex[]', String(itensIn.length));
+        body.append('cdMovivimentacao', '');
+
+        const path = '/l.unilux/modInventario/estoque/controle/ctlTransferenciaEstoque.php';
+        const headers: Record<string, string> = {
+          'Cookie': auth.jar.header(),
+          'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRF-TOKEN': auth.csrf,
+          'Origin': AUGE_BASE_URL,
+          'Referer': `${AUGE_BASE_URL}/l.unilux/modInventario/estoque/gerirTransferenciaEstoque.php`,
+          'User-Agent': UA,
+          'Accept': 'application/json, text/javascript, */*; q=0.01',
+          'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
+        };
+        if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
+        const res = await fetch(`${AUGE_BASE_URL}${path}`, { method: 'POST', headers, body });
+        auth.jar.ingest(res);
+        const rawText = await res.text();
+        let j: any;
+        try { j = JSON.parse(rawText); } catch { j = { _raw: rawText.slice(0, 500) }; }
+
+        console.log(`[debug_criar] HTTP ${res.status}`);
+        console.log(`[debug_criar] Body: ${body.toString().slice(0, 800)}`);
+        console.log(`[debug_criar] Raw response: ${rawText.slice(0, 1000)}`);
+        console.log(`[debug_criar] Parsed: ${JSON.stringify(j).slice(0, 1000)}`);
+
+        const cd = j?.cdMovimentacao ?? j?.cdMovivimentacao;
+        await admin.from('auge_sync_runs').insert({
+          status: 'success', triggered_by: triggeredBy, entidade: 'transferencias',
+          finished_at: new Date().toISOString(),
+          detalhes: {
+            action: 'debug_criar_transferencia',
+            cdMovimentacao: cd,
+            itens: itensIn.length,
+            http_status: res.status,
+            raw_response: rawText.slice(0, 2000),
+            parsed: j,
+            body_params: body.toString().slice(0, 2000),
+          },
+        });
+        return new Response(JSON.stringify({
+          ok: true,
+          cdMovimentacao: cd,
+          http_status: res.status,
+          raw_response: rawText.slice(0, 1000),
+          parsed: j,
+        }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      } catch (e: any) {
+        await admin.from('auge_sync_runs').insert({
+          status: 'error', triggered_by: triggeredBy, entidade: 'transferencias',
+          finished_at: new Date().toISOString(),
+          erro: e.message,
+          detalhes: { action: 'debug_criar_transferencia', raw: JSON.stringify(payload).slice(0, 2000) },
+        });
+        throw e;
+      }
+    }
+
+    // Debug: consulta os itens de uma transferência
+    if (action === 'debug_transferencia') {
+      let payload: any = {};
+      try { payload = await req.json(); } catch { /* ignore */ }
+      const cd = String(payload?.cdMovimentacao ?? '').trim();
+      if (!cd) throw new Error('cdMovimentacao é obrigatório.');
+      try {
+        const ids = [cd];
+        const { det, itens, debug } = await fetchTransferenciaDetalhe(auth, ids, 'T', 'T');
+        return new Response(JSON.stringify({
+          ok: true,
+          cdMovimentacao: cd,
+          detalhes: det,
+          itens,
+          debug
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } catch (e: any) {
+        return new Response(JSON.stringify({ ok: false, error: e.message }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
     }
 
 

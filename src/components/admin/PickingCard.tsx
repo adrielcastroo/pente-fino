@@ -65,7 +65,7 @@ export default function PickingCard() {
   const [inputDataFim, setInputDataFim] = useState(fmtDateForInput(amanha3));
   const STATUS_PADRAO = 'atend';
   const DEPOSITO_ORIGEM_PADRAO = '01';
-  const DEPOSITO_DESTINO = 'Atend.';
+  const DEPOSITO_DESTINO = 'Balcão.';
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState<PickingRow[]>([]);
   const [criando, setCriando] = useState(false);
@@ -151,11 +151,13 @@ export default function PickingCard() {
         }));
 
         const resp = await callAuge({
-          action: 'transferencia_criar',
-          itens,
+          action: 'picking_criar',
+          itens: grupo.map(r => ({
+            nomeItem: r.nomeItem,
+            deposito: r.deposito,
+            quantidade: r.quantidade,
+          })),
           observacao,
-          efetivar: false,
-          skip_validacao: true,
         });
 
         if (!resp?.ok || resp?.cdMovimentacao === undefined) {
