@@ -9,7 +9,9 @@ import { toast } from 'sonner';
 import { Loader2, Search, Package, CheckCircle2, XCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { supabase } from '@/integrations/supabase/client';
+
+const DEPOSITO_ORIGEM_PADRAO = '01';
+const DEPOSITO_DESTINO = 'BALCÃO';
 
 interface PickingRow {
   index: number;
@@ -34,7 +36,7 @@ function fmtDateForInput(d: Date): string {
 }
 
 async function callAuge(body: Record<string, unknown>) {
-  const { data: session } = await supabase.auth.getSession();
+  const { data: session } = await (await import('@/integrations/supabase/client')).supabase.auth.getSession();
   const token = session.session?.access_token;
   const anon = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY) as string;
   const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/auge-sync`;
@@ -59,8 +61,6 @@ export default function PickingCard() {
   const [inputDataInicio, setInputDataInicio] = useState(fmtDateForInput(hoje));
   const [inputDataFim, setInputDataFim] = useState(fmtDateForInput(amanha3));
   const STATUS_PADRAO = 'atend';
-  const DEPOSITO_ORIGEM_PADRAO = '01';
-  const DEPOSITO_DESTINO = 'Balcão.';
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState<PickingRow[]>([]);
   const [criando, setCriando] = useState(false);
@@ -135,11 +135,16 @@ export default function PickingCard() {
       let sucesso = 0;
       let falha = 0;
 
+      const extraiCodigo = (nome: string): string => {
+        const m = nome.match(/\[([^\]]+)\]\s*$/);
+        return m ? m[1].trim() : nome.trim();
+      };
+
       for (const [chave, grupo] of grupos) {
         const [nrPedido, dtEntrega] = chave.split('|');
         const observacao = `Picking ${dtEntrega} - ${grupo[0].nomeCliente} - ${nrPedido}`;
         const itens = grupo.map(r => ({
-          cdItem: r.nomeItem,
+          cdItem: extraiCodigo(r.nomeItem),
           cdDepositoOrigem: r.deposito,
           cdDepositoDestino: DEPOSITO_DESTINO,
           qtd: r.quantidade.replace('.', ','),
@@ -147,11 +152,7 @@ export default function PickingCard() {
 
         const resp = await callAuge({
           action: 'picking_criar',
-          itens: grupo.map(r => ({
-            nomeItem: r.nomeItem,
-            deposito: r.deposito,
-            quantidade: r.quantidade,
-          })),
+          itens,
           observacao,
         });
 

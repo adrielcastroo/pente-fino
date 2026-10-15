@@ -2539,6 +2539,108 @@ function limparCdItemTransf(cd: string | null | undefined): string {
 }
 
 /**
+ * Busca o código de item pelo nome usando o endpoint getItensEstoque.php do Auge.
+ * Faz cache por request para evitar múltiplas chamadas ao mesmo item.
+ * Retorna null se não encontrar correspondência.
+ */
+async function buscarCdItemPorNome(
+  auth: { jar: Jar; csrf: string; apiToken: string | null },
+  nome: string,
+  cache: Map<string, string>,
+): Promise<string | null> {
+  const key = nome.trim();
+  if (!key) return null;
+  if (cache.has(key)) return cache.get(key) ?? null;
+  try {
+    const qs = new URLSearchParams({
+      idEstoca: 'Y',
+      idVende: '',
+      idCompra: '',
+      idLiquidavel: 'Y',
+      idEmEstoque: '',
+      idAtivo: 'Y',
+      dsPesquisaGeralCdItem: '',
+      dsPesquisaGeralNmItem: key.slice(0, 50), // Auge API 有长度限制
+      cdGrupo: '',
+      idTipoItem: 'N',
+      _: String(Date.now()),
+    });
+    const url = `${AUGE_BASE_URL}/l.unilux/modInventario/Ajax/getItensEstoque.php?${qs.toString()}`;
+    const res = await fetch(url, {
+      headers: {
+        'Cookie': auth.jar.header(),
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRF-TOKEN': auth.csrf,
+        'Referer': `${AUGE_BASE_URL}/l.unilux/modInventario/consultaItens.php`,
+        'User-Agent': UA,
+        'Accept': 'application/json, text/javascript, */*; q=0.01',
+      },
+    });
+    auth.jar.ingest(res);
+    if (!res.ok) { console.warn(`[buscarCdItem] HTTP ${res.status} para "${key}"`); cache.set(key, 'NAO-ENCONTRADO'); return null; }
+    const text = await res.text();
+    let j: any;
+    try { j = JSON.parse(text); } catch { cache.set(key, 'NAO-ENCONTRADO'); return null; }
+    const items = Array.isArray(j?.data) ? j.data : (Array.isArray(j) ? j : []);
+    if (!items.length) { cache.set(key, 'NAO-ENCONTRADO'); return null; }
+    // 改进匹配策略：提取关键词，支持模糊匹配
+    const keywords = extractKeywords(key);
+    const scored = items.map((it: any) => {
+      const nm = String(it.nmItem ?? '').trim();
+      const cd = String(it.cdItem ?? '').trim();
+      let score = 0;
+      for (const kw of keywords) {
+        if (nm.toLowerCase().includes(kw.toLowerCase())) score += 10;
+        if (nm.toLowerCase().startsWith(kw.toLowerCase())) score += 5;
+        // 匹配代码中的子串
+        if (cd.toLowerCase().includes(kw.toLowerCase())) score += 8;
+      }
+      // 长度惩罚（越短越精确）
+      if (score > 0) score -= nm.length / 100;
+      return { it, cd, score };
+    }).filter(x => x.score > 0).sort((a, b) => b.score - a.score);
+    if (!scored.length) {
+      // 回退：用第一个结果（可能是最接近的）
+      const best = items[0];
+      const cd = String(best?.cdItem ?? '').trim();
+      cache.set(key, cd || 'NAO-ENCONTRADO');
+      console.log(`[buscarCdItem] 无精确匹配，使用首结果: "${key}" -> ${cd}`);
+      return cd || null;
+    }
+    const best = scored[0].cd;
+    cache.set(key, best || 'NAO-ENCONTRADO');
+    return best || null;
+  } catch (e: any) {
+    console.warn(`[buscarCdItem] Erro ao buscar "${key}":`, e?.message);
+    cache.set(key, 'ERRO');
+    return null;
+  }
+}
+
+/**
+ * 从物品名称中提取关键词（支持括号内容、缩写等）
+ */
+function extractKeywords(nome: string): string[] {
+  const keywords: string[] = [];
+  const text = nome.trim().toLowerCase();
+  // 提取方括号内容
+  const bracketMatches = text.match(/\[([^\]]+)\]/g);
+  if (bracketMatches) bracketMatches.forEach(m => keywords.push(m.replace(/[\[\]]/g, '').trim()));
+  // 提取常见缩写模式 (PCT, VB, FL, Comp 等)
+  const prefixMatches = text.match(/\b(pct|vb|fl|comp|ctrl|motor|interface)\b/g);
+  if (prefixMatches) prefixMatches.forEach(m => keywords.push(m.trim()));
+  // 提取数字序列（产品编号）
+  const numberMatches = text.match(/\d{4,}/g);
+  if (numberMatches) numberMatches.forEach(m => keywords.push(m));
+  // 如果没有任何提取，使用原始文本的前几个词
+  if (!keywords.length) {
+    const words = text.split(/[\s\.\-\/\\{}()]+/).filter(w => w.length >= 3);
+    keywords.push(...words.slice(0, 3));
+  }
+  return keywords.filter(k => k.length >= 2);
+}
+
+/**
  * Normaliza texto livre antes de enviar ao Auge (PHP legado):
  * - NFC: acentos "decompostos" (teclados de celular/Mac) viram caracteres únicos;
  * - aspas/traços tipográficos e espaços especiais viram ASCII;
@@ -2579,6 +2681,7 @@ async function criarTransferencia(
     body.append('qtdTransferencia[]', q);
     body.append('cdIndex[]', String(i));
     body.append('nrLote[]', it.nrLote ?? '');
+    console.log(`[criarTransferencia] Item ${i}: cdItem="${it.cdItem}", depositoOrig="${it.cdDepositoOrigem}", depositoDest="${it.cdDepositoDestino}", qtd="${q}"`);
   });
   // Linha vazia extra + cdMovivimentacao repetido (observado no HAR)
   body.append('cdItem[]', '');
@@ -4897,22 +5000,111 @@ Deno.serve(async (req) => {
       let payload: any = {};
       try { payload = await req.json(); } catch { /* body opcional em query */ }
       const observacao = String(payload?.observacao ?? 'Picking');
-      const itens = Array.isArray(payload?.itens)
-        ? payload.itens.map((r: any) => ({
-            cdItem: limparCdItemTransf(r.cdItem ?? r.nomeItem),
-            cdDepositoOrigem: String(r.cdDepositoOrigem ?? r.deposito ?? '01'),
-            cdDepositoDestino: String(r.cdDepositoDestino ?? 'Balcão.'),
-            qtd: String(r.qtd ?? r.quantidade ?? ''),
-          }))
-        : [];
+      const itensRaw = Array.isArray(payload?.itens) ? payload.itens : [];
+
+      // Busca código de cada item pelo nome/descrição quando necessário
+      const nomeCache = new Map<string, string>();
+      const itens = itensRaw.map((r: any) => {
+        const nome = String(r.nomeItem ?? r.cdItem ?? '').trim();
+        const cdForcado = limparCdItemTransf(r.cdItem);
+        const cdValido = /^[A-Z0-9._\-]{2,48}$/i.test(cdForcado) ? cdForcado : '';
+        if (cdValido) return { cdItem: cdValido, cdDepositoOrigem: String(r.cdDepositoOrigem ?? r.deposito ?? '01'), cdDepositoDestino: String(r.cdDepositoDestino ?? 'BALCÃO'), qtd: String(r.qtd ?? r.quantidade ?? '') };
+        return { cdItem: '', cdDepositoOrigem: String(r.cdDepositoOrigem ?? r.deposito ?? '01'), cdDepositoDestino: String(r.cdDepositoDestino ?? 'BALCÃO'), qtd: String(r.qtd ?? r.quantidade ?? ''), _nome: nome };
+      });
+
+      // Resolve nomes não-correspondentes via busca no Auge
+      const pendentes = itens.filter(it => !it.cdItem && it._nome);
+      console.log(`[picking_criar] Total itens: ${itens.length}, pendentes: ${pendentes.length}`);
+      for (const it of pendentes) {
+        console.log(`[picking_criar] Tentando resolver: "${it._nome.slice(0, 60)}"`);
+        const cd = await buscarCdItemPorNome(auth, it._nome, nomeCache);
+        console.log(`[picking_criar] Resultado busca: ${cd}`);
+        it.cdItem = cd ?? it._nome; // fallback para o nome se não encontrar
+        if (cd) {
+          console.log(`[picking_criar] Mapeado: "${it._nome.slice(0, 50)}" -> ${cd}`);
+        } else {
+          console.warn(`[picking_criar] NÃO mapeado: "${it._nome.slice(0, 50)}"`);
+        }
+        delete it._nome;
+      }
+
+      if (payload?.debug_raw === true) {
+        const body = new URLSearchParams();
+        body.set('idAcao', '1');
+        body.set('cdMovivimentacao', '');
+        body.set('idUm', 'UN');
+        body.set('idEfetivacao', '');
+        body.set('idValidacao', 'N');
+        body.set('idDuplicar', 'N');
+        body.set('dsObservacao', observacao);
+        body.set('idLancamentoAjuste', 'N');
+        itens.forEach((r: any, i: number) => {
+          body.append('cdItem[]', limparCdItemTransf(r.cdItem));
+          body.append('cdDepositoOrigem[]', String(r.cdDepositoOrigem ?? r.deposito ?? '01'));
+          body.append('cdDepositoDestino[]', String(r.cdDepositoDestino ?? 'BALCÃO'));
+          body.append('qtdTransferencia[]', String(r.qtd ?? r.quantidade ?? ''));
+          body.append('cdIndex[]', String(i));
+          body.append('nrLote[]', '');
+        });
+        body.append('cdItem[]', '');
+        body.append('cdIndex[]', String(itens.length));
+        body.append('cdMovivimentacao', '');
+        const raw = await postCtlTransferencia(auth, body);
+        return new Response(JSON.stringify({ ok: true, rawAugeResponse: raw, bodySent: body.toString(), itens_resolvidos: itens.map((it: any) => ({ nome: it._nome ?? it.cdItem, cdItem: it.cdItem })) }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      console.log(`[picking_criar] ${itens.length} itens para criar:`, JSON.stringify(itens));
       if (!itens.length) throw new Error('Envie ao menos 1 item em "itens".');
+      const destInvalidos = itens.filter((it: any) => !it.cdDepositoDestino || /^\s*$/.test(it.cdDepositoDestino));
+      if (destInvalidos.length > 0) {
+        console.warn('[picking_criar] Alguns itens têm cdDepositoDestino vazio:', destInvalidos.map((it: any) => it._nome ?? it.cdItem));
+        throw new Error('Um ou mais itens não têm cdDepositoDestino definido.');
+      }
       const cd = await criarTransferencia(auth, itens, observacao);
+
+      // Criar rows locais diretamente a partir dos dados do payload (sem fetch pós-criação)
+      const rows: any[] = itens.map((it: any, i: number) => {
+        const code = it.cdItem ?? 'sem-item';
+        return {
+          id_externo: `transf-php:${cd}:item:${i}:${code}`,
+          deposito_origem: cleanText(it.cdDepositoOrigem),
+          deposito_destino: cleanText(it.cdDepositoDestino),
+          codigo_produto: cleanText(code),
+          descricao_produto: normalizeDescricaoProduto(null, code),
+          quantidade: parseNum(it.qtd),
+          situacao: '10',
+          ds_situacao: 'Pendente',
+          valor: 0,
+          documento: cd,
+          data_movimento: new Date().toISOString(),
+          nr_efetivacao: null,
+          ds_efetivacao: null,
+          observacao: observacao,
+          raw: {
+            _cd: cd,
+            _item: { cdItem: code, cdDepositoOrigem: it.cdDepositoOrigem, cdDepositoDestino: it.cdDepositoDestino, qtdTransferencia: it.qtd },
+            _item_index: i,
+            idTipoDocumento: 'PORTAL',
+            idTipoMovimentacao: 'T',
+            dtCriacao: new Date().toISOString(),
+            nmUsuarioCriacao: 'Sistema Auge',
+          },
+          synced_at: new Date().toISOString(),
+          detalhe_sincronizado_em: new Date().toISOString(),
+        };
+      });
+      const { error: errInsert } = await admin.from('auge_transferencias').upsert(rows, { onConflict: 'id_externo' });
+      if (errInsert) console.error('[picking_criar] Erro ao upsert itens:', errInsert);
+      else console.log(`[picking_criar] ${rows.length} item(ns) da transferência ${cd} salvo(s) com sucesso`);
+
       await admin.from('auge_sync_runs').insert({
         status: 'success', triggered_by: triggeredBy, entidade: 'picking',
         finished_at: new Date().toISOString(),
         detalhes: { cdMovimentacao: cd, itens: itens.length },
       });
-      return new Response(JSON.stringify({ ok: true, cdMovimentacao: cd }), {
+      return new Response(JSON.stringify({ ok: true, cdMovimentacao: cd, itens_incluidos: itens.length }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
