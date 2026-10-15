@@ -147,6 +147,18 @@ export default function NovaTransferenciaDialog({
       efetivar ? 'Criando e efetivando...' : 'Criando transferência...'
     );
     try {
+      // Garante que todo código existe no cadastro do Auge (sem curinga "*"):
+      // código inexistente faz o Auge gravar a linha sem "Nome Item".
+      const codigos = Array.from(new Set(linhas.map(l => l.cdItem.trim().replace(/\*+$/, ''))));
+      const { data: achados, error: errCad } = await supabase
+        .from('auge_produtos').select('codigo').in('codigo', codigos);
+      if (!errCad) {
+        const ok = new Set((achados ?? []).map((p: { codigo: string }) => p.codigo));
+        const faltando = codigos.filter(c => !ok.has(c));
+        if (faltando.length) {
+          throw new Error(`Item não encontrado no cadastro do Auge: ${faltando.join(', ')}. Escolha o item pela busca.`);
+        }
+      }
       // Expande cada linha em N itens quando há lotes selecionados
       const itens = linhas.flatMap(l => {
         if (l.lotes.length > 0) {
