@@ -1,3 +1,4 @@
+// @ts-ignore -- dependência opcional de teste
 import "fake-indexeddb/auto";
 import { describe, it, expect, vi } from "vitest";
 

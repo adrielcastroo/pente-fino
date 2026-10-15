@@ -24,7 +24,7 @@ export async function buscarMotoresBipados(
   limit: number = 50,
   searchTerm?: string
 ): Promise<MotorBipado[]> {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('registros')
     .select(`
       id,
@@ -107,7 +107,7 @@ export interface MotorPotencialPerdido {
 export async function buscarMotoresPerdidos(limite: number = 100): Promise<MotorPotencialPerdido[]> {
   const umaSemanaAtras = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
   
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('registros')
     .select('id, item, processo, lote, quantidade, modo_origem, created_at')
     .in('modo_origem', ['motor', 'controle'])
@@ -133,7 +133,7 @@ export async function buscarMotoresPerdidos(limite: number = 100): Promise<Motor
  * Busca em conferências pendentes de motor/controle
  */
 export async function buscarEmConferenciasPendentes(): Promise<any[]> {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('conferencias')
     .select(`
       id, nome, processo, status, iniciado_em, finalizado_em,
@@ -154,7 +154,7 @@ export async function recuperarMotorDeConferencia(
   conferenciaId: string,
   registroId: string
 ): Promise<boolean> {
-  const { data: conf, error: confErr } = await supabase
+  const { data: conf, error: confErr } = await (supabase as any)
     .from('conferencias')
     .select('registros')
     .eq('id', conferenciaId)
@@ -171,7 +171,7 @@ export async function recuperarMotorDeConferencia(
     return false;
   }
 
-  const { error: upsertErr } = await supabase.from('registros').upsert({
+  const { error: upsertErr } = await (supabase as any).from('registros').upsert({
     id: reg.id || registroId,
     item: reg.item,
     processo: reg.processo,

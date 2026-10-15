@@ -34,6 +34,13 @@ import ImportComponentesDialog, {
 import { exportConferenceToExcel } from '@/lib/export-utils';
 import { componentesExportBus } from '@/lib/componentes-export-bus';
 
+// Feedback simples via toast (substitui referências soltas a 'show').
+const show = (type: 'success' | 'error' | 'info' | 'warning', title: string, description?: string) => {
+  const fn = type === 'success' ? toast.success : type === 'error' ? toast.error : type === 'warning' ? toast.warning : toast.info;
+  fn(title, description ? { description } : undefined);
+};
+
+
 
 /* ============================================================
    Tipos & Persistência
@@ -583,7 +590,7 @@ function ComponentesTabela({ itens, onAjustar, onRemover, totalPacotes, isLow }:
 
 export default function ComponentesPage() {
   useDocumentTitle('Conferência — Componentes');
-  const { show } = useOperationFeedback();
+  // feedback via toast (show definido no topo do arquivo)
   const isMobile = useIsMobile();
   const isTablet = useIsTablet();
   const isNarrow = isMobile || isTablet;
