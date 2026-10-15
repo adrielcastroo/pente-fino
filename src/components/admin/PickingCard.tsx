@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +9,7 @@ import { toast } from 'sonner';
 import { Loader2, Search, Package, CheckCircle2, XCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { supabase } from '@/integrations/supabase/client';
 
 interface PickingRow {
   index: number;
@@ -32,11 +32,6 @@ function fmtDate(d: Date): string {
 function fmtDateForInput(d: Date): string {
   return format(d, 'yyyy-MM-dd');
 }
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL as string,
-  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string,
-);
 
 async function callAuge(body: Record<string, unknown>) {
   const { data: session } = await supabase.auth.getSession();

@@ -4890,6 +4890,33 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ==============================================================
+    // PICKING - Criar transferências de separação
+    // ==============================================================
+    if (action === 'picking_criar') {
+      let payload: any = {};
+      try { payload = await req.json(); } catch { /* body opcional em query */ }
+      const observacao = String(payload?.observacao ?? 'Picking');
+      const itens = Array.isArray(payload?.itens)
+        ? payload.itens.map((r: any) => ({
+            cdItem: limparCdItemTransf(r.cdItem ?? r.nomeItem),
+            cdDepositoOrigem: String(r.cdDepositoOrigem ?? r.deposito ?? '01'),
+            cdDepositoDestino: String(r.cdDepositoDestino ?? 'Balcão.'),
+            qtd: String(r.qtd ?? r.quantidade ?? ''),
+          }))
+        : [];
+      if (!itens.length) throw new Error('Envie ao menos 1 item em "itens".');
+      const cd = await criarTransferencia(auth, itens, observacao);
+      await admin.from('auge_sync_runs').insert({
+        status: 'success', triggered_by: triggeredBy, entidade: 'picking',
+        finished_at: new Date().toISOString(),
+        detalhes: { cdMovimentacao: cd, itens: itens.length },
+      });
+      return new Response(JSON.stringify({ ok: true, cdMovimentacao: cd }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // Entregar/Receber folha de transferência da logística (em lote).
     // payload: { ids: string[], idLogistica: 1|2, desejado?: boolean }
     if (action === 'transferencia_logistica') {
