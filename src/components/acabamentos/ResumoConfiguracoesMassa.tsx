@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Layers, ChevronRight, Sparkles, Loader2 } from 'lucide-react';
+import { AlertTriangle, Layers, ChevronRight, Sparkles, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useTagCustomConfigurationSearch } from '@/hooks/useTagCustomConfigurationSearch';
@@ -10,6 +10,7 @@ interface ResumoConfiguracoesMassaProps {
   customAberta: { cd: string; nm: string } | null;
   setCustomAberta: (v: { cd: string; nm: string } | null) => void;
   obrigatoriasCount: number;
+  foraDoPadraoCount?: number;
   disabled?: boolean;
 }
 
@@ -18,6 +19,7 @@ export function ResumoConfiguracoesMassa({
   customAberta,
   setCustomAberta,
   obrigatoriasCount,
+  foraDoPadraoCount = 0,
   disabled = false
 }: ResumoConfiguracoesMassaProps) {
   const termo = termoBusca.trim();
@@ -60,11 +62,19 @@ export function ResumoConfiguracoesMassa({
                     Exibindo configurações que possuam <strong>TODOS</strong> os tokens/palavras inseridas na busca (Curinga SAP B1).
                     As alterações realizadas na composição abaixo serão aplicadas a todas as configurações listadas aqui.
                   </span>
-                  {obrigatoriasCount > 0 && (
-                    <Badge variant="outline" className="text-[9px] border-blue-500/30 text-blue-600 bg-blue-50/50">
-                      {obrigatoriasCount} TAGs Reconhecidas
-                    </Badge>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {obrigatoriasCount > 0 && (
+                      <Badge variant="outline" className="text-[9px] border-blue-500/30 text-blue-600 bg-blue-50/50">
+                        {obrigatoriasCount} TAGs Reconhecidas
+                      </Badge>
+                    )}
+                    {foraDoPadraoCount > 0 && (
+                      <Badge variant="outline" className="text-[9px] border-amber-500/40 text-amber-700 bg-amber-50/50 flex items-center gap-1">
+                        <AlertTriangle className="h-2.5 w-2.5" />
+                        {foraDoPadraoCount} fora do padrão
+                      </Badge>
+                    )}
+                  </div>
                 </div>
 
                 <div className="space-y-1">

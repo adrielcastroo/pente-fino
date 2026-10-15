@@ -28,9 +28,10 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { PageShell, PageHeader } from '@/components/expedicao/ui';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { CalendarClock, Loader2, PlayCircle, Search, Sparkles, CheckCircle2, XCircle, MinusCircle, ExternalLink, ArrowRight, Type, Plus, Layers } from 'lucide-react';
+import { CalendarClock, Loader2, PlayCircle, Search, Sparkles, CheckCircle2, XCircle, MinusCircle, ExternalLink, ArrowRight, Type, Plus, Layers, Package } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import KitsForroCard from '@/components/admin/KitsForroCard';
+import PickingCard from '@/components/admin/PickingCard';
 
 
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -866,12 +867,18 @@ export default function AutomacoesPage() {
             <TabsTrigger value="kits-forro" className="gap-2">
               <Layers className="h-4 w-4" /> Kits com Forro
             </TabsTrigger>
+            <TabsTrigger value="picking" className="gap-2">
+              <Package className="h-4 w-4" /> Picking
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="entrega-apos" className="mt-0">
             <EntregaAposCard />
           </TabsContent>
           <TabsContent value="kits-forro" className="mt-0">
             <KitsForroCard />
+          </TabsContent>
+          <TabsContent value="picking" className="mt-0">
+            <PickingCard />
           </TabsContent>
 
         </Tabs>

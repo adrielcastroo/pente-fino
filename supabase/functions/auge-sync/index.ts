@@ -2545,7 +2545,7 @@ async function criarTransferencia(
   body.set('dsObservacao', observacao || '');
   body.set('idLancamentoAjuste', 'N');
   itens.forEach((it, i) => {
-    body.append('cdItem[]', it.cdItem);
+    body.append('cdItem[]', (it.cdItem ?? '').slice(0, 48) + '*');
     body.append('cdDepositoOrigem[]', it.cdDepositoOrigem);
     body.append('cdDepositoDestino[]', it.cdDepositoDestino);
     const q = typeof it.qtd === 'number' ? it.qtd.toFixed(6).replace('.', ',') : String(it.qtd);
@@ -2716,7 +2716,7 @@ async function atualizarTransferencia(
   body.set('dsObservacao', observacao || '');
   body.set('idLancamentoAjuste', 'N');
   itens.forEach((it, i) => {
-    body.append('cdItem[]', it.cdItem);
+    body.append('cdItem[]', (it.cdItem ?? '').slice(0, 48) + '*');
     body.append('cdDepositoOrigem[]', it.cdDepositoOrigem);
     body.append('cdDepositoDestino[]', it.cdDepositoDestino);
     const q = typeof it.qtd === 'number' ? it.qtd.toFixed(6).replace('.', ',') : String(it.qtd);
@@ -6121,13 +6121,13 @@ Deno.serve(async (req) => {
       });
     }
 
-    // -------------- CONSULTA PARAMETRIZADA (modTI/gerirConsulta) --------------
     if (action === 'run_consulta') {
       let payload: any = {};
       try { payload = await req.json(); } catch { /* ignore */ }
       const idConsulta = String(payload?.idConsulta ?? url.searchParams.get('idConsulta') ?? '').trim();
       if (!idConsulta) throw new Error('idConsulta é obrigatório.');
-      const data = await runConsultaAuge(auth, idConsulta);
+      const parametros = payload?.parametros ?? {};
+      const data = await runConsultaAuge(auth, idConsulta, parametros);
       return new Response(JSON.stringify({ ok: true, ...data }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });

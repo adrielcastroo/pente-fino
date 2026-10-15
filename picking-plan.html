@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Picking - Plano Visual</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', -apple-system, sans-serif; background: #0f172a; color: #e2e8f0; padding: 24px; }
+  h1 { font-size: 20px; margin-bottom: 8px; color: #f8fafc; }
+  .subtitle { font-size: 13px; color: #94a3b8; margin-bottom: 32px; }
+  .section { margin-bottom: 40px; }
+  .section-title { font-size: 14px; font-weight: 600; color: #60a5fa; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .section-title::before { content: ''; width: 3px; height: 16px; background: #3b82f6; border-radius: 2px; }
+
+  /* Card */
+  .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; overflow: hidden; max-width: 1200px; }
+  .card-header { padding: 20px 24px; border-bottom: 1px solid #334155; display: flex; align-items: flex-start; justify-content: space-between; }
+  .card-title { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .card-title .icon { width: 28px; height: 28px; background: #1d4ed8; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .card-desc { font-size: 12px; color: #94a3b8; margin-top: 4px; line-height: 1.5; }
+  .badge { background: #1e3a5f; border: 1px solid #2d5a8a; color: #60a5fa; font-size: 10px; padding: 2px 8px; border-radius: 9999px; display: flex; align-items: center; gap: 4px; }
+
+  /* Filters */
+  .filters { padding: 20px 24px; border-bottom: 1px solid #334155; display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+  .filter-group { display: flex; flex-direction: column; gap: 4px; }
+  .filter-label { font-size: 10px; font-weight: 600; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; }
+  .filter-input { background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 6px 10px; font-size: 12px; color: #e2e8f0; outline: none; width: 140px; }
+  .filter-input:focus { border-color: #3b82f6; }
+  .filter-select { background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 6px 10px; font-size: 12px; color: #e2e8f0; outline: none; width: 200px; }
+  .btn { border: none; border-radius: 6px; padding: 7px 16px; font-size: 12px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.15s; }
+  .btn-primary { background: #1d4ed8; color: white; }
+  .btn-primary:hover { background: #1e40af; }
+  .btn-outline { background: transparent; border: 1px solid #334155; color: #94a3b8; }
+  .btn-outline:hover { border-color: #475569; color: #e2e8f0; }
+  .btn-sm { padding: 4px 10px; font-size: 11px; }
+
+  /* Table */
+  .table-wrap { padding: 16px 24px; max-height: 360px; overflow-y: auto; }
+  .table-meta { font-size: 11px; color: #64748b; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  thead { position: sticky; top: 0; z-index: 1; }
+  th { background: #1e293b; color: #94a3b8; font-weight: 600; text-align: left; padding: 8px 10px; border-bottom: 1px solid #334155; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; }
+  td { padding: 7px 10px; border-bottom: 1px solid #1e293b; color: #cbd5e1; vertical-align: middle; }
+  tr:hover td { background: #1e293b; }
+  tr.selected td { background: #1e3a5f; }
+  .mono { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+  .truncate { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+  .truncate-w { max-width: 220px; }
+  .center { text-align: center; }
+
+  /* Results */
+  .results { padding: 16px 24px; border-top: 1px solid #334155; background: #162032; }
+  .results-title { font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 10px; text-transform: uppercase; }
+  .result-row { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 4px 0; }
+  .result-ok { color: #34d399; }
+  .result-err { color: #f87171; }
+  .result-icon { width: 14px; height: 14px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; flex-shrink: 0; }
+  .result-ok .result-icon { background: #064e3b; }
+  .result-err .result-icon { background: #7f1d1d; }
+
+  /* Flow diagram */
+  .flow { display: flex; align-items: center; gap: 0; flex-wrap: wrap; max-width: 1200px; }
+  .flow-step { background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 16px 20px; text-align: center; min-width: 160px; }
+  .flow-step .step-num { font-size: 10px; font-weight: 700; color: #3b82f6; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
+  .flow-step .step-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .flow-step .step-desc { font-size: 11px; color: #94a3b8; }
+  .flow-arrow { color: #475569; font-size: 18px; padding: 0 8px; }
+
+  /* Observation pattern */
+  .pattern-box { background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 12px; max-width: 1200px; }
+  .pattern-box .label { font-size: 10px; color: #64748b; text-transform: uppercase; margin-bottom: 6px; font-family: 'Inter', sans-serif; }
+  .pattern-box code { color: #34d399; }
+  .pattern-box .placeholder { color: #fbbf24; }
+
+  /* Notes */
+  .notes { max-width: 1200px; margin-top: 24px; padding: 16px 20px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; font-size: 12px; color: #94a3b8; line-height: 1.8; }
+  .notes strong { color: #e2e8f0; }
+  .notes ul { margin-left: 16px; }
+  .notes li { margin-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<h1>Picking — Automação Auge</h1>
+<p class="subtitle">Plano visual da aba Picking na página de Automações · Atualizado em 14/10/2026</p>
+
+<!-- Flow -->
+<div class="section">
+  <div class="section-title">Fluxo da automação</div>
+  <div class="flow">
+    <div class="flow-step">
+      <div class="step-num">Passo 1</div>
+      <div class="step-title">Consultar</div>
+      <div class="step-desc">run_consulta<br/>idConsulta: 1699</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">
+      <div class="step-num">Passo 2</div>
+      <div class="step-title">Preencher campos</div>
+      <div class="step-desc">[%0] atend<br/>[%1] data atual<br/>[%2] +3 dias</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">
+      <div class="step-num">Passo 3</div>
+      <div class="step-title">Selecionar itens</div>
+      <div class="step-desc">Checkbox por linha<br/>+ selecionar todos</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">
+      <div class="step-num">Passo 4</div>
+      <div class="step-title">Agrupar</div>
+      <div class="step-desc">Por (Pedido +<br/>Dt. Entrega)</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">
+      <div class="step-num">Passo 5</div>
+      <div class="step-title">Criar sketch</div>
+      <div class="step-desc">transferencia_criar<br/>efetivar: false</div>
+    </div>
+  </div>
+</div>
+
+<!-- Observation pattern -->
+<div class="section">
+  <div class="section-title">Formato da observação</div>
+  <div class="pattern-box">
+    <div class="label">Observação padrão do esboço de transferência</div>
+            Picking <code>16/10/26</code> - <code>G &amp; G Comércio de Revestimentos LTDA</code> - <code>MOST - 2-C1590</code>
+  </div>
+</div>
+
+<!-- UI Mockup -->
+<div class="section">
+  <div class="section-title">Interface — Aba Picking</div>
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">
+          <div class="icon">📦</div>
+          Picking
+        </div>
+        <div class="card-desc">
+          Consulta pedidos de venda com entrega prevista e gera esboços de transferência para separação de itens.
+          Observação padrão: <code style="background:#0f172a;padding:1px 5px;border-radius:3px;font-size:11px;color:#fbbf24;">Picking {Dt. Entrega} - {Nome Cliente} - {Nr. pedido}</code>
+        </div>
+      </div>
+      <div class="badge">🔌 Auge</div>
+    </div>
+
+    <div class="filters">
+      <div class="filter-group">
+        <div class="filter-label">Status</div>
+        <input class="filter-input" type="text" value="atend" placeholder="ex: atend">
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">Data início</div>
+        <input class="filter-input" type="date" value="2026-10-14">
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">Data fim</div>
+        <input class="filter-input" type="date" value="2026-10-17">
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">Depósito destino</div>
+        <select class="filter-select">
+          <option>DEP-01 — Depósito Central</option>
+          <option>DEP-02 — Depósito Norte</option>
+          <option>DEP-03 — Depósito Sul</option>
+        </select>
+      </div>
+      <button class="btn btn-primary">🔍 Consultar</button>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-meta">
+        <span>5 linha(s) encontrada(s) · 3 selecionada(s)</span>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-outline btn-sm">Desmarcar todos</button>
+          <button class="btn btn-primary btn-sm">📦 Criar transferências (3)</button>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:32px;" class="center">✓</th>
+            <th>Nr. Pedido</th>
+            <th>Nome Cliente</th>
+            <th>Nome Item</th>
+            <th class="center">Qtd</th>
+            <th class="center">Unid.</th>
+            <th class="center">Dt. Entrega</th>
+            <th>Depósito</th>
+            <th>Obs. PV</th>
+            <th>Obs. Item</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="selected">
+            <td class="center" style="color:#34d399;">☑</td>
+            <td class="mono">MOST-2-C1590</td>
+            <td><span class="truncate truncate-w">G & G Comércio de Revestimentos LTDA</span></td>
+            <td><span class="truncate">CHAPA ACM BRANCO 2.5MM</span></td>
+            <td class="center mono">50</td>
+            <td class="center">UN</td>
+            <td class="center">16/10/26</td>
+            <td class="mono">DEP-01</td>
+            <td><span class="truncate">Entrega urgente</span></td>
+            <td><span class="truncate">Verificar peso</span></td>
+          </tr>
+          <tr class="selected">
+            <td class="center" style="color:#34d399;">☑</td>
+            <td class="mono">MOST-2-C1590</td>
+            <td><span class="truncate truncate-w">G & G Comércio de Revestimentos LTDA</span></td>
+            <td><span class="truncate">PROFILADO U 2.0MM</span></td>
+            <td class="center mono">30</td>
+            <td class="center">UN</td>
+            <td class="center">16/10/26</td>
+            <td class="mono">DEP-01</td>
+            <td><span class="truncate">Entrega urgente</span></td>
+            <td><span class="truncate">-</span></td>
+          </tr>
+          <tr>
+            <td class="center">☐</td>
+            <td class="mono">MOST-3-C2001</td>
+            <td><span class="truncate truncate-w">Construções Silva ME</span></td>
+            <td><span class="truncate">TUBO REDONDO 1"</span></td>
+            <td class="center mono">100</td>
+            <td class="center">M</td>
+            <td class="center">17/10/26</td>
+            <td class="mono">DEP-02</td>
+            <td><span class="truncate">-</span></td>
+            <td><span class="truncate">Frágil</span></td>
+          </tr>
+          <tr class="selected">
+            <td class="center" style="color:#34d399;">☑</td>
+            <td class="mono">MOST-1-C0887</td>
+            <td><span class="truncate truncate-w">Metalúrgica Souza EIRELI</span></td>
+            <td><span class="truncate">CHAPA A36 4x6</span></td>
+            <td class="center mono">12</td>
+            <td class="center">UN</td>
+            <td class="center">16/10/26</td>
+            <td class="mono">DEP-01</td>
+            <td><span class="truncate">Prioridade alta</span></td>
+            <td><span class="truncate">Pesos específicos</span></td>
+          </tr>
+          <tr>
+            <td class="center">☐</td>
+            <td class="mono">MOST-4-C3100</td>
+            <td><span class="truncate truncate-w">Ferreiros & Cia LTDA</span></td>
+            <td><span class="truncate">ANGULAR 2x1/2</span></td>
+            <td class="center mono">200</td>
+            <td class="center">M</td>
+            <td class="center">18/10/26</td>
+            <td class="mono">DEP-03</td>
+            <td><span class="truncate">-</span></td>
+            <td><span class="truncate">-</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="results">
+      <div class="results-title">Resultado da criação</div>
+      <div class="result-row result-ok">
+        <div class="result-icon">✓</div>
+        <span class="mono">MOST-2-C1590</span>
+        <span style="color:#64748b;">→ TM-2026-000482</span>
+        <span style="font-size:10px;color:#64748b;">(2 itens agrupados)</span>
+      </div>
+      <div class="result-row result-ok">
+        <div class="result-icon">✓</div>
+        <span class="mono">MOST-1-C0887</span>
+        <span style="color:#64748b;">→ TM-2026-000483</span>
+        <span style="font-size:10px;color:#64748b;">(1 item)</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Technical notes -->
+<div class="notes">
+  <strong>Notas técnicas:</strong>
+  <ul>
+    <li><strong>Edge function fix:</strong> O action <code>run_consulta</code> agora recebe e repassa <code>parametros</code> para <code>runConsultaAuge()</code> — correção feita em <code>supabase/functions/auge-sync/index.ts:6125</code></li>
+    <li><strong>Consulta 1699:</strong> "Relatório de Vendas - Itens PV" — campos [%0]=status, [%1]=data início, [%2]=data fim</li>
+    <li><strong>Data no Auge:</strong> formato dd/MM/yy (ex: 14/10/26)</li>
+    <li><strong>Agrupamento:</strong> linhas são agrupadas por <code>nrPedido|dtEntrega</code>, gerando 1 sketch por grupo</li>
+    <li><strong>Criação:</strong> usa <code>transferencia_criar</code> com <code>efetivar: false</code> (esboço não efetivado)</li>
+    <li><strong>Depósitos:</strong> carregados da tabela <code>auge_depositos</code> via Supabase</li>
+    <li><strong>Observação:</strong> padrão <code>Picking {dtEntrega} - {nomeCliente} - {nrPedido}</code></li>
+  </ul>
+</div>
+
+</body>
+</html>

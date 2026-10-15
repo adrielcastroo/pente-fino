@@ -26,6 +26,7 @@ import { toast } from 'sonner';
 import { normalizeTagFormatC } from '@/lib/tag-utils';
 import { registrarEventoTag, type TagEventoTipo } from '@/lib/tag-historico';
 import { ResumoConfiguracoesMassa } from './ResumoConfiguracoesMassa';
+import { TagPadraoRegraManager } from './TagPadraoRegraManager';
 import {
   extrairPalavras,
   filtrarPorIlike,
@@ -39,6 +40,7 @@ import {
   toIlikePattern,
   toIlikeTokens,
 } from '@/lib/tag-search';
+import { aplicarRegrasPadrao, type TagPadraoRegra } from '@/lib/tag-search';
 
 interface ConfiguracaoLite {
   cd_configuracao: string;
@@ -1031,11 +1033,45 @@ export default function BuscarAvancadoTab({ onVerHistorico }: BuscarAvancadoTabP
     },
   });
 
+  // ---------- Regras de TAG Padrão (conformidade) ----------
+  const { data: regrasPadrao = [] } = useQuery({
+    queryKey: ['tag-padrao-regras'],
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke('auge-sync?action=tag_padrao_list');
+      if (error) throw error;
+      return (data as { rules?: TagPadraoRegra[] })?.rules ?? [];
+    },
+  });
 
+  const foraDoPadraoCount = useMemo(() => {
+    if (configsMassa.length === 0 || regrasPadrao.length === 0) return 0;
+    const rows = configsMassa.map((c) => ({
+      cd_configuracao: c.cd_configuracao,
+      nm_configuracao: c.nm_configuracao,
+      tag: '',
+      formula: undefined,
+      score: 0,
+    }));
+    // Map tags to their configurations so we can check if each config has its padrão tag.
+    const tagsByCfg = new Map<string, Set<string>>();
+    for (const t of tagsBusca) {
+      const tagVal = (t.ds_tag_customizada ?? t.nm_tag_customizada ?? '').trim();
+      if (!tagVal) continue;
+      const existing = tagsByCfg.get(t.cd_configuracao) ?? new Set();
+      existing.add(tagVal);
+      tagsByCfg.set(t.cd_configuracao, existing);
+    }
+    return rows.filter((r) => {
+      const regra = regrasPadrao.find((rgr) =>
+        (r.nm_configuracao ?? '').toLowerCase().includes(rgr.padrao_nm.toLowerCase()),
+      );
+      if (!regra) return false;
+      return !tagsByCfg.get(r.cd_configuracao)?.has(regra.tag_padrao);
+    }).length;
+  }, [configsMassa, regrasPadrao, tagsBusca]);
 
-
-
-  // TAGs Custom existentes que casam com o termo pesquisado (removido lógica duplicada)
+  // TAGs Custom existentes que casam com o termo pesquisado (removido lógica duplicada) (removido lógica duplicada)
   const customsEncontradas = useMemo(() => {
     return configsMassa.map(c => ({ cd: c.cd_configuracao, nm: c.nm_configuracao, qtd: c.qtd_tags }));
   }, [configsMassa]);
@@ -1880,17 +1916,30 @@ export default function BuscarAvancadoTab({ onVerHistorico }: BuscarAvancadoTabP
           </div>
         )}
 
-        <ResumoConfiguracoesMassa 
+        <ResumoConfiguracoesMassa
           termoBusca={termoBusca}
           customAberta={customAberta}
           setCustomAberta={setCustomAberta}
           obrigatoriasCount={obrigatorias.length}
+          foraDoPadraoCount={foraDoPadraoCount}
           disabled={modoEdicaoRelancamento}
         />
       </Card>
 
-
-
+      {/* Gerenciador de regras de TAG padrão */}
+      <Card className="overflow-hidden">
+        <div className="p-3 border-b">
+          <div className="text-xs font-semibold flex items-center gap-2">
+            <span>Regras de TAG Padrão</span>
+            <span className="text-[10px] font-normal text-muted-foreground">
+              Defina qual TAG deve ser padrão para cada tipo de configuração.
+            </span>
+          </div>
+        </div>
+        <div className="p-3">
+          <TagPadraoRegraManager />
+        </div>
+      </Card>
 
       <div className="grid grid-cols-1 gap-4 items-start">
         {/* Tabela principal */}
