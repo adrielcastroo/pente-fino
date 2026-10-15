@@ -1512,6 +1512,35 @@ function parseNum(v: any): number {
   return isFinite(n) ? n : Number(v) || 0;
 }
 
+function toLatin1(text: string): string {
+  // Encode UTF-8 text as Latin-1 (ISO-8859-1) for PHP Auge forms.
+  // The Auge portal expects ISO-8859-1 encoding in form submissions.
+  // We map UTF-8 characters to their closest Latin-1 equivalents.
+  const utf8ToLatin1: Record<number, string> = {
+    224: 'à', 225: 'á', 226: 'â', 227: 'ã', 228: 'ä', 229: 'å',
+    231: 'ç', 232: 'è', 233: 'é', 234: 'ê', 235: 'ë',
+    237: 'í', 238: 'î', 239: 'ï',
+    241: 'ñ', 242: 'ò', 243: 'ó', 244: 'ô', 245: 'õ', 246: 'ö',
+    249: 'ù', 250: 'ú', 251: 'û', 252: 'ü',
+    253: 'ý', 255: 'ÿ',
+    192: 'À', 193: 'Á', 194: 'Â', 195: 'Ã', 196: 'Ä', 197: 'Å',
+    199: 'Ç', 200: 'È', 201: 'É', 202: 'Ê', 203: 'Ë',
+    204: 'Ì', 205: 'Í', 206: 'Î', 207: 'Ï',
+    209: 'Ñ', 210: 'Ò', 211: 'Ó', 212: 'Ô', 213: 'Õ', 214: 'Ö',
+    217: 'Ù', 218: 'Ú', 219: 'Û', 220: 'Ü',
+  };
+  let result = '';
+  for (let i = 0; i < text.length; i++) {
+    const code = text.charCodeAt(i);
+    if (code < 128) {
+      result += text[i];
+    } else {
+      result += utf8ToLatin1[code] ?? '?';
+    }
+  }
+  return result;
+}
+
 function cleanText(v: any): string | null {
   if (v == null) return null;
   const s = String(v).replace(/\s+/g, ' ').trim();
@@ -1728,6 +1757,59 @@ async function fetchItensPHP(
   let j: any;
   try { j = JSON.parse(text); } catch { throw new Error(`Resposta não-JSON: ${text.slice(0,120)}`); }
   return Array.isArray(j?.data) ? j.data : [];
+}
+
+async function buscarItemPorCodigo(auth: { jar: Jar; csrf: string; apiToken: string | null }, cdItem: string): Promise<{ codigo: string; descricao: string } | null> {
+  const qs = new URLSearchParams({
+    idEstoca: 'Y',
+    idVende: '',
+    idCompra: '',
+    idLiquidavel: 'Y',
+    idEmEstoque: '',
+    idAtivo: 'Y',
+    dsPesquisaGeralCdItem: cdItem.trim(),
+    dsPesquisaGeralNmItem: '',
+    cdGrupo: '102',
+    idTipoItem: 'N',
+    _: String(Date.now()),
+  });
+  const path = `/l.unilux/modInventario/Ajax/getItensEstoque.php?${qs.toString()}`;
+  const headers: Record<string, string> = {
+    'Cookie': auth.jar.header(),
+    'X-Requested-With': 'XMLHttpRequest',
+    'X-CSRF-TOKEN': auth.csrf,
+    'Referer': `${AUGE_BASE_URL}/l.unilux/modInventario/consultaItens.php`,
+    'User-Agent': UA,
+    'Accept': 'application/json, text/javascript, */*; q=0.01',
+    'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
+  };
+  if (auth.apiToken) headers['Authorization'] = `Bearer ${auth.apiToken}`;
+  const res = await fetch(`${AUGE_BASE_URL}${path}`, { method: 'GET', headers });
+  auth.jar.ingest(res);
+  const text = await res.text();
+  if (!res.ok) return null;
+  let j: any;
+  try { j = JSON.parse(text); } catch { return null; }
+  const items = Array.isArray(j?.data) ? j.data : [];
+  if (!items.length) return null;
+  const r = items[0];
+  return { codigo: String(r.cdItem ?? '').trim(), descricao: r.nmItem ?? null };
+}
+
+async function validarItensTransferencia(auth: { jar: Jar; csrf: string; apiToken: string | null }, itens: TransferenciaItem[]): Promise<{ validos: string[]; invalidos: string[] }> {
+  const validos: string[] = [];
+  const invalidos: string[] = [];
+  for (const it of itens) {
+    const cd = (it.cdItem ?? '').trim();
+    if (!cd) { invalidos.push(''); continue; }
+    const item = await buscarItemPorCodigo(auth, cd);
+    if (item) {
+      validos.push(cd);
+    } else {
+      invalidos.push(cd);
+    }
+  }
+  return { validos, invalidos };
 }
 
 function mapSaidaPHP(r: any) {
@@ -2542,10 +2624,10 @@ async function criarTransferencia(
   body.set('idEfetivacao', '');
   body.set('idValidacao', 'N');
   body.set('idDuplicar', 'N');
-  body.set('dsObservacao', observacao || '');
+  body.set('dsObservacao', toLatin1(observacao || ''));
   body.set('idLancamentoAjuste', 'N');
   itens.forEach((it, i) => {
-    body.append('cdItem[]', (it.cdItem ?? '').slice(0, 48) + '*');
+    body.append('cdItem[]', (it.cdItem ?? '').slice(0, 48));
     body.append('cdDepositoOrigem[]', it.cdDepositoOrigem);
     body.append('cdDepositoDestino[]', it.cdDepositoDestino);
     const q = typeof it.qtd === 'number' ? it.qtd.toFixed(6).replace('.', ',') : String(it.qtd);
@@ -2713,10 +2795,10 @@ async function atualizarTransferencia(
   body.set('idEfetivacao', '');
   body.set('idValidacao', 'N');
   body.set('idDuplicar', 'N');
-  body.set('dsObservacao', observacao || '');
+  body.set('dsObservacao', toLatin1(observacao || ''));
   body.set('idLancamentoAjuste', 'N');
   itens.forEach((it, i) => {
-    body.append('cdItem[]', (it.cdItem ?? '').slice(0, 48) + '*');
+    body.append('cdItem[]', (it.cdItem ?? '').slice(0, 48));
     body.append('cdDepositoOrigem[]', it.cdDepositoOrigem);
     body.append('cdDepositoDestino[]', it.cdDepositoDestino);
     const q = typeof it.qtd === 'number' ? it.qtd.toFixed(6).replace('.', ',') : String(it.qtd);
@@ -4812,6 +4894,10 @@ Deno.serve(async (req) => {
             throw new Error('Cada item precisa de cdItem, cdDepositoOrigem, cdDepositoDestino e qtd.');
           }
         }
+        const { validos, invalidos } = await validarItensTransferencia(auth, itens);
+        if (invalidos.length) {
+          throw new Error(`Itens não encontrados no cadastro: ${invalidos.join(', ')}`);
+        }
         const cd = await criarTransferencia(auth, itens, String(payload?.observacao ?? ''));
         let efetivado = false;
         if (payload?.efetivar === true) {
@@ -4833,6 +4919,10 @@ Deno.serve(async (req) => {
           if (!it?.cdItem || !it?.cdDepositoOrigem || !it?.cdDepositoDestino || !it?.qtd) {
             throw new Error('Cada item precisa de cdItem, cdDepositoOrigem, cdDepositoDestino e qtd.');
           }
+        }
+        const { validos: validosAtual, invalidos: invalidosAtual } = await validarItensTransferencia(auth, itens);
+        if (invalidosAtual.length) {
+          throw new Error(`Itens não encontrados no cadastro: ${invalidosAtual.join(', ')}`);
         }
         const newCd = await atualizarTransferencia(auth, cd, itens, String(payload?.observacao ?? ''));
         await logDetalhes({ cdMovimentacao: newCd, itens: itens.length });
@@ -6639,6 +6729,10 @@ Deno.serve(async (req) => {
       }
 
       const observacao = String(payload?.observacao ?? 'Necessidade (Pente Fino)');
+      const { invalidos: invalidosNec } = await validarItensTransferencia(auth, itensFinais);
+      if (invalidosNec.length) {
+        throw new Error(`Itens não encontrados no cadastro: ${invalidosNec.join(', ')}`);
+      }
       const cd = await criarTransferencia(auth, itensFinais, observacao);
       let efetivado = false;
       if (payload?.efetivar === true) {
@@ -7054,6 +7148,10 @@ Deno.serve(async (req) => {
           const mm = String(nowBrt.getUTCMonth() + 1).padStart(2, '0');
           const yy = String(nowBrt.getUTCFullYear()).slice(-2);
           const observacao = `${nomeDestino} Nec ${dd}/${mm}/${yy}`;
+          const { invalidos: invalidosCron } = await validarItensTransferencia(auth, itensFinais);
+          if (invalidosCron.length) {
+            return { destino, tag, status: 'erro', itens: itensFinais.length, erro: `Itens não encontrados: ${invalidosCron.join(', ')}` };
+          }
           const cd = await criarTransferencia(auth, itensFinais, observacao);
           if (efetivar) await efetivarTransferencia(auth, cd);
           return { destino, tag, status: 'ok', cdMovimentacao: cd, itens: itensFinais.length, efetivado: efetivar };
