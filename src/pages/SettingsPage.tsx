@@ -71,6 +71,7 @@ import SettingsErrorBoundary from '@/components/SettingsErrorBoundary';
 import { setBipSoundEnabled, isBipSoundEnabled, bipSuccess } from '@/lib/bip-feedback';
 import AugeUserCredentialsDialog from '@/components/auge/AugeUserCredentialsDialog';
 import { UserAvatar } from '@/components/UserAvatar';
+import DOMPurify from 'dompurify';
 
 type ModuleScope = 'estoque' | 'expedicao';
 type Category = {
@@ -614,7 +615,7 @@ export default function SettingsPage() {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <Card className="settings-card rounded-md border border-border bg-card shadow-sm overflow-hidden">
+ <Card className="settings-card rounded-md border border-border bg-card overflow-hidden">
                 <CardHeader className="p-5 sm:p-6 border-b border-border/40">
                   <div className="flex items-center gap-3 mb-1">
                     <div className="p-2 rounded-md bg-primary/10 border border-primary/20 text-primary">
@@ -1457,7 +1458,7 @@ export default function SettingsPage() {
                                     Escaneie o QR Code com seu app autenticador (Google Authenticator, Authy, 1Password, etc.) e digite o código de 6 dígitos abaixo.
                                   </p>
                                   <div className="flex justify-center p-4 bg-white rounded-md">
-                                    <div dangerouslySetInnerHTML={{ __html: mfaQrCode }} />
+                                    <div dangerouslySetInnerHTML={{ __html: mfaQrCode ? DOMPurify.sanitize(mfaQrCode) : '' }} />
                                   </div>
                                   {mfaSecret && (
                                     <div className="space-y-1">

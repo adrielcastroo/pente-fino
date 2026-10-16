@@ -347,7 +347,7 @@ function SecurityTab() {
       </CardShell>
       <SectionToolbar hint="Eventos de autenticação (login, reset, etc.)." onRefresh={load} loading={loading} />
       {loading ? <Skeleton className="h-64 rounded-md" /> : (
-        <div className="rounded-md border border-border/40 shadow-sm bg-card/60 overflow-hidden">
+ <div className="rounded-md border border-border/40 bg-card/60 overflow-hidden">
           <div className="max-h-[600px] overflow-auto">
             <table className="w-full text-xs">
               <thead className="bg-muted/40 sticky top-0 backdrop-blur">

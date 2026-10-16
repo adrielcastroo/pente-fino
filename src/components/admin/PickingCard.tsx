@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,10 @@ import { toast } from 'sonner';
 import { Loader2, Search, Package, CheckCircle2, XCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { supabase } from '@/integrations/supabase/client';
+import { cn } from '@/lib/utils';
+
+const DEPOSITO_ORIGEM_PADRAO = '01';
+const DEPOSITO_DESTINO = 'Balcão.';
 
 interface PickingRow {
   index: number;
@@ -23,6 +26,7 @@ interface PickingRow {
   obsPV: string;
   obsItem: string;
   selecionado: boolean;
+  cdMovimentacao?: string;
 }
 
 function fmtDate(d: Date): string {
@@ -33,8 +37,18 @@ function fmtDateForInput(d: Date): string {
   return format(d, 'yyyy-MM-dd');
 }
 
+// Converte valor de input date (yyyy-mm-dd) para Date LOCAL, evitando
+// distorção de fuso horário (new Date('yyyy-mm-dd') é interpretado como UTC).
+function parseISODateLocal(s: string): Date | null {
+  const parts = s.split('-');
+  if (parts.length !== 3) return null;
+  const [y, m, d] = parts.map(Number);
+  if (isNaN(y) || isNaN(m) || isNaN(d)) return null;
+  return new Date(y, m - 1, d);
+}
+
 async function callAuge(body: Record<string, unknown>) {
-  const { data: session } = await supabase.auth.getSession();
+  const { data: session } = await (await import('@/integrations/supabase/client')).supabase.auth.getSession();
   const token = session.session?.access_token;
   const anon = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY) as string;
   const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/auge-sync`;
@@ -59,12 +73,14 @@ export default function PickingCard() {
   const [inputDataInicio, setInputDataInicio] = useState(fmtDateForInput(hoje));
   const [inputDataFim, setInputDataFim] = useState(fmtDateForInput(amanha3));
   const STATUS_PADRAO = 'atend';
-  const DEPOSITO_ORIGEM_PADRAO = '01';
-  const DEPOSITO_DESTINO = 'Balcão.';
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState<PickingRow[]>([]);
   const [criando, setCriando] = useState(false);
   const [resultados, setResultados] = useState<Array<{ pedido: string; cdMovimentacao?: string; erro?: string }>>([]);
+  const [transferStatuses, setTransferStatuses] = useState<Record<string, { status: string; documento?: string }>>({});
+  const [transferHover, setTransferHover] = useState<string | null>(null);
+  const transferStatusRef = useRef(transferStatuses);
+  transferStatusRef.current = transferStatuses;
 
   const selecionados = useMemo(() => rows.filter(r => r.selecionado), [rows]);
   const podeConsultar = dataInicio && dataFim;
@@ -102,14 +118,86 @@ export default function PickingCard() {
           selecionado: false,
         };
       });
-      setRows(mapped);
-      toast.success(`${mapped.length} pedido(s) encontrado(s).`);
+      // Filtra client-side para garantir precisão (o Auge pode não filtrar datas corretamente)
+      // Converte datas BR (dd/mm/yyyy) e ISO (yyyy-mm-dd) para objetos Date comparáveis,
+      // sempre no timezone LOCAL para evitar distorção (new Date('yyyy-mm-dd') é UTC).
+      const parseDate = (s: string): Date | null => {
+        if (!s) return null;
+        s = s.trim();
+        // Formato ISO: yyyy-mm-dd
+        if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+          return parseISODateLocal(s);
+        }
+        // Formato BR: dd/mm/yyyy
+        const parts = s.split('/');
+        if (parts.length !== 3) return null;
+        const day = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1;
+        const year = parts[2].length === 2 ? 2000 + parseInt(parts[2], 10) : parseInt(parts[2], 10);
+        return new Date(year, month, day);
+      };
+
+      const dInicio = parseDate(dataInicio);
+      const dFim = parseDate(dataFim);
+
+      const filtered = dInicio && dFim
+        ? mapped.filter(r => {
+            const d = parseDate(r.dtEntrega);
+            return d && d >= dInicio && d <= dFim;
+          })
+        : mapped;
+      setRows(filtered);
+      toast.success(`${filtered.length} pedido(s) encontrado(s).`);
     } catch (e: any) {
       toast.error(e?.message ?? 'Erro na consulta.');
     } finally {
       setLoading(false);
     }
   };
+
+  // Busca status da transferência para cada picking ao consultar
+  useEffect(() => {
+    const fetchTransferStatuses = async () => {
+      if (!rows.length) return;
+      const statusMap: Record<string, { status: string; documento?: string }> = {};
+      try {
+        const supa = (await import('@/integrations/supabase/client')).supabase;
+
+        // Para cada picking, busca a transferência correspondente pela observação
+        // A observação contém o padrão: "Picking {dtEntrega} - {nomeCliente} - {nrPedido}"
+        const promises = rows.map(async (row) => {
+          try {
+            // Busca por nrPedido na observação (caminho mais confiável)
+            const { data, error } = await supa
+              .from('auge_transferencias')
+              .select('situacao, ds_situacao, nr_efetivacao, ds_efetivacao, documento, observacao')
+              .ilike('observacao', `%${row.nrPedido}%`)
+              .limit(1);
+
+            if (error || !data || data.length === 0) return;
+
+            const t = data[0];
+            // '10' = Pendente (esboço), nr_efetivacao preenchido = Efetivado
+            const isEfetivado = String(t.nr_efetivacao ?? '').trim() !== '';
+
+            statusMap[row.nrPedido] = {
+              status: isEfetivado ? 'Gerado - Efetivado' : 'Gerado - Esboço',
+              documento: t.documento,
+            };
+          } catch (e) {
+            console.warn('[PickingCard] Erro ao buscar status da transferência:', e);
+          }
+        });
+
+        await Promise.all(promises);
+      } catch (e) {
+        console.error('[PickingCard] Erro ao buscar status das transferências:', e);
+      }
+      setTransferStatuses(statusMap);
+    };
+
+    fetchTransferStatuses();
+  }, [rows]);
 
   const toggleSelecionar = (index: number) => {
     setRows(rs => rs.map((r, i) => i === index ? { ...r, selecionado: !r.selecionado } : r));
@@ -135,11 +223,16 @@ export default function PickingCard() {
       let sucesso = 0;
       let falha = 0;
 
+      const extraiCodigo = (nome: string): string => {
+        const m = nome.match(/\[([^\]]+)\]\s*$/);
+        return m ? m[1].trim() : nome.trim();
+      };
+
       for (const [chave, grupo] of grupos) {
         const [nrPedido, dtEntrega] = chave.split('|');
         const observacao = `Picking ${dtEntrega} - ${grupo[0].nomeCliente} - ${nrPedido}`;
         const itens = grupo.map(r => ({
-          cdItem: r.nomeItem,
+          cdItem: extraiCodigo(r.nomeItem),
           cdDepositoOrigem: r.deposito,
           cdDepositoDestino: DEPOSITO_DESTINO,
           qtd: r.quantidade.replace('.', ','),
@@ -147,11 +240,7 @@ export default function PickingCard() {
 
         const resp = await callAuge({
           action: 'picking_criar',
-          itens: grupo.map(r => ({
-            nomeItem: r.nomeItem,
-            deposito: r.deposito,
-            quantidade: r.quantidade,
-          })),
+          itens,
           observacao,
         });
 
@@ -203,7 +292,11 @@ export default function PickingCard() {
               id="pick-data-inicio"
               type="date"
               value={inputDataInicio}
-              onChange={(e) => { setInputDataInicio(e.target.value); setDataInicio(fmtDate(new Date(e.target.value))); }}
+              onChange={(e) => {
+                setInputDataInicio(e.target.value);
+                const parsed = parseISODateLocal(e.target.value);
+                if (parsed) setDataInicio(fmtDate(parsed));
+              }}
               className="h-9 text-xs"
             />
           </div>
@@ -213,7 +306,11 @@ export default function PickingCard() {
               id="pick-data-fim"
               type="date"
               value={inputDataFim}
-              onChange={(e) => { setInputDataFim(e.target.value); setDataFim(fmtDate(new Date(e.target.value))); }}
+              onChange={(e) => {
+                setInputDataFim(e.target.value);
+                const parsed = parseISODateLocal(e.target.value);
+                if (parsed) setDataFim(fmtDate(parsed));
+              }}
               className="h-9 text-xs"
             />
           </div>
@@ -272,13 +369,20 @@ export default function PickingCard() {
                       className={`border-t cursor-pointer hover:bg-muted/30 ${row.selecionado ? 'bg-primary/5' : ''}`}
                       onClick={() => toggleSelecionar(row.index)}
                     >
-                      <td className="px-2 py-1.5 text-center">
+                      <td className="px-2 py-1.5 text-center relative">
                         <input
                           type="checkbox"
                           checked={row.selecionado}
                           onChange={() => toggleSelecionar(row.index)}
                           onClick={(e) => e.stopPropagation()}
                         />
+                        {transferStatuses[row.nrPizza] && (
+                          <span className="absolute left-2 top-2 z-10 bg-primary/90 text-white text-xs px-2 py-1 rounded"
+                            title={transferStatuses[row.nrPizza].documento || 'Documento não disponível'}
+                          >
+                            {transferStatuses[row.nrPizza].status}
+                          </span>
+                        )}
                       </td>
                       <td className="px-2 py-1.5 font-mono">{row.nrPedido}</td>
                       <td className="px-2 py-1.5 max-w-[200px] truncate">{row.nomeCliente}</td>

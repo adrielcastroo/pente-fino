@@ -88,7 +88,7 @@ TemplateCard.displayName = 'TemplateCard';
 export const TemplateCardSkeleton = memo(function TemplateCardSkeleton() {
   return (
     <div className="border border-border rounded-xl p-4 bg-card animate-pulse">
-      <div className="aspect-[100/150] bg-muted rounded-lg mb-3" />
+      <div className="aspect-[2/3] bg-muted rounded-lg mb-3" />
       <div className="h-4 bg-muted rounded w-2/3 mb-2" />
       <div className="h-3 bg-muted rounded w-1/2 mb-3" />
       <div className="h-9 bg-muted rounded" />

@@ -339,7 +339,7 @@ export default function MotorControlePage() {
                 <motion.div 
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="flex items-center gap-4 p-4 rounded-md bg-primary/5 border border-primary/10 shadow-sm"
+ className="flex items-center gap-4 p-4 rounded-md bg-primary/5 border border-primary/10 "
                 >
                   <Switch 
                     checked={temCaixa} 

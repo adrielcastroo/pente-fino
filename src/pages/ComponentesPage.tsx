@@ -119,7 +119,7 @@ function labelUnidade(unidade: string | null | undefined): string {
    ============================================================ */
 
 const INPUT_BASE =
-  'w-full h-11 rounded-lg border border-border bg-card px-3.5 text-sm font-mono shadow-sm ' +
+ 'w-full h-11 rounded-lg border border-border bg-card px-3.5 text-sm font-mono ' +
   'transition-all duration-200 hover:border-primary/40 focus:border-primary focus:bg-card ' +
   'focus:ring-2 focus:ring-primary/25 focus:shadow-md focus:outline-none ' +
   'placeholder:text-muted-foreground/40';
