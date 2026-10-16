@@ -16,15 +16,35 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-};
+const ALLOWED_ORIGINS = [
+  "https://pente-fino.vercel.app",
+  "http://localhost:5173",
+  "http://localhost:3000",
+];
+
+function corsHeaders(origin: string) {
+  return {
+    "Access-Control-Allow-Origin": ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0],
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Max-Age": "86400",
+  };
+}
+
+async function getAuthenticatedUser(req: Request, supabase: ReturnType<typeof createClient>) {
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return null;
+  }
+  const token = authHeader.replace("Bearer ", "");
+  const { data: { user }, error } = await supabase.auth.getUser(token);
+  if (error || !user) return null;
+  return user;
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders(req.headers.get("origin") ?? "") });
   }
 
   try {
@@ -32,6 +52,14 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
+
+    const user = await getAuthenticatedUser(req, supabaseClient);
+    if (!user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders(req.headers.get("origin") ?? ""), "Content-Type": "application/json" },
+      });
+    }
 
     const url = new URL(req.url);
     const body = await req.json().catch(() => ({}));
@@ -170,7 +198,7 @@ serve(async (req) => {
       }
 
       return new Response(JSON.stringify({ success: true, results, daysAhead }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders(req.headers.get("origin") ?? ""), "Content-Type": "application/json" },
       });
     }
 
@@ -186,7 +214,7 @@ serve(async (req) => {
       if (error) throw error;
 
       return new Response(JSON.stringify({ success: true, regras: regras || [] }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders(req.headers.get("origin") ?? ""), "Content-Type": "application/json" },
       });
     }
 
@@ -203,7 +231,7 @@ serve(async (req) => {
       if (error) throw error;
 
       return new Response(JSON.stringify({ success: true, logs: logs || [] }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders(req.headers.get("origin") ?? ""), "Content-Type": "application/json" },
       });
     }
 
@@ -219,7 +247,7 @@ serve(async (req) => {
       if (error) throw error;
 
       return new Response(JSON.stringify({ success: true, data: data || [] }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders(req.headers.get("origin") ?? ""), "Content-Type": "application/json" },
       });
     }
 
@@ -253,7 +281,7 @@ serve(async (req) => {
       if (error) throw error;
 
       return new Response(JSON.stringify({ success: true }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders(req.headers.get("origin") ?? ""), "Content-Type": "application/json" },
       });
     }
 
@@ -269,7 +297,7 @@ serve(async (req) => {
       if (error) throw error;
 
       return new Response(JSON.stringify({ success: true }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders(req.headers.get("origin") ?? ""), "Content-Type": "application/json" },
       });
     }
 
@@ -308,19 +336,19 @@ serve(async (req) => {
       if (error) throw error;
 
       return new Response(JSON.stringify({ success: true, imported: rules.length }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders(req.headers.get("origin") ?? ""), "Content-Type": "application/json" },
       });
     }
 
     return new Response(
       JSON.stringify({ error: "Acao invalida. Use: generate, preview, logs, get_rules, save_rule, delete_rule, import_rules" }),
-      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 400, headers: { ...corsHeaders(req.headers.get("origin") ?? ""), "Content-Type": "application/json" } }
     );
   } catch (error: any) {
     console.error("[expedicao-auto-romaneio] Error:", error);
     return new Response(
       JSON.stringify({ error: error.message || "Erro interno no servidor" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 500, headers: { ...corsHeaders(req.headers.get("origin") ?? ""), "Content-Type": "application/json" } }
     );
   }
 });

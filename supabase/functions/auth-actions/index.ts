@@ -19,6 +19,15 @@ function corsHeaders(origin: string) {
   };
 }
 
+async function getAuthenticatedUser(req: Request, supabase: ReturnType<typeof createClient>) {
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) return null;
+  const token = authHeader.replace("Bearer ", "");
+  const { data: { user }, error } = await supabase.auth.getUser(token);
+  if (error || !user) return null;
+  return user;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders(req.headers.get("origin") ?? "") });
@@ -29,6 +38,15 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
+
+    // Auth required: only logged-in users can request password reset/OTP
+    const user = await getAuthenticatedUser(req, supabaseClient);
+    if (!user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders(req.headers.get("origin") ?? ""), "Content-Type": "application/json" },
+      });
+    }
 
     const { email, type, action, redirectTo } = await req.json();
 
