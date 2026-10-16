@@ -1,0 +1,38 @@
+- generic [ref=f3e1]:
+  - link "Pular para o conteúdo" [ref=f3e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - main [ref=f3e4]:
+    - generic [ref=f3e5]:
+      - generic [ref=f3e6]:
+        - img "Logo Pente-Fino" [ref=f3e8]
+        - heading "Pente Fino" [level=1] [ref=f3e9]
+      - generic [ref=f3e11]:
+        - generic [ref=f3e12]:
+          - heading "Acesse sua operação" [level=2] [ref=f3e13]
+          - paragraph [ref=f3e14]: Entre para continuar suas conferências, endereçamentos e expedições.
+        - generic [ref=f3e16]:
+          - generic [ref=f3e17]:
+            - text: Email
+            - textbox "Email" [active] [ref=f3e22]:
+              - /placeholder: seu@email.com
+          - generic [ref=f3e23]:
+            - generic [ref=f3e24]:
+              - generic [ref=f3e25]: Senha
+              - link "Esqueceu a senha?" [ref=f3e26] [cursor=pointer]:
+                - /url: /forgot-password
+            - generic [ref=f3e27]:
+              - textbox "Senha" [ref=f3e31]:
+                - /placeholder: ••••••••
+              - button "Mostrar senha" [ref=f3e32] [cursor=pointer]
+          - generic [ref=f3e36]:
+            - checkbox "Lembrar de mim" [checked] [ref=f3e37] [cursor=pointer]
+            - checkbox [checked] [aria-hidden]
+            - generic [ref=f3e38] [cursor=pointer]: Lembrar de mim
+          - button "Entrar" [ref=f3e39] [cursor=pointer]
+        - generic [ref=f3e40]:
+          - generic [ref=f3e41]:
+            - text: Ainda não tem conta?
+            - button "Cadastre-se" [ref=f3e42] [cursor=pointer]
+          - generic [ref=f3e43]: Acesso rápido
+          - button "Entrar como visitante (sem conta)" [ref=f3e48] [cursor=pointer]
+      - paragraph [ref=f3e49]: © 2026 Unilux · Pente Fino

@@ -191,7 +191,7 @@ export function CountingHistoryTable() {
                           <Badge 
                             variant="outline"
                             className={cn(
-                              "font-semibold text-[10px] uppercase tracking-[0.2em] min-w-[140px] justify-center py-2 rounded-md border-2 shadow-sm transition-all duration-500",
+ "font-semibold text-[10px] uppercase tracking-[0.2em] min-w-[140px] justify-center py-2 rounded-md border-2 transition-all duration-500",
                               item.status === 'completed' && diff === 0 ? "text-success border-emerald-600/30 bg-emerald-500/10" : 
                               item.status === 'completed' && diff !== 0 ? "text-warning border-amber-600/30 bg-amber-500/10" :
                               "text-destructive border-rose-600/30 bg-rose-500/10 animate-pulse"

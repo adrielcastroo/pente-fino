@@ -2051,7 +2051,7 @@ export default function GerarTagTab({ onVerHistorico }: GerarTagTabProps = {}) {
 
           {/* Retorno do Auge */}
           {resultado && !modoEdicaoRelancamento && (
-            <div className={`m-3 rounded-lg border p-4 space-y-4 shadow-sm ${resultado.ok ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-destructive/30 bg-destructive/5'}`}>
+ <div className={`m-3 rounded-lg border p-4 space-y-4 ${resultado.ok ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-destructive/30 bg-destructive/5'}`}>
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <div className={cn(

@@ -558,7 +558,7 @@ export default function EstoquePage() {
                 onClick={() => setSelectedStat(prev => prev === s.key ? null : s.key)}
                 className={cn(
                   'rounded-lg border transition-all duration-200 cursor-pointer relative overflow-hidden group',
-                  'shadow-sm hover:shadow-md hover:border-primary/40',
+ ' hover:shadow-md hover:border-primary/40',
                   s.config.border,
                   s.config.bg,
                   selectedStat === s.key ? 'ring-2 ring-primary/60 border-primary/50' : '',
@@ -605,7 +605,7 @@ export default function EstoquePage() {
           >
             <Card
               onClick={() => setSaidasOpen(true)}
-              className="rounded-lg border border-border/40 bg-card hover:bg-muted/40 transition-all duration-200 cursor-pointer relative overflow-hidden group shadow-sm hover:shadow-md h-full"
+ className="rounded-lg border border-border/40 bg-card hover:bg-muted/40 transition-all duration-200 cursor-pointer relative overflow-hidden group hover:shadow-md h-full"
             >
               <CardContent className="p-3 tablet-portrait:p-2 relative z-10 h-full flex flex-col">
                 <div className="flex items-center justify-between gap-2 mb-1.5">
@@ -747,7 +747,7 @@ export default function EstoquePage() {
 
 
       {/* TEC Tabs */}
-      <div className="tec-tabs flex bg-card/60 rounded-md p-1 gap-1 border border-border/40 shadow-sm flex-wrap sm:flex-nowrap">
+ <div className="tec-tabs flex bg-card/60 rounded-md p-1 gap-1 border border-border/40 flex-wrap sm:flex-nowrap">
         {Object.keys(TEC_CONFIG).map(tec => {
           const isActive = activeTec === tec;
           return (
@@ -770,7 +770,7 @@ export default function EstoquePage() {
 
       {/* Grid */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-24 gap-4 bg-card/60 rounded-lg border border-border/40 shadow-sm">
+ <div className="flex flex-col items-center justify-center py-24 gap-4 bg-card/60 rounded-lg border border-border/40 ">
           <div className="relative">
             <div className="w-12 h-12 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
             <div className="absolute inset-0 flex items-center justify-center">
@@ -839,7 +839,7 @@ export default function EstoquePage() {
                       whileHover={{ scale: 1.02, zIndex: 10 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => setSelectedCell({ col, nivel })} 
-                      className={`touch-cell flex-1 min-w-0 h-14 sm:h-20 md:h-24 rounded-md sm:rounded-md cursor-pointer p-2 sm:p-4 transition-all duration-300 group relative overflow-hidden border shadow-sm hover:shadow-md ${fillTone.bg} ${fillTone.border} ${
+ className={`touch-cell flex-1 min-w-0 h-14 sm:h-20 md:h-24 rounded-md sm:rounded-md cursor-pointer p-2 sm:p-4 transition-all duration-300 group relative overflow-hidden border hover:shadow-md ${fillTone.bg} ${fillTone.border} ${
                         !matchesFilter ? 'opacity-20 grayscale cursor-not-allowed' : ''
                       } ${
                         isHighlighted ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-[1.03] z-10' : ''

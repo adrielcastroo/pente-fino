@@ -624,7 +624,7 @@ export default function DashboardPage() {
           </DialogHeader>
           <div className="overflow-y-auto flex-1 custom-scrollbar">
             <div className="overflow-x-auto"><table className="w-full text-sm min-w-[600px]">
-              <thead className={cn("sticky top-0 z-20 shadow-sm", isDark ? "bg-card" : "bg-card")}>
+ <thead className={cn("sticky top-0 z-20 ", isDark ? "bg-card" : "bg-card")}>
                 <tr>
                    <th className={cn("px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-left font-semibold text-[11px] uppercase tracking-[0.2em] border-b", isDark ? "text-muted-foreground border-border" : "text-muted-foreground border-border")}>Processo</th>
                   <th className={cn("px-3 sm:px-6 lg:px-10 py-3 sm:py-4 lg:py-6 text-left font-semibold text-[11px] uppercase tracking-[0.2em] border-b hidden sm:table-cell", isDark ? "text-muted-foreground border-border" : "text-muted-foreground border-border")}>Conferente</th>
@@ -695,7 +695,7 @@ export default function DashboardPage() {
           </DialogHeader>
           <div className="overflow-y-auto flex-1 custom-scrollbar">
             <div className="overflow-x-auto"><table className="w-full text-sm min-w-[600px]">
-              <thead className={cn("sticky top-0 z-20 shadow-sm", isDark ? "bg-card" : "bg-card")}>
+ <thead className={cn("sticky top-0 z-20 ", isDark ? "bg-card" : "bg-card")}>
                 <tr>
                   <th className={cn("px-6 sm:px-10 py-4 sm:py-6 text-left font-semibold text-[10px] sm:text-[11px] uppercase tracking-[0.2em] border-b", isDark ? "text-muted-foreground border-border" : "text-muted-foreground border-border")}>Item / NF</th>
                   <th className={cn("px-6 sm:px-10 py-4 sm:py-6 text-left font-semibold text-[10px] sm:text-[11px] uppercase tracking-[0.2em] border-b hidden sm:table-cell", isDark ? "text-muted-foreground border-border" : "text-muted-foreground border-border")}>Conferência</th>

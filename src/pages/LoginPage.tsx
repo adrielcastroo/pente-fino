@@ -188,7 +188,7 @@ export default function LoginPage() {
       <div className="w-full max-w-[410px] relative z-10">
         {/* Header com logo + nome */}
         <div className="flex flex-col items-center mb-6">
-          <div className="p-2.5 bg-card border border-border/60 rounded-lg shadow-sm mb-3">
+ <div className="p-2.5 bg-card border border-border/60 rounded-lg mb-3">
             <img src={logoComb} alt="Logo Pente-Fino" width={40} height={40} className="w-10 h-10 object-contain" fetchPriority="high" />
           </div>
           <h1 className="text-lg font-semibold tracking-tight text-foreground">Pente Fino</h1>

@@ -107,7 +107,7 @@ export default function AugePermissoesTab() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-4">
       {/* Lista de usuários */}
-      <Card className="p-3 rounded-md border-border/40 shadow-sm flex flex-col min-h-[480px]">
+ <Card className="p-3 rounded-md border-border/40 flex flex-col min-h-[480px]">
         <div className="relative mb-2">
           <Search className="h-3.5 w-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -149,7 +149,7 @@ export default function AugePermissoesTab() {
       </Card>
 
       {/* Editor */}
-      <Card className="p-4 rounded-md border-border/40 shadow-sm">
+ <Card className="p-4 rounded-md border-border/40 ">
         {!draft || !selectedUser ? (
           <div className="h-full flex flex-col items-center justify-center text-center text-muted-foreground py-16">
             <ShieldCheck className="h-8 w-8 mb-2 opacity-40" />

@@ -39,7 +39,7 @@ export function WidgetRenderer({
             : CheckCircle2;
 
   return (
-    <Card className="mt-2 border-primary/40 bg-primary/[0.03] p-3 shadow-sm">
+ <Card className="mt-2 border-primary/40 bg-primary/[0.03] p-3 ">
       <div className="mb-2 flex items-start gap-2">
         <Icon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
         <div className="min-w-0 flex-1">

@@ -361,7 +361,7 @@ export default function CadastrosPage() {
 
       <Tabs defaultValue="interno" className="flex-1 flex flex-col overflow-hidden gap-3 sm:gap-4 min-w-0">
         <TabsContent value="interno" className="flex-1 flex flex-col gap-3 sm:gap-4 overflow-hidden mt-0 min-w-0">
-          <div className="flex flex-col lg:flex-row lg:items-center gap-2 sm:gap-3 min-w-0 rounded-md border border-border/40 bg-card/60 p-2 sm:p-3 shadow-sm">
+ <div className="flex flex-col lg:flex-row lg:items-center gap-2 sm:gap-3 min-w-0 rounded-md border border-border/40 bg-card/60 p-2 sm:p-3 ">
             <div className="relative w-full lg:flex-1 lg:max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input

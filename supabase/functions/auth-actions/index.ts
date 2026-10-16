@@ -1,14 +1,27 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+const ALLOWED_ORIGINS = [
+  "https://pente-fino.vercel.app",
+  "http://localhost:5173",
+  "http://localhost:3000",
+];
+const ALLOWED_REDIRECT_PATHS = ["/reset-password", "/login", "/"];
+
+function corsHeaders(origin: string) {
+  return {
+    "Access-Control-Allow-Origin": ALLOWED_ORIGINS.includes(origin)
+      ? origin
+      : ALLOWED_ORIGINS[0],
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Max-Age": "86400",
+  };
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders(req.headers.get("origin") ?? "") });
   }
 
   try {
@@ -29,7 +42,7 @@ serve(async (req) => {
       if (limitError || !isAllowed) {
         return new Response(
           JSON.stringify({ error: "Too many requests. Please try again in 15 minutes." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          { status: 429, headers: { ...corsHeaders(req.headers.get("origin") ?? ""), "Content-Type": "application/json" } }
         );
       }
 
@@ -42,7 +55,6 @@ serve(async (req) => {
       });
 
       // 3. Send Recovery Link/OTP via Supabase Auth
-      // We don't reveal if user exists (security best practice)
       if (type === "otp") {
         await supabaseClient.auth.signInWithOtp({
           email,
@@ -50,10 +62,11 @@ serve(async (req) => {
             shouldCreateUser: false,
           },
         });
-        // We don't throw error if user not found to avoid revealing existence
       } else {
-        await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo });
-        // We don't throw error if user not found to avoid revealing existence
+        const safeRedirect = ALLOWED_REDIRECT_PATHS.includes(redirectTo)
+          ? redirectTo
+          : "/reset-password";
+        await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: safeRedirect });
       }
 
       // 4. Update Audit Log - Success
@@ -65,18 +78,18 @@ serve(async (req) => {
 
       return new Response(
         JSON.stringify({ message: "If an account exists with this email, instructions have been sent." }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 200, headers: { ...corsHeaders(req.headers.get("origin") ?? ""), "Content-Type": "application/json" } }
       );
     }
 
     return new Response(JSON.stringify({ error: "Invalid action" }), {
       status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders(req.headers.get("origin") ?? ""), "Content-Type": "application/json" },
     });
   } catch (error) {
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders(req.headers.get("origin") ?? ""), "Content-Type": "application/json" },
     });
   }
 });

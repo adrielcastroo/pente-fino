@@ -37,7 +37,7 @@ export function EtiquetaToolbar(props: Props) {
   const [importInputRef] = useState(() => ({ current: null as HTMLInputElement | null }));
 
   return (
-    <div className="print:hidden rounded-xl border border-border/60 bg-gradient-to-br from-card via-card to-muted/40 shadow-sm">
+ <div className="print:hidden rounded-xl border border-border/60 bg-gradient-to-br from-card via-card to-muted/40 ">
       <div className="flex flex-col gap-3 p-3 sm:p-4 lg:flex-row lg:items-center lg:justify-between">
         {/* Left: template picker */}
         <div className="flex items-center gap-2 min-w-0 flex-wrap">

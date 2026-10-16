@@ -263,7 +263,7 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
   zpl, onChange, valores, dimensoes, variaveis, logoUrl,
   lineThickness = 2,
   lineStyle = 'solid',
-  lineColor = '#111111',
+  lineColor = 'hsl(var(--foreground))',
   fontFamily = 'monospace',
   borderWidth = 0,
   borderStyle = 'none',
@@ -316,7 +316,7 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
       rx: borderRadius,
       ry: borderRadius,
       fill: 'none',
-      stroke: '#000',
+      stroke: 'hsl(var(--foreground))',
       strokeWidth: effectiveBorderWidth,
       strokeDasharray: borderDashArray,
     };
@@ -665,8 +665,8 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
         aria-label="Preview interativo da etiqueta"
       >
         <rect x={0} y={0} width={viewW} height={viewH} fill="#fff" />
-        <line x1={viewW / 2} y1={0} x2={viewW / 2} y2={viewH} stroke="#e5e7eb" strokeDasharray="2 6" strokeWidth={1} />
-        <line x1={0} y1={viewH / 2} x2={viewW} y2={viewH / 2} stroke="#e5e7eb" strokeDasharray="2 6" strokeWidth={1} />
+        <line x1={viewW / 2} y1={0} x2={viewW / 2} y2={viewH} stroke="hsl(var(--muted))" strokeDasharray="2 6" strokeWidth={1} />
+        <line x1={0} y1={viewH / 2} x2={viewW} y2={viewH / 2} stroke="hsl(var(--muted))" strokeDasharray="2 6" strokeWidth={1} />
 
         {/* Grupo de conteúdo: SEM clipPath no editor — elementos fora dos limites
             precisam continuar visíveis/arrastáveis para o usuário reposicioná-los. */}
@@ -690,8 +690,8 @@ export const InteractiveZPLEditor = memo(function InteractiveZPLEditor({
                     <image href={logoUrl} x={b.x} y={b.y} height={h} width={w} preserveAspectRatio="xMidYMid meet" />
                   ) : (
                     <>
-                      <rect x={b.x} y={b.y} width={w} height={h} fill="#f3f4f6" stroke="#d1d5db" strokeDasharray="4 3" />
-                      <text x={b.x + w / 2} y={b.y + h / 2 + 4} fontSize={12} fontFamily={fontFamily} fill="#6b7280" textAnchor="middle" pointerEvents="none">LOGO</text>
+                      <rect x={b.x} y={b.y} width={w} height={h} fill="hsl(var(--muted))" stroke="hsl(var(--border))" strokeDasharray="4 3" />
+                      <text x={b.x + w / 2} y={b.y + h / 2 + 4} fontSize={12} fontFamily={fontFamily} fill="hsl(var(--muted-foreground))" textAnchor="middle" pointerEvents="none">LOGO</text>
                     </>
                   )}
                   <rect x={b.x} y={b.y} width={w} height={h} fill="transparent" className="hover:stroke-primary/40" stroke="transparent" strokeWidth={1} />
